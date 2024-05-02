@@ -17,12 +17,14 @@ package dataschema
 
 import (
 	"fmt"
+	"slices"
 
 	"github.com/hootrhino/rhilex/utils"
 )
 
 type IoTPropertyType string
 
+// "INTEGER", "BOOL", "FLOAT", "STRING", "GEO"
 const (
 	// 目前边缘侧暂时只支持常见类型
 	IoTPropertyTypeString  IoTPropertyType = "STRING"
@@ -301,5 +303,18 @@ type GeoRule struct {
 
 func (V GeoRule) Validate(Value interface{}) error {
 
+	return nil
+}
+
+/*
+*
+* Check Type
+*
+ */
+func CheckPropertyType(s string) error {
+	Types := []string{"INTEGER", "BOOL", "FLOAT", "STRING", "GEO"}
+	if !slices.Contains(Types, s) {
+		return fmt.Errorf("Invalid Property Type, Must one of:%v", Types)
+	}
 	return nil
 }
