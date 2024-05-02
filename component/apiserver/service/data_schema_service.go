@@ -16,8 +16,10 @@
 package service
 
 import (
-	"github.com/hootrhino/rhilex/component/interdb"
+	"fmt"
+
 	"github.com/hootrhino/rhilex/component/apiserver/model"
+	"github.com/hootrhino/rhilex/component/interdb"
 	"gorm.io/gorm"
 )
 
@@ -36,13 +38,20 @@ func GetDataSchemaWithUUID(uuid string) (model.MIotSchema, error) {
 // 删除DataSchema
 func DeleteDataSchemaAndProperty(schemaUuid string) error {
 	err := interdb.DB().Transaction(func(tx *gorm.DB) error {
+		// Delete Schema
 		err2 := tx.Where("uuid=?", schemaUuid).Delete(&model.MIotSchema{}).Error
 		if err2 != nil {
 			return err2
 		}
+		// Delete All IotProperty
 		err1 := tx.Where("schema_id=?", schemaUuid).Delete(model.MIotProperty{}).Error
 		if err1 != nil {
 			return err1
+		}
+		// Delete data_center
+		err3 := tx.Raw(fmt.Sprintf("DROP TABLE data_center_%s;", schemaUuid)).Error
+		if err3 != nil {
+			return err3
 		}
 		return nil
 	})
