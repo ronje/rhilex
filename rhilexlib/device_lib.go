@@ -1,6 +1,8 @@
 package rhilexlib
 
 import (
+	"encoding/hex"
+
 	"github.com/hootrhino/rhilex/common"
 	"github.com/hootrhino/rhilex/glogger"
 	"github.com/hootrhino/rhilex/typex"
@@ -88,7 +90,7 @@ func WriteDevice(rx typex.Rhilex, uuid string) func(L *lua.LState) int {
 
 /*
 *
-* 控制操作[2023年4月16日新增, 需求来自总线控制多个不对等设备]
+* return Hex String
 *
  */
 func CtrlDevice(rx typex.Rhilex, uuid string) func(L *lua.LState) int {
@@ -101,13 +103,15 @@ func CtrlDevice(rx typex.Rhilex, uuid string) func(L *lua.LState) int {
 		if Device != nil {
 			if Device.Device.Status() == typex.DEV_UP {
 				result, err := Device.Device.OnCtrl([]byte(cmd), []byte(data))
+				//
+				CtrlResponse := hex.EncodeToString(result)
 				if err != nil {
 					glogger.GLogger.Error(err)
 					l.Push(lua.LNil)
 					l.Push(lua.LString(err.Error()))
 					return 2
 				} else {
-					l.Push(lua.LString(string(result)))
+					l.Push(lua.LString(CtrlResponse))
 					l.Push(lua.LNil)
 					return 2
 				}

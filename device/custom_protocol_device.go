@@ -21,7 +21,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"net"
 	"time"
 
 	"github.com/hootrhino/rhilex/common"
@@ -48,7 +47,7 @@ type _CPDCommonConfig struct {
  */
 type _CustomProtocolConfig struct {
 	CommonConfig _CPDCommonConfig  `json:"commonConfig" validate:"required"`
-	PortUuid     string            `json:"portUuid"`
+	PortUuid     string            `json:"portUuid" validate:"required"`
 	HostConfig   common.HostConfig `json:"hostConfig" validate:"required"`
 }
 type CustomProtocolDevice struct {
@@ -56,7 +55,6 @@ type CustomProtocolDevice struct {
 	status       typex.DeviceState
 	RuleEngine   typex.Rhilex
 	serialPort   *serial.Port // 串口
-	tcpcon       net.Conn     // TCP
 	mainConfig   _CustomProtocolConfig
 	errorCount   int // 记录最大容错数，默认5次，出错超过5此就重启
 	hwPortConfig hwportmanager.UartConfig
@@ -80,9 +78,9 @@ func (mdev *CustomProtocolDevice) Init(devId string, configMap map[string]interf
 	if err := utils.BindSourceConfig(configMap, &mdev.mainConfig); err != nil {
 		return err
 	}
-	if !utils.SContains([]string{`TCP`, `UART`},
+	if !utils.SContains([]string{`UART`},
 		mdev.mainConfig.CommonConfig.Mode) {
-		return errors.New("option only one of 'TCP','UART'")
+		return errors.New("option only 'UART'")
 	}
 	if mdev.mainConfig.CommonConfig.Mode == "UART" {
 		hwPort, err := hwportmanager.GetHwPort(mdev.mainConfig.PortUuid)
@@ -139,20 +137,6 @@ func (mdev *CustomProtocolDevice) Start(cctx typex.CCTX) error {
 		mdev.status = typex.DEV_UP
 		return nil
 	}
-
-	// rawtcp
-	if mdev.mainConfig.CommonConfig.Mode == "TCP" {
-		tcpcon, err := net.Dial("tcp",
-			fmt.Sprintf("%s:%d", mdev.mainConfig.HostConfig.Host,
-				mdev.mainConfig.HostConfig.Port))
-		if err != nil {
-			glogger.GLogger.Error("tcp connection start failed:", err)
-			return err
-		}
-		mdev.tcpcon = tcpcon
-		mdev.status = typex.DEV_UP
-		return nil
-	}
 	return fmt.Errorf("unsupported Mode:%s", mdev.mainConfig.CommonConfig.Mode)
 }
 
@@ -201,11 +185,6 @@ func (mdev *CustomProtocolDevice) Stop() {
 	mdev.status = typex.DEV_DOWN
 	if mdev.CancelCTX != nil {
 		mdev.CancelCTX()
-	}
-	if mdev.mainConfig.CommonConfig.Mode == "TCP" {
-		if mdev.tcpcon != nil {
-			mdev.tcpcon.Close()
-		}
 	}
 	if mdev.mainConfig.CommonConfig.Mode == "UART" {
 		if mdev.serialPort != nil {
@@ -256,16 +235,6 @@ func (mdev *CustomProtocolDevice) ctrl(args []byte) ([]byte, error) {
 			hexs, result[:], false,
 			time.Duration(30)*time.Millisecond /*30ms wait*/)
 	}
-	if mdev.mainConfig.CommonConfig.Mode == "TCP" {
-		mdev.tcpcon.SetReadDeadline(
-			time.Now().Add((time.Duration(mdev.mainConfig.HostConfig.Timeout) * time.Millisecond)),
-		)
-		count, errSliceRequest = utils.SliceRequest(ctx, mdev.tcpcon,
-			hexs, result[:], false,
-			time.Duration(30)*time.Millisecond /*30ms wait*/)
-		mdev.tcpcon.SetReadDeadline(time.Time{})
-	}
-
 	cancel()
 	if errSliceRequest != nil {
 		glogger.GLogger.Error("Custom Protocol Device Request error: ", errSliceRequest)
