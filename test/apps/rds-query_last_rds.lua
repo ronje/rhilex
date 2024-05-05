@@ -15,12 +15,7 @@
 
 
 function Main(arg)
-    local err = data:ToRDS('SCHEMAHHCOOYVY', {
-        temp = 25.67,
-        humi = 67.89,
-        sw1 = true,
-        warning = "Low Battery"
-    })
+    local err = rds:QueryList('SCHEMAHHCOOYVY', "temp,humi")
     if err ~= nil then
         Throw(err)
         return 0
