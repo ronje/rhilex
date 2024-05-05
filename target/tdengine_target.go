@@ -116,11 +116,12 @@ func (td *tdEngineTarget) Details() *typex.OutEnd {
 
 }
 
-
 // 停止资源, 用来释放资源
 func (td *tdEngineTarget) Stop() {
 	td.status = typex.SOURCE_DOWN
-	td.CancelCTX()
+	if td.CancelCTX != nil {
+		td.CancelCTX()
+	}
 }
 
 func post(client http.Client,
