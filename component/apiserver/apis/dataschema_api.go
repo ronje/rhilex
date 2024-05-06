@@ -234,10 +234,10 @@ func PublishSchema(c *gin.Context, ruleEngine typex.Rhilex) {
 	DDLColumns := []datacenter.DDLColumn{}
 	// 默认加入PK
 	DDLColumns = append(DDLColumns, datacenter.DDLColumn{
-		Name: "id", Type: "int", Description: "PRIMARY KEY",
+		Name: "id", Type: "INTEGER", Description: "PRIMARY KEY",
 	})
 	DDLColumns = append(DDLColumns, datacenter.DDLColumn{
-		Name: "ts", Type: "int", Description: "Timestamp",
+		Name: "create_at", Type: "DATETIME", Description: "DATETIME",
 	})
 	for _, record := range records {
 		DDLColumns = append(DDLColumns, datacenter.DDLColumn{
