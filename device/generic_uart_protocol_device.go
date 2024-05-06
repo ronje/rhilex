@@ -45,25 +45,25 @@ type _CPDCommonConfig struct {
 * 自定义协议
 *
  */
-type _CustomProtocolConfig struct {
+type _GenericUartProtocolConfig struct {
 	CommonConfig _CPDCommonConfig  `json:"commonConfig" validate:"required"`
 	PortUuid     string            `json:"portUuid" validate:"required"`
 	HostConfig   common.HostConfig `json:"hostConfig" validate:"required"`
 }
-type CustomProtocolDevice struct {
+type GenericUartProtocolDevice struct {
 	typex.XStatus
 	status       typex.DeviceState
 	RuleEngine   typex.Rhilex
 	serialPort   *serial.Port // 串口
-	mainConfig   _CustomProtocolConfig
+	mainConfig   _GenericUartProtocolConfig
 	errorCount   int // 记录最大容错数，默认5次，出错超过5此就重启
 	hwPortConfig hwportmanager.UartConfig
 }
 
-func NewCustomProtocolDevice(e typex.Rhilex) typex.XDevice {
-	mdev := new(CustomProtocolDevice)
+func NewGenericUartProtocolDevice(e typex.Rhilex) typex.XDevice {
+	mdev := new(GenericUartProtocolDevice)
 	mdev.RuleEngine = e
-	mdev.mainConfig = _CustomProtocolConfig{
+	mdev.mainConfig = _GenericUartProtocolConfig{
 		CommonConfig: _CPDCommonConfig{},
 		PortUuid:     "/dev/ttyS0",
 		HostConfig:   common.HostConfig{Host: "127.0.0.1", Port: 502, Timeout: 3000},
@@ -73,7 +73,7 @@ func NewCustomProtocolDevice(e typex.Rhilex) typex.XDevice {
 }
 
 // 初始化
-func (mdev *CustomProtocolDevice) Init(devId string, configMap map[string]interface{}) error {
+func (mdev *GenericUartProtocolDevice) Init(devId string, configMap map[string]interface{}) error {
 	mdev.PointId = devId
 	if err := utils.BindSourceConfig(configMap, &mdev.mainConfig); err != nil {
 		return err
@@ -105,7 +105,7 @@ func (mdev *CustomProtocolDevice) Init(devId string, configMap map[string]interf
 }
 
 // 启动
-func (mdev *CustomProtocolDevice) Start(cctx typex.CCTX) error {
+func (mdev *GenericUartProtocolDevice) Start(cctx typex.CCTX) error {
 	mdev.Ctx = cctx.Ctx
 	mdev.CancelCTX = cctx.CancelCTX
 	mdev.errorCount = 0
@@ -145,7 +145,7 @@ func (mdev *CustomProtocolDevice) Start(cctx typex.CCTX) error {
 * 数据读出来，对数据结构有要求, 其中Key必须是个数字或者数字字符串, 例如 1 or "1"
 *
  */
-func (mdev *CustomProtocolDevice) OnRead(cmd []byte, data []byte) (int, error) {
+func (mdev *GenericUartProtocolDevice) OnRead(cmd []byte, data []byte) (int, error) {
 	return 0, errors.New("unknown read command:" + string(cmd))
 
 }
@@ -157,7 +157,7 @@ func (mdev *CustomProtocolDevice) OnRead(cmd []byte, data []byte) (int, error) {
  */
 
 // 把数据写入设备
-func (mdev *CustomProtocolDevice) OnWrite(cmd []byte, data []byte) (int, error) {
+func (mdev *GenericUartProtocolDevice) OnWrite(cmd []byte, data []byte) (int, error) {
 	return 0, errors.New("unknown write command:" + string(cmd))
 }
 
@@ -166,13 +166,13 @@ func (mdev *CustomProtocolDevice) OnWrite(cmd []byte, data []byte) (int, error) 
 * 外部指令交互, 常用来实现自定义协议等
 *
  */
-func (mdev *CustomProtocolDevice) OnCtrl(cmd []byte, _ []byte) ([]byte, error) {
+func (mdev *GenericUartProtocolDevice) OnCtrl(cmd []byte, _ []byte) ([]byte, error) {
 	glogger.GLogger.Debug("Time slice SliceRequest:", string(cmd))
 	return mdev.ctrl(cmd)
 }
 
 // 设备当前状态
-func (mdev *CustomProtocolDevice) Status() typex.DeviceState {
+func (mdev *GenericUartProtocolDevice) Status() typex.DeviceState {
 	if mdev.errorCount >= mdev.mainConfig.CommonConfig.RetryTime {
 		mdev.CancelCTX()
 		mdev.status = typex.DEV_DOWN
@@ -181,7 +181,7 @@ func (mdev *CustomProtocolDevice) Status() typex.DeviceState {
 }
 
 // 停止设备
-func (mdev *CustomProtocolDevice) Stop() {
+func (mdev *GenericUartProtocolDevice) Stop() {
 	mdev.status = typex.DEV_DOWN
 	if mdev.CancelCTX != nil {
 		mdev.CancelCTX()
@@ -195,12 +195,12 @@ func (mdev *CustomProtocolDevice) Stop() {
 }
 
 // 真实设备
-func (mdev *CustomProtocolDevice) Details() *typex.Device {
+func (mdev *GenericUartProtocolDevice) Details() *typex.Device {
 	return mdev.RuleEngine.GetDevice(mdev.PointId)
 }
 
 // 状态
-func (mdev *CustomProtocolDevice) SetState(status typex.DeviceState) {
+func (mdev *GenericUartProtocolDevice) SetState(status typex.DeviceState) {
 	mdev.status = status
 }
 
@@ -209,7 +209,7 @@ func (mdev *CustomProtocolDevice) SetState(status typex.DeviceState) {
 * 设备服务调用
 *
  */
-func (mdev *CustomProtocolDevice) OnDCACall(_ string, Command string,
+func (mdev *GenericUartProtocolDevice) OnDCACall(_ string, Command string,
 	Args interface{}) typex.DCAResult {
 
 	return typex.DCAResult{}
@@ -218,7 +218,7 @@ func (mdev *CustomProtocolDevice) OnDCACall(_ string, Command string,
 // --------------------------------------------------------------------------------------------------
 // 内部函数
 // --------------------------------------------------------------------------------------------------
-func (mdev *CustomProtocolDevice) ctrl(args []byte) ([]byte, error) {
+func (mdev *GenericUartProtocolDevice) ctrl(args []byte) ([]byte, error) {
 	hexs, err1 := hex.DecodeString(string(args))
 	if err1 != nil {
 		glogger.GLogger.Error(err1)
