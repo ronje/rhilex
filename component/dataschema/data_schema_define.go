@@ -308,9 +308,8 @@ func (V GeoRule) Validate(Value interface{}) error {
 
 /*
 *
-* Check Type
-*
- */
+  - Check Type:"INTEGER", "BOOL", "FLOAT", "STRING", "GEO"
+*/
 func CheckPropertyType(s string) error {
 	Types := []string{"INTEGER", "BOOL", "FLOAT", "STRING", "GEO"}
 	if !slices.Contains(Types, s) {
