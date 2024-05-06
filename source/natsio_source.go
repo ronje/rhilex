@@ -109,10 +109,6 @@ func (nt *natsSource) Stop() {
 
 }
 
-func (nt *natsSource) DataModels() []typex.XDataModel {
-	return []typex.XDataModel{}
-}
-
 // 来自外面的数据
 func (*natsSource) DownStream([]byte) (int, error) {
 	return 0, nil
