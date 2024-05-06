@@ -254,15 +254,9 @@ func LoadAppLibGroup(app *Application, e typex.Rhilex) {
 	}
 	{
 		Funcs := map[string]func(l *lua.LState) int{
-			"Update": rhilexlib.DataSchemaValueUpdate(e, app.UUID),
-		}
-		AddAppLibToGroup(app, e, "dataschema", Funcs)
-	}
-	{
-		Funcs := map[string]func(l *lua.LState) int{
-			"Save":      rhilexlib.InsertToDataCenterTable(e, app.UUID),
-			"QueryList": rhilexlib.QueryDataCenterList(e, app.UUID),
-			"QueryLast": rhilexlib.QueryDataCenterLast(e, app.UUID),
+			"Save": rhilexlib.InsertToDataCenterTable(e, app.UUID),
+			"List": rhilexlib.QueryDataCenterList(e, app.UUID),
+			"Last": rhilexlib.QueryDataCenterLast(e, app.UUID),
 		}
 		AddAppLibToGroup(app, e, "rds", Funcs)
 	}

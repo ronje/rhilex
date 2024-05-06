@@ -209,32 +209,6 @@ func DeleteInEnd(c *gin.Context, ruleEngine typex.Rhilex) {
 	}
 }
 
-/*
-*
-* UI配置表
-*
- */
-func GetInEndConfig(c *gin.Context, ruleEngine typex.Rhilex) {
-	c.JSON(common.HTTP_OK, common.OkWithEmpty())
-}
-
-/*
-*
-* 属性表
-*
- */
-func GetInEndModels(c *gin.Context, ruleEngine typex.Rhilex) {
-	uuid, _ := c.GetQuery("uuid")
-	inend := ruleEngine.GetInEnd(uuid)
-	if inend != nil {
-		modelsMap := inend.Source.DataModels()
-		c.JSON(common.HTTP_OK, common.OkWithData(modelsMap))
-	} else {
-		c.JSON(common.HTTP_OK, common.OkWithEmpty())
-	}
-
-}
-
 type InEndClient struct {
 	Ip         string         `json:"ip"`
 	Status     bool           `json:"status"`
@@ -243,7 +217,7 @@ type InEndClient struct {
 
 /*
 *
-* 获取客户端列表
+* 获取客户端列表[南向资源可能会有一些客户端连接上来]
 *
  */
 func GetInEndClients(c *gin.Context, ruleEngine typex.Rhilex) {
