@@ -55,13 +55,9 @@ func (ms *modbusScanner) Stop() error {
 
 func (ms *modbusScanner) PluginMetaInfo() typex.XPluginMetaInfo {
 	return typex.XPluginMetaInfo{
-		UUID:     ms.uuid,
-		Name:     "Modbus Device Scanner",
-		Version:  "v0.0.1",
-		Homepage: "https://www.hootrhino.com",
-		HelpLink: "https://www.hootrhino.com",
-		Author:   "RHILEXTeam",
-		Email:    "RHILEXTeam@hootrhino.com",
-		License:  "",
+		UUID:        ms.uuid,
+		Name:        "ModbusScanner",
+		Version:     "v0.0.1",
+		Description: "Simple Modbus Device Scanner",
 	}
 }

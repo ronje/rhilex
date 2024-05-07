@@ -81,13 +81,9 @@ func (tty *WebTTYPlugin) Stop() error {
 
 func (tty *WebTTYPlugin) PluginMetaInfo() typex.XPluginMetaInfo {
 	return typex.XPluginMetaInfo{
-		UUID:     tty.uuid,
-		Name:     "Web Terminal",
-		Version:  "v0.0.1",
-		Homepage: "https://github.com/tsl0922/ttyd",
-		HelpLink: "https://github.com/tsl0922/ttyd",
-		Author:   "RHILEXTeam",
-		Email:    "RHILEXTeam@hootrhino.com",
-		License:  "",
+		UUID:        tty.uuid,
+		Name:        "Web Terminal",
+		Version:     "v0.0.1",
+		Description: "Simple Web Terminal Interface",
 	}
 }

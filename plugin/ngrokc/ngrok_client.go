@@ -232,13 +232,9 @@ func (dm *NgrokClient) Stop() error {
 
 func (dm *NgrokClient) PluginMetaInfo() typex.XPluginMetaInfo {
 	return typex.XPluginMetaInfo{
-		UUID:     "NGROKC",
-		Name:     "Ngrok Client",
-		Version:  "v0.0.1",
-		Homepage: "https://www.hootrhino.com",
-		HelpLink: "https://www.hootrhino.com",
-		Author:   "RHILEXTeam",
-		Email:    "RHILEXTeam@hootrhino.com",
-		License:  "",
+		UUID:        "NGROKC",
+		Name:        "Ngrok Client",
+		Version:     "v0.0.1",
+		Description: "Ngrok Proxy Client",
 	}
 }
