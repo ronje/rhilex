@@ -29,51 +29,45 @@ import (
 	"github.com/hootrhino/rhilex/utils"
 )
 
-type CommonConfig struct {
+type GenericUartMainConfig struct {
+	// 通用配置，包含AllowPing、DataMode、PingPacket、Timeout等
 	// 是否允许Ping操作
 	AllowPing *bool `json:"allowPing" validate:"required"`
-	// 数据模式，可以是RAW或HEX
-	DataMode string `json:"dataMode" validate:"required"` // RAW|HEX
+	// 数据模式，RAW_STRING|HEX_STRING
+	DataMode string `json:"dataMode" validate:"required"` // RAW_STRING|HEX_STRING
 	// Ping请求的数据包内容
 	PingPacket string `json:"pingPacket" validate:"required"`
 	// 请求超时时间，单位为秒
 	Timeout *int `json:"timeout" validate:"required"`
-}
-
-type CommonUartMainConfig struct {
-	// 通用配置，包含AllowPing、DataMode、PingPacket、Timeout等
-	CommonConfig CommonConfig `json:"commonConfig" validate:"required"`
 	// 端口UUID，用于识别特定的串口设备
 	PortUuid string `json:"portUuid" validate:"required"`
 }
 
-type CommonUart struct {
+type GenericUart struct {
 	typex.XStatus
 	hwPortConfig hwportmanager.UartConfig
 	status       typex.SourceState
 	locker       sync.Mutex
 	serialPort   serial.Port
 	maxError     int
-	mainConfig   CommonUartMainConfig
+	mainConfig   GenericUartMainConfig
 }
 
-func NewCommonUart(e typex.Rhilex) typex.XTarget {
-	mdev := new(CommonUart)
+func NewGenericUart(e typex.Rhilex) typex.XTarget {
+	mdev := new(GenericUart)
 	mdev.RuleEngine = e
-	mdev.mainConfig = CommonUartMainConfig{
-		PortUuid: "/dev/ttyS1",
-		CommonConfig: CommonConfig{
-			DataMode:   "RAW",
-			PingPacket: "RHILEX",
-			AllowPing: func() *bool {
-				b := false
-				return &b
-			}(),
-			Timeout: func() *int {
-				b := 3000
-				return &b
-			}(),
-		},
+	mdev.mainConfig = GenericUartMainConfig{
+		PortUuid:   "/dev/ttyS1",
+		DataMode:   "RAW_STRING",
+		PingPacket: "RHILEX",
+		AllowPing: func() *bool {
+			b := false
+			return &b
+		}(),
+		Timeout: func() *int {
+			b := 3000
+			return &b
+		}(),
 	}
 	mdev.maxError = 5
 	mdev.locker = sync.Mutex{}
@@ -81,7 +75,7 @@ func NewCommonUart(e typex.Rhilex) typex.XTarget {
 	return mdev
 }
 
-func (mdev *CommonUart) Init(outEndId string, configMap map[string]interface{}) error {
+func (mdev *GenericUart) Init(outEndId string, configMap map[string]interface{}) error {
 	mdev.PointId = outEndId
 	mdev.maxError = 0
 
@@ -92,7 +86,7 @@ func (mdev *CommonUart) Init(outEndId string, configMap map[string]interface{}) 
 	return nil
 
 }
-func (mdev *CommonUart) Start(cctx typex.CCTX) error {
+func (mdev *GenericUart) Start(cctx typex.CCTX) error {
 	mdev.Ctx = cctx.Ctx
 	mdev.CancelCTX = cctx.CancelCTX
 	hwPort, err := hwportmanager.GetHwPort(mdev.mainConfig.PortUuid)
@@ -125,7 +119,7 @@ func (mdev *CommonUart) Start(cctx typex.CCTX) error {
 		glogger.GLogger.Error(err)
 		return err
 	}
-	if *mdev.mainConfig.CommonConfig.AllowPing {
+	if *mdev.mainConfig.AllowPing {
 		go func(serialPort serial.Port) {
 			ticker := time.NewTicker(time.Duration(time.Second * 5))
 			defer ticker.Stop()
@@ -139,7 +133,7 @@ func (mdev *CommonUart) Start(cctx typex.CCTX) error {
 				default:
 				}
 				if mdev.serialPort != nil {
-					_, err := mdev.serialPort.Write([]byte(mdev.mainConfig.CommonConfig.PingPacket))
+					_, err := mdev.serialPort.Write([]byte(mdev.mainConfig.PingPacket))
 					if err != nil {
 						glogger.GLogger.Error(err)
 						mdev.maxError++
@@ -151,16 +145,16 @@ func (mdev *CommonUart) Start(cctx typex.CCTX) error {
 	}
 	mdev.serialPort = serialPort
 	mdev.status = typex.SOURCE_UP
-	glogger.GLogger.Info("CommonUart started:", mdev.hwPortConfig.Uart)
+	glogger.GLogger.Info("GenericUart started:", mdev.hwPortConfig.Uart)
 	return nil
 }
 
-func (mdev *CommonUart) Status() typex.SourceState {
+func (mdev *GenericUart) Status() typex.SourceState {
 	if mdev.maxError >= 5 {
 		mdev.status = typex.SOURCE_DOWN
 	}
 	if mdev.serialPort != nil {
-		_, err := mdev.serialPort.Write([]byte(mdev.mainConfig.CommonConfig.PingPacket))
+		_, err := mdev.serialPort.Write([]byte(mdev.mainConfig.PingPacket))
 		if err != nil {
 			glogger.GLogger.Error(err)
 			mdev.maxError++
@@ -174,18 +168,18 @@ func (mdev *CommonUart) Status() typex.SourceState {
 * 数据写到串口
 *
  */
-func (mdev *CommonUart) To(data interface{}) (interface{}, error) {
+func (mdev *GenericUart) To(data interface{}) (interface{}, error) {
 	if mdev.serialPort == nil {
 		mdev.maxError++
 		return 0, fmt.Errorf("serial Port invalid")
 	}
-	if mdev.mainConfig.CommonConfig.DataMode == "RAW" {
+	if mdev.mainConfig.DataMode == "RAW_STRING" {
 		switch S := data.(type) {
 		case string:
 			return mdev.serialPort.Write([]byte(S))
 		}
 	}
-	if mdev.mainConfig.CommonConfig.DataMode == "HEX" {
+	if mdev.mainConfig.DataMode == "HEX_STRING" {
 		switch t := data.(type) {
 		case string:
 			Hex, err := hex.DecodeString(t)
@@ -199,13 +193,13 @@ func (mdev *CommonUart) To(data interface{}) (interface{}, error) {
 	return 0, fmt.Errorf("invalid data:%v", data)
 }
 
-func (mdev *CommonUart) Stop() {
+func (mdev *GenericUart) Stop() {
 	mdev.status = typex.SOURCE_DOWN
 	if mdev.CancelCTX != nil {
 		mdev.CancelCTX()
 	}
 	mdev.serialPort.Close()
 }
-func (mdev *CommonUart) Details() *typex.OutEnd {
+func (mdev *GenericUart) Details() *typex.OutEnd {
 	return mdev.RuleEngine.GetOutEnd(mdev.PointId)
 }
