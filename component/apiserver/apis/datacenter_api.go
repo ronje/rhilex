@@ -238,8 +238,8 @@ func GenDataToLuaFunc(c *gin.Context, ruleEngine typex.Rhilex) {
 		if TableColumn.Name == "id" || TableColumn.Name == "create_at" {
 			continue
 		}
-		s = append(s, fmt.Sprintf("%s=%v",
-			TableColumn.Name, parse_type(TableColumn.Type)))
+		_, D := SqliteTypeMappingGoDefault(TableColumn.Type)
+		s = append(s, fmt.Sprintf("%s=%v", TableColumn.Name, D))
 	}
 	luaS := fmt.Sprintf("local errRdsSave = rds:Save('%s', {%s\n}\n)",
 		uuid, strings.Join(s, ", "))
@@ -253,8 +253,9 @@ func GenDataToLuaFunc(c *gin.Context, ruleEngine typex.Rhilex) {
  */
 func GetSchemaDDLDefine(c *gin.Context, ruleEngine typex.Rhilex) {
 	type tableColumn struct {
-		Name string `json:"name"`
-		Type string `json:"type"`
+		Name         string `json:"name"`
+		Type         string `json:"type"`
+		DefaultValue any    `json:"defaultValue"`
 	}
 	uuid, _ := c.GetQuery("uuid")
 	TableColumnInfos, err := service.GetTableSchema(uuid)
@@ -264,28 +265,27 @@ func GetSchemaDDLDefine(c *gin.Context, ruleEngine typex.Rhilex) {
 	}
 	tableColumns := []tableColumn{}
 	for _, TableColumn := range TableColumnInfos {
-		if TableColumn.Name == "id" || TableColumn.Name == "create_at" {
-			continue
-		}
+		T, D := SqliteTypeMappingGoDefault(TableColumn.Type)
 		tableColumns = append(tableColumns, tableColumn{
-			Name: TableColumn.Name,
-			Type: TableColumn.Type,
+			Name:         TableColumn.Name,
+			Type:         T,
+			DefaultValue: D,
 		})
 	}
 	c.JSON(common.HTTP_OK, common.OkWithData(tableColumns))
 
 }
-func parse_type(dbType string) interface{} {
+func SqliteTypeMappingGoDefault(dbType string) (string, interface{}) {
 	switch dbType {
 	case "TEXT":
-		return "''"
+		return "STRING", "''"
 	case "INTEGER":
-		return 0
+		return "INTEGER", 0
 	case "REAL":
-		return 0
+		return "FLOAT", 0
 	case "BOOLEAN":
-		return false
+		return "BOOL", false
 	default:
-		return "''"
+		return "STRING", "''"
 	}
 }
