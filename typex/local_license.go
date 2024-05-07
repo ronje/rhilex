@@ -15,7 +15,9 @@
 
 package typex
 
-import "time"
+import (
+	"time"
+)
 
 type LocalLicense struct {
 	DeviceID          string `json:"device_id"`          // 设备生产序列号
@@ -27,10 +29,10 @@ type LocalLicense struct {
 	License           string `json:"license"`            // 公钥, 发给用户设备
 }
 
-func (d LocalLicense) ValidateTime() bool {
+func (ll LocalLicense) ValidateTime() bool {
 	Now := time.Now().UnixNano()
-	V := d.EndAuthorize - Now
-	if (d.BeginAuthorize > Now) && (V <= 0) {
+	V := ll.EndAuthorize - Now
+	if (ll.BeginAuthorize > Now) && (V <= 0) {
 		return false
 	}
 	return true
