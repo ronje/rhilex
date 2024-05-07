@@ -27,14 +27,10 @@ type ServiceResult struct {
 *
  */
 type XPluginMetaInfo struct {
-	UUID     string `json:"uuid"`
-	Name     string `json:"name"`
-	Version  string `json:"version"`
-	Homepage string `json:"homepage"`
-	HelpLink string `json:"helpLink"`
-	Author   string `json:"author"`
-	Email    string `json:"email"`
-	License  string `json:"license"`
+	UUID        string `json:"uuid"`
+	Name        string `json:"name"`
+	Version     string `json:"version"`
+	Description string `json:"description"`
 }
 
 /*

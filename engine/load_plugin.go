@@ -36,13 +36,14 @@ func (e *RuleEngine) LoadPlugin(sectionK string, p typex.XPlugin) error {
 	if ok {
 		return errors.New("plugin already installed:" + p.PluginMetaInfo().Name)
 	}
-
 	if err := p.Start(e); err != nil {
 		return err
 	}
-
-	e.Plugins.Store(p.PluginMetaInfo().UUID, p)
-	glogger.GLogger.Infof("Plugin start successfully:[%v]", p.PluginMetaInfo().Name)
+	// Skip License Manager
+	if p.PluginMetaInfo().UUID != "LicenseManager" {
+		e.Plugins.Store(p.PluginMetaInfo().UUID, p)
+		glogger.GLogger.Infof("Plugin start successfully:[%v]", p.PluginMetaInfo().Name)
+	}
 	return nil
 
 }
