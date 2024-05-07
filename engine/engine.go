@@ -653,7 +653,7 @@ func (e *RuleEngine) InitTargetTypeManager() error {
 	e.TargetTypeManager.Register(typex.GENERIC_UART_TARGET,
 		&typex.XConfig{
 			Engine:    e,
-			NewTarget: target.NewCommonUart,
+			NewTarget: target.NewGenericUart,
 		},
 	)
 	e.TargetTypeManager.Register(typex.MONGO_SINGLE,
