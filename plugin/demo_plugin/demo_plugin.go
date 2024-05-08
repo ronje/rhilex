@@ -6,13 +6,10 @@ import (
 )
 
 type DemoPlugin struct {
-	uuid string
 }
 
 func NewDemoPlugin() *DemoPlugin {
-	return &DemoPlugin{
-		uuid: "DEMO01",
-	}
+	return &DemoPlugin{}
 }
 
 func (dm *DemoPlugin) Init(config *ini.Section) error {
@@ -28,10 +25,10 @@ func (dm *DemoPlugin) Stop() error {
 
 func (dm *DemoPlugin) PluginMetaInfo() typex.XPluginMetaInfo {
 	return typex.XPluginMetaInfo{
-		UUID:        dm.uuid,
+		UUID:        "DEMO01",
 		Name:        "DemoPlugin",
 		Version:     "v0.0.1",
-		Description: "",
+		Description: "DEMO01",
 	}
 }
 
