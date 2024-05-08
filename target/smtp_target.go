@@ -83,9 +83,9 @@ func (ht *SmtpTarget) Status() typex.SourceState {
 	return typex.SOURCE_UP
 }
 func (ht *SmtpTarget) To(data interface{}) (interface{}, error) {
-	switch data.(type) {
+	switch T := data.(type) {
 	case string:
-		err := sendMail(ht.mainConfig.From, ht.mainConfig.To, ht.mainConfig.Subject, "",
+		err := sendMail(ht.mainConfig.From, ht.mainConfig.To, ht.mainConfig.Subject, T,
 			ht.mainConfig.Server, ht.mainConfig.Port, ht.mainConfig.User, ht.mainConfig.Password)
 		return nil, err
 	default:
