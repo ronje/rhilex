@@ -231,6 +231,10 @@ func PublishSchema(c *gin.Context, ruleEngine typex.Rhilex) {
 		c.JSON(common.HTTP_OK, common.Error400(result.Error))
 		return
 	}
+	if len(records) == 0 {
+		c.JSON(common.HTTP_OK, common.Error("Must contain at least one property"))
+		return
+	}
 	DDLColumns := []datacenter.DDLColumn{}
 	// 默认加入PK
 	DDLColumns = append(DDLColumns, datacenter.DDLColumn{
