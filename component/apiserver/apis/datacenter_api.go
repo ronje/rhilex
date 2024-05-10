@@ -91,24 +91,24 @@ func ExportData(c *gin.Context, ruleEngine typex.Rhilex) {
 		return
 	}
 	Headers := []string{}
-	OneRow := make([]interface{}, len(TableSchemas))
+	OneRowNCol := make([]interface{}, len(TableSchemas))
 	for i, TableSchema := range TableSchemas {
 		Headers = append(Headers, TableSchema.Name)
 		switch TableSchema.Type {
 		case "INTEGER":
-			OneRow[i] = new(int)
+			OneRowNCol[i] = new(int)
 		case "BOOLEAN":
-			OneRow[i] = new(bool)
+			OneRowNCol[i] = new(bool)
 		case "DATETIME":
-			OneRow[i] = new(string)
+			OneRowNCol[i] = new(string)
 		case "TIMESTAMP":
-			OneRow[i] = new(string)
+			OneRowNCol[i] = new(string)
 		case "TEXT":
-			OneRow[i] = new(string)
+			OneRowNCol[i] = new(string)
 		case "REAL":
-			OneRow[i] = new(float32)
+			OneRowNCol[i] = new(float32)
 		default:
-			OneRow[i] = new(string) // 不知道啥类型就String
+			OneRowNCol[i] = new(string) // 不知道啥类型就String
 		}
 	}
 
@@ -128,13 +128,13 @@ func ExportData(c *gin.Context, ruleEngine typex.Rhilex) {
 	}
 	idx := 0
 	for rows.Next() {
-		if err := rows.Scan(OneRow...); err != nil {
+		if err := rows.Scan(OneRowNCol...); err != nil {
 			c.JSON(common.HTTP_OK, common.Error400(err))
 			return
 		}
 		cell, _ = excelize.CoordinatesToCellName(1, idx+2)
 		SheetRow := []interface{}{}
-		for _, Column := range OneRow {
+		for _, Column := range OneRowNCol {
 			switch T := Column.(type) {
 			case *bool:
 				SheetRow = append(SheetRow, *T)
