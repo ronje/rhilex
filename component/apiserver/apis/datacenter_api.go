@@ -21,9 +21,11 @@ import (
 
 	"github.com/gin-gonic/gin"
 	common "github.com/hootrhino/rhilex/component/apiserver/common"
+	"github.com/hootrhino/rhilex/component/apiserver/model"
 	"github.com/hootrhino/rhilex/component/apiserver/server"
 	"github.com/hootrhino/rhilex/component/apiserver/service"
 	"github.com/hootrhino/rhilex/component/datacenter"
+	"github.com/hootrhino/rhilex/component/interdb"
 	"github.com/hootrhino/rhilex/glogger"
 	"github.com/hootrhino/rhilex/typex"
 	"github.com/xuri/excelize/v2"
@@ -65,7 +67,7 @@ func ListSchemaDDL(c *gin.Context, ruleEngine typex.Rhilex) {
 
 /*
 *
-* 详情, 先返回DDL算了
+* 详情
 *
  */
 func SchemaDDLDetail(c *gin.Context, ruleEngine typex.Rhilex) {
@@ -277,28 +279,30 @@ func QueryDDLLastData(c *gin.Context, ruleEngine typex.Rhilex) {
 * 获取定义
 *
  */
+type ddl_define struct {
+	Name string `json:"name"`
+	Type string `json:"type"`
+	Uuid string `json:"uuid"`
+	Unit string `json:"unit"`
+}
+
 func GetSchemaDDLDefine(c *gin.Context, ruleEngine typex.Rhilex) {
-	type tableColumn struct {
-		Name         string `json:"name"`
-		Type         string `json:"type"`
-		DefaultValue any    `json:"defaultValue"`
-	}
 	uuid, _ := c.GetQuery("uuid")
-	TableColumnInfos, err := service.GetTableSchema(uuid)
-	if err != nil {
-		c.JSON(common.HTTP_OK, common.Error400(err))
+	// 取单位
+	var records []ddl_define
+	tx := interdb.DB()
+	result := tx.Model(&model.MIotProperty{}).Select("name,type,uuid,unit").
+		Where("schema_id=?", uuid).Find(&records)
+	if result.Error != nil {
+		c.JSON(common.HTTP_OK, common.Error400(result.Error))
 		return
 	}
-	tableColumns := []tableColumn{}
-	for _, TableColumn := range TableColumnInfos {
-		T, D := SqliteTypeMappingGoDefault(TableColumn.Type)
-		tableColumns = append(tableColumns, tableColumn{
-			Name:         TableColumn.Name,
-			Type:         T,
-			DefaultValue: D,
-		})
+	for i, record := range records {
+		if record.Unit == "" {
+			records[i].Unit = "./." // 默认无单位
+		}
 	}
-	c.JSON(common.HTTP_OK, common.OkWithData(tableColumns))
+	c.JSON(common.HTTP_OK, common.OkWithData(records))
 
 }
 func SqliteTypeMappingGoDefault(dbType string) (string, interface{}) {
