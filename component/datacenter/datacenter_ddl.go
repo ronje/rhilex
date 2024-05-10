@@ -43,23 +43,29 @@ func GenerateSQLiteCreateTableDDL(schemaDDL SchemaDDL) (string, error) {
 
 	var columns []string
 	for i, col := range schemaDDL.DDLColumns {
-		columnDef := fmt.Sprintf("%s %s", col.Name, SqliteTypeMappingSchemaType(col.Type))
+		columnDefine := fmt.Sprintf("%s %s", col.Name, SqliteTypeMappingSchemaType(col.Type))
 		if col.Description != "" {
-			if i == len(schemaDDL.DDLColumns)-1 {
+			switch col.Type {
+			case "STRING":
+				columnDefine += " NOT NULL DEFAULT ''"
+			case "INTEGER":
 				if col.Name == "id" {
-					columnDef += " PRIMARY KEY AUTOINCREMENT -- " + col.Description
+					columnDefine += " NOT NULL PRIMARY KEY AUTOINCREMENT"
 				} else {
-					columnDef += "-- " + col.Description
+					columnDefine += " NOT NULL DEFAULT 0"
 				}
-			} else {
-				if col.Name == "id" {
-					columnDef += " PRIMARY KEY AUTOINCREMENT ,-- " + col.Description
-				} else {
-					columnDef += ",-- " + col.Description
-				}
+			case "FLOAT":
+				columnDefine += " NOT NULL DEFAULT 0"
+			case "BOOL":
+				columnDefine += " NOT NULL DEFAULT 0"
+			case "DATETIME":
+				columnDefine += " NOT NULL DEFAULT CURRENT_TIMESTAMP"
+			}
+			if i != len(schemaDDL.DDLColumns)-1 {
+				columnDefine += ","
 			}
 		}
-		columns = append(columns, columnDef)
+		columns = append(columns, columnDefine)
 	}
 
 	tableName := schemaDDL.SchemaUUID
@@ -85,6 +91,8 @@ func SqliteTypeMappingSchemaType(goType string) string {
 		return "REAL"
 	case "BOOL":
 		return "BOOLEAN"
+	case "DATETIME":
+		return "DATETIME"
 	default:
 		return "TEXT"
 	}
