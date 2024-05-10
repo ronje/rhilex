@@ -16,9 +16,8 @@
 package datacenter
 
 import (
-	"fmt"
-
 	"github.com/hootrhino/rhilex/typex"
+	"gorm.io/gorm"
 )
 
 var __DefaultDataCenter *DataCenter
@@ -29,85 +28,20 @@ var __DefaultDataCenter *DataCenter
 *
  */
 type DataCenter struct {
-	LocalDb DataSource
-	rhilex  typex.Rhilex
+	Sqlite *SqliteDb
+	rhilex typex.Rhilex
 }
 
 func InitDataCenter(rhilex typex.Rhilex) {
 	__DefaultDataCenter = new(DataCenter)
 	__DefaultDataCenter.rhilex = rhilex
-	__DefaultDataCenter.LocalDb = InitLocalDb(rhilex)
+	__DefaultDataCenter.Sqlite = InitSqliteDb(rhilex)
+	go StartDataCenterCron()
 }
 
-/*
-*
-* 获取表格定义
-*
- */
-func SchemaList() []SchemaDetail {
-	Schemas := []SchemaDetail{}
-	// 本地内部数据中心
-	Schemas = append(Schemas, __DefaultDataCenter.LocalDb.GetSchemaDetail("rhilex_internal_datacenter"))
-	return Schemas
+func DB() *gorm.DB {
+	return __DefaultDataCenter.Sqlite.db
 }
-
-/*
-*
-* 表结构
-*
- */
-
-func GetSchemaDefine(uuid string) (SchemaDefine, error) {
-	schemaDefine := SchemaDefine{}
-	return schemaDefine, nil
-
-}
-
-/*
-*
-* 仓库列表
-*
- */
-func SchemaDefineList() ([]SchemaDefine, error) {
-	var err error
-	ColumnsMap := []SchemaDefine{}
-
-	return ColumnsMap, err
-}
-
-/*
-*
-* 获取仓库详情, 现阶段写死的, 后期会在proto中实现
-*
- */
-func GetSchemaDetail(uuid string) SchemaDetail {
-	return SchemaDetail{
-		UUID:        "********",
-		Name:        "Local",
-		LocalPath:   ".local",
-		CreateTs:    0,
-		Size:        0,
-		StorePath:   "test.db",
-		Description: "Test Db",
-	}
-}
-
-/*
-*
-* 查询，第一个参数是查询请求，针对Sqlite就是SQL，针对mongodb就是JS，根据具体情况而定
-  TODO 未来实现：DataCenter['uuid'].Query(query string)
-*
-*/
-
-func Query(uuid, query string) ([]map[string]any, error) {
-
-	// 本地
-	// Rows 来自本地Sqlite查询
-	if uuid == "rhilex_internal_datacenter" {
-		LocalResult, err := __DefaultDataCenter.LocalDb.Query(uuid, query)
-		return LocalResult, err
-	}
-	// 外部
-	return nil, fmt.Errorf("unsupported db type:" + uuid)
-
+func VACUUM() {
+	DB().Exec("VACUUM;")
 }
