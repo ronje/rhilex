@@ -23,6 +23,8 @@ package ossupport
 const (
 	// rhilex 工作目录
 	MainWorkDir = "/usr/local"
+	// 数据中心
+	DataCenterPath = "/usr/local/rhilex_datacenter.db"
 	// RHILEX 的配置数据库
 	RunDbPath = "/usr/local/rhilex.db"
 	// 固件保存路径
@@ -37,6 +39,10 @@ const (
 	BackupLockPath = "/var/run/rhilex-upgrade.lock"
 	// 升级锁
 	UpgradeLockPath = BackupLockPath
+	// 数据备份
+	DataBackupPath = "/usr/local/upload/Backup/"
 	// 备份数据库
-	RecoveryDbPath = "/usr/local/upload/Backup/recovery.db"
+	RecoveryDbPath = DataBackupPath + "recovery.db"
+	//
+	RecoveryDataCenterPath = DataBackupPath + "rhilex_datacenter.db"
 )
