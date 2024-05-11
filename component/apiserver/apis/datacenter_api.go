@@ -72,12 +72,21 @@ func ListSchemaDDL(c *gin.Context, ruleEngine typex.Rhilex) {
  */
 func SchemaDDLDetail(c *gin.Context, ruleEngine typex.Rhilex) {
 	uuid, _ := c.GetQuery("uuid")
-	TableSchemas, err := service.GetTableSchema(uuid)
-	if err != nil {
-		c.JSON(common.HTTP_OK, common.Error400(err))
+	// 取单位
+	var records []ddl_define
+	tx := interdb.DB()
+	result := tx.Model(&model.MIotProperty{}).Select("name,type,uuid,unit").
+		Where("schema_id=?", uuid).Find(&records)
+	if result.Error != nil {
+		c.JSON(common.HTTP_OK, common.Error400(result.Error))
 		return
 	}
-	c.JSON(common.HTTP_OK, common.OkWithData(TableSchemas))
+	for i, record := range records {
+		if record.Unit == "" {
+			records[i].Unit = "./." // 默认无单位
+		}
+	}
+	c.JSON(common.HTTP_OK, common.OkWithData(records))
 }
 
 /*
@@ -286,23 +295,33 @@ type ddl_define struct {
 	Unit string `json:"unit"`
 }
 
+/*
+*
+* 获取定义
+*
+ */
 func GetSchemaDDLDefine(c *gin.Context, ruleEngine typex.Rhilex) {
+	type tableColumn struct {
+		Name         string `json:"name"`
+		Type         string `json:"type"`
+		DefaultValue any    `json:"defaultValue"`
+	}
 	uuid, _ := c.GetQuery("uuid")
-	// 取单位
-	var records []ddl_define
-	tx := interdb.DB()
-	result := tx.Model(&model.MIotProperty{}).Select("name,type,uuid,unit").
-		Where("schema_id=?", uuid).Find(&records)
-	if result.Error != nil {
-		c.JSON(common.HTTP_OK, common.Error400(result.Error))
+	TableColumnInfos, err := service.GetTableSchema(uuid)
+	if err != nil {
+		c.JSON(common.HTTP_OK, common.Error400(err))
 		return
 	}
-	for i, record := range records {
-		if record.Unit == "" {
-			records[i].Unit = "./." // 默认无单位
-		}
+	tableColumns := []tableColumn{}
+	for _, TableColumn := range TableColumnInfos {
+		T, D := SqliteTypeMappingGoDefault(TableColumn.Type)
+		tableColumns = append(tableColumns, tableColumn{
+			Name:         TableColumn.Name,
+			Type:         T,
+			DefaultValue: D,
+		})
 	}
-	c.JSON(common.HTTP_OK, common.OkWithData(records))
+	c.JSON(common.HTTP_OK, common.OkWithData(tableColumns))
 
 }
 func SqliteTypeMappingGoDefault(dbType string) (string, interface{}) {
