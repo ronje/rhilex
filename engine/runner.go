@@ -28,35 +28,30 @@ import (
 	ngrokc "github.com/hootrhino/rhilex/plugin/ngrokc"
 	ttyterminal "github.com/hootrhino/rhilex/plugin/ttyd_terminal"
 	usbmonitor "github.com/hootrhino/rhilex/plugin/usb_monitor"
-	"gopkg.in/ini.v1"
+	ini "gopkg.in/ini.v1"
 
 	apiServer "github.com/hootrhino/rhilex/component/apiserver"
-	"github.com/hootrhino/rhilex/component/interkv"
 	core "github.com/hootrhino/rhilex/config"
-	"github.com/hootrhino/rhilex/glogger"
+	glogger "github.com/hootrhino/rhilex/glogger"
 	icmpsender "github.com/hootrhino/rhilex/plugin/icmp_sender"
 	license_manager "github.com/hootrhino/rhilex/plugin/license_manager"
-	"github.com/hootrhino/rhilex/typex"
+	typex "github.com/hootrhino/rhilex/typex"
 )
 
-// 启动 rhilex
 func RunRhilex(iniPath string) {
 	mainConfig := core.InitGlobalConfig(iniPath)
-	//----------------------------------------------------------------------------------------------
-	// Init logger
-	//----------------------------------------------------------------------------------------------
 	glogger.StartGLogger(
-		core.GlobalConfig.LogLevel,
+		mainConfig.AppId,
+		mainConfig.LogLevel,
 		mainConfig.EnableConsole,
 		mainConfig.AppDebugMode,
-		core.GlobalConfig.LogPath,
-		mainConfig.AppId, mainConfig.AppName,
+		mainConfig.LogPath,
+		mainConfig.LogMaxSize,
+		mainConfig.LogMaxBackups,
+		mainConfig.LogMaxAge,
+		mainConfig.LogCompress,
 	)
-	glogger.StartNewRealTimeLogger(core.GlobalConfig.LogLevel)
-	//----------------------------------------------------------------------------------------------
-	// Init Component
-	//----------------------------------------------------------------------------------------------
-	interkv.StartStore(core.GlobalConfig.MaxQueueSize)
+	glogger.StartNewRealTimeLogger(mainConfig.LogLevel)
 	core.SetDebugMode(mainConfig.EnablePProf)
 	core.SetGomaxProcs(mainConfig.GomaxProcs)
 	//

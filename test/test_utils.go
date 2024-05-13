@@ -11,7 +11,6 @@ import (
 	"time"
 
 	httpserver "github.com/hootrhino/rhilex/component/apiserver"
-	"github.com/hootrhino/rhilex/component/interkv"
 
 	core "github.com/hootrhino/rhilex/config"
 	"github.com/hootrhino/rhilex/engine"
@@ -67,14 +66,17 @@ func HttpGet(api string) string {
 func RunTestEngine() typex.Rhilex {
 	mainConfig := core.InitGlobalConfig("config/rhilex.ini")
 	glogger.StartGLogger(
-		core.GlobalConfig.LogLevel,
+		mainConfig.AppId,
+		mainConfig.LogLevel,
 		mainConfig.EnableConsole,
 		mainConfig.AppDebugMode,
-		core.GlobalConfig.LogPath,
-		mainConfig.AppId, mainConfig.AppName,
+		mainConfig.LogPath,
+		mainConfig.LogMaxSize,
+		mainConfig.LogMaxBackups,
+		mainConfig.LogMaxAge,
+		mainConfig.LogCompress,
 	)
 	glogger.StartNewRealTimeLogger(core.GlobalConfig.LogLevel)
-	interkv.StartStore(core.GlobalConfig.MaxQueueSize)
 	core.SetDebugMode(mainConfig.EnablePProf)
 	core.SetGomaxProcs(mainConfig.GomaxProcs)
 	return engine.InitRuleEngine(mainConfig)

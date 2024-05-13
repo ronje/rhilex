@@ -25,6 +25,7 @@ import (
 	"github.com/hootrhino/rhilex/component/aibase"
 	"github.com/hootrhino/rhilex/component/appstack"
 	"github.com/hootrhino/rhilex/component/hwportmanager"
+	"github.com/hootrhino/rhilex/component/interkv"
 	"github.com/hootrhino/rhilex/component/rhilexmanager"
 	"github.com/hootrhino/rhilex/component/ruleengine"
 	core "github.com/hootrhino/rhilex/config"
@@ -90,6 +91,8 @@ func InitRuleEngine(config typex.RhilexConfig) typex.Rhilex {
 	}
 	// Internal DB
 	interdb.Init(__DefaultRuleEngine, __DEFAULT_DB_PATH)
+	// Internal kv Store
+	interkv.InitInterKVStore(core.GlobalConfig.MaxKvStoreSize)
 	// Shelly Device Registry
 	shellymanager.InitShellyDeviceRegistry(__DefaultRuleEngine)
 	// SuperVisor Admin
