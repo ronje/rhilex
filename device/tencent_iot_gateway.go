@@ -183,8 +183,10 @@ func (hd *TencentIoTGateway) Start(cctx typex.CCTX) error {
 // 设备当前状态
 func (hd *TencentIoTGateway) Status() typex.DeviceState {
 	if hd.client != nil {
-		if hd.client.IsConnectionOpen() {
+		if hd.client.IsConnectionOpen() && hd.client.IsConnected() {
 			return typex.DEV_UP
+		} else {
+			return typex.DEV_DOWN
 		}
 	}
 	return hd.status

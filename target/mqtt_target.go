@@ -101,7 +101,7 @@ func (mq *mqttOutEndTarget) Stop() {
 
 func (mq *mqttOutEndTarget) Status() typex.SourceState {
 	if mq.client != nil {
-		if mq.client.IsConnected() {
+		if mq.client.IsConnected() && mq.client.IsConnectionOpen() {
 			return typex.SOURCE_UP
 		}
 		return typex.SOURCE_DOWN
