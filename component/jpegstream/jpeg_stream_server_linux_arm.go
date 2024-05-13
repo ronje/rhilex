@@ -1,6 +1,3 @@
-//go:build arm
-// +build arm
-
 package jpegstream
 
 import (
