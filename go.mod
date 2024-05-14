@@ -3,7 +3,7 @@ module github.com/hootrhino/rhilex
 go 1.22
 
 require (
-	github.com/BeatTime/bacnet v0.2.1
+	github.com/BeatTime/bacnet v0.2.2
 	github.com/DrmagicE/gmqtt v0.5.0
 	github.com/Kowiste/ProfinetServer v0.0.0-20200929093941-9c422ae1f008
 	github.com/adrianmo/go-nmea v1.8.0
@@ -44,6 +44,7 @@ require (
 	github.com/robfig/cron/v3 v3.0.1
 	github.com/robinson/gos7 v0.0.0-20231031082500-fb5a72fd499e
 	github.com/rs/zerolog v1.32.0
+	github.com/samber/lo v1.39.0
 	github.com/shirou/gopsutil v3.21.11+incompatible
 	github.com/shirou/gopsutil/v3 v3.24.2
 	github.com/sirupsen/logrus v1.9.3
@@ -84,6 +85,8 @@ require (
 	golang.ngrok.com/muxado/v2 v2.0.0 // indirect
 	golang.org/x/term v0.19.0 // indirect
 )
+
+require github.com/youmark/pkcs8 v0.0.0-20181117223130-1be2e3e5546d // indirect
 
 require (
 	github.com/KyleBanks/depth v1.2.1 // indirect
@@ -169,7 +172,6 @@ require (
 	github.com/xrash/smetrics v0.0.0-20201216005158-039620a65673 // indirect
 	github.com/xuri/efp v0.0.0-20231025114914-d1ff6096ae53 // indirect
 	github.com/xuri/nfp v0.0.0-20230919160717-d98342af3f05 // indirect
-	github.com/youmark/pkcs8 v0.0.0-20181117223130-1be2e3e5546d // indirect
 	github.com/yusufpapurcu/wmi v1.2.4 // indirect
 	go.uber.org/atomic v1.11.0 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
