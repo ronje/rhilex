@@ -473,7 +473,7 @@ func maybePrependZero(slice []byte) []byte {
 // 设备当前状态
 func (mdev *generic_modbus_device) Status() typex.DeviceState {
 	// 容错5次
-	if mdev.retryTimes > 0 {
+	if mdev.retryTimes > 5 {
 		return typex.DEV_DOWN
 	}
 	return mdev.status
