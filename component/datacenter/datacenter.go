@@ -16,6 +16,7 @@
 package datacenter
 
 import (
+	core "github.com/hootrhino/rhilex/config"
 	"github.com/hootrhino/rhilex/typex"
 	"gorm.io/gorm"
 )
@@ -28,17 +29,29 @@ var __DefaultDataCenter *DataCenter
 *
  */
 type DataCenter struct {
-	Sqlite *SqliteDb
-	rhilex typex.Rhilex
+	Sqlite  *SqliteDb
+	rhilex  typex.Rhilex
+	secrets map[string]bool
 }
 
 func InitDataCenter(rhilex typex.Rhilex) {
 	__DefaultDataCenter = new(DataCenter)
 	__DefaultDataCenter.rhilex = rhilex
 	__DefaultDataCenter.Sqlite = InitSqliteDb(rhilex)
+	secrets := map[string]bool{}
+	for _, v := range core.GlobalConfig.DataSchemaSecret {
+		secrets[v] = true
+	}
+	loadSecrets(secrets)
 	go StartDataCenterCron()
 }
-
+func loadSecrets(secrets map[string]bool) {
+	__DefaultDataCenter.secrets = secrets
+}
+func CHeckSecrets(secret string) bool {
+	_, ok := __DefaultDataCenter.secrets[secret]
+	return ok
+}
 func DB() *gorm.DB {
 	return __DefaultDataCenter.Sqlite.db
 }

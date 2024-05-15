@@ -34,7 +34,7 @@ import (
 var GlobalConfig typex.RhilexConfig
 var INIPath string
 
-// Init config
+// Init config, First to run!
 func InitGlobalConfig(path string) typex.RhilexConfig {
 	log.Println("Init rhilex config:", path)
 	cfg, err := ini.ShadowLoad(path)
@@ -46,10 +46,6 @@ func InitGlobalConfig(path string) typex.RhilexConfig {
 	GlobalConfig = typex.RhilexConfig{}
 	GlobalConfig.Init()
 	if err := cfg.Section("app").MapTo(&GlobalConfig); err != nil {
-		log.Fatalf("Fail to map config file: %v", err)
-		os.Exit(1)
-	}
-	if err := cfg.Section("ext_libs").MapTo(&GlobalConfig.ExtLibs); err != nil {
 		log.Fatalf("Fail to map config file: %v", err)
 		os.Exit(1)
 	}

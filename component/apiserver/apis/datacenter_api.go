@@ -223,6 +223,12 @@ func ClearSchemaData(c *gin.Context, ruleEngine typex.Rhilex) {
 func QueryDDLDataList(c *gin.Context, ruleEngine typex.Rhilex) {
 	uuid, _ := c.GetQuery("uuid")
 	order, _ := c.GetQuery("order")
+	secret, _ := c.GetQuery("secret")
+	if !datacenter.CHeckSecrets(secret) {
+		c.JSON(common.HTTP_OK, common.Error("Expect api secret"))
+		return
+	}
+
 	selectFields, _ := c.GetQueryArray("select")
 	pager, err := service.ReadPageRequest(c)
 	if err != nil {
@@ -280,6 +286,11 @@ func QueryDDLDataList(c *gin.Context, ruleEngine typex.Rhilex) {
 func QueryDDLLastData(c *gin.Context, ruleEngine typex.Rhilex) {
 	uuid, _ := c.GetQuery("uuid")
 	selectFields, _ := c.GetQueryArray("select")
+	secret, _ := c.GetQuery("secret")
+	if !datacenter.CHeckSecrets(secret) {
+		c.JSON(common.HTTP_OK, common.Error("Expect api secret"))
+		return
+	}
 	MSchema, err := service.GetDataSchemaWithUUID(uuid)
 	if err != nil {
 		c.JSON(common.HTTP_OK, common.Error400(err))
