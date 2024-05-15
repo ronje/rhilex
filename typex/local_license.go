@@ -30,9 +30,8 @@ type LocalLicense struct {
 }
 
 func (ll LocalLicense) ValidateTime() bool {
-	Now := time.Now().UnixNano()
-	V := ll.EndAuthorize - Now
-	if (ll.BeginAuthorize > Now) && (V <= 0) {
+	Now := time.Now().UnixMilli()
+	if ll.BeginAuthorize > Now || ll.EndAuthorize < Now {
 		return false
 	}
 	return true
