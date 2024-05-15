@@ -26,8 +26,8 @@ type bacnetConfig struct {
 	IsMstp int    `json:"isMstp" title:"是否为mstp设备，若是则子网号必须填写（仅type=SINGLE时生效）"`
 	Subnet int    `json:"subnet" title:"子网号（仅type=SINGLE 且 isMstp=1 时生效）"`
 
-	LocalIp    string `json:"LocalIp" title:"本地ip地址（仅type=BOARDCAST时有效）"`
-	SubnetCIDR int    `json:"subnetCidr" title:"子网掩码长度（仅type=BOARDCAST时有效）"`
+	LocalIp    string `json:"LocalIp" title:"本地ip地址（仅type=BROADCAST时有效）"`
+	SubnetCIDR int    `json:"subnetCidr" title:"子网掩码长度（仅type=BROADCAST时有效）"`
 
 	LocalPort int `json:"localPort" title:"本地监听端口，填0表示默认47808（有的模拟器必须本地监听47808才能正常交互）"`
 	Frequency int `json:"frequency" title:"采集间隔，单位毫秒"`
@@ -145,7 +145,7 @@ func (dev *GenericBacnetIpDevice) Start(cctx typex.CCTX) error {
 		dev.BacnetDataPoints[idx].property = tmp
 	}
 
-	if dev.BacnetConfig.Mode == "BOARDCAST" {
+	if dev.BacnetConfig.Mode == "BROADCAST" {
 		// 创建一个bacnetip的本地网络
 		client, err := bacnet.NewClient(&bacnet.ClientBuilder{
 			Ip:         dev.BacnetConfig.LocalIp,
