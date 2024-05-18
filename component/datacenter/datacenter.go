@@ -48,7 +48,7 @@ func InitDataCenter(rhilex typex.Rhilex) {
 func loadSecrets(secrets map[string]bool) {
 	__DefaultDataCenter.secrets = secrets
 }
-func CHeckSecrets(secret string) bool {
+func CheckSecrets(secret string) bool {
 	_, ok := __DefaultDataCenter.secrets[secret]
 	return ok
 }

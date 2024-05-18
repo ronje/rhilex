@@ -221,9 +221,10 @@ func LoadRuleLibGroup(r *typex.Rule, e typex.Rhilex) {
 	}
 	{
 		Funcs := map[string]func(l *lua.LState) int{
-			"Save": rhilexlib.InsertToDataCenterTable(e, r.UUID),
-			"List": rhilexlib.QueryDataCenterList(e, r.UUID),
-			"Last": rhilexlib.QueryDataCenterLast(e, r.UUID),
+			"Save":       rhilexlib.InsertToDataCenterTable(e, r.UUID),
+			"List":       rhilexlib.QueryDataCenterList(e, r.UUID),
+			"Last":       rhilexlib.QueryDataCenterLast(e, r.UUID),
+			"UpdateLast": rhilexlib.UpdateDataCenterLast(e, r.UUID),
 		}
 		AddRuleLibToGroup(r, e, "rds", Funcs)
 	}

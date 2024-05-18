@@ -224,7 +224,7 @@ func QueryDDLDataList(c *gin.Context, ruleEngine typex.Rhilex) {
 	uuid, _ := c.GetQuery("uuid")
 	order, _ := c.GetQuery("order")
 	secret, _ := c.GetQuery("secret")
-	if !datacenter.CHeckSecrets(secret) {
+	if !datacenter.CheckSecrets(secret) {
 		c.JSON(common.HTTP_OK, common.Error("Expect api secret"))
 		return
 	}
@@ -287,7 +287,7 @@ func QueryDDLLastData(c *gin.Context, ruleEngine typex.Rhilex) {
 	uuid, _ := c.GetQuery("uuid")
 	selectFields, _ := c.GetQueryArray("select")
 	secret, _ := c.GetQuery("secret")
-	if !datacenter.CHeckSecrets(secret) {
+	if !datacenter.CheckSecrets(secret) {
 		c.JSON(common.HTTP_OK, common.Error("Expect api secret"))
 		return
 	}
