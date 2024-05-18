@@ -18,6 +18,7 @@ package target
 import (
 	"errors"
 	"fmt"
+	"time"
 
 	"github.com/hootrhino/rhilex/common"
 	"github.com/hootrhino/rhilex/glogger"
@@ -61,25 +62,23 @@ func (mq *mqttOutEndTarget) Init(outEndId string, configMap map[string]interface
 func (mq *mqttOutEndTarget) Start(cctx typex.CCTX) error {
 	mq.Ctx = cctx.Ctx
 	mq.CancelCTX = cctx.CancelCTX
-	//
-	//
-	var connectHandler mqtt.OnConnectHandler = func(client mqtt.Client) {
-		glogger.GLogger.Infof("Mqtt OutEnd Connected Success")
-	}
 
-	var connectLostHandler mqtt.ConnectionLostHandler = func(client mqtt.Client, err error) {
-		glogger.GLogger.Warn("Mqtt Connect lost:", err)
-	}
 	opts := mqtt.NewClientOptions()
 	opts.AddBroker(fmt.Sprintf("tcp://%s:%v", mq.mainConfig.Host, mq.mainConfig.Port))
 	opts.SetClientID(mq.mainConfig.ClientId)
 	opts.SetUsername(mq.mainConfig.Username)
 	opts.SetPassword(mq.mainConfig.Password)
-	opts.OnConnect = connectHandler
-	opts.OnConnectionLost = connectLostHandler
-	opts.CleanSession = true
+	opts.SetOnConnectHandler(func(client mqtt.Client) {
+		glogger.GLogger.Infof("Mqtt Connected Success")
+	})
+	opts.SetConnectionLostHandler(func(client mqtt.Client, err error) {
+		glogger.GLogger.Warn("Mqtt Connect lost:", err)
+	})
+	opts.SetCleanSession(true)
 	opts.SetAutoReconnect(false)    //不需要自动重连, 交给RHILEX管理
 	opts.SetMaxReconnectInterval(0) // 不需要自动重连, 交给RHILEX管理
+	opts.SetConnectTimeout(5 * time.Second)
+	opts.SetPingTimeout(5 * time.Second)
 	mq.client = mqtt.NewClient(opts)
 	token := mq.client.Connect()
 	if token.Wait() && token.Error() != nil {
@@ -95,7 +94,7 @@ func (mq *mqttOutEndTarget) Stop() {
 		mq.CancelCTX()
 	}
 	if mq.client != nil {
-		mq.client.Disconnect(0)
+		mq.client.Disconnect(10)
 	}
 }
 
@@ -117,7 +116,7 @@ func (mq *mqttOutEndTarget) To(data interface{}) (interface{}, error) {
 	if mq.client != nil {
 		switch s := data.(type) {
 		case string:
-			// glogger.GLogger.Debug("mqtt Target publish:", mq.mainConfig.PubTopic, 1, false, data)
+			glogger.GLogger.Debug("Target publish:", mq.mainConfig.PubTopic, 1, false, data)
 			token := mq.client.Publish(mq.mainConfig.PubTopic, 1, false, s)
 			return nil, token.Error()
 		default:
