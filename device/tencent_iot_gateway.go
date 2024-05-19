@@ -157,10 +157,10 @@ func (hd *TencentIoTGateway) Start(cctx typex.CCTX) error {
 
 	opts := mqtt.NewClientOptions()
 	// iotcloud.tencentdevices.com
-	// endPoint := "tcp://%s.iotcloud.tencentdevices.com:1883"
-	// hd.mainConfig.CommonConfig.ServerEndpoint = fmt.Sprintf(endPoint, hd.mainConfig.CommonConfig.ProductId)
-	endPoint := "tcp://192.168.1.170:1883"
-	opts.AddBroker(endPoint)
+	endPoint := "tcp://%s.iotcloud.tencentdevices.com:1883"
+	hd.mainConfig.CommonConfig.ServerEndpoint = fmt.Sprintf(endPoint, hd.mainConfig.CommonConfig.ProductId)
+	// endPoint := "tcp://192.168.1.170:1883"
+	opts.AddBroker(hd.mainConfig.CommonConfig.ServerEndpoint)
 	opts.SetClientID(hd.mqttClientId)
 	opts.SetUsername(hd.mqttUsername)
 	opts.SetPassword(hd.mqttPassword)
