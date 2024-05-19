@@ -57,8 +57,8 @@ func StartInSupervisor(InCtx context.Context, in *typex.InEnd, ruleEngine typex.
 			glogger.GLogger.Debugf(info)
 			internotify.Push(internotify.BaseEvent{
 				Type:  "SOURCE",
-				Event: "event.down",
-				Ts:    uint64(time.Now().UnixNano()),
+				Event: "event.inend.down",
+				Ts:    uint64(time.Now().UnixMilli()),
 				Info:  info,
 			})
 			time.Sleep(4 * time.Second)
@@ -111,8 +111,8 @@ func StartOutSupervisor(OutCtx context.Context, out *typex.OutEnd, ruleEngine ty
 			glogger.GLogger.Debugf(info)
 			internotify.Push(internotify.BaseEvent{
 				Type:  "TARGET",
-				Event: "event.down",
-				Ts:    uint64(time.Now().UnixNano()),
+				Event: "event.outend.down",
+				Ts:    uint64(time.Now().UnixMilli()),
 				Info:  info,
 			})
 			time.Sleep(4 * time.Second)
@@ -170,8 +170,8 @@ func StartDeviceSupervisor(DeviceCtx context.Context, device *typex.Device, rule
 			glogger.GLogger.Debugf(info)
 			internotify.Push(internotify.BaseEvent{
 				Type:  "DEVICE",
-				Event: "event.down",
-				Ts:    uint64(time.Now().UnixNano()),
+				Event: "event.device.down",
+				Ts:    uint64(time.Now().UnixMilli()),
 				Info:  info,
 			})
 			time.Sleep(4 * time.Second)

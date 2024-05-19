@@ -106,7 +106,7 @@ func UpgradeFirmWare(c *gin.Context, ruleEngine typex.Rhilex) {
 	}
 	glogger.GLogger.Debugf("Compare MD5:[%s]~[%s]", md51, string(readBytes))
 	if md51 != string(readBytes) {
-		c.JSON(common.HTTP_OK, common.Error("invalid sum md5!"))
+		c.JSON(common.HTTP_OK, common.Error("Invalid sum md5!"))
 		return
 	}
 	if err3 := os.RemoveAll(tempPath); err3 != nil {

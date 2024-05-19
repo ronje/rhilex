@@ -120,7 +120,7 @@ func (mq *mqttOutEndTarget) To(data interface{}) (interface{}, error) {
 			token := mq.client.Publish(mq.mainConfig.PubTopic, 1, false, s)
 			return nil, token.Error()
 		default:
-			return nil, errors.New("invalid mqtt data type")
+			return nil, errors.New("Invalid mqtt data type")
 		}
 	}
 	return nil, errors.New("mqtt client is nil")

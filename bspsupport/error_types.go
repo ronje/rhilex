@@ -2,9 +2,7 @@ package archsupport
 
 import (
 	"errors"
-	"runtime"
 )
 
-var errArchNotSupport = errors.New("not support current OS:" + runtime.GOOS)
-var errInvalidLen = errors.New("invalid len")
-var errInvalidValue = errors.New("invalid value")
+var errInvalidLen = errors.New("Invalid len")
+var errInvalidValue = errors.New("Invalid value")

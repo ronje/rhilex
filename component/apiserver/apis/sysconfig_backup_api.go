@@ -143,5 +143,5 @@ func ReadSQLiteFileMagicNumber(filePath string) ([16]byte, error) {
 	if string(MagicNumber[:]) == "SQLite format 3\x00" {
 		return MagicNumber, nil
 	}
-	return MagicNumber, fmt.Errorf("invalid Sqlite Db ,MagicNumber:%v error", MagicNumber)
+	return MagicNumber, fmt.Errorf("Invalid Sqlite Db ,MagicNumber:%v error", MagicNumber)
 }

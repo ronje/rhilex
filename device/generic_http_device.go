@@ -67,7 +67,7 @@ func (hd *GenericHttpDevice) Init(devId string, configMap map[string]interface{}
 		return err
 	}
 	if _, err := isValidHTTP_URL(hd.mainConfig.HttpConfig.Url); err != nil {
-		return fmt.Errorf("invalid url format:%s, %s", hd.mainConfig.HttpConfig.Url, err)
+		return fmt.Errorf("Invalid url format:%s, %s", hd.mainConfig.HttpConfig.Url, err)
 	}
 	return nil
 }
@@ -189,7 +189,7 @@ func isValidHTTP_URL(urlStr string) (bool, error) {
 		return false, fmt.Errorf("error parsing URL: %w", err)
 	}
 	if r.Scheme != "http" && r.Scheme != "https" {
-		return false, fmt.Errorf("invalid scheme; must be http or https")
+		return false, fmt.Errorf("Invalid scheme; must be http or https")
 	}
 	return true, nil
 }

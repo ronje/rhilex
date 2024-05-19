@@ -218,7 +218,7 @@ func ShellyDeviceStatus(c *gin.Context, ruleEngine typex.Rhilex) {
 		c.JSON(common.HTTP_OK, common.OkWithData(ShellyDeviceStatus))
 		return
 	}
-	c.JSON(common.HTTP_OK, common.Error("invalid ip schema:"+ip))
+	c.JSON(common.HTTP_OK, common.Error("Invalid ip schema:"+ip))
 }
 
 /*

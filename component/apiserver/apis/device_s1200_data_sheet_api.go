@@ -249,7 +249,7 @@ func checkSiemensDataPoints(M SiemensPointVo) error {
 	switch M.DataType {
 	case "I", "Q", "BYTE":
 		if M.DataOrder != "A" {
-			return fmt.Errorf("invalid '%s' order '%s'", M.DataType, M.DataOrder)
+			return fmt.Errorf("Invalid '%s' order '%s'", M.DataType, M.DataOrder)
 		}
 	case "SHORT", "USHORT", "INT16", "UINT16":
 		if !utils.SContains([]string{"AB", "BA"}, M.DataOrder) {
@@ -257,13 +257,13 @@ func checkSiemensDataPoints(M SiemensPointVo) error {
 		}
 	case "RAW", "INT", "INT32", "UINT", "UINT32", "FLOAT", "UFLOAT":
 		if !utils.SContains([]string{"ABCD", "DCBA", "CDAB"}, M.DataOrder) {
-			return fmt.Errorf("invalid '%s' order '%s'", M.DataType, M.DataOrder)
+			return fmt.Errorf("Invalid '%s' order '%s'", M.DataType, M.DataOrder)
 		}
 	default:
-		return fmt.Errorf("invalid '%s' order '%s'", M.DataType, M.DataOrder)
+		return fmt.Errorf("Invalid '%s' order '%s'", M.DataType, M.DataOrder)
 	}
 	if M.Weight == nil {
-		return fmt.Errorf("invalid Weight value:%d", M.Weight)
+		return fmt.Errorf("Invalid Weight value:%d", M.Weight)
 	}
 	if !utils.IsValidColumnName(M.Tag) {
 		return fmt.Errorf("'Invalid Tag Name:%s", M.Tag)
@@ -405,7 +405,7 @@ func parseSiemensPointExcel(
 	}
 	// 判断首行标头
 	//
-	err1 := errors.New("invalid Sheet Header")
+	err1 := errors.New("Invalid Sheet Header")
 	if len(rows[0]) < 7 {
 		return nil, err1
 	}

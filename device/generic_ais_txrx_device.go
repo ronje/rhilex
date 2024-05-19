@@ -99,7 +99,7 @@ func (aism *AISDeviceMaster) Init(devId string, configMap map[string]interface{}
 			}
 		default:
 			{
-				return fmt.Errorf("invalid config:%s", hwPort.Config)
+				return fmt.Errorf("Invalid config:%s", hwPort.Config)
 			}
 		}
 	}
@@ -273,7 +273,7 @@ func (aism *AISDeviceMaster) Start(cctx typex.CCTX) error {
 		return nil
 	}
 	aism.status = typex.DEV_DOWN
-	return fmt.Errorf("invalid work mode:%s", aism.mainConfig.CommonConfig.Mode)
+	return fmt.Errorf("Invalid work mode:%s", aism.mainConfig.CommonConfig.Mode)
 }
 
 // 从设备里面读数据出来

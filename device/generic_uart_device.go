@@ -82,7 +82,7 @@ func (uart *genericUartDevice) Init(devId string, configMap map[string]interface
 		}
 	default:
 		{
-			return fmt.Errorf("invalid config:%s", hwPort.Config)
+			return fmt.Errorf("Invalid config:%s", hwPort.Config)
 		}
 	}
 	return nil

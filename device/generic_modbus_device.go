@@ -239,7 +239,7 @@ func (mdev *generic_modbus_device) Init(devId string, configMap map[string]inter
 			}
 		default:
 			{
-				return fmt.Errorf("invalid config:%s", hwPort.Config)
+				return fmt.Errorf("Invalid config:%s", hwPort.Config)
 			}
 		}
 	}
