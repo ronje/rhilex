@@ -251,8 +251,8 @@ func QueryDDLDataList(c *gin.Context, ruleEngine typex.Rhilex) {
 		c.JSON(common.HTTP_OK, common.Error400(err))
 		return
 	}
-	if pager.Size > 1000 {
-		c.JSON(common.HTTP_OK, common.Error("Query size too large, Must less than 1000"))
+	if pager.Size > 100 {
+		c.JSON(common.HTTP_OK, common.Error("Query size too large, Must less than 100"))
 		return
 	}
 	MSchema, err := service.GetDataSchemaWithUUID(uuid)

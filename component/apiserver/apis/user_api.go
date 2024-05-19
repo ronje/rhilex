@@ -185,7 +185,33 @@ func Login(c *gin.Context, ruleEngine typex.Rhilex) {
 	}
 }
 
+/*
+*
+* 退出
+*
+ */
 func LogOut(c *gin.Context, ruleEngine typex.Rhilex) {
+
+	type _user struct {
+		Username string `json:"username" binding:"required"`
+		Password string `json:"password" binding:"required"`
+	}
+	clientIP := c.ClientIP()
+	var u _user
+	if err := c.BindJSON(&u); err != nil {
+		c.JSON(common.HTTP_OK, common.Error400(err))
+		return
+	}
+	service.InsertInternalNotify(model.MInternalNotify{
+		UUID:    utils.MakeUUID("NOTIFY"),
+		Type:    `INFO`, // INFO | ERROR | WARNING
+		Status:  1,
+		Event:   `event.system.user.logout.success`,
+		Ts:      uint64(time.Now().UnixMilli()),
+		Summary: "User Logout Success",
+		Info: fmt.Sprintf(`User Logout Success, Username: %s, RemoteAddr: %s`,
+			u.Username, clientIP),
+	})
 	c.JSON(common.HTTP_OK, common.Ok())
 }
 
@@ -253,34 +279,4 @@ func parseToken(tokenString string) (*JwtClaims, error) {
 	} else {
 		return nil, err
 	}
-}
-
-/*
-*
-* 上传头像
-*
- */
-func UploadSysLogo(c *gin.Context, ruleEngine typex.Rhilex) {
-	c.JSON(common.HTTP_OK, common.Ok())
-
-}
-
-/*
-*
-* 加载头像
-*
- */
-func GetSysLogo(c *gin.Context, ruleEngine typex.Rhilex) {
-	c.JSON(common.HTTP_OK, common.Ok())
-
-}
-
-/*
-*
-* 重置站点
-*
- */
-func ResetSiteConfig(c *gin.Context, ruleEngine typex.Rhilex) {
-
-	c.JSON(common.HTTP_OK, common.Ok())
 }
