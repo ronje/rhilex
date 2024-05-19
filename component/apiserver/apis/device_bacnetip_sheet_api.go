@@ -377,7 +377,7 @@ func parseBacnetExcel(r multipart.File, sheetName string, deviceUuid string) ([]
 
 func checkBacnetPoint(point dto.BacnetDataPointCreateOrUpdate) error {
 	contains := lo.Contains(dto.ValidBacnetObjectType, point.ObjectType)
-	if contains == false {
+	if !contains {
 		return errors.New("illegal objectType")
 	}
 	return nil

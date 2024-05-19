@@ -19,9 +19,12 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"time"
 
+	"github.com/hootrhino/rhilex/component/interdb"
 	"github.com/hootrhino/rhilex/glogger"
 	"github.com/hootrhino/rhilex/typex"
+	"github.com/hootrhino/rhilex/utils"
 )
 
 var __DefaultInternalEventBus *InternalEventBus
@@ -36,10 +39,11 @@ var __DefaultInternalEventBus *InternalEventBus
 // - HARDWARE: 硬件事件
 
 type BaseEvent struct {
-	Type  string
-	Event string
-	Ts    uint64
-	Info  interface{}
+	Type    string
+	Event   string
+	Ts      uint64
+	Summary string
+	Info    interface{}
 }
 
 func (be BaseEvent) String() string {
@@ -111,22 +115,41 @@ func InitInternalEventBus(r typex.Rhilex, MaxQueueSize int) *InternalEventBus {
 * 监控chan
 *
  */
+type MInternalNotify struct {
+	ID        uint      `gorm:"primaryKey" json:"id"`
+	CreatedAt time.Time `json:"created_at"`
+	UUID      string    `gorm:"not null"` // UUID
+	Type      string    `gorm:"not null"` // INFO | ERROR | WARNING
+	Status    int       `gorm:"not null"` // 1 未读 2 已读
+	Event     string    `gorm:"not null"` // 字符串
+	Ts        uint64    `gorm:"not null"` // 时间戳
+	Summary   string    `gorm:"not null"` // 概览，为了节省流量，在消息列表只显示这个字段，Info值为“”
+	Info      string    `gorm:"not null"` // 消息内容，是个文本，详情显示
+}
+
 func StartInternalEventQueue() {
 	go func(ctx context.Context, InternalEventBus *InternalEventBus) {
+		ticker := time.NewTicker(100 * time.Millisecond)
+		defer ticker.Stop()
 		for {
 			// 当无订阅者时，及时释放channel里面的数据
 			if __DefaultInternalEventBus.SourceCount == 0 {
 				select {
 				case <-ctx.Done():
 					return
+				case <-ticker.C:
+					continue // 防止超时死锁
 				case Event := <-InternalEventBus.Queue:
-					{
-						//
-						// TODO 内部事件应该写入数据库, 主要是起通知作用
-						//
-						glogger.GLogger.Debug("Internal Event:", Event)
-
-					}
+					// glogger.GLogger.Debug("Internal Event:", Event)
+					interdb.DB().Table("m_internal_notifies").Save(&MInternalNotify{
+						UUID:    utils.MakeUUID("NOTIFY"),
+						Type:    Event.Type, // INFO | ERROR | WARNING
+						Status:  1,          // Default unread
+						Event:   Event.Event,
+						Ts:      Event.Ts,
+						Summary: "RHILEX Internal Event: " + Event.Event,
+						Info:    Event.String(),
+					})
 				}
 			}
 		}
