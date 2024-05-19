@@ -47,10 +47,7 @@ type BaseEvent struct {
 }
 
 func (be BaseEvent) String() string {
-	return fmt.Sprintf(
-		`BaseEvent@Type:%s, Event:%s, Ts:%d, Info:%s`,
-		be.Type, be.Event, be.Ts, be.Info)
-
+	return fmt.Sprintf(`Event: [%s], [%s], %s`, be.Type, be.Event, be.Info)
 }
 
 /*

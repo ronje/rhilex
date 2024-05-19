@@ -7,6 +7,7 @@ import (
 	"github.com/hootrhino/rhilex/component/apiserver/model"
 	"github.com/hootrhino/rhilex/component/apiserver/server"
 	"github.com/hootrhino/rhilex/component/apiserver/service"
+	"github.com/hootrhino/rhilex/component/intercache"
 	"github.com/hootrhino/rhilex/component/interdb"
 	"gorm.io/gorm"
 
@@ -46,6 +47,13 @@ func DeviceDetail(c *gin.Context, ruleEngine typex.Rhilex) {
 	DeviceVo.Type = mdev.Type
 	DeviceVo.Description = mdev.Description
 	DeviceVo.Config = mdev.GetConfig()
+	Slot := intercache.GetSlot("__DefaultRuleEngine")
+	if Slot != nil {
+		CacheValue, ok := Slot[mdev.UUID]
+		if ok {
+			DeviceVo.ErrMsg = CacheValue.ErrMsg
+		}
+	}
 	//
 	device := ruleEngine.GetDevice(mdev.UUID)
 	if device == nil {
@@ -337,14 +345,14 @@ func UpdateDevice(c *gin.Context, ruleEngine typex.Rhilex) {
 *
  */
 func GetDeviceErrorMsg(c *gin.Context, ruleEngine typex.Rhilex) {
-	c.JSON(common.HTTP_OK, common.OkWithData("Error Msg Not Found"))
-}
-
-/*
-*
-* 获取设备点位表挂了的异常信息
-*
- */
-func GetDevicePointErrorMsg(c *gin.Context, ruleEngine typex.Rhilex) {
-	c.JSON(common.HTTP_OK, common.OkWithData("Error Msg Not Found"))
+	uuid, _ := c.GetQuery("uuid")
+	Slot := intercache.GetSlot("__DefaultRuleEngine")
+	if Slot != nil {
+		CacheValue, ok := Slot[uuid]
+		if ok {
+			c.JSON(common.HTTP_OK, common.OkWithData(CacheValue.ErrMsg))
+			return
+		}
+	}
+	c.JSON(common.HTTP_OK, common.OkWithData("It seems No Any Error"))
 }

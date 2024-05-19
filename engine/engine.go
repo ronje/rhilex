@@ -119,6 +119,10 @@ func InitRuleEngine(config typex.RhilexConfig) typex.Rhilex {
 	rtspserver.InitRtspServer(__DefaultRuleEngine)
 	// Jpeg Stream Server
 	jpegstream.InitJpegStreamServer(__DefaultRuleEngine)
+	// 内部队列
+	interqueue.StartDataCacheQueue()
+	// InternalEventQueue
+	internotify.StartInternalEventQueue()
 	return __DefaultRuleEngine
 }
 
@@ -132,10 +136,7 @@ func (e *RuleEngine) Start() *typex.RhilexConfig {
 	e.InitDeviceTypeManager()
 	e.InitSourceTypeManager()
 	e.InitTargetTypeManager()
-	// 内部队列
-	interqueue.StartDataCacheQueue()
-	// InternalEventQueue
-	internotify.StartInternalEventQueue()
+	intercache.RegisterSlot("__DefaultRuleEngine")
 	return e.Config
 }
 
@@ -202,10 +203,14 @@ func (e *RuleEngine) Stop() {
 	})
 	glogger.GLogger.Info("Flush Shelly Device Cache")
 	shellymanager.Flush()
+	// Modbus Point sheet Cache
 	glogger.GLogger.Info("Flush Modbus Point sheet Cache")
 	intercache.Flush()
+	// aibase
 	glogger.GLogger.Info("Stop AI Runtime")
 	aibase.Stop()
+	// UnRegisterSlot
+	intercache.UnRegisterSlot("__DefaultRuleEngine")
 	glogger.GLogger.Info("[√] Stop rhilex successfully")
 	if err := glogger.Close(); err != nil {
 		fmt.Println("Close logger error: ", err)

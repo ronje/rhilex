@@ -19,7 +19,9 @@ import (
 	"context"
 	"fmt"
 	"sync"
+	"time"
 
+	intercache "github.com/hootrhino/rhilex/component/intercache"
 	"github.com/hootrhino/rhilex/glogger"
 	"github.com/hootrhino/rhilex/typex"
 )
@@ -129,7 +131,19 @@ func (e *RuleEngine) loadDevices(xDevice typex.XDevice, deviceInstance *typex.De
 		e.RemoveDevice(deviceInstance.UUID)
 		return err
 	}
-	startDevice(xDevice, e, ctx, cancelCTX)
+	err2 := startDevice(xDevice, e, ctx, cancelCTX)
+	if err2 != nil {
+		glogger.GLogger.Error(err2)
+		intercache.SetValue("__DefaultRuleEngine", deviceInstance.UUID, intercache.CacheValue{
+			UUID:          deviceInstance.UUID,
+			Status:        1,
+			ErrMsg:        err2.Error(),
+			LastFetchTime: uint64(time.Now().UnixMilli()),
+			Value:         "",
+		})
+	} else {
+		intercache.DeleteValue("__DefaultRuleEngine", deviceInstance.UUID)
+	}
 	glogger.GLogger.Infof("Device [%v, %v] load successfully", deviceInstance.Name, deviceInstance.UUID)
 	return nil
 }

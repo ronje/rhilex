@@ -18,7 +18,9 @@ package engine
 import (
 	"context"
 	"fmt"
+	"time"
 
+	intercache "github.com/hootrhino/rhilex/component/intercache"
 	"github.com/hootrhino/rhilex/glogger"
 	"github.com/hootrhino/rhilex/typex"
 )
@@ -83,7 +85,19 @@ func (e *RuleEngine) loadSource(source typex.XSource, in *typex.InEnd,
 		return err
 	}
 
-	e.startSource(source, ctx, cancelCTX)
+	err2 := e.startSource(source, ctx, cancelCTX)
+	if err2 != nil {
+		glogger.GLogger.Error(err2)
+		intercache.SetValue("__DefaultRuleEngine", in.UUID, intercache.CacheValue{
+			UUID:          in.UUID,
+			Status:        1,
+			ErrMsg:        err2.Error(),
+			LastFetchTime: uint64(time.Now().UnixMilli()),
+			Value:         "",
+		})
+	} else {
+		intercache.DeleteValue("__DefaultRuleEngine", in.UUID)
+	}
 	glogger.GLogger.Infof("InEnd [%v, %v] load successfully", in.Name, in.UUID)
 	return nil
 }
