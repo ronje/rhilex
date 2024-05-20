@@ -6,11 +6,22 @@
 #### 广播配置模式
 ```json
 {
-  "type": "BROADCAST",
-  "localIp": "192.168.1.50",
-  "subnetCidr": 24,
-  "localPort": 47808,
-  "frequency": 10000
+    "name": "GENERIC_BACNET_IP",
+    "type": "GENERIC_BACNET_IP",
+    "gid": "DROOT",
+    "config": {
+        "commonConfig": {
+            "frequency": 1000
+        },
+        "bacnetConfig": {
+            "interface": "ETH1",
+            "mode": "BROADCAST",
+            "localIp": "192.168.10.163",
+            "subnetCidr": 24,
+            "localPort": 47808
+        }
+    },
+    "description": "GENERIC_BACNET_IP"
 }
 ```
 
@@ -71,9 +82,27 @@
 ### 采集后输出的数据格式
 ```json
 {
-  "tag1": "1",
-  "tag2": "2",
-  "tag3": "3"
+    "gas": {
+        "tag": "gas",
+        "deviceId": 1,
+        "propertyType": "AnalogInput",
+        "propertyInstance": 2,
+        "value": 77.89
+    },
+    "humi": {
+        "tag": "humi",
+        "deviceId": 1,
+        "propertyType": "AnalogInput",
+        "propertyInstance": 1,
+        "value": 56.78
+    },
+    "temp": {
+        "tag": "temp",
+        "deviceId": 1,
+        "propertyType": "AnalogInput",
+        "propertyInstance": 0,
+        "value": 12.34
+    }
 }
 ```
 
