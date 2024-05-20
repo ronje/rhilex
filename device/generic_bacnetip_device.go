@@ -21,22 +21,22 @@ import (
 type bacnetConfig struct {
 	Mode string `json:"mode" title:"bacnet运行模式"`
 
-	Ip     string `json:"ip" title:"bacnet设备ip（仅type=SINGLE生效）"`
-	Port   int    `json:"port" title:"bacnet端口，通常是47808（仅type=SINGLE生效）"`
-	IsMstp int    `json:"isMstp" title:"是否为mstp设备，若是则子网号必须填写（仅type=SINGLE时生效）"`
-	Subnet int    `json:"subnet" title:"子网号（仅type=SINGLE 且 isMstp=1 时生效）"`
+	Ip     string `json:"ip" title:"bacnet设备ip(仅type=SINGLE生效)"`
+	Port   int    `json:"port" title:"bacnet端口，通常是47808(仅type=SINGLE生效)"`
+	IsMstp int    `json:"isMstp" title:"是否为mstp设备，若是则子网号必须填写(仅type=SINGLE时生效)"`
+	Subnet int    `json:"subnet" title:"子网号(仅type=SINGLE 且 isMstp=1 时生效)"`
 
-	LocalIp    string `json:"LocalIp" title:"本地ip地址（仅type=BROADCAST时有效）"`
-	SubnetCIDR int    `json:"subnetCidr" title:"子网掩码长度（仅type=BROADCAST时有效）"`
+	LocalIp    string `json:"LocalIp" title:"本地ip地址(仅type=BROADCAST时有效)"`
+	SubnetCIDR int    `json:"subnetCidr" title:"子网掩码长度(仅type=BROADCAST时有效)"`
 
-	LocalPort int `json:"localPort" title:"本地监听端口，填0表示默认47808（有的模拟器必须本地监听47808才能正常交互）"`
+	LocalPort int `json:"localPort" title:"本地监听端口，填0表示默认47808(有的模拟器必须本地监听47808才能正常交互)"`
 	Frequency int `json:"frequency" title:"采集间隔，单位毫秒"`
 }
 
 type bacnetDataPoint struct {
 	UUID           string            `json:"uuid"`
 	Tag            string            `json:"tag" validate:"required" title:"数据Tag"`
-	BacnetDeviceId int               `json:"bacnetDeviceId" title:"bacnet设备id（若isMstp=1，则deviceId应该必填；若是纯bacnetip设备，则填1即可）"`
+	BacnetDeviceId int               `json:"bacnetDeviceId" title:"bacnet设备id(若isMstp=1，则deviceId应该必填；若是纯bacnetip设备，则填1即可)"`
 	ObjectType     btypes.ObjectType `json:"objectType" title:"object类型"`
 	ObjectId       int               `json:"objectId" title:"object的id"`
 
@@ -88,10 +88,17 @@ func (dev *GenericBacnetIpDevice) Init(devId string, configMap map[string]interf
 			ObjectId:       point.ObjectId,
 		}
 		points[i] = dataPoint
+		intercache.SetValue(dev.PointId, point.UUID, intercache.CacheValue{
+			UUID:          point.UUID,
+			Status:        0,
+			LastFetchTime: uint64(time.Now().UnixMilli()),
+			Value:         "",
+			ErrMsg:        "Loading",
+		})
 	}
 	dev.BacnetDataPoints = points
 	if err != nil {
-		glogger.GLogger.Error("加载bacnet点位出现错误", err)
+		glogger.GLogger.Error(err)
 		return err
 	}
 
@@ -162,18 +169,19 @@ func (dev *GenericBacnetIpDevice) Start(cctx typex.CCTX) error {
 
 		go func(ctx context.Context) {
 			// 定时刷新device列表 后续可以优化下逻辑
-			ticker := time.NewTicker(15 * time.Minute)
+			ticker := time.NewTicker(5 * time.Second)
 			defer ticker.Stop()
 			for {
 				select {
 				case <-ticker.C:
+					/// 迁移配置到前端控制
 					devices, err := client.WhoIs(&bacnet.WhoIsOpts{
 						Low:             -1,
 						High:            -1,
 						GlobalBroadcast: true,
 					})
 					if err != nil {
-						glogger.GLogger.Error("查找bacnet设备失败", err)
+						glogger.GLogger.Error(err)
 						continue
 					}
 					deviceMap := make(map[int]btypes.Device)
@@ -182,7 +190,7 @@ func (dev *GenericBacnetIpDevice) Start(cctx typex.CCTX) error {
 					}
 					dev.remoteDeviceMap = deviceMap
 				case <-ctx.Done():
-					break
+					return
 				}
 			}
 		}(dev.Ctx)
@@ -259,8 +267,16 @@ func (dev *GenericBacnetIpDevice) OnRead(cmd []byte, data []byte) (int, error) {
 	return len, nil
 }
 
+type ReturnValue struct {
+	Tag              string      `json:"tag"`
+	DeviceId         int         `json:"deviceId"`
+	PropertyType     string      `json:"propertyType"`
+	PropertyInstance uint32      `json:"propertyInstance"`
+	Value            interface{} `json:"value"`
+}
+
 func (dev *GenericBacnetIpDevice) read() ([]byte, error) {
-	retMap := map[string]string{}
+	retMap := map[string]ReturnValue{}
 	for _, v := range dev.BacnetDataPoints {
 		var bacnetDeviceId int
 		if dev.BacnetConfig.Mode == "SINGLE" {
@@ -271,15 +287,25 @@ func (dev *GenericBacnetIpDevice) read() ([]byte, error) {
 		if device, ok := dev.remoteDeviceMap[bacnetDeviceId]; ok {
 			property, err := dev.bacnetClient.ReadProperty(device, v.property)
 			if err != nil {
-				glogger.GLogger.Errorf("read failed. tag = %v, err=%v", v.Tag, err)
+				glogger.GLogger.Errorf("bacnet Client Read Property failed. tag = %v, err=%v", v.Tag, err)
 				continue
 			}
-			value := fmt.Sprintf("%v", property.Object.Properties[0].Data)
-			retMap[v.Tag] = value
+			ReturnValue := ReturnValue{
+				Tag:              v.Tag,
+				DeviceId:         bacnetDeviceId,
+				PropertyType:     property.Object.ID.Type.String(),
+				PropertyInstance: uint32(property.Object.ID.Instance),
+			}
+			if len(property.Object.Properties) > 0 {
+				ReturnValue.Value = property.Object.Properties[0].Data
+			} else {
+				ReturnValue.Value = 0
+			}
+			retMap[v.Tag] = ReturnValue
 		}
 	}
 	bytes, _ := json.Marshal(retMap)
-	glogger.GLogger.Debugf("%v", retMap)
+	glogger.GLogger.Debug(string(bytes))
 	return bytes, nil
 }
 
