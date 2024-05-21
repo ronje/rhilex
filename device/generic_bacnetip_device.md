@@ -25,29 +25,6 @@
 }
 ```
 
-#### bacnetIp设备
-```json
-{
-  "type": "SINGLE",
-  "ip": "192.168.1.36",
-  "port": 47808,
-  "localPort": 47808,
-  "frequency": 10000
-}
-```
-
-#### bacnetMstp over ip设备
-```json
-{
-  "type": "SINGLE",
-  "ip": "192.168.1.36",
-  "port": 47808,
-  "isMstp": 1,
-  "subnet": 20,
-  "localPort": 47808,
-  "frequency": 10000
-}
-```
 
 > 字段含义
 
