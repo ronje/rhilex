@@ -169,6 +169,7 @@ func NewGenericModbusDevice(e typex.Rhilex) typex.XDevice {
 //  初始化
 func (mdev *generic_modbus_device) Init(devId string, configMap map[string]interface{}) error {
 	mdev.PointId = devId
+	mdev.retryTimes = 0
 	intercache.RegisterSlot(mdev.PointId)
 	if err := utils.BindSourceConfig(configMap, &mdev.mainConfig); err != nil {
 		return err
@@ -308,7 +309,7 @@ func (mdev *generic_modbus_device) groupTags(registers []*common.RegisterRW) []*
 func (mdev *generic_modbus_device) Start(cctx typex.CCTX) error {
 	mdev.Ctx = cctx.Ctx
 	mdev.CancelCTX = cctx.CancelCTX
-
+	mdev.retryTimes = 0
 	if mdev.mainConfig.CommonConfig.Mode == "UART" {
 		hwPort, err := hwportmanager.GetHwPort(mdev.mainConfig.PortUuid)
 		if err != nil {
