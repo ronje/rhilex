@@ -255,7 +255,7 @@ func (dev *GenericBacnetIpDevice) Start(cctx typex.CCTX) error {
 			default:
 			}
 
-			read, err2 := dev.read()
+			read, err2 := dev.ReadProperty()
 			if err2 != nil {
 				glogger.GLogger.Error(err2)
 			} else {
@@ -270,7 +270,7 @@ func (dev *GenericBacnetIpDevice) Start(cctx typex.CCTX) error {
 }
 
 func (dev *GenericBacnetIpDevice) OnRead(cmd []byte, data []byte) (int, error) {
-	read, err := dev.read()
+	read, err := dev.ReadProperty()
 	if err != nil {
 		return 0, err
 	}
@@ -286,7 +286,12 @@ type ReturnValue struct {
 	Value            interface{} `json:"value"`
 }
 
-func (dev *GenericBacnetIpDevice) read() ([]byte, error) {
+/*
+*
+* 局域网广播
+*
+ */
+func (dev *GenericBacnetIpDevice) ReadProperty() ([]byte, error) {
 	retMap := map[string]ReturnValue{}
 	for _, v := range dev.BacnetDataPoints {
 		var bacnetDeviceId int
@@ -348,6 +353,7 @@ func (dev *GenericBacnetIpDevice) Status() typex.DeviceState {
 }
 
 func (dev *GenericBacnetIpDevice) Stop() {
+	dev.status = typex.DEV_DOWN
 	if dev.CancelCTX != nil {
 		dev.CancelCTX()
 	}
