@@ -57,6 +57,7 @@
 
 | ObjectType | 英文名称         | 中文名称   |
 | ---------- | ---------------- | ---------- |
+| AI         | AnalogInput      | 模拟输入   |
 | AO         | AnalogOutput     | 模拟输出   |
 | AV         | AnalogValue      | 模拟值     |
 | BI         | BinaryInput      | 二进制输入 |
