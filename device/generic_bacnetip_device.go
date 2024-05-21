@@ -299,6 +299,13 @@ func (dev *GenericBacnetIpDevice) read() ([]byte, error) {
 			property, err := dev.bacnetClient.ReadProperty(device, v.property)
 			if err != nil {
 				glogger.GLogger.Errorf("bacnet Client Read Property failed. tag = %v, err=%v", v.Tag, err)
+				intercache.SetValue(dev.PointId, v.UUID, intercache.CacheValue{
+					UUID:          v.UUID,
+					Status:        0,
+					LastFetchTime: uint64(time.Now().UnixMilli()),
+					Value:         "",
+					ErrMsg:        err.Error(),
+				})
 				continue
 			}
 			ReturnValue := ReturnValue{
@@ -313,6 +320,13 @@ func (dev *GenericBacnetIpDevice) read() ([]byte, error) {
 				ReturnValue.Value = 0
 			}
 			retMap[v.Tag] = ReturnValue
+			intercache.SetValue(dev.PointId, v.UUID, intercache.CacheValue{
+				UUID:          v.UUID,
+				Status:        1,
+				LastFetchTime: uint64(time.Now().UnixMilli()),
+				Value:         fmt.Sprintf("%v", ReturnValue.Value),
+				ErrMsg:        "",
+			})
 		}
 	}
 	bytes, _ := json.Marshal(retMap)
