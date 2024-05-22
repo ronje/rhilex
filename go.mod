@@ -3,7 +3,7 @@ module github.com/hootrhino/rhilex
 go 1.22
 
 require (
-	github.com/BeatTime/bacnet v0.2.4
+	github.com/BeatTime/bacnet v0.2.5
 	github.com/DrmagicE/gmqtt v0.5.0
 	github.com/Kowiste/ProfinetServer v0.0.0-20200929093941-9c422ae1f008
 	github.com/adrianmo/go-nmea v1.8.0

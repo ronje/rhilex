@@ -53,6 +53,13 @@ func (e *RuleEngine) loadTarget(target typex.XTarget, out *typex.OutEnd,
 	if err := target.Init(out.UUID, config); err != nil {
 		glogger.GLogger.Error(err)
 		e.RemoveInEnd(out.UUID)
+		intercache.SetValue("__DefaultRuleEngine", out.UUID, intercache.CacheValue{
+			UUID:          out.UUID,
+			Status:        1,
+			ErrMsg:        err.Error(),
+			LastFetchTime: uint64(time.Now().UnixMilli()),
+			Value:         "",
+		})
 		return err
 	}
 	err2 := startTarget(target, ctx, cancelCTX)

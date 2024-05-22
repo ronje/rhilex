@@ -81,6 +81,13 @@ func (e *RuleEngine) loadSource(source typex.XSource, in *typex.InEnd,
 	}
 	if err := source.Init(in.UUID, config); err != nil {
 		glogger.GLogger.Error(err)
+		intercache.SetValue("__DefaultRuleEngine", in.UUID, intercache.CacheValue{
+			UUID:          in.UUID,
+			Status:        1,
+			ErrMsg:        err.Error(),
+			LastFetchTime: uint64(time.Now().UnixMilli()),
+			Value:         "",
+		})
 		e.RemoveInEnd(in.UUID)
 		return err
 	}
