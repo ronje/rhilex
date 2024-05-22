@@ -56,7 +56,7 @@ func StartInSupervisor(InCtx context.Context, in *typex.InEnd, ruleEngine typex.
 			info := fmt.Sprintf("Source:%v DOWN, supervisor try to Restart", UUID)
 			glogger.GLogger.Debugf(info)
 			internotify.Push(internotify.BaseEvent{
-				Type:  "SOURCE",
+				Type:  `WARNING`,
 				Event: "event.inend.down",
 				Ts:    uint64(time.Now().UnixMilli()),
 				Info:  info,
@@ -110,7 +110,7 @@ func StartOutSupervisor(OutCtx context.Context, out *typex.OutEnd, ruleEngine ty
 			info := fmt.Sprintf("OutEnd:%v DOWN, supervisor try to Restart", UUID)
 			glogger.GLogger.Debugf(info)
 			internotify.Push(internotify.BaseEvent{
-				Type:  "TARGET",
+				Type:  `WARNING`,
 				Event: "event.outend.down",
 				Ts:    uint64(time.Now().UnixMilli()),
 				Info:  info,
@@ -169,7 +169,7 @@ func StartDeviceSupervisor(DeviceCtx context.Context, device *typex.Device, rule
 			info := fmt.Sprintf("Device:%v DOWN, supervisor try to Restart", UUID)
 			glogger.GLogger.Debugf(info)
 			internotify.Push(internotify.BaseEvent{
-				Type:  "DEVICE",
+				Type:  `WARNING`,
 				Event: "event.device.down",
 				Ts:    uint64(time.Now().UnixMilli()),
 				Info:  info,

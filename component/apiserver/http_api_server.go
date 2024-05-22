@@ -436,7 +436,6 @@ func (hs *ApiServerPlugin) LoadRoute() {
 	// 站内公告
 	internalNotifyApi := server.DefaultApiServer.GetGroup(server.ContextUrl("/notify"))
 	{
-		internalNotifyApi.GET("/list", server.AddRoute(apis.InternalNotifies))
 		internalNotifyApi.PUT("/clear", server.AddRoute(apis.ClearInternalNotifies))
 		internalNotifyApi.PUT("/read", server.AddRoute(apis.ReadInternalNotifies))
 		internalNotifyApi.GET("/pageList", server.AddRoute(apis.PageInternalNotifies))

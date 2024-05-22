@@ -207,6 +207,7 @@ func (dev *GenericBacnetIpDevice) Start(cctx typex.CCTX) error {
 					for i := range devices {
 						deviceMap[devices[i].DeviceID] = devices[i]
 					}
+					dev.remoteDeviceMap = nil
 					dev.remoteDeviceMap = deviceMap
 				case <-ctx.Done():
 					return
