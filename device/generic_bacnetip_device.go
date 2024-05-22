@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"strconv"
 	"time"
 
 	"github.com/hootrhino/rhilex/component/apiserver/model"
@@ -32,7 +31,7 @@ type bacnetConfig struct {
 	Subnet int    `json:"subnet" title:"子网号(仅type=SINGLE 且 isMstp=1 时生效)"`
 
 	LocalIp    string `json:"LocalIp" title:"本地ip地址(仅type=BROADCAST时有效)"`
-	SubnetCIDR string `json:"subnetCidr" title:"子网掩码长度(仅type=BROADCAST时有效)"`
+	SubnetCIDR int    `json:"subnetCidr" title:"子网掩码长度(仅type=BROADCAST时有效)"`
 
 	LocalPort int `json:"localPort" title:"本地监听端口，填0表示默认47808(有的模拟器必须本地监听47808才能正常交互)"`
 }
@@ -69,7 +68,7 @@ func NewGenericBacnetIpDevice(e typex.Rhilex) typex.XDevice {
 		BacnetConfig: bacnetConfig{
 			Mode:       "BROADCAST",
 			LocalIp:    "192.168.1.1",
-			SubnetCIDR: "24",
+			SubnetCIDR: 24,
 			LocalPort:  47808,
 		},
 	}
@@ -168,15 +167,11 @@ func (dev *GenericBacnetIpDevice) Start(cctx typex.CCTX) error {
 	}
 
 	if dev.mainConfig.BacnetConfig.Mode == "BROADCAST" {
-		Cidr, err := strconv.Atoi(dev.mainConfig.BacnetConfig.SubnetCIDR)
-		if err != nil {
-			return err
-		}
 		// 创建一个bacnet ip的本地网络
 		client, err := bacnet.NewClient(&bacnet.ClientBuilder{
 			Ip:         dev.mainConfig.BacnetConfig.LocalIp,
 			Port:       dev.mainConfig.BacnetConfig.LocalPort,
-			SubnetCIDR: Cidr,
+			SubnetCIDR: dev.mainConfig.BacnetConfig.SubnetCIDR,
 		})
 		if err != nil {
 			return err
