@@ -198,12 +198,15 @@ func (dev *GenericBacnetIpDevice) Start(cctx typex.CCTX) error {
 						glogger.GLogger.Error(err)
 						continue
 					}
-					deviceMap := make(map[int]btypes.Device)
-					for i := range devices {
-						deviceMap[devices[i].DeviceID] = devices[i]
+					if len(devices) > 0 {
+						deviceMap := make(map[int]btypes.Device)
+						for i := range devices {
+							deviceMap[devices[i].DeviceID] = devices[i]
+						}
+						dev.remoteDeviceMap = nil
+						dev.remoteDeviceMap = deviceMap
 					}
-					dev.remoteDeviceMap = nil
-					dev.remoteDeviceMap = deviceMap
+
 				case <-ctx.Done():
 					return
 				}
@@ -212,34 +215,34 @@ func (dev *GenericBacnetIpDevice) Start(cctx typex.CCTX) error {
 
 	}
 
-	if dev.mainConfig.BacnetConfig.Mode == "SINGLE" {
-		// 创建一个bacnet ip的本地网络
-		client, err := bacnet.NewClient(&bacnet.ClientBuilder{
-			Ip:         "0.0.0.0",                             // 本地ip
-			Port:       dev.mainConfig.BacnetConfig.LocalPort, // 本地监听端口
-			SubnetCIDR: 10,                                    // 随便填一个，主要为了能够创建Client
-		})
-		if err != nil {
-			return err
-		}
+	// if dev.mainConfig.BacnetConfig.Mode == "SINGLE" {
+	// 	// 创建一个bacnet ip的本地网络
+	// 	client, err := bacnet.NewClient(&bacnet.ClientBuilder{
+	// 		Ip:         "0.0.0.0",                             // 本地ip
+	// 		Port:       dev.mainConfig.BacnetConfig.LocalPort, // 本地监听端口
+	// 		SubnetCIDR: 10,                                    // 随便填一个，主要为了能够创建Client
+	// 	})
+	// 	if err != nil {
+	// 		return err
+	// 	}
 
-		dev.bacnetClient = client
-		client.SetLogger(glogger.GLogger.Logger)
-		go dev.bacnetClient.ClientRun()
+	// 	dev.bacnetClient = client
+	// 	client.SetLogger(glogger.GLogger.Logger)
+	// 	go dev.bacnetClient.ClientRun()
 
-		mac := make([]byte, 6)
-		fmt.Sscanf(dev.mainConfig.BacnetConfig.Ip, "%d.%d.%d.%d", &mac[0], &mac[1], &mac[2], &mac[3])
-		port := uint16(dev.mainConfig.BacnetConfig.Port)
-		mac[4] = byte(port >> 8)
-		mac[5] = byte(port & 0x00FF)
+	// 	mac := make([]byte, 6)
+	// 	fmt.Sscanf(dev.mainConfig.BacnetConfig.Ip, "%d.%d.%d.%d", &mac[0], &mac[1], &mac[2], &mac[3])
+	// 	port := uint16(dev.mainConfig.BacnetConfig.Port)
+	// 	mac[4] = byte(port >> 8)
+	// 	mac[5] = byte(port & 0x00FF)
 
-		dev.remoteDeviceMap[1] = btypes.Device{
-			Addr: btypes.Address{
-				MacLen: 6,
-				Mac:    mac,
-			},
-		}
-	}
+	// 	dev.remoteDeviceMap[1] = btypes.Device{
+	// 		Addr: btypes.Address{
+	// 			MacLen: 6,
+	// 			Mac:    mac,
+	// 		},
+	// 	}
+	// }
 
 	go func(ctx context.Context) {
 		ticker := time.NewTicker(time.Duration(dev.mainConfig.CommonConfig.Frequency) * time.Millisecond)
