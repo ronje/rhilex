@@ -78,10 +78,6 @@ func ListDevice(c *gin.Context, ruleEngine typex.Rhilex) {
 		return
 	}
 	count, MDevices := service.PageDevice(pager.Current, pager.Size)
-	err1 := interdb.DB().Model(&model.MDevice{}).Count(&count).Error
-	if err1 != nil {
-		c.JSON(common.HTTP_OK, common.Error400(err1))
-	}
 	devices := []DeviceVo{}
 	for _, mdev := range MDevices {
 		DeviceVo := DeviceVo{}
@@ -120,11 +116,6 @@ func ListDeviceByGroup(c *gin.Context, ruleEngine typex.Rhilex) {
 	}
 	Gid, _ := c.GetQuery("uuid")
 	count, MDevices := service.PageDeviceByGroup(pager.Current, pager.Size, Gid)
-	err1 := interdb.DB().Model(&model.MDevice{}).Count(&count).Error
-	if err1 != nil {
-		c.JSON(common.HTTP_OK, common.Error400(err1))
-		return
-	}
 	devices := []DeviceVo{}
 	for _, mdev := range MDevices {
 		DeviceVo := DeviceVo{}

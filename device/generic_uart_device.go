@@ -192,12 +192,7 @@ func (uart *genericUartDevice) OnCtrl(cmd []byte, args []byte) ([]byte, error) {
 
 // 设备当前状态
 func (uart *genericUartDevice) Status() typex.DeviceState {
-	if uart.serialPort != nil {
-		// _, err := uart.serialPort.Write([]byte("\r\n"))
-		// if err != nil {
-		// 	uart.status = typex.DEV_DOWN
-		// }
-	} else {
+	if uart.serialPort == nil {
 		uart.status = typex.DEV_DOWN
 	}
 	return uart.status
@@ -216,20 +211,13 @@ func (uart *genericUartDevice) Stop() {
 
 }
 
-// 真实设备
 func (uart *genericUartDevice) Details() *typex.Device {
 	return uart.RuleEngine.GetDevice(uart.PointId)
 }
 
-// 状态
 func (uart *genericUartDevice) SetState(status typex.DeviceState) {
 	uart.status = status
-
 }
-
-// --------------------------------------------------------------------------------------------------
-//
-// --------------------------------------------------------------------------------------------------
 
 func (uart *genericUartDevice) OnDCACall(UUID string, Command string, Args interface{}) typex.DCAResult {
 	return typex.DCAResult{}
