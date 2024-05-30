@@ -12,6 +12,7 @@ import (
 	"github.com/hootrhino/rhilex/component/interdb"
 
 	"github.com/hootrhino/gobacnet"
+	"github.com/hootrhino/gobacnet/apdus"
 	"github.com/hootrhino/gobacnet/btypes"
 
 	"github.com/hootrhino/rhilex/glogger"
@@ -32,8 +33,10 @@ type bacnetConfig struct {
 
 	LocalIp    string `json:"LocalIp" title:"本地ip地址(仅type=BROADCAST时有效)"`
 	SubnetCIDR int    `json:"subnetCidr" title:"子网掩码长度(仅type=BROADCAST时有效)"`
-
-	LocalPort int `json:"localPort" title:"本地监听端口，填0表示默认47808(有的模拟器必须本地监听47808才能正常交互)"`
+	LocalPort  int    `json:"localPort" title:"本地监听端口，填0表示默认47808(有的模拟器必须本地监听47808才能正常交互)"`
+	//
+	DeviceId uint32 `json:"deviceId"`
+	VendorId uint16 `json:"vendorId"`
 }
 
 type bacnetDataPoint struct {
@@ -67,9 +70,11 @@ func NewGenericBacnetIpDevice(e typex.Rhilex) typex.XDevice {
 		CommonConfig: bacnetCommonConfig{Frequency: 1000},
 		BacnetConfig: bacnetConfig{
 			Mode:       "BROADCAST",
-			LocalIp:    "192.168.1.1",
+			LocalIp:    "127.0.0.1",
 			SubnetCIDR: 24,
 			LocalPort:  47808,
+			DeviceId:   2580,
+			VendorId:   2580,
 		},
 	}
 	g.BacnetDataPoints = make([]bacnetDataPoint, 0)
@@ -146,7 +151,7 @@ func getObjectTypeByNumber(strType string) btypes.ObjectType {
 func (dev *GenericBacnetIpDevice) Start(cctx typex.CCTX) error {
 	dev.CancelCTX = cctx.CancelCTX
 	dev.Ctx = cctx.Ctx
-
+	PropertyData := map[uint32][2]btypes.Object{}
 	// 将nodeConfig对应的配置信息
 	for idx, v := range dev.BacnetDataPoints {
 		tmp := btypes.PropertyData{
@@ -164,20 +169,25 @@ func (dev *GenericBacnetIpDevice) Start(cctx typex.CCTX) error {
 			},
 		}
 		dev.BacnetDataPoints[idx].property = tmp
+		//
+		PropertyData[uint32(v.ObjectId)] = apdus.NewAIPropertyWithRequiredFields(v.Tag, 1, float32(0.00), "")
 	}
-
+	// 广播模式监听
 	if dev.mainConfig.BacnetConfig.Mode == "BROADCAST" {
 		// 创建一个bacnet ip的本地网络
+		// PropertyData:= map[uint32][2]btypes.Object{
+		// 	1: apdus.NewAIPropertyWithRequiredFields("temp", 1, float32(3.14), "empty"),
+		// 	2: apdus.NewAIPropertyWithRequiredFields("humi", 2, float32(77.67), "empty"),
+		// 	3: apdus.NewAIPropertyWithRequiredFields("pres", 3, float32(101.11), "empty"),
+		// },
 		client, err := bacnet.NewClient(&bacnet.ClientBuilder{
 			Ip:           dev.mainConfig.BacnetConfig.LocalIp,
 			Port:         dev.mainConfig.BacnetConfig.LocalPort,
 			SubnetCIDR:   dev.mainConfig.BacnetConfig.SubnetCIDR,
-			DeviceId:     10,                            // 参数化
-			VendorId:     10,                            // 参数化
-			NetWorkId:    10,                            // 参数化
-			PropertyData: map[uint32][2]btypes.Object{
-				
-			}, // 点位表
+			DeviceId:     10,           // 参数化
+			VendorId:     10,           // 参数化
+			NetWorkId:    10,           // 参数化
+			PropertyData: PropertyData, // 点位表, 需要更新为动态
 		})
 		if err != nil {
 			return err
@@ -220,35 +230,6 @@ func (dev *GenericBacnetIpDevice) Start(cctx typex.CCTX) error {
 		}(dev.Ctx)
 
 	}
-
-	// if dev.mainConfig.BacnetConfig.Mode == "SINGLE" {
-	// 	// 创建一个bacnet ip的本地网络
-	// 	client, err := bacnet.NewClient(&bacnet.ClientBuilder{
-	// 		Ip:         "0.0.0.0",                             // 本地ip
-	// 		Port:       dev.mainConfig.BacnetConfig.LocalPort, // 本地监听端口
-	// 		SubnetCIDR: 10,                                    // 随便填一个，主要为了能够创建Client
-	// 	})
-	// 	if err != nil {
-	// 		return err
-	// 	}
-
-	// 	dev.bacnetClient = client
-	// 	client.SetLogger(glogger.GLogger.Logger)
-	// 	go dev.bacnetClient.ClientRun()
-
-	// 	mac := make([]byte, 6)
-	// 	fmt.Sscanf(dev.mainConfig.BacnetConfig.Ip, "%d.%d.%d.%d", &mac[0], &mac[1], &mac[2], &mac[3])
-	// 	port := uint16(dev.mainConfig.BacnetConfig.Port)
-	// 	mac[4] = byte(port >> 8)
-	// 	mac[5] = byte(port & 0x00FF)
-
-	// 	dev.remoteDeviceMap[1] = btypes.Device{
-	// 		Addr: btypes.Address{
-	// 			MacLen: 6,
-	// 			Mac:    mac,
-	// 		},
-	// 	}
-	// }
 
 	go func(ctx context.Context) {
 		ticker := time.NewTicker(time.Duration(dev.mainConfig.CommonConfig.Frequency) * time.Millisecond)
