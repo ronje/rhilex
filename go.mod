@@ -3,7 +3,6 @@ module github.com/hootrhino/rhilex
 go 1.22
 
 require (
-	github.com/BeatTime/bacnet v0.2.5
 	github.com/DrmagicE/gmqtt v0.5.0
 	github.com/Kowiste/ProfinetServer v0.0.0-20200929093941-9c422ae1f008
 	github.com/adrianmo/go-nmea v1.8.0
@@ -25,6 +24,7 @@ require (
 	github.com/hootrhino/beautiful-lua-go v0.1.0
 	github.com/hootrhino/go-ais v1.0.0
 	github.com/hootrhino/go-dhcpd-leases v0.0.0-20240116064141-0730f287f9a2
+	github.com/hootrhino/gobacnet v0.0.0-20240530141136-ff1b63c17a22
 	github.com/hootrhino/gopher-lua v1.0.3
 	github.com/hootrhino/wmi v0.0.0-20230603082700-cfa077a8cf01
 	github.com/itchyny/gojq v0.12.14
@@ -86,13 +86,15 @@ require (
 	golang.org/x/term v0.19.0 // indirect
 )
 
-require github.com/youmark/pkcs8 v0.0.0-20181117223130-1be2e3e5546d // indirect
+require (
+	github.com/alecthomas/assert/v2 v2.6.0 // indirect
+	github.com/youmark/pkcs8 v0.0.0-20181117223130-1be2e3e5546d // indirect
+)
 
 require (
 	github.com/KyleBanks/depth v1.2.1 // indirect
 	github.com/PuerkitoBio/purell v1.1.1 // indirect
 	github.com/PuerkitoBio/urlesc v0.0.0-20170810143723-de5bf2ad4578 // indirect
-	github.com/alecthomas/kong v0.9.0
 	github.com/alecthomas/participle/v2 v2.1.1
 	github.com/alecthomas/repr v0.4.0
 	github.com/beorn7/perks v1.0.1 // indirect

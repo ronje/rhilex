@@ -11,8 +11,8 @@ import (
 	"github.com/hootrhino/rhilex/component/intercache"
 	"github.com/hootrhino/rhilex/component/interdb"
 
-	"github.com/BeatTime/bacnet"
-	"github.com/BeatTime/bacnet/btypes"
+	"github.com/hootrhino/gobacnet"
+	"github.com/hootrhino/gobacnet/btypes"
 
 	"github.com/hootrhino/rhilex/glogger"
 	"github.com/hootrhino/rhilex/typex"
@@ -169,9 +169,15 @@ func (dev *GenericBacnetIpDevice) Start(cctx typex.CCTX) error {
 	if dev.mainConfig.BacnetConfig.Mode == "BROADCAST" {
 		// 创建一个bacnet ip的本地网络
 		client, err := bacnet.NewClient(&bacnet.ClientBuilder{
-			Ip:         dev.mainConfig.BacnetConfig.LocalIp,
-			Port:       dev.mainConfig.BacnetConfig.LocalPort,
-			SubnetCIDR: dev.mainConfig.BacnetConfig.SubnetCIDR,
+			Ip:           dev.mainConfig.BacnetConfig.LocalIp,
+			Port:         dev.mainConfig.BacnetConfig.LocalPort,
+			SubnetCIDR:   dev.mainConfig.BacnetConfig.SubnetCIDR,
+			DeviceId:     10,                            // 参数化
+			VendorId:     10,                            // 参数化
+			NetWorkId:    10,                            // 参数化
+			PropertyData: map[uint32][2]btypes.Object{
+				
+			}, // 点位表
 		})
 		if err != nil {
 			return err
