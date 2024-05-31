@@ -42,9 +42,9 @@ type bacnetConfig struct {
 type bacnetDataPoint struct {
 	UUID           string            `json:"uuid"`
 	Tag            string            `json:"tag" validate:"required" title:"数据Tag"`
-	BacnetDeviceId int               `json:"bacnetDeviceId" title:"bacnet设备id(若isMstp=1，则deviceId应该必填；若是纯bacnetip设备，则填1即可)"`
+	BacnetDeviceId uint32            `json:"bacnetDeviceId" title:"bacnet设备id(若isMstp=1，则deviceId应该必填；若是纯bacnetip设备，则填1即可)"`
 	ObjectType     btypes.ObjectType `json:"objectType" title:"object类型"`
-	ObjectId       int               `json:"objectId" title:"object的id"`
+	ObjectId       uint32            `json:"objectId" title:"object的id"`
 
 	property btypes.PropertyData
 }
@@ -61,7 +61,7 @@ type GenericBacnetIpDevice struct {
 	// 点位表
 	SubDeviceDataPoints []bacnetDataPoint           // 读到子设备的点位
 	SelfPropertyData    map[uint32][2]btypes.Object // 自己的点位
-	remoteDeviceMap     map[int]btypes.Device
+	remoteDeviceMap     map[uint32]btypes.Device
 }
 
 func NewGenericBacnetIpDevice(e typex.Rhilex) typex.XDevice {
@@ -86,7 +86,7 @@ func NewGenericBacnetIpDevice(e typex.Rhilex) typex.XDevice {
 func (dev *GenericBacnetIpDevice) Init(devId string, configMap map[string]interface{}) error {
 	dev.PointId = devId
 	// 先给个空的
-	dev.remoteDeviceMap = make(map[int]btypes.Device)
+	dev.remoteDeviceMap = make(map[uint32]btypes.Device)
 
 	intercache.RegisterSlot(devId)
 	err := utils.BindSourceConfig(configMap, &dev.mainConfig)
@@ -215,9 +215,9 @@ func (dev *GenericBacnetIpDevice) Start(cctx typex.CCTX) error {
 						continue
 					}
 					if len(devices) > 0 {
-						deviceMap := make(map[int]btypes.Device)
+						deviceMap := make(map[uint32]btypes.Device)
 						for i := range devices {
-							deviceMap[devices[i].DeviceID] = devices[i]
+							deviceMap[uint32(devices[i].DeviceID)] = devices[i]
 						}
 						dev.remoteDeviceMap = nil
 						dev.remoteDeviceMap = deviceMap
@@ -266,7 +266,7 @@ func (dev *GenericBacnetIpDevice) OnRead(cmd []byte, data []byte) (int, error) {
 
 type ReturnValue struct {
 	Tag              string      `json:"tag"`
-	DeviceId         int         `json:"deviceId"`
+	DeviceId         uint32      `json:"deviceId"`
 	PropertyType     string      `json:"propertyType"`
 	PropertyInstance uint32      `json:"propertyInstance"`
 	Value            interface{} `json:"value"`
@@ -280,7 +280,7 @@ type ReturnValue struct {
 func (dev *GenericBacnetIpDevice) ReadProperty() ([]byte, error) {
 	retMap := map[string]ReturnValue{}
 	for _, SubDeviceDataPoint := range dev.SubDeviceDataPoints {
-		var bacnetDeviceId int
+		var bacnetDeviceId uint32
 		if dev.mainConfig.BacnetConfig.Mode == "SINGLE" {
 			bacnetDeviceId = 1
 		} else {

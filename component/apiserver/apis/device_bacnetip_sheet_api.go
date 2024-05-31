@@ -194,7 +194,7 @@ func BacnetIpSheetPageList(c *gin.Context, ruleEngine typex.Rhilex) {
 				ErrMsg:         value.ErrMsg,
 			}
 			if ok {
-				pointVo.Status = func() int {
+				pointVo.Status = func() uint32 {
 					if value.Value == "" {
 						return 0
 					}
@@ -352,9 +352,9 @@ func parseBacnetExcel(r multipart.File, sheetName string, deviceUuid string) ([]
 		createDto := dto.BacnetDataPointCreateOrUpdate{
 			Tag:            tag,
 			Alias:          alias,
-			BacnetDeviceId: int(bacnetDeviceId),
+			BacnetDeviceId: uint32(bacnetDeviceId),
 			ObjectType:     objectType,
-			ObjectId:       int(objectId),
+			ObjectId:       uint32(objectId),
 		}
 		err = checkBacnetPoint(createDto)
 		if err != nil {
