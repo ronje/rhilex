@@ -54,13 +54,14 @@ type BacnetMainConfig struct {
 }
 type GenericBacnetIpDevice struct {
 	typex.XStatus
-	status           typex.DeviceState
-	RuleEngine       typex.Rhilex
-	mainConfig       BacnetMainConfig
-	BacnetDataPoints []bacnetDataPoint
-	// Bacnet
-	bacnetClient    bacnet.Client
-	remoteDeviceMap map[int]btypes.Device
+	bacnetClient bacnet.Client
+	status       typex.DeviceState
+	RuleEngine   typex.Rhilex
+	mainConfig   BacnetMainConfig
+	// 点位表
+	SubDeviceDataPoints []bacnetDataPoint           // 读到子设备的点位
+	SelfPropertyData    map[uint32][2]btypes.Object // 自己的点位
+	remoteDeviceMap     map[int]btypes.Device
 }
 
 func NewGenericBacnetIpDevice(e typex.Rhilex) typex.XDevice {
@@ -77,7 +78,7 @@ func NewGenericBacnetIpDevice(e typex.Rhilex) typex.XDevice {
 			VendorId:   2580,
 		},
 	}
-	g.BacnetDataPoints = make([]bacnetDataPoint, 0)
+	g.SubDeviceDataPoints = make([]bacnetDataPoint, 0)
 	g.status = typex.DEV_DOWN
 	return g
 }
@@ -96,26 +97,24 @@ func (dev *GenericBacnetIpDevice) Init(devId string, configMap map[string]interf
 	err = interdb.DB().Table("m_bacnet_data_points").
 		Where("device_uuid=?", devId).Find(&dataPoints).Error
 
-	points := make([]bacnetDataPoint, len(dataPoints))
-	for i := range dataPoints {
-		point := dataPoints[i]
+	for _, mDataPoint := range dataPoints {
 		dataPoint := bacnetDataPoint{
-			UUID:           point.UUID,
-			Tag:            point.Tag,
-			BacnetDeviceId: point.BacnetDeviceId,
-			ObjectType:     getObjectTypeByNumber(point.ObjectType),
-			ObjectId:       point.ObjectId,
+			UUID:           mDataPoint.UUID,
+			Tag:            mDataPoint.Tag,
+			BacnetDeviceId: mDataPoint.BacnetDeviceId,
+			ObjectType:     getObjectTypeByNumber(mDataPoint.ObjectType),
+			ObjectId:       mDataPoint.ObjectId,
 		}
-		points[i] = dataPoint
-		intercache.SetValue(dev.PointId, point.UUID, intercache.CacheValue{
-			UUID:          point.UUID,
+		// Cache Value
+		intercache.SetValue(dev.PointId, mDataPoint.UUID, intercache.CacheValue{
+			UUID:          mDataPoint.UUID,
 			Status:        0,
 			LastFetchTime: uint64(time.Now().UnixMilli()),
 			Value:         "",
 			ErrMsg:        "Loading",
 		})
+		dev.SubDeviceDataPoints = append(dev.SubDeviceDataPoints, dataPoint)
 	}
-	dev.BacnetDataPoints = points
 	if err != nil {
 		glogger.GLogger.Error(err)
 		return err
@@ -153,12 +152,12 @@ func (dev *GenericBacnetIpDevice) Start(cctx typex.CCTX) error {
 	dev.Ctx = cctx.Ctx
 	PropertyData := map[uint32][2]btypes.Object{}
 	// 将nodeConfig对应的配置信息
-	for idx, v := range dev.BacnetDataPoints {
-		tmp := btypes.PropertyData{
+	for idx, BacnetDataPoint := range dev.SubDeviceDataPoints {
+		SubPropertyData := btypes.PropertyData{
 			Object: btypes.Object{
 				ID: btypes.ObjectID{
-					Type:     v.ObjectType,
-					Instance: btypes.ObjectInstance(v.ObjectId),
+					Type:     BacnetDataPoint.ObjectType,
+					Instance: btypes.ObjectInstance(BacnetDataPoint.ObjectId),
 				},
 				Properties: []btypes.Property{
 					{
@@ -168,9 +167,10 @@ func (dev *GenericBacnetIpDevice) Start(cctx typex.CCTX) error {
 				},
 			},
 		}
-		dev.BacnetDataPoints[idx].property = tmp
-		//
-		PropertyData[uint32(v.ObjectId)] = apdus.NewAIPropertyWithRequiredFields(v.Tag, 1, float32(0.00), "")
+		dev.SubDeviceDataPoints[idx].property = SubPropertyData
+		// 配置自身的点位
+		PropertyData[uint32(BacnetDataPoint.ObjectId)] = apdus.NewAIPropertyWithRequiredFields(BacnetDataPoint.Tag,
+			uint32(BacnetDataPoint.ObjectId), float32(0.00), "")
 	}
 	// 广播模式监听
 	if dev.mainConfig.BacnetConfig.Mode == "BROADCAST" {
@@ -279,28 +279,30 @@ type ReturnValue struct {
  */
 func (dev *GenericBacnetIpDevice) ReadProperty() ([]byte, error) {
 	retMap := map[string]ReturnValue{}
-	for _, v := range dev.BacnetDataPoints {
+	for _, SubDeviceDataPoint := range dev.SubDeviceDataPoints {
 		var bacnetDeviceId int
 		if dev.mainConfig.BacnetConfig.Mode == "SINGLE" {
 			bacnetDeviceId = 1
 		} else {
-			bacnetDeviceId = v.BacnetDeviceId
+			bacnetDeviceId = SubDeviceDataPoint.BacnetDeviceId
 		}
 		if device, ok := dev.remoteDeviceMap[bacnetDeviceId]; ok {
-			property, err := dev.bacnetClient.ReadProperty(device, v.property)
+			property, err := dev.bacnetClient.ReadProperty(device, SubDeviceDataPoint.property)
 			if err != nil {
-				glogger.GLogger.Errorf("bacnet Client Read Property failed. tag = %v, err=%v", v.Tag, err)
-				intercache.SetValue(dev.PointId, v.UUID, intercache.CacheValue{
-					UUID:          v.UUID,
+				glogger.GLogger.Errorf("bacnet Client Read Property failed. tag = %v, err=%v", SubDeviceDataPoint.Tag, err)
+				intercache.SetValue(dev.PointId, SubDeviceDataPoint.UUID, intercache.CacheValue{
+					UUID:          SubDeviceDataPoint.UUID,
 					Status:        0,
 					LastFetchTime: uint64(time.Now().UnixMilli()),
 					Value:         "",
 					ErrMsg:        err.Error(),
 				})
+				dev.bacnetClient.GetBacnetIPServer().
+					UpdateAIPropertyValue(uint32(SubDeviceDataPoint.ObjectId), float32(0))
 				continue
 			}
 			ReturnValue := ReturnValue{
-				Tag:              v.Tag,
+				Tag:              SubDeviceDataPoint.Tag,
 				DeviceId:         bacnetDeviceId,
 				PropertyType:     property.Object.ID.Type.String(),
 				PropertyInstance: uint32(property.Object.ID.Instance),
@@ -308,11 +310,14 @@ func (dev *GenericBacnetIpDevice) ReadProperty() ([]byte, error) {
 			if len(property.Object.Properties) > 0 {
 				ReturnValue.Value = property.Object.Properties[0].Data
 			} else {
-				ReturnValue.Value = 0
+				ReturnValue.Value = uint32(0)
 			}
-			retMap[v.Tag] = ReturnValue
-			intercache.SetValue(dev.PointId, v.UUID, intercache.CacheValue{
-				UUID:          v.UUID,
+			retMap[SubDeviceDataPoint.Tag] = ReturnValue
+			dev.bacnetClient.GetBacnetIPServer().
+				UpdateAIPropertyValue(uint32(SubDeviceDataPoint.ObjectId), ReturnValue.Value)
+
+			intercache.SetValue(dev.PointId, SubDeviceDataPoint.UUID, intercache.CacheValue{
+				UUID:          SubDeviceDataPoint.UUID,
 				Status:        1,
 				LastFetchTime: uint64(time.Now().UnixMilli()),
 				Value:         fmt.Sprintf("%v", ReturnValue.Value),
