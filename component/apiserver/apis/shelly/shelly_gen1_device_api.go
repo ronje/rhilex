@@ -62,50 +62,6 @@ type ShellyDeviceVo struct {
 	Switch     []ShellyDeviceOutPortVo `json:"switch"`
 }
 
-func ScanShellyDevice(c *gin.Context, ruleEngine typex.Rhilex) {
-	uuid, _ := c.GetQuery("uuid")
-	IPs, err := shellymanager.ScanCIDR("192.168.1.0/24", 5*time.Second)
-	if err != nil {
-		c.JSON(common.HTTP_OK, common.Error400(err))
-		return
-	}
-	go func() {
-		// 1 将第一次扫出来请求失败的设备拉进黑名单,防止浪费资源
-		// 2 已经有在列表里面的就不再扫描
-		for _, Ip := range IPs {
-			if shellymanager.Exists(uuid, Ip) {
-				continue
-			}
-			if !tinyarp.IsValidIP(Ip) {
-				continue
-			}
-			DeviceInfo, err := shellymanager.GetShellyDeviceInfo(Ip)
-			if err != nil {
-				continue
-			}
-			DeviceInfo.Ip = Ip
-			if utils.IsValidMacAddress1(DeviceInfo.Mac) ||
-				utils.IsValidMacAddress2(DeviceInfo.Mac) {
-				shellymanager.SetValue(uuid, DeviceInfo.Ip, shellymanager.ShellyDevice{
-					Ip:         DeviceInfo.Ip,
-					Name:       DeviceInfo.Name,
-					ID:         DeviceInfo.ID,
-					Mac:        DeviceInfo.Mac,
-					Slot:       DeviceInfo.Slot,
-					Model:      DeviceInfo.Model,
-					Gen:        DeviceInfo.Gen,
-					FwID:       DeviceInfo.FwID,
-					Ver:        DeviceInfo.Ver,
-					App:        DeviceInfo.App,
-					AuthEn:     DeviceInfo.AuthEn,
-					AuthDomain: DeviceInfo.AuthDomain,
-				})
-			}
-		}
-	}()
-	c.JSON(common.HTTP_OK, common.Ok())
-}
-
 /*
 *
 * 删除ShellyDevice
@@ -257,40 +213,55 @@ func ShellyDeviceDetail(c *gin.Context, ruleEngine typex.Rhilex) {
 * 扫描设备
 *
  */
-func ScanDevice(c *gin.Context, ruleEngine typex.Rhilex) {
-	IPs, err := shellymanager.ScanCIDR("192.168.1.0/24", 5*time.Second)
-	if err != nil {
-		c.JSON(common.HTTP_OK, common.Error400(err))
+func ScanShellyDevice(c *gin.Context, ruleEngine typex.Rhilex) {
+	uuid, _ := c.GetQuery("uuid")
+	cidr, _ := c.GetQuery("cidr")
+	if _, _, errParseCIDR := net.ParseCIDR(cidr); errParseCIDR != nil {
+		c.JSON(common.HTTP_OK, common.Error400(errParseCIDR))
+		return
+	}
+	IPs, errScanCIDR := shellymanager.ScanCIDR(cidr, 5*time.Second)
+	if errScanCIDR != nil {
+		c.JSON(common.HTTP_OK, common.Error400(errScanCIDR))
 		return
 	}
 	wg := sync.WaitGroup{}
 	wg.Add(len(IPs))
-	for _, Ip := range IPs {
-		go func(Ip string) {
-			defer wg.Done()
-			if tinyarp.IsValidIP(Ip) {
-				DeviceInfo, err := shellymanager.GetShellyDeviceInfo(Ip)
-				if err != nil {
-					c.JSON(common.HTTP_OK, common.Error400(err))
+	go func() {
+		for _, Ip := range IPs {
+			go func() {
+				defer wg.Done()
+				if shellymanager.Exists(uuid, Ip) {
 					return
 				}
-				shellymanager.SetValue(DeviceInfo.Mac, DeviceInfo.Mac, shellymanager.ShellyDevice{
-					Ip:         DeviceInfo.Ip,
-					Name:       DeviceInfo.Name,
-					ID:         DeviceInfo.ID,
-					Mac:        DeviceInfo.Mac,
-					Slot:       DeviceInfo.Slot,
-					Model:      DeviceInfo.Model,
-					Gen:        DeviceInfo.Gen,
-					FwID:       DeviceInfo.FwID,
-					Ver:        DeviceInfo.Ver,
-					App:        DeviceInfo.App,
-					AuthEn:     DeviceInfo.AuthEn,
-					AuthDomain: DeviceInfo.AuthDomain,
-				})
-			}
-		}(Ip)
-	}
+				if !tinyarp.IsValidIP(Ip) {
+					return
+				}
+				DeviceInfo, err := shellymanager.GetShellyDeviceInfo(Ip)
+				if err != nil {
+					return
+				}
+				DeviceInfo.Ip = Ip
+				if utils.IsValidMacAddress1(DeviceInfo.Mac) ||
+					utils.IsValidMacAddress2(DeviceInfo.Mac) {
+					shellymanager.SetValue(uuid, DeviceInfo.Ip, shellymanager.ShellyDevice{
+						Ip:         DeviceInfo.Ip,
+						Name:       DeviceInfo.Name,
+						ID:         DeviceInfo.ID,
+						Mac:        DeviceInfo.Mac,
+						Slot:       DeviceInfo.Slot,
+						Model:      DeviceInfo.Model,
+						Gen:        DeviceInfo.Gen,
+						FwID:       DeviceInfo.FwID,
+						Ver:        DeviceInfo.Ver,
+						App:        DeviceInfo.App,
+						AuthEn:     DeviceInfo.AuthEn,
+						AuthDomain: DeviceInfo.AuthDomain,
+					})
+				}
+			}()
+		}
+	}()
 	wg.Wait()
 	c.JSON(common.HTTP_OK, common.Ok())
 }

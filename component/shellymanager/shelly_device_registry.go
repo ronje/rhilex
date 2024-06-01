@@ -64,6 +64,7 @@ func SetValue(Slot, K string, V ShellyDevice) {
 func GetValue(Slot, K string) ShellyDevice {
 	return __DefaultShellyDeviceRegistry.GetValue(Slot, K)
 }
+
 func Exists(Slot, K string) bool {
 	if Slots, ok1 := __DefaultShellyDeviceRegistry.Slots[Slot]; ok1 {
 		if _, ok2 := Slots[K]; ok2 {
@@ -98,7 +99,7 @@ type ShellyDeviceRegistry struct {
 func InitShellyDeviceRegistry(ruleEngine typex.Rhilex) *ShellyDeviceRegistry {
 	__DefaultShellyDeviceRegistry = &ShellyDeviceRegistry{
 		ruleEngine: ruleEngine,
-		Slots:      map[string]map[string]ShellyDevice{},
+		Slots:      map[string]map[string]ShellyDevice{}, // K: { k:v ...}
 		locker:     sync.RWMutex{},
 		status:     "DONE",
 		keys:       make([]string, 0),

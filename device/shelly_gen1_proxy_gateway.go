@@ -67,7 +67,7 @@ func NewShellyGen1ProxyGateway(e typex.Rhilex) typex.XDevice {
 	Shelly.locker = sync.Mutex{}
 	Shelly.mainConfig = ShellyConfig{
 		CommonConfig: ShellyCommonConfig{
-			NetworkCidr: "192.168.1.0/24",
+			NetworkCidr: "192.168.10.1/24",
 			AutoScan: func() *bool {
 				b := true
 				return &b
@@ -107,7 +107,7 @@ func (Shelly *ShellyGen1ProxyGateway) Start(cctx typex.CCTX) error {
 	})
 	Shelly.shellyWebHookServer.StartServer(Shelly.Ctx)
 	go func() {
-		ticker := time.NewTicker(30 * time.Second)
+		ticker := time.NewTicker((time.Duration(Shelly.mainConfig.CommonConfig.Frequency) * time.Millisecond))
 		defer ticker.Stop()
 		if *Shelly.mainConfig.CommonConfig.AutoScan {
 			for {
@@ -125,7 +125,7 @@ func (Shelly *ShellyGen1ProxyGateway) Start(cctx typex.CCTX) error {
 				default:
 				}
 				Shelly.ScanDevice(Shelly.PointId)
-				time.Sleep(time.Duration(Shelly.mainConfig.CommonConfig.Frequency) * time.Millisecond)
+
 				<-ticker.C
 			}
 		}
@@ -209,6 +209,9 @@ func (Shelly *ShellyGen1ProxyGateway) ScanDevice(Slot string) {
 					glogger.GLogger.Error(err)
 					return
 				}
+				if shellymanager.Exists(Shelly.PointId, Ip) {
+					return
+				}
 				// 注册设备到Registry
 				DeviceInfo.Ip = Ip
 				if DeviceInfo.Name == nil {
@@ -217,7 +220,7 @@ func (Shelly *ShellyGen1ProxyGateway) ScanDevice(Slot string) {
 				}
 				if utils.IsValidMacAddress1(DeviceInfo.Mac) ||
 					utils.IsValidMacAddress2(DeviceInfo.Mac) {
-					shellymanager.SetValue(Slot, DeviceInfo.Mac, shellymanager.ShellyDevice{
+					shellymanager.SetValue(Slot, DeviceInfo.Ip, shellymanager.ShellyDevice{
 						Ip:         DeviceInfo.Ip,
 						Name:       DeviceInfo.Name,
 						ID:         DeviceInfo.ID,
@@ -234,10 +237,6 @@ func (Shelly *ShellyGen1ProxyGateway) ScanDevice(Slot string) {
 				} else {
 					glogger.GLogger.Error("Invalid Mac Address")
 				}
-			} else {
-				Shelly.locker.Lock()
-				Shelly.BlackList[Ip] = Ip
-				Shelly.locker.Unlock()
 			}
 		}(Ip)
 	}
