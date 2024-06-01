@@ -35,8 +35,9 @@ type bacnetConfig struct {
 	SubnetCIDR int    `json:"subnetCidr" title:"子网掩码长度(仅type=BROADCAST时有效)"`
 	LocalPort  int    `json:"localPort" title:"本地监听端口，填0表示默认47808(有的模拟器必须本地监听47808才能正常交互)"`
 	//
-	DeviceId uint32 `json:"deviceId"`
-	VendorId uint16 `json:"vendorId"`
+	DeviceId  uint32 `json:"deviceId"`
+	VendorId  uint16 `json:"vendorId"`
+	NetWorkId uint16 `json:"netWorkId"`
 }
 
 type bacnetDataPoint struct {
@@ -184,10 +185,10 @@ func (dev *GenericBacnetIpDevice) Start(cctx typex.CCTX) error {
 			Ip:           dev.mainConfig.BacnetConfig.LocalIp,
 			Port:         dev.mainConfig.BacnetConfig.LocalPort,
 			SubnetCIDR:   dev.mainConfig.BacnetConfig.SubnetCIDR,
-			DeviceId:     10,           // 参数化
-			VendorId:     10,           // 参数化
-			NetWorkId:    10,           // 参数化
-			PropertyData: PropertyData, // 点位表, 需要更新为动态
+			DeviceId:     dev.mainConfig.BacnetConfig.DeviceId,         // 参数化
+			VendorId:     uint32(dev.mainConfig.BacnetConfig.VendorId), // 参数化
+			NetWorkId:    dev.mainConfig.BacnetConfig.NetWorkId,        // 参数化
+			PropertyData: PropertyData,                                 // 点位表, 需要更新为动态
 		})
 		if err != nil {
 			return err
@@ -196,7 +197,6 @@ func (dev *GenericBacnetIpDevice) Start(cctx typex.CCTX) error {
 		dev.bacnetClient = client
 		client.SetLogger(glogger.GLogger.Logger)
 		go dev.bacnetClient.ClientRun()
-
 		go func(ctx context.Context) {
 			// 定时刷新device列表 后续可以优化下逻辑
 			ticker := time.NewTicker(5 * time.Second)
