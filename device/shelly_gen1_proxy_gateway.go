@@ -85,7 +85,7 @@ func NewShellyGen1ProxyGateway(e typex.Rhilex) typex.XDevice {
 //  初始化
 func (Shelly *ShellyGen1ProxyGateway) Init(devId string, configMap map[string]interface{}) error {
 	Shelly.PointId = devId
-	if err := utils.BindSourceConfig(configMap, &Shelly.mainConfig.CommonConfig); err != nil {
+	if err := utils.BindSourceConfig(configMap, &Shelly.mainConfig); err != nil {
 		glogger.GLogger.Error(err)
 		return err
 	}
