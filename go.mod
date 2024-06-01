@@ -24,7 +24,7 @@ require (
 	github.com/hootrhino/beautiful-lua-go v0.1.0
 	github.com/hootrhino/go-ais v1.0.0
 	github.com/hootrhino/go-dhcpd-leases v0.0.0-20240116064141-0730f287f9a2
-	github.com/hootrhino/gobacnet v0.0.0-20240530141136-ff1b63c17a22
+	github.com/hootrhino/gobacnet v0.0.0-20240601164133-19e0ad2b8719
 	github.com/hootrhino/gopher-lua v1.0.3
 	github.com/hootrhino/wmi v0.0.0-20230603082700-cfa077a8cf01
 	github.com/itchyny/gojq v0.12.14
@@ -182,7 +182,7 @@ require (
 	golang.org/x/exp/typeparams v0.0.0-20240409090435-93d18d7e34b8 // indirect
 	golang.org/x/net v0.24.0 // indirect
 	golang.org/x/sync v0.7.0 // indirect
-	golang.org/x/text v0.14.0 // indirect
+	golang.org/x/text v0.15.0 // indirect
 	golang.org/x/tools v0.20.0 // indirect
 	golang.org/x/xerrors v0.0.0-20220907171357-04be3eba64a2 // indirect
 	google.golang.org/genproto v0.0.0-20240123012728-ef4313101c80 // indirect
