@@ -130,7 +130,7 @@ func (Shelly *ShellyGen1ProxyGateway) Start(cctx typex.CCTX) error {
 				}
 				Shelly.ScanDevice(Shelly.PointId)
 
-				<-ticker.C
+				time.Sleep(5 * time.Second)
 			}
 		}
 	}()
