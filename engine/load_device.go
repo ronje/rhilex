@@ -128,7 +128,6 @@ func (e *RuleEngine) loadDevices(xDevice typex.XDevice, deviceInstance *typex.De
 		return err
 	}
 	if err := xDevice.Init(deviceInstance.UUID, config); err != nil {
-		e.RemoveDevice(deviceInstance.UUID)
 		intercache.SetValue("__DefaultRuleEngine", deviceInstance.UUID, intercache.CacheValue{
 			UUID:          deviceInstance.UUID,
 			Status:        1,

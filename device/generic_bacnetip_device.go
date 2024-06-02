@@ -30,7 +30,7 @@ type bacnetConfig struct {
 	NetworkCidr string `json:"networkCidr" validate:"required"`
 	DeviceId    uint32 `json:"deviceId" validate:"required"`
 	VendorId    uint32 `json:"vendorId" validate:"required"`
-	NetWorkId   uint16 `json:"netWorkId" validate:"required"`
+	// NetWorkId   uint16 `json:"netWorkId" validate:"required"`
 }
 
 type bacnetDataPoint struct {
@@ -177,10 +177,10 @@ func (dev *GenericBacnetIpDevice) Start(cctx typex.CCTX) error {
 			Ip:           IP.String(),
 			SubnetCIDR:   MaskSize,
 			Port:         dev.mainConfig.BacnetConfig.LocalPort,
-			DeviceId:     dev.mainConfig.BacnetConfig.DeviceId,  // RHILEX 自身的ID
-			VendorId:     dev.mainConfig.BacnetConfig.VendorId,  // RHILEX 自身的厂家
-			NetWorkId:    dev.mainConfig.BacnetConfig.NetWorkId, // RHILEX 自身的网络号
-			PropertyData: PropertyData,                          // 点位表, 需要更新为动态
+			DeviceId:     dev.mainConfig.BacnetConfig.DeviceId, // RHILEX 自身的ID
+			VendorId:     dev.mainConfig.BacnetConfig.VendorId, // RHILEX 自身的厂家
+			NetWorkId:    0,                                    // RHILEX 自身的网络号
+			PropertyData: PropertyData,                         // 点位表, 需要更新为动态
 		})
 		if err != nil {
 			return err

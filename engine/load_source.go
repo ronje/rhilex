@@ -88,7 +88,6 @@ func (e *RuleEngine) loadSource(source typex.XSource, in *typex.InEnd,
 			LastFetchTime: uint64(time.Now().UnixMilli()),
 			Value:         "",
 		})
-		e.RemoveInEnd(in.UUID)
 		return err
 	}
 
