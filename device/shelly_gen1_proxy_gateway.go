@@ -26,13 +26,10 @@ import (
 	"github.com/hootrhino/rhilex/utils/tinyarp"
 )
 
-type ShellyConfig struct {
-	CommonConfig ShellyCommonConfig `json:"commonConfig" validate:"required"`
-}
 type ShellyGen1ProxyGateway struct {
 	typex.XStatus
 	status              typex.DeviceState
-	mainConfig          ShellyConfig
+	mainConfig          ShellyMainConfig
 	BlackList           map[string]string
 	locker              sync.Mutex
 	shellyWebHookServer *shellymanager.ShellyWebHookServer
@@ -43,17 +40,22 @@ type ShellyGen1ProxyGateway struct {
 * 配置
 *
  */
-type ShellyCommonConfig struct {
-	// CIDR
+type ShellyConfig struct {
 	NetworkCidr string `json:"networkCidr" validate:"required"`
+	WebHookPort int    `json:"webHookPort" validate:"required"`
+}
+type ShellyCommonConfig struct {
 	// AutoScan
 	AutoScan *bool `json:"autoScan" validate:"required"`
 	// 扫描超时
 	ScanTimeout int `json:"timeout" validate:"required"`
 	// Request Frequency, default 5 second
 	Frequency int64 `json:"frequency" validate:"required"`
-	// WebHook Listen Port
-	WebHookPort int `json:"webHookPort" validate:"required"`
+}
+
+type ShellyMainConfig struct {
+	CommonConfig ShellyCommonConfig `json:"commonConfig" validate:"required"`
+	ShellyConfig ShellyConfig       `json:"shellyConfig" validate:"required"`
 }
 
 /*
@@ -65,16 +67,18 @@ func NewShellyGen1ProxyGateway(e typex.Rhilex) typex.XDevice {
 	Shelly := new(ShellyGen1ProxyGateway)
 	Shelly.BlackList = map[string]string{}
 	Shelly.locker = sync.Mutex{}
-	Shelly.mainConfig = ShellyConfig{
-		CommonConfig: ShellyCommonConfig{
+	Shelly.mainConfig = ShellyMainConfig{
+		ShellyConfig: ShellyConfig{
 			NetworkCidr: "192.168.10.1/24",
+			WebHookPort: 6400,
+		},
+		CommonConfig: ShellyCommonConfig{
 			AutoScan: func() *bool {
 				b := true
 				return &b
 			}(),
 			ScanTimeout: 3000, //ms
 			Frequency:   5000, //ms
-			WebHookPort: 6400,
 		},
 	}
 	Shelly.RuleEngine = e
@@ -92,7 +96,7 @@ func (Shelly *ShellyGen1ProxyGateway) Init(devId string, configMap map[string]in
 	shellymanager.RegisterSlot(devId)
 	Shelly.shellyWebHookServer = shellymanager.NewShellyWebHookServer(
 		Shelly.RuleEngine,
-		Shelly.mainConfig.CommonConfig.WebHookPort,
+		Shelly.mainConfig.ShellyConfig.WebHookPort,
 	)
 	return nil
 }
@@ -115,7 +119,7 @@ func (Shelly *ShellyGen1ProxyGateway) Start(cctx typex.CCTX) error {
 				case <-Shelly.Ctx.Done():
 					return
 				case <-ticker.C:
-					glogger.GLogger.Debug("Clear BlackList")
+					glogger.GLogger.Debug("Clear Black List")
 					// 黑名单30秒刷新一次
 					Shelly.locker.Lock()
 					for k := range Shelly.BlackList {
@@ -142,45 +146,12 @@ func (Shelly *ShellyGen1ProxyGateway) Stop() {
 	Shelly.shellyWebHookServer.Stop()
 }
 
-func (Shelly *ShellyGen1ProxyGateway) OnRead(cmd []byte, data []byte) (int, error) {
-
-	return 0, nil
-}
-
-// 把数据写入设备
-func (Shelly *ShellyGen1ProxyGateway) OnWrite(cmd []byte, b []byte) (int, error) {
-	return 0, nil
-}
-
-// 设备当前状态
-func (Shelly *ShellyGen1ProxyGateway) Status() typex.DeviceState {
-	return typex.DEV_UP
-}
-
-// 真实设备
-func (Shelly *ShellyGen1ProxyGateway) Details() *typex.Device {
-	return Shelly.RuleEngine.GetDevice(Shelly.PointId)
-}
-
-// 状态
-func (Shelly *ShellyGen1ProxyGateway) SetState(status typex.DeviceState) {
-	Shelly.status = status
-
-}
-
-func (Shelly *ShellyGen1ProxyGateway) OnDCACall(UUID string, Command string, Args interface{}) typex.DCAResult {
-	return typex.DCAResult{}
-}
-func (Shelly *ShellyGen1ProxyGateway) OnCtrl(cmd []byte, args []byte) ([]byte, error) {
-	return []byte{}, nil
-}
-
 // --------------------------------------------------------------------------------------------------
 // Shelly API
 // --------------------------------------------------------------------------------------------------
 
 func (Shelly *ShellyGen1ProxyGateway) ScanDevice(Slot string) {
-	IPs, err := shellymanager.ScanCIDR(Shelly.mainConfig.CommonConfig.NetworkCidr, 5*time.Second)
+	IPs, err := shellymanager.ScanCIDR(Shelly.mainConfig.ShellyConfig.NetworkCidr, 5*time.Second)
 	if err != nil {
 		return
 	}
@@ -241,4 +212,37 @@ func (Shelly *ShellyGen1ProxyGateway) ScanDevice(Slot string) {
 		}(Ip)
 	}
 	wg.Wait()
+}
+
+func (Shelly *ShellyGen1ProxyGateway) OnRead(cmd []byte, data []byte) (int, error) {
+
+	return 0, nil
+}
+
+// 把数据写入设备
+func (Shelly *ShellyGen1ProxyGateway) OnWrite(cmd []byte, b []byte) (int, error) {
+	return 0, nil
+}
+
+// 设备当前状态
+func (Shelly *ShellyGen1ProxyGateway) Status() typex.DeviceState {
+	return typex.DEV_UP
+}
+
+// 真实设备
+func (Shelly *ShellyGen1ProxyGateway) Details() *typex.Device {
+	return Shelly.RuleEngine.GetDevice(Shelly.PointId)
+}
+
+// 状态
+func (Shelly *ShellyGen1ProxyGateway) SetState(status typex.DeviceState) {
+	Shelly.status = status
+
+}
+
+func (Shelly *ShellyGen1ProxyGateway) OnDCACall(UUID string, Command string, Args interface{}) typex.DCAResult {
+	return typex.DCAResult{}
+}
+func (Shelly *ShellyGen1ProxyGateway) OnCtrl(cmd []byte, args []byte) ([]byte, error) {
+	return []byte{}, nil
 }

@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"net"
 	"time"
 
 	"github.com/hootrhino/rhilex/component/apiserver/model"
@@ -24,26 +25,18 @@ type bacnetCommonConfig struct {
 	Frequency int `json:"frequency" title:"采集间隔，单位毫秒"`
 }
 type bacnetConfig struct {
-	Mode string `json:"mode" title:"bacnet运行模式"`
-
-	Ip     string `json:"ip" validate:"required" title:"bacnet设备ip(仅type=SINGLE生效)"`
-	Port   int    `json:"port" validate:"required" title:"bacnet端口，通常是47808(仅type=SINGLE生效)"`
-	IsMstp int    `json:"isMstp" title:"是否为mstp设备，若是则子网号必须填写(仅type=SINGLE时生效)"`
-	Subnet int    `json:"subnet" title:"子网号(仅type=SINGLE 且 isMstp=1 时生效)"`
-
-	LocalIp    string `json:"LocalIp" validate:"required" title:"本地ip地址(仅type=BROADCAST时有效)"`
-	SubnetCIDR int    `json:"subnetCidr" validate:"required" title:"子网掩码长度(仅type=BROADCAST时有效)"`
-	LocalPort  int    `json:"localPort" validate:"required" title:"本地监听端口，填0表示默认47808(有的模拟器必须本地监听47808才能正常交互)"`
-	//
-	DeviceId  uint32 `json:"deviceId" validate:"required"`
-	VendorId  uint32 `json:"vendorId" validate:"required"`
-	NetWorkId uint16 `json:"netWorkId" validate:"required"`
+	Mode        string `json:"mode" title:"bacnet运行模式"` // IP/MSTP
+	LocalPort   int    `json:"localPort" validate:"required"`
+	NetworkCidr string `json:"networkCidr" validate:"required"`
+	DeviceId    uint32 `json:"deviceId" validate:"required"`
+	VendorId    uint32 `json:"vendorId" validate:"required"`
+	NetWorkId   uint16 `json:"netWorkId" validate:"required"`
 }
 
 type bacnetDataPoint struct {
 	UUID           string            `json:"uuid"`
 	Tag            string            `json:"tag" validate:"required" title:"数据Tag"`
-	BacnetDeviceId uint32            `json:"bacnetDeviceId" title:"bacnet设备id(若isMstp=1，则deviceId应该必填；若是纯bacnetip设备，则填1即可)"`
+	BacnetDeviceId uint32            `json:"bacnetDeviceId" title:"bacnet设备id"`
 	ObjectType     btypes.ObjectType `json:"objectType" title:"object类型"`
 	ObjectId       uint32            `json:"objectId" title:"object的id"`
 
@@ -71,12 +64,10 @@ func NewGenericBacnetIpDevice(e typex.Rhilex) typex.XDevice {
 	g.mainConfig = BacnetMainConfig{
 		CommonConfig: bacnetCommonConfig{Frequency: 1000},
 		BacnetConfig: bacnetConfig{
-			Mode:       "BROADCAST",
-			LocalIp:    "127.0.0.1",
-			SubnetCIDR: 24,
-			LocalPort:  47808,
-			DeviceId:   2580,
-			VendorId:   2580,
+			Mode:      "BROADCAST",
+			LocalPort: 47808,
+			DeviceId:  2580,
+			VendorId:  2580,
 		},
 	}
 	g.SubDeviceDataPoints = make([]bacnetDataPoint, 0)
@@ -176,15 +167,16 @@ func (dev *GenericBacnetIpDevice) Start(cctx typex.CCTX) error {
 	// 广播模式监听
 	if dev.mainConfig.BacnetConfig.Mode == "BROADCAST" {
 		// 创建一个bacnet ip的本地网络
-		// PropertyData:= map[uint32][2]btypes.Object{
-		// 	1: apdus.NewAIPropertyWithRequiredFields("temp", 1, float32(3.14), "empty"),
-		// 	2: apdus.NewAIPropertyWithRequiredFields("humi", 2, float32(77.67), "empty"),
-		// 	3: apdus.NewAIPropertyWithRequiredFields("pres", 3, float32(101.11), "empty"),
-		// },
+		IP, IPNet, errParseCIDR := net.ParseCIDR(dev.mainConfig.BacnetConfig.NetworkCidr)
+		if errParseCIDR != nil {
+			glogger.GLogger.Error(errParseCIDR)
+			return errParseCIDR
+		}
+		MaskSize, _ := IPNet.Mask.Size()
 		client, err := bacnet.NewClient(&bacnet.ClientBuilder{
-			Ip:           dev.mainConfig.BacnetConfig.LocalIp,
+			Ip:           IP.String(),
+			SubnetCIDR:   MaskSize,
 			Port:         dev.mainConfig.BacnetConfig.LocalPort,
-			SubnetCIDR:   dev.mainConfig.BacnetConfig.SubnetCIDR,
 			DeviceId:     dev.mainConfig.BacnetConfig.DeviceId,  // RHILEX 自身的ID
 			VendorId:     dev.mainConfig.BacnetConfig.VendorId,  // RHILEX 自身的厂家
 			NetWorkId:    dev.mainConfig.BacnetConfig.NetWorkId, // RHILEX 自身的网络号
