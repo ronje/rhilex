@@ -26,18 +26,18 @@ type bacnetCommonConfig struct {
 type bacnetConfig struct {
 	Mode string `json:"mode" title:"bacnet运行模式"`
 
-	Ip     string `json:"ip" title:"bacnet设备ip(仅type=SINGLE生效)"`
-	Port   int    `json:"port" title:"bacnet端口，通常是47808(仅type=SINGLE生效)"`
+	Ip     string `json:"ip" validate:"required" title:"bacnet设备ip(仅type=SINGLE生效)"`
+	Port   int    `json:"port" validate:"required" title:"bacnet端口，通常是47808(仅type=SINGLE生效)"`
 	IsMstp int    `json:"isMstp" title:"是否为mstp设备，若是则子网号必须填写(仅type=SINGLE时生效)"`
 	Subnet int    `json:"subnet" title:"子网号(仅type=SINGLE 且 isMstp=1 时生效)"`
 
-	LocalIp    string `json:"LocalIp" title:"本地ip地址(仅type=BROADCAST时有效)"`
-	SubnetCIDR int    `json:"subnetCidr" title:"子网掩码长度(仅type=BROADCAST时有效)"`
-	LocalPort  int    `json:"localPort" title:"本地监听端口，填0表示默认47808(有的模拟器必须本地监听47808才能正常交互)"`
+	LocalIp    string `json:"LocalIp" validate:"required" title:"本地ip地址(仅type=BROADCAST时有效)"`
+	SubnetCIDR int    `json:"subnetCidr" validate:"required" title:"子网掩码长度(仅type=BROADCAST时有效)"`
+	LocalPort  int    `json:"localPort" validate:"required" title:"本地监听端口，填0表示默认47808(有的模拟器必须本地监听47808才能正常交互)"`
 	//
-	DeviceId  uint32 `json:"deviceId"`
-	VendorId  uint16 `json:"vendorId"`
-	NetWorkId uint16 `json:"netWorkId"`
+	DeviceId  uint32 `json:"deviceId" validate:"required"`
+	VendorId  uint32 `json:"vendorId" validate:"required"`
+	NetWorkId uint16 `json:"netWorkId" validate:"required"`
 }
 
 type bacnetDataPoint struct {
@@ -170,8 +170,8 @@ func (dev *GenericBacnetIpDevice) Start(cctx typex.CCTX) error {
 		}
 		dev.SubDeviceDataPoints[idx].property = SubPropertyData
 		// 配置自身的点位
-		PropertyData[uint32(BacnetDataPoint.ObjectId)] = apdus.NewAIPropertyWithRequiredFields(BacnetDataPoint.Tag,
-			uint32(BacnetDataPoint.ObjectId), float32(0.00), "")
+		PropertyData[BacnetDataPoint.ObjectId] = apdus.NewAIPropertyWithRequiredFields(BacnetDataPoint.Tag,
+			BacnetDataPoint.ObjectId, float32(0.00), "")
 	}
 	// 广播模式监听
 	if dev.mainConfig.BacnetConfig.Mode == "BROADCAST" {
@@ -185,10 +185,10 @@ func (dev *GenericBacnetIpDevice) Start(cctx typex.CCTX) error {
 			Ip:           dev.mainConfig.BacnetConfig.LocalIp,
 			Port:         dev.mainConfig.BacnetConfig.LocalPort,
 			SubnetCIDR:   dev.mainConfig.BacnetConfig.SubnetCIDR,
-			DeviceId:     dev.mainConfig.BacnetConfig.DeviceId,         // 参数化
-			VendorId:     uint32(dev.mainConfig.BacnetConfig.VendorId), // 参数化
-			NetWorkId:    dev.mainConfig.BacnetConfig.NetWorkId,        // 参数化
-			PropertyData: PropertyData,                                 // 点位表, 需要更新为动态
+			DeviceId:     dev.mainConfig.BacnetConfig.DeviceId,  // RHILEX 自身的ID
+			VendorId:     dev.mainConfig.BacnetConfig.VendorId,  // RHILEX 自身的厂家
+			NetWorkId:    dev.mainConfig.BacnetConfig.NetWorkId, // RHILEX 自身的网络号
+			PropertyData: PropertyData,                          // 点位表, 需要更新为动态
 		})
 		if err != nil {
 			return err
