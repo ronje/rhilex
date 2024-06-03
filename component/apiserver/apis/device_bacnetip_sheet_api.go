@@ -268,7 +268,9 @@ func BacnetIpSheetCreateOrUpdate(c *gin.Context, ruleEngine typex.Rhilex) {
 			c.JSON(common.HTTP_OK, common.Error400(err))
 			return
 		}
-		if Point.UUID == "" {
+		if Point.UUID == "" ||
+			Point.UUID == "new" ||
+			Point.UUID == "copy" {
 			NewRow := model.MBacnetDataPoint{
 				UUID:           utils.BacnetPointUUID(),
 				DeviceUuid:     form.DeviceUUID,

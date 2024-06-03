@@ -397,6 +397,5 @@ func SqliteTypeMappingGoDefault(dbType string) (string, interface{}) {
 type SchemaColumn map[string]interface{}
 
 func (s *SchemaColumn) Scan(value interface{}) error {
-	panic(value)
 	return nil
 }

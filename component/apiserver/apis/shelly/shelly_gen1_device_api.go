@@ -185,10 +185,10 @@ func ShellyDeviceStatus(c *gin.Context, ruleEngine typex.Rhilex) {
 func ShellyDeviceDetail(c *gin.Context, ruleEngine typex.Rhilex) {
 	ShellyDevice := ShellyDeviceVo{}
 	deviceId, _ := c.GetQuery("deviceId")
-	mac, _ := c.GetQuery("mac")
+	ip, _ := c.GetQuery("ip")
 	Slot := shellymanager.GetSlot(deviceId)
 	if Slot != nil {
-		if SDevice, ok := Slot[mac]; ok {
+		if SDevice, ok := Slot[ip]; ok {
 			ShellyDevice.Ip = SDevice.Ip
 			ShellyDevice.Name = SDevice.Name
 			ShellyDevice.ID = SDevice.ID
@@ -205,7 +205,7 @@ func ShellyDeviceDetail(c *gin.Context, ruleEngine typex.Rhilex) {
 			return
 		}
 	}
-	c.JSON(common.HTTP_OK, common.OkWithEmpty())
+	c.JSON(common.HTTP_OK, common.OkWithData(map[string]interface{}{}))
 }
 
 /*
