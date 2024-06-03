@@ -20,15 +20,18 @@ import (
 )
 
 type _UartCommonConfig struct {
-	Tag         string `json:"tag" validate:"required"`
-	AutoRequest *bool  `json:"autoRequest" validate:"required"`
-	TimeSlice   uint64 `json:"timeSlice" validate:"required"`
-	ReadFormat  string `json:"readFormat" validate:"required" myself:"RAW,HEX,UTF8"` // 读取格式, "RAW"|"HEX"|"UTF8"
+	AutoRequest *bool `json:"autoRequest" validate:"required"`
 }
-
+type _UartRwConfig struct {
+	Tag        string `json:"tag" validate:"required"`
+	TimeSlice  uint64 `json:"timeSlice" validate:"required"`
+	ReadFormat string `json:"readFormat" validate:"required" myself:"RAW,HEX,UTF8"` // 读取格式, "RAW"|"HEX"|"UTF8"
+}
 type _UartMainConfig struct {
 	CommonConfig _UartCommonConfig `json:"commonConfig" validate:"required"`
-	PortUuid     string            `json:"portUuid" validate:"required"`
+	RwConfig     _UartRwConfig     `json:"rwConfig" validate:"required"`
+
+	PortUuid string `json:"portUuid" validate:"required"`
 }
 
 type genericUartDevice struct {
@@ -51,13 +54,15 @@ func NewGenericUartDevice(e typex.Rhilex) typex.XDevice {
 	uart.locker = &sync.Mutex{}
 	uart.mainConfig = _UartMainConfig{
 		CommonConfig: _UartCommonConfig{
-			Tag: "uart",
 			AutoRequest: func() *bool {
 				b := true
 				return &b
 			}(),
+		},
+		RwConfig: _UartRwConfig{
 			TimeSlice:  50,
 			ReadFormat: "HEX",
+			Tag:        "uart",
 		},
 	}
 	uart.RuleEngine = e
@@ -72,14 +77,14 @@ func (uart *genericUartDevice) Init(devId string, configMap map[string]interface
 		glogger.GLogger.Error(err)
 		return err
 	}
-	if uart.mainConfig.CommonConfig.TimeSlice < 50 {
+	if uart.mainConfig.RwConfig.TimeSlice < 50 {
 		errA := fmt.Errorf("TimeSlice Must Great than 50, but current is: %v",
-			uart.mainConfig.CommonConfig.TimeSlice)
+			uart.mainConfig.RwConfig.TimeSlice)
 		glogger.GLogger.Error(errA)
 		return errA
 	}
 	ReadFormatTypes := []string{"HEX", "RAW", "UTF8"}
-	if !slices.Contains(ReadFormatTypes, uart.mainConfig.CommonConfig.ReadFormat) {
+	if !slices.Contains(ReadFormatTypes, uart.mainConfig.RwConfig.ReadFormat) {
 		errA := fmt.Errorf("ReadFormat Only Support Type: %v", ReadFormatTypes)
 		glogger.GLogger.Error(errA)
 		return errA
@@ -116,7 +121,7 @@ func (uart *genericUartDevice) Start(cctx typex.CCTX) error {
 		Parity:   uart.hwPortConfig.Parity,
 		StopBits: uart.hwPortConfig.StopBits,
 		// 固定写法，表示串口最小一个包耗时，一般50毫秒足够
-		Timeout: time.Duration(uart.mainConfig.CommonConfig.TimeSlice) * time.Millisecond,
+		Timeout: time.Duration(uart.mainConfig.RwConfig.TimeSlice) * time.Millisecond,
 	}
 	serialPort, err := serial.Open(&config)
 	if err != nil {
@@ -137,7 +142,7 @@ func (uart *genericUartDevice) Start(cctx typex.CCTX) error {
 	}
 	go func(ctx context.Context) {
 		result := [2048]byte{}
-		sliceTimer := time.NewTimer(time.Duration(uart.mainConfig.CommonConfig.TimeSlice) * time.Millisecond)
+		sliceTimer := time.NewTimer(time.Duration(uart.mainConfig.RwConfig.TimeSlice) * time.Millisecond)
 		sliceTimer.Stop()
 		peerCount := 0
 		for {
@@ -146,9 +151,9 @@ func (uart *genericUartDevice) Start(cctx typex.CCTX) error {
 				return
 			case <-sliceTimer.C:
 				mapV := map[string]interface{}{
-					"tag": uart.mainConfig.CommonConfig.Tag,
+					"tag": uart.mainConfig.RwConfig.Tag,
 				}
-				switch uart.mainConfig.CommonConfig.ReadFormat {
+				switch uart.mainConfig.RwConfig.ReadFormat {
 				case "HEX":
 					mapV["value"] = hex.EncodeToString(result[:peerCount])
 				case "RAW":
@@ -161,7 +166,7 @@ func (uart *genericUartDevice) Start(cctx typex.CCTX) error {
 					mapV["value"] = string(result[:peerCount])
 				default:
 					mapV["value"] = ""
-					glogger.GLogger.Error("Not supported type:", uart.mainConfig.CommonConfig.ReadFormat)
+					glogger.GLogger.Error("Not supported type:", uart.mainConfig.RwConfig.ReadFormat)
 				}
 				glogger.GLogger.Debug("Serial Port Read: ", mapV["value"])
 				bytes, _ := json.Marshal(mapV)
@@ -176,7 +181,7 @@ func (uart *genericUartDevice) Start(cctx typex.CCTX) error {
 				}
 				if n != 0 {
 					peerCount += n
-					sliceTimer.Reset(time.Duration(uart.mainConfig.CommonConfig.TimeSlice) * time.Millisecond)
+					sliceTimer.Reset(time.Duration(uart.mainConfig.RwConfig.TimeSlice) * time.Millisecond)
 				}
 			}
 		}
@@ -202,7 +207,7 @@ func (uart *genericUartDevice) OnCtrl(cmd []byte, args []byte) ([]byte, error) {
 			return nil, err1
 		}
 		n, errSliceRequest := utils.SliceRequest(uart.Ctx, uart.serialPort,
-			hexs, result[:], false, time.Duration(uart.mainConfig.CommonConfig.TimeSlice)*time.Millisecond)
+			hexs, result[:], false, time.Duration(uart.mainConfig.RwConfig.TimeSlice)*time.Millisecond)
 		if errSliceRequest != nil {
 			return []byte{}, errSliceRequest
 		}
