@@ -24,7 +24,7 @@ require (
 	github.com/hootrhino/beautiful-lua-go v0.1.0
 	github.com/hootrhino/go-ais v1.0.0
 	github.com/hootrhino/go-dhcpd-leases v0.0.0-20240116064141-0730f287f9a2
-	github.com/hootrhino/gobacnet v0.0.0-20240602145126-bef5bd01a463
+	github.com/hootrhino/gobacnet v0.0.0-20240603064442-3409cf8f0a46
 	github.com/hootrhino/gopher-lua v1.0.3
 	github.com/hootrhino/wmi v0.0.0-20230603082700-cfa077a8cf01
 	github.com/itchyny/gojq v0.12.14
@@ -149,7 +149,7 @@ require (
 	github.com/nats-io/nkeys v0.4.7 // indirect
 	github.com/nats-io/nuid v1.0.1 // indirect
 	github.com/notnoobmaster/luautil v1.4.11 // indirect
-	github.com/pelletier/go-toml/v2 v2.2.0 // indirect
+	github.com/pelletier/go-toml/v2 v2.2.2 // indirect
 	github.com/pion/dtls/v2 v2.2.8-0.20240201071732-2597464081c8 // indirect
 	github.com/pion/logging v0.2.2 // indirect
 	github.com/pion/transport/v3 v3.0.1 // indirect

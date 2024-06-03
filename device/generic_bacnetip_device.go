@@ -12,7 +12,7 @@ import (
 	"github.com/hootrhino/rhilex/component/intercache"
 	"github.com/hootrhino/rhilex/component/interdb"
 
-	"github.com/hootrhino/gobacnet"
+	bacnet "github.com/hootrhino/gobacnet"
 	"github.com/hootrhino/gobacnet/apdus"
 	"github.com/hootrhino/gobacnet/btypes"
 
