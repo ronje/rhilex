@@ -539,7 +539,7 @@ func (e *RuleEngine) InitDeviceTypeManager() error {
 			NewDevice: device.NewGenericModbusDevice,
 		},
 	)
-	e.DeviceTypeManager.Register(typex.GENERIC_UART,
+	e.DeviceTypeManager.Register(typex.GENERIC_UART_RW,
 		&typex.XConfig{
 			Engine:    e,
 			NewDevice: device.NewGenericUartDevice,

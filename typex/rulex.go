@@ -36,7 +36,7 @@ func (C *RhilexConfig) Init() {
 		C.LogPath = "./rhilexlog"
 	}
 	if C.LogLevel == "" {
-		C.LogLevel = "error"
+		C.LogLevel = "info"
 	}
 	if C.MaxQueueSize == 0 {
 		C.MaxQueueSize = 102400

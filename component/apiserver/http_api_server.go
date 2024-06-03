@@ -152,7 +152,7 @@ func loadAllPortConfig() {
 		// 串口
 		if MHwPort.Type == "UART" {
 			config := hwportmanager.UartConfig{}
-			if err := utils.BindConfig(MHwPort.GetConfig(), &config); err != nil {
+			if err := utils.BindSourceConfig(MHwPort.GetConfig(), &config); err != nil {
 				glogger.GLogger.Error(err) // 这里必须不能出错
 				continue
 			}
