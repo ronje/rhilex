@@ -184,7 +184,7 @@ func LoadAppLibGroup(app *Application, e typex.Rhilex) {
 			"Led1On":  rhilexlib.Led1On(e, app.UUID),
 			"Led1Off": rhilexlib.Led1Off(e, app.UUID),
 		}
-		AddAppLibToGroup(app, e, "rhinopi", Funcs)
+		AddAppLibToGroup(app, e, "rhilexg1", Funcs)
 	}
 	{
 		Funcs := map[string]func(l *lua.LState) int{

@@ -158,7 +158,7 @@ func LoadRuleLibGroup(r *typex.Rule, e typex.Rhilex) {
 			"Led1On":  rhilexlib.Led1On(e, r.UUID),
 			"Led1Off": rhilexlib.Led1Off(e, r.UUID),
 		}
-		AddRuleLibToGroup(r, e, "rhinopi", Funcs)
+		AddRuleLibToGroup(r, e, "rhilexg1", Funcs)
 	}
 	{
 		Funcs := map[string]func(l *lua.LState) int{
