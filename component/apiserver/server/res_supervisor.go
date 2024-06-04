@@ -53,7 +53,7 @@ func StartInSupervisor(InCtx context.Context, in *typex.InEnd, ruleEngine typex.
 		// STOP 设计特殊状态,标记被彻底删除的资源
 		// 资源可能不会及时DOWN
 		if currentIn.Source.Status() == typex.SOURCE_DOWN {
-			info := fmt.Sprintf("Source:%v DOWN, supervisor try to Restart", UUID)
+			info := fmt.Sprintf("Source:(%s,%s) DOWN, supervisor try to Restart", UUID, currentIn.Name)
 			glogger.GLogger.Debugf(info)
 			internotify.Push(internotify.BaseEvent{
 				Type:  `WARNING`,
@@ -107,7 +107,7 @@ func StartOutSupervisor(OutCtx context.Context, out *typex.OutEnd, ruleEngine ty
 		}
 		// 资源可能不会及时DOWN
 		if currentOut.Target.Status() == typex.SOURCE_DOWN {
-			info := fmt.Sprintf("OutEnd:%v DOWN, supervisor try to Restart", UUID)
+			info := fmt.Sprintf("OutEnd:(%s,%s) DOWN, supervisor try to Restart", UUID, currentOut.Name)
 			glogger.GLogger.Debugf(info)
 			internotify.Push(internotify.BaseEvent{
 				Type:  `WARNING`,
@@ -166,7 +166,7 @@ func StartDeviceSupervisor(DeviceCtx context.Context, device *typex.Device, rule
 
 		// 资源可能不会及时DOWN
 		if currentDevice.Device.Status() == typex.DEV_DOWN {
-			info := fmt.Sprintf("Device:%v DOWN, supervisor try to Restart", UUID)
+			info := fmt.Sprintf("Device:(%s,%s) DOWN, supervisor try to Restart", UUID, currentDevice.Name)
 			glogger.GLogger.Debugf(info)
 			internotify.Push(internotify.BaseEvent{
 				Type:  `WARNING`,

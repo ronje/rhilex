@@ -172,7 +172,7 @@ func startDevice(xDevice typex.XDevice, e *RuleEngine,
 	if device != nil {
 		// bind 最新的规则 要从数据库拿刚更新的
 		for _, rule := range device.BindRules {
-			glogger.GLogger.Debugf("Load rule:%s", rule.Name)
+			glogger.GLogger.Debugf("Load rule:(%s,%s)", rule.UUID, rule.Name)
 			RuleInstance := typex.NewLuaRule(e,
 				rule.UUID,
 				rule.Name,

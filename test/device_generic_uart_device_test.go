@@ -23,7 +23,7 @@ func Test_UART_Device(t *testing.T) {
 		t.Fatal("HttpServer load failed:", err)
 	}
 
-	GUART := typex.NewDevice(typex.GENERIC_UART,
+	GUART := typex.NewDevice(typex.GENERIC_UART_RW,
 		"UART", "UART", map[string]interface{}{
 			"autoRequest": true,
 			"decollator":  "\n",

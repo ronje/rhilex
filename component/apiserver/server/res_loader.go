@@ -50,7 +50,7 @@ func LoadNewestInEnd(uuid string, ruleEngine typex.Rhilex) error {
 		if err1 != nil {
 			return err1
 		}
-		glogger.GLogger.Debugf("Load rule:%s", mRule.Name)
+		glogger.GLogger.Debugf("Load rule:(%s,%s)", mRule.UUID, mRule.Name)
 		RuleInstance := typex.NewLuaRule(
 			ruleEngine,
 			mRule.UUID,
@@ -146,7 +146,7 @@ func LoadNewestDevice(uuid string, ruleEngine typex.Rhilex) error {
 		if err1 != nil {
 			return err1
 		}
-		glogger.GLogger.Debugf("Load rule:%s", mRule.Name)
+		glogger.GLogger.Debugf("Load rule:(%s,%s)", mRule.UUID, mRule.Name)
 		RuleInstance := typex.NewLuaRule(
 			ruleEngine,
 			mRule.UUID,

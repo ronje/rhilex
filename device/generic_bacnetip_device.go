@@ -318,7 +318,7 @@ func (dev *GenericBacnetIpDevice) ReadProperty() ([]byte, error) {
 		}
 	}
 	bytes, _ := json.Marshal(retMap)
-	glogger.GLogger.Debug(string(bytes))
+	glogger.GLogger.Debug("Bacnet Client.ReadProperty", string(bytes))
 	return bytes, nil
 }
 

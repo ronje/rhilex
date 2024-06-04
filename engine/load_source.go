@@ -76,7 +76,7 @@ func (e *RuleEngine) loadSource(source typex.XSource, in *typex.InEnd,
 	config := e.GetInEnd(in.UUID).Config
 	if config == nil {
 		e.RemoveInEnd(in.UUID)
-		err := fmt.Errorf("source [%v] config is nil", in.Name)
+		err := fmt.Errorf("source [%v, %v] config is nil", in.UUID, in.Name)
 		return err
 	}
 	if err := source.Init(in.UUID, config); err != nil {
@@ -104,7 +104,7 @@ func (e *RuleEngine) loadSource(source typex.XSource, in *typex.InEnd,
 	} else {
 		intercache.DeleteValue("__DefaultRuleEngine", in.UUID)
 	}
-	glogger.GLogger.Infof("InEnd [%v, %v] load successfully", in.Name, in.UUID)
+	glogger.GLogger.Infof("InEnd [%v, %v] load successfully", in.UUID, in.Name)
 	return nil
 }
 

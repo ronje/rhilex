@@ -39,7 +39,7 @@ func (e *RuleEngine) LoadRule(r *typex.Rule) error {
 	// Load LoadBuildInLuaLib
 	//--------------------------------------------------------------
 	LoadRuleLibGroup(r, e)
-	glogger.GLogger.Infof("Rule [%v, %v] load successfully", r.Name, r.UUID)
+	glogger.GLogger.Infof("Rule [%s, %s] load successfully", r.UUID, r.Name)
 	// 查找输入定义的资源是否存在
 	if in := e.GetInEnd(r.FromSource); in != nil {
 		(in.BindRules)[r.UUID] = *r
@@ -85,7 +85,7 @@ func (e *RuleEngine) RemoveRule(ruleId string) {
 		e.AllDevices().Range(func(key, value interface{}) bool {
 			Device := value.(*typex.Device)
 			for _, r := range Device.BindRules {
-				glogger.GLogger.Debugf("Unlink rule:%s", rule.Name)
+				glogger.GLogger.Debugf("Unlink rule:[%s, %s]", rule.UUID, rule.Name)
 				if rule.UUID == r.UUID {
 					delete(Device.BindRules, ruleId)
 				}
@@ -93,7 +93,7 @@ func (e *RuleEngine) RemoveRule(ruleId string) {
 			return true
 		})
 		e.Rules.Delete(ruleId)
-		glogger.GLogger.Infof("Rule [%v] has been deleted", ruleId)
+		glogger.GLogger.Infof("Rule [%s, %s] has been deleted", ruleId, rule.Name)
 	}
 }
 
