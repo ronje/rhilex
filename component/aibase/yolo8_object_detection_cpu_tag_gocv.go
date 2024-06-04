@@ -1,3 +1,5 @@
+//go:build gocv
+
 // Copyright (C) 2024 wwhai
 //
 // This program is free software: you can redistribute it and/or modify
