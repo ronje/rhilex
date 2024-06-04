@@ -1,3 +1,4 @@
+//go:build gocv
 package device
 
 import (

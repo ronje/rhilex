@@ -1,5 +1,4 @@
-//go:build amd64
-// +build amd64
+//go:build gocv
 
 // Copyright (C) 2024 wwhai
 //
