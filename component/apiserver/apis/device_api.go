@@ -345,5 +345,5 @@ func GetDeviceErrorMsg(c *gin.Context, ruleEngine typex.Rhilex) {
 			return
 		}
 	}
-	c.JSON(common.HTTP_OK, common.OkWithData("It seems No Any Error"))
+	c.JSON(common.HTTP_OK, common.OkWithData("--"))
 }
