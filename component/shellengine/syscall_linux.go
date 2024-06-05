@@ -15,21 +15,62 @@
 
 package shellengine
 
-import (
-	"fmt"
-	"golang.org/x/sys/unix"
-	"os"
-)
+import "syscall"
 
 /*
 *
 * 系统调用
 *
  */
-func IOctl(fd int, request, arg uintptr) error {
-	_, _, errno := unix.Syscall(unix.SYS_IOCTL, uintptr(fd), request, arg)
-	if errno != 0 {
-		return os.NewSyscallError(fmt.Sprintf("ioctl error:%v,%v,%v", fd, request, arg), errno)
+
+const (
+	iocNrBits   = 8
+	iocTypeBits = 8
+	iocSizeBits = 14
+	iocDirBits  = 2
+
+	iocNrShift   = 0
+	iocTypeShift = iocNrShift + iocNrBits
+	iocSizeShift = iocTypeShift + iocTypeBits
+	iocDirShift  = iocSizeShift + iocSizeBits
+
+	iocNone  = 0
+	iocWrite = 1
+	iocRead  = 2
+)
+
+func IO(t, nr uintptr) uintptr {
+	return IOC(iocNone, t, nr, 0)
+}
+
+func IOR(t, nr, size uintptr) uintptr {
+	return IOC(iocRead, t, nr, size)
+}
+
+func IOW(t, nr, size uintptr) uintptr {
+	return IOC(iocWrite, t, nr, size)
+}
+
+func IOWR(t, nr, size uintptr) uintptr {
+	return IOC(iocRead|iocWrite, t, nr, size)
+}
+
+func IOC(dir, t, nr, size uintptr) uintptr {
+	return (dir << iocDirShift) | (t << iocTypeShift) | (nr << iocNrShift) | (size << iocSizeShift)
+}
+
+func Ioctl(fd, request, value uintptr) error {
+	_, _, e := syscall.Syscall(syscall.SYS_IOCTL, fd, request, value)
+	if e == syscall.Errno(0) {
+		return nil
 	}
-	return nil
+	return e
+}
+
+func IoctlX(fd, request, value uintptr) (int64, error) {
+	x, _, e := syscall.Syscall(syscall.SYS_IOCTL, fd, request, value)
+	if e == syscall.Errno(0) {
+		return int64(x), nil
+	}
+	return 0, e
 }
