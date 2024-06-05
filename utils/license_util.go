@@ -104,7 +104,7 @@ func (ll *LocalLicense) ToString() string {
 }
 
 func (ll LocalLicense) ValidateTime() bool {
-	Now := time.Now().UnixNano()
+	Now := time.Now().UnixMilli()
 	V := ll.EndAuthorize - Now
 	if (ll.BeginAuthorize > Now) && (V <= 0) {
 		return false
@@ -162,7 +162,7 @@ func ValidateLicense(key_path, license_path string) (LocalLicense, error) {
 	}
 	//
 	if !LocalLicense.ValidateTime() {
-		return LocalLicense, fmt.Errorf("InValid Auth Time!")
+		return LocalLicense, fmt.Errorf("Invalid Auth Time!")
 	}
 	localMac := ""
 	var err3 error

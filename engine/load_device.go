@@ -19,7 +19,9 @@ import (
 	"context"
 	"fmt"
 	"sync"
+	"time"
 
+	intercache "github.com/hootrhino/rhilex/component/intercache"
 	"github.com/hootrhino/rhilex/glogger"
 	"github.com/hootrhino/rhilex/typex"
 )
@@ -126,10 +128,28 @@ func (e *RuleEngine) loadDevices(xDevice typex.XDevice, deviceInstance *typex.De
 		return err
 	}
 	if err := xDevice.Init(deviceInstance.UUID, config); err != nil {
-		e.RemoveDevice(deviceInstance.UUID)
+		intercache.SetValue("__DefaultRuleEngine", deviceInstance.UUID, intercache.CacheValue{
+			UUID:          deviceInstance.UUID,
+			Status:        1,
+			ErrMsg:        err.Error(),
+			LastFetchTime: uint64(time.Now().UnixMilli()),
+			Value:         "",
+		})
 		return err
 	}
-	startDevice(xDevice, e, ctx, cancelCTX)
+	err2 := startDevice(xDevice, e, ctx, cancelCTX)
+	if err2 != nil {
+		glogger.GLogger.Error(err2)
+		intercache.SetValue("__DefaultRuleEngine", deviceInstance.UUID, intercache.CacheValue{
+			UUID:          deviceInstance.UUID,
+			Status:        1,
+			ErrMsg:        err2.Error(),
+			LastFetchTime: uint64(time.Now().UnixMilli()),
+			Value:         "",
+		})
+	} else {
+		intercache.DeleteValue("__DefaultRuleEngine", deviceInstance.UUID)
+	}
 	glogger.GLogger.Infof("Device [%v, %v] load successfully", deviceInstance.Name, deviceInstance.UUID)
 	return nil
 }
@@ -152,7 +172,7 @@ func startDevice(xDevice typex.XDevice, e *RuleEngine,
 	if device != nil {
 		// bind 最新的规则 要从数据库拿刚更新的
 		for _, rule := range device.BindRules {
-			glogger.GLogger.Debugf("Load rule:%s", rule.Name)
+			glogger.GLogger.Debugf("Load rule:(%s,%s)", rule.UUID, rule.Name)
 			RuleInstance := typex.NewLuaRule(e,
 				rule.UUID,
 				rule.Name,

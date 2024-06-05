@@ -18,11 +18,12 @@ package apis
 import (
 	"errors"
 	"fmt"
-	"github.com/hootrhino/rhilex/component/apiserver/dto"
-	"github.com/samber/lo"
 	"mime/multipart"
 	"strconv"
 	"time"
+
+	"github.com/hootrhino/rhilex/component/apiserver/dto"
+	"github.com/samber/lo"
 
 	"github.com/hootrhino/rhilex/glogger"
 
@@ -193,7 +194,7 @@ func BacnetIpSheetPageList(c *gin.Context, ruleEngine typex.Rhilex) {
 				ErrMsg:         value.ErrMsg,
 			}
 			if ok {
-				pointVo.Status = func() int {
+				pointVo.Status = func() uint32 {
 					if value.Value == "" {
 						return 0
 					}
@@ -267,7 +268,9 @@ func BacnetIpSheetCreateOrUpdate(c *gin.Context, ruleEngine typex.Rhilex) {
 			c.JSON(common.HTTP_OK, common.Error400(err))
 			return
 		}
-		if Point.UUID == "" {
+		if Point.UUID == "" ||
+			Point.UUID == "new" ||
+			Point.UUID == "copy" {
 			NewRow := model.MBacnetDataPoint{
 				UUID:           utils.BacnetPointUUID(),
 				DeviceUuid:     form.DeviceUUID,
@@ -351,9 +354,9 @@ func parseBacnetExcel(r multipart.File, sheetName string, deviceUuid string) ([]
 		createDto := dto.BacnetDataPointCreateOrUpdate{
 			Tag:            tag,
 			Alias:          alias,
-			BacnetDeviceId: int(bacnetDeviceId),
+			BacnetDeviceId: uint32(bacnetDeviceId),
 			ObjectType:     objectType,
-			ObjectId:       int(objectId),
+			ObjectId:       uint32(objectId),
 		}
 		err = checkBacnetPoint(createDto)
 		if err != nil {
@@ -376,7 +379,7 @@ func parseBacnetExcel(r multipart.File, sheetName string, deviceUuid string) ([]
 
 func checkBacnetPoint(point dto.BacnetDataPointCreateOrUpdate) error {
 	contains := lo.Contains(dto.ValidBacnetObjectType, point.ObjectType)
-	if contains == false {
+	if !contains {
 		return errors.New("illegal objectType")
 	}
 	return nil

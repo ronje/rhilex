@@ -6,10 +6,8 @@ import (
 	"github.com/hootrhino/rhilex/glogger"
 	"github.com/hootrhino/rhilex/typex"
 	"github.com/hootrhino/rhilex/utils"
-	"github.com/mochi-co/mqtt/v2"
-	"github.com/mochi-co/mqtt/v2/listeners"
-	"github.com/mochi-co/mqtt/v2/packets"
-	"github.com/rs/zerolog"
+	mqtt "github.com/mochi-mqtt/server/v2"
+	"github.com/mochi-mqtt/server/v2/listeners"
 	"gopkg.in/ini.v1"
 )
 
@@ -50,10 +48,12 @@ func (s *MqttServer) Init(config *ini.Section) error {
 
 func (s *MqttServer) Start(r typex.Rhilex) error {
 	s.ruleEngine = r
-	zlog := zerolog.New(glogger.GLogger.Writer()).With().Logger()
 
-	server := mqtt.New(&mqtt.Options{Logger: &zlog})
-	tcp := listeners.NewTCP("node1", fmt.Sprintf("%v:%v", s.Host, s.Port), nil)
+	server := mqtt.New(&mqtt.Options{})
+	tcp := listeners.NewTCP(listeners.Config{
+		ID:      "node1",
+		Address: fmt.Sprintf("%v:%v", s.Host, s.Port),
+	})
 	if err := server.AddListener(tcp); err != nil {
 		return err
 	}
@@ -64,8 +64,7 @@ func (s *MqttServer) Start(r typex.Rhilex) error {
 	// 本地服务器
 	//
 	s.mqttServer = server
-	server.AddHook(&ahooks{s: s}, nil)
-	server.AddHook(&mHooks{}, nil)
+	server.AddHook(&AuthHook{s: s}, nil)
 	glogger.GLogger.Infof("MqttServer start at [%s:%v] successfully", s.Host, s.Port)
 	return nil
 }
@@ -88,64 +87,25 @@ func (s *MqttServer) PluginMetaInfo() typex.XPluginMetaInfo {
 	}
 }
 
-/*
-*
-* 认证器
-*
- */
-
-type mHooks struct {
-	mqtt.HookBase
-}
-
-func (h *mHooks) ID() string {
-	return "events-hooks"
-}
-
-func (h *mHooks) Provides(b byte) bool {
-	return true
-}
-
-func (h *mHooks) OnConnect(client *mqtt.Client, pk packets.Packet) error {
-	glogger.GLogger.Debugf("Client OnConnect:%s", client.ID)
-	return nil
-}
-
-func (h *mHooks) OnDisconnect(client *mqtt.Client, err error, expire bool) {
-	glogger.GLogger.Debugf("Client disconnected:%s", client.ID)
-}
-
-func (h *mHooks) OnPublish(cl *mqtt.Client, pk packets.Packet) (packets.Packet, error) {
-	glogger.GLogger.Debugf("client OnPublish:[%v]=%v", pk.TopicName, string(pk.Payload))
-	return pk, nil
-}
-
-// ahooks is an authentication hook which allows connection access
+// AuthHooks is an authentication hook which allows connection access
 // for all users and read and write access to all topics.
-type ahooks struct {
+type AuthHook struct {
 	mqtt.HookBase
 	s *MqttServer
 }
 
 // ID returns the ID of the hook.
-func (h *ahooks) ID() string {
+func (h *AuthHook) ID() string {
 	return "auth-hooks"
 }
 
 // Provides indicates which hook methods this hook provides.
-func (h *ahooks) Provides(b byte) bool {
-	return true
-}
-
-// OnConnectAuthenticate returns true/allowed for all requests.
-func (h *ahooks) OnConnectAuthenticate(client *mqtt.Client, pk packets.Packet) bool {
-	glogger.GLogger.Debugf("OnAuthenticate:[%v],[%v],[%v]",
-		client.ID, string(client.Properties.Username), string(pk.Connect.Password))
+func (h *AuthHook) Provides(b byte) bool {
 	return true
 }
 
 // OnACLCheck returns true/allowed for all checks.
-func (h *ahooks) OnACLCheck(client *mqtt.Client, topic string, write bool) bool {
+func (h *AuthHook) OnACLCheck(client *mqtt.Client, topic string, write bool) bool {
 	glogger.GLogger.Debugf("OnACLCheck:[%v],[%v],[%v]",
 		client.ID, string(client.Properties.Username), topic)
 	_, ok := h.s.topics[client.ID]

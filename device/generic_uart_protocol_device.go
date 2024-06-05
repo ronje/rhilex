@@ -97,7 +97,7 @@ func (mdev *GenericUartProtocolDevice) Init(devId string, configMap map[string]i
 			}
 		default:
 			{
-				return fmt.Errorf("invalid config:%s", hwPort.Config)
+				return fmt.Errorf("Invalid config:%s", hwPort.Config)
 			}
 		}
 	}

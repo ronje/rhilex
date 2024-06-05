@@ -26,6 +26,7 @@ import (
 	"github.com/hootrhino/rhilex/component/apiserver/service"
 	"github.com/hootrhino/rhilex/component/datacenter"
 	"github.com/hootrhino/rhilex/component/interdb"
+	core "github.com/hootrhino/rhilex/config"
 	"github.com/hootrhino/rhilex/glogger"
 	"github.com/hootrhino/rhilex/typex"
 	"github.com/xuri/excelize/v2"
@@ -40,6 +41,7 @@ func InitDataCenterApi() {
 	datacenterApi.GET("/listSchemaDDL", server.AddRoute(ListSchemaDDL))
 	datacenterApi.GET("/schemaDDLDetail", server.AddRoute(SchemaDDLDetail))
 	datacenterApi.GET("/queryDataList", server.AddRoute(QueryDDLDataList))
+	datacenterApi.GET("/secret", server.AddRoute(GetQuerySecret))
 	datacenterApi.GET("/queryLastData", server.AddRoute(QueryDDLLastData))
 	datacenterApi.GET("/exportData", server.AddRoute(ExportData))
 	datacenterApi.GET("/schemaDDLDefine", server.AddRoute(GetSchemaDDLDefine))
@@ -219,18 +221,38 @@ func ClearSchemaData(c *gin.Context, ruleEngine typex.Rhilex) {
 * 分页查找
 *
  */
+func GetQuerySecret(c *gin.Context, ruleEngine typex.Rhilex) {
+	type secret struct {
+		Secret string `json:"secret"`
+	}
+	if len(core.GlobalConfig.DataSchemaSecret) > 0 {
+		c.JSON(common.HTTP_OK, common.OkWithData(secret{
+			Secret: core.GlobalConfig.DataSchemaSecret[0],
+		}))
+		return
+	}
+	c.JSON(common.HTTP_OK, common.OkWithData(secret{
+		Secret: "",
+	}))
 
+}
 func QueryDDLDataList(c *gin.Context, ruleEngine typex.Rhilex) {
 	uuid, _ := c.GetQuery("uuid")
 	order, _ := c.GetQuery("order")
+	secret, _ := c.GetQuery("secret")
+	if !datacenter.CheckSecrets(secret) {
+		c.JSON(common.HTTP_OK, common.Error("Expect api secret"))
+		return
+	}
+
 	selectFields, _ := c.GetQueryArray("select")
 	pager, err := service.ReadPageRequest(c)
 	if err != nil {
 		c.JSON(common.HTTP_OK, common.Error400(err))
 		return
 	}
-	if pager.Size > 1000 {
-		c.JSON(common.HTTP_OK, common.Error("Query size too large, Must less than 1000"))
+	if pager.Size > 100 {
+		c.JSON(common.HTTP_OK, common.Error("Query size too large, Must less than 100"))
 		return
 	}
 	MSchema, err := service.GetDataSchemaWithUUID(uuid)
@@ -280,6 +302,11 @@ func QueryDDLDataList(c *gin.Context, ruleEngine typex.Rhilex) {
 func QueryDDLLastData(c *gin.Context, ruleEngine typex.Rhilex) {
 	uuid, _ := c.GetQuery("uuid")
 	selectFields, _ := c.GetQueryArray("select")
+	secret, _ := c.GetQuery("secret")
+	if !datacenter.CheckSecrets(secret) {
+		c.JSON(common.HTTP_OK, common.Error("Expect api secret"))
+		return
+	}
 	MSchema, err := service.GetDataSchemaWithUUID(uuid)
 	if err != nil {
 		c.JSON(common.HTTP_OK, common.Error400(err))
@@ -370,6 +397,5 @@ func SqliteTypeMappingGoDefault(dbType string) (string, interface{}) {
 type SchemaColumn map[string]interface{}
 
 func (s *SchemaColumn) Scan(value interface{}) error {
-	panic(value)
 	return nil
 }

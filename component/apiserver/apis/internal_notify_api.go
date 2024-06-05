@@ -16,15 +16,13 @@
 package apis
 
 import (
-	"fmt"
-	"time"
 
 	"github.com/gin-gonic/gin"
 	common "github.com/hootrhino/rhilex/component/apiserver/common"
 	"github.com/hootrhino/rhilex/component/apiserver/model"
 	"github.com/hootrhino/rhilex/component/apiserver/service"
+	"github.com/hootrhino/rhilex/component/interdb"
 	"github.com/hootrhino/rhilex/typex"
-	"github.com/hootrhino/rhilex/utils"
 )
 
 /*
@@ -67,6 +65,38 @@ func InternalNotifies(c *gin.Context, ruleEngine typex.Rhilex) {
 
 /*
 *
+* 支持分页
+*
+ */
+func PageInternalNotifies(c *gin.Context, ruleEngine typex.Rhilex) {
+	pager, err := service.ReadPageRequest(c)
+	if err != nil {
+		c.JSON(common.HTTP_OK, common.Error400(err))
+		return
+	}
+	if pager.Size > 100 {
+		c.JSON(common.HTTP_OK, common.Error("Query size too large, Must less than 100"))
+		return
+	}
+	DbTx := interdb.DB().Scopes(service.Paginate(*pager))
+	records := []InternalNotifyVo{}
+	result := DbTx.Model(model.MInternalNotify{}).Order("id DESC").Scan(&records)
+	if result.Error != nil {
+		c.JSON(common.HTTP_OK, common.Error400(result.Error))
+		return
+	}
+	var count int64
+	err1 := interdb.DB().Model(&model.MInternalNotify{}).Count(&count).Error
+	if err1 != nil {
+		c.JSON(common.HTTP_OK, common.Error400(err1))
+		return
+	}
+	Result := service.WrapPageResult(*pager, records, count)
+	c.JSON(common.HTTP_OK, common.OkWithData(Result))
+}
+
+/*
+*
 * 清空
 *
  */
@@ -88,21 +118,6 @@ func ReadInternalNotifies(c *gin.Context, ruleEngine typex.Rhilex) {
 	if err := service.ReadInternalNotifies(uuid); err != nil {
 		c.JSON(common.HTTP_OK, common.Error400(err))
 		return
-	}
-	c.JSON(common.HTTP_OK, common.Ok())
-}
-
-func TestCreateNotifies(c *gin.Context, ruleEngine typex.Rhilex) {
-	for i := 0; i < 50; i++ {
-		service.InsertInternalNotify(model.MInternalNotify{
-			UUID:    utils.MakeUUID("NOTIFY"), // UUID
-			Type:    `WARNING`,                // INFO | ERROR | WARNING
-			Status:  1,
-			Event:   `event.down`, // 字符串
-			Ts:      uint64(time.Now().UnixMilli()),
-			Info:    "位于某处的某个设备已经离线, 请及时检查处理,这是测试数据而已",
-			Summary: fmt.Sprintf(`测试数据：设备 %d 离线`, i),
-		})
 	}
 	c.JSON(common.HTTP_OK, common.Ok())
 }

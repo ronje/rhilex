@@ -16,8 +16,8 @@
 package service
 
 import (
-	"github.com/hootrhino/rhilex/component/interdb"
 	"github.com/hootrhino/rhilex/component/apiserver/model"
+	"github.com/hootrhino/rhilex/component/interdb"
 	"github.com/hootrhino/rhilex/utils"
 	"gorm.io/gorm"
 )
@@ -82,7 +82,19 @@ SELECT * FROM m_devices WHERE uuid IN (
 	offset := (current - 1) * size
 	interdb.DB().Raw(sql, gid, size, offset).Find(&MDevices)
 	var count int64
-	interdb.DB().Model(&model.MDevice{}).Count(&count)
+	countSql := `SELECT count(id)
+FROM m_devices
+WHERE uuid IN (
+SELECT m_generic_group_relations.rid
+FROM m_generic_groups
+LEFT JOIN
+m_generic_group_relations
+ON (m_generic_groups.uuid = m_generic_group_relations.gid)
+WHERE type = 'DEVICE' AND
+gid = ?
+);
+`
+	interdb.DB().Raw(countSql, gid).Scan(&count)
 	return count, MDevices
 }
 

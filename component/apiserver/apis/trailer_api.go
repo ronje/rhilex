@@ -390,10 +390,6 @@ func UpdateGoods(c *gin.Context, ruleEngine typex.Rhilex) {
 	}
 	// 把正在运行的给停了
 	if goods := trailer.Get(mGoods.UUID); goods != nil {
-		if err != nil {
-			glogger.GLogger.Error(err)
-			return
-		}
 		glogger.GLogger.Debug("Already running, ready to stop:", mGoods.UUID)
 		grpcConnection, err1 := grpc.Dial(goods.Info.NetAddr,
 			grpc.WithTransportCredentials(insecure.NewCredentials()))

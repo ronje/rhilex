@@ -62,7 +62,7 @@ func (O AddressInfo) String() string {
 func ParseSiemensDB(s string) (AddressInfo, error) {
 	AddressInfo := AddressInfo{}
 	if len(s) < 3 {
-		return AddressInfo, fmt.Errorf("invalid Address format:%s", s)
+		return AddressInfo, fmt.Errorf("Invalid Address format:%s", s)
 	}
 	if s[:2] == "I." {
 		return _ParseADDR_I(s)
@@ -138,7 +138,7 @@ func _ParseDB_DX(s string) (AddressInfo, error) {
 func _ParseADDR_I(s string) (AddressInfo, error) {
 	AddressInfo := AddressInfo{}
 	if len(s) < 2 {
-		return AddressInfo, fmt.Errorf("invalid Address format:%s", s)
+		return AddressInfo, fmt.Errorf("Invalid Address format:%s", s)
 	}
 	// I0.0
 	parts := strings.Split(s[1:], ".")
@@ -180,7 +180,7 @@ func _ParseADDR_IB(string) (AddressInfo, error) {
 func _ParseADDR_Q(s string) (AddressInfo, error) {
 	AddressInfo := AddressInfo{}
 	if len(s) < 2 {
-		return AddressInfo, fmt.Errorf("invalid Address format:%s", s)
+		return AddressInfo, fmt.Errorf("Invalid Address format:%s", s)
 	}
 	// I0.0
 	parts := strings.Split(s[1:], ".")

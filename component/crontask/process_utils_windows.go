@@ -1,6 +1,6 @@
 //go:build windows
 
-package cron_task
+package crontask
 
 import (
 	"os/exec"

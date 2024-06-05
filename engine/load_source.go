@@ -18,7 +18,9 @@ package engine
 import (
 	"context"
 	"fmt"
+	"time"
 
+	intercache "github.com/hootrhino/rhilex/component/intercache"
 	"github.com/hootrhino/rhilex/glogger"
 	"github.com/hootrhino/rhilex/typex"
 )
@@ -74,17 +76,35 @@ func (e *RuleEngine) loadSource(source typex.XSource, in *typex.InEnd,
 	config := e.GetInEnd(in.UUID).Config
 	if config == nil {
 		e.RemoveInEnd(in.UUID)
-		err := fmt.Errorf("source [%v] config is nil", in.Name)
+		err := fmt.Errorf("source [%v, %v] config is nil", in.UUID, in.Name)
 		return err
 	}
 	if err := source.Init(in.UUID, config); err != nil {
 		glogger.GLogger.Error(err)
-		e.RemoveInEnd(in.UUID)
+		intercache.SetValue("__DefaultRuleEngine", in.UUID, intercache.CacheValue{
+			UUID:          in.UUID,
+			Status:        1,
+			ErrMsg:        err.Error(),
+			LastFetchTime: uint64(time.Now().UnixMilli()),
+			Value:         "",
+		})
 		return err
 	}
 
-	e.startSource(source, ctx, cancelCTX)
-	glogger.GLogger.Infof("InEnd [%v, %v] load successfully", in.Name, in.UUID)
+	err2 := e.startSource(source, ctx, cancelCTX)
+	if err2 != nil {
+		glogger.GLogger.Error(err2)
+		intercache.SetValue("__DefaultRuleEngine", in.UUID, intercache.CacheValue{
+			UUID:          in.UUID,
+			Status:        1,
+			ErrMsg:        err2.Error(),
+			LastFetchTime: uint64(time.Now().UnixMilli()),
+			Value:         "",
+		})
+	} else {
+		intercache.DeleteValue("__DefaultRuleEngine", in.UUID)
+	}
+	glogger.GLogger.Infof("InEnd [%v, %v] load successfully", in.UUID, in.Name)
 	return nil
 }
 

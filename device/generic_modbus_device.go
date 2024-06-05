@@ -169,6 +169,7 @@ func NewGenericModbusDevice(e typex.Rhilex) typex.XDevice {
 //  初始化
 func (mdev *generic_modbus_device) Init(devId string, configMap map[string]interface{}) error {
 	mdev.PointId = devId
+	mdev.retryTimes = 0
 	intercache.RegisterSlot(mdev.PointId)
 	if err := utils.BindSourceConfig(configMap, &mdev.mainConfig); err != nil {
 		return err
@@ -239,7 +240,7 @@ func (mdev *generic_modbus_device) Init(devId string, configMap map[string]inter
 			}
 		default:
 			{
-				return fmt.Errorf("invalid config:%s", hwPort.Config)
+				return fmt.Errorf("Invalid config:%s", hwPort.Config)
 			}
 		}
 	}
@@ -308,7 +309,7 @@ func (mdev *generic_modbus_device) groupTags(registers []*common.RegisterRW) []*
 func (mdev *generic_modbus_device) Start(cctx typex.CCTX) error {
 	mdev.Ctx = cctx.Ctx
 	mdev.CancelCTX = cctx.CancelCTX
-
+	mdev.retryTimes = 0
 	if mdev.mainConfig.CommonConfig.Mode == "UART" {
 		hwPort, err := hwportmanager.GetHwPort(mdev.mainConfig.PortUuid)
 		if err != nil {
@@ -473,7 +474,7 @@ func maybePrependZero(slice []byte) []byte {
 // 设备当前状态
 func (mdev *generic_modbus_device) Status() typex.DeviceState {
 	// 容错5次
-	if mdev.retryTimes > 0 {
+	if mdev.retryTimes > 5 {
 		return typex.DEV_DOWN
 	}
 	return mdev.status

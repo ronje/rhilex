@@ -1,3 +1,4 @@
+//go:build gocv
 package device
 
 import (
@@ -75,7 +76,7 @@ func (vc *videoCamera) Init(devId string, configMap map[string]interface{}) erro
 	}
 	if vc.mainConfig.InputMode == __INPUT_REMOTE_STREAM_RTSP {
 		if !isValidRTSPAddress(vc.mainConfig.InputAddr) {
-			return fmt.Errorf("invalid RtspUrl Format:%s", vc.mainConfig.InputAddr)
+			return fmt.Errorf("Invalid RtspUrl Format:%s", vc.mainConfig.InputAddr)
 		}
 	}
 	return nil
@@ -169,7 +170,6 @@ func (vc *videoCamera) Details() *typex.Device {
 func (vc *videoCamera) SetState(_ typex.DeviceState) {
 
 }
-
 
 func (vc *videoCamera) OnDCACall(_ string, _ string, _ interface{}) typex.DCAResult {
 	return typex.DCAResult{}

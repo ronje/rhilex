@@ -7,24 +7,28 @@ import (
 
 // Global config
 type ExtLib struct {
-	Value []string `ini:"ext_libs,,allowshadow" json:"extLibs"`
+	Value []string `ini:"value,,allowshadow"`
+}
+type Secret struct {
+	Value []string `ini:"value,,allowshadow"`
 }
 type RhilexConfig struct {
-	AppId                 string `ini:"app_id" json:"appId"`
-	MaxQueueSize          int    `ini:"max_queue_size" json:"maxQueueSize"`
-	SourceRestartInterval int    `ini:"resource_restart_interval" json:"sourceRestartInterval"`
-	GomaxProcs            int    `ini:"gomax_procs" json:"gomaxProcs"`
-	EnablePProf           bool   `ini:"enable_pprof" json:"enablePProf"`
-	EnableConsole         bool   `ini:"enable_console" json:"enableConsole"`
-	AppDebugMode          bool   `ini:"app_debug_mode" json:"appDebugMode"`
-	LogLevel              string `ini:"log_level" json:"logLevel"`
-	LogPath               string `ini:"log_path" json:"logPath"`
-	LogMaxSize            int    `ini:"log_max_size" json:"logMaxSize"`
-	LogMaxBackups         int    `ini:"log_max_backups" json:"logMaxBackups"`
-	LogMaxAge             int    `ini:"log_max_age" json:"logMaxAge"`
-	LogCompress           bool   `ini:"log_compress" json:"logCompress"`
-	MaxKvStoreSize        int    `ini:"max_kv_store_size" json:"maxKvStoreSize"`
-	ExtLibs               ExtLib `ini:"ext_libs,,allowshadow" json:"extLibs"`
+	AppId                 string   `ini:"app_id" json:"appId"`
+	MaxQueueSize          int      `ini:"max_queue_size" json:"maxQueueSize"`
+	SourceRestartInterval int      `ini:"resource_restart_interval" json:"sourceRestartInterval"`
+	GomaxProcs            int      `ini:"gomax_procs" json:"gomaxProcs"`
+	EnablePProf           bool     `ini:"enable_pprof" json:"enablePProf"`
+	EnableConsole         bool     `ini:"enable_console" json:"enableConsole"`
+	AppDebugMode          bool     `ini:"app_debug_mode" json:"appDebugMode"`
+	LogLevel              string   `ini:"log_level" json:"logLevel"`
+	LogPath               string   `ini:"log_path" json:"logPath"`
+	LogMaxSize            int      `ini:"log_max_size" json:"logMaxSize"`
+	LogMaxBackups         int      `ini:"log_max_backups" json:"logMaxBackups"`
+	LogMaxAge             int      `ini:"log_max_age" json:"logMaxAge"`
+	LogCompress           bool     `ini:"log_compress" json:"logCompress"`
+	MaxKvStoreSize        int      `ini:"max_kv_store_size" json:"maxKvStoreSize"`
+	ExtLibs               []string `ini:"ext_libs,,allowshadow" json:"extLibs"`
+	DataSchemaSecret      []string `ini:"dataschema_secrets,,allowshadow" json:"dataSchemaSecret"`
 }
 
 func (C *RhilexConfig) Init() {
@@ -32,7 +36,7 @@ func (C *RhilexConfig) Init() {
 		C.LogPath = "./rhilexlog"
 	}
 	if C.LogLevel == "" {
-		C.LogLevel = "error"
+		C.LogLevel = "info"
 	}
 	if C.MaxQueueSize == 0 {
 		C.MaxQueueSize = 102400

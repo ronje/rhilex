@@ -220,7 +220,7 @@ func SetSystemTime(c *gin.Context, ruleEngine typex.Rhilex) {
 		return
 	}
 	if validTimeZone(DtoCfg.SysTimeZone) {
-		c.JSON(common.HTTP_OK, common.Error("InValid TimeZone:"+DtoCfg.SysTimeZone))
+		c.JSON(common.HTTP_OK, common.Error("Invalid TimeZone:"+DtoCfg.SysTimeZone))
 		return
 	}
 

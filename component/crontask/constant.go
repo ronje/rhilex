@@ -1,4 +1,4 @@
-package cron_task
+package crontask
 
 // CRON_TASK_TYPE
 const (

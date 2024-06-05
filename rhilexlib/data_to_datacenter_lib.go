@@ -85,6 +85,10 @@ func InsertToDataCenterTable(rx typex.Rhilex, uuid string) func(L *lua.LState) i
 	return func(l *lua.LState) int {
 		schema_uuid := l.ToString(2)
 		kvs := l.ToTable(3)
+		if kvs == nil {
+			l.Push(lua.LString("missing table fields"))
+			return 1
+		}
 		RowList := [][2]interface{}{}
 		// create_at
 		RowList = append(RowList, [2]interface{}{
@@ -146,7 +150,7 @@ func saveToDataCenter(schema_uuid string, RowList [][2]interface{}) error {
 * 检查属性约束
 *
  */
-func checkValue(schema_uuid string, RowList [][2]interface{}) error {
+func CheckSchemaConsist(schema_uuid string, RowList [][2]interface{}) error {
 	return nil
 }
 
@@ -192,5 +196,108 @@ func QueryDataCenterLast(rx typex.Rhilex, uuid string) func(L *lua.LState) int {
 }
 func queryDataCenterLast(schema_uuid string, fields string) error {
 	glogger.GLogger.Debug(schema_uuid, fields)
+	return nil
+}
+
+/*
+*
+* 更新最后一行，而不是插入
+ */
+func UpdateDataCenterLast(rx typex.Rhilex, uuid string) func(l *lua.LState) int {
+	return func(l *lua.LState) int {
+		schema_uuid := l.ToString(2)
+		kvs := l.ToTable(3)
+		if kvs == nil {
+			l.Push(lua.LString("missing table fields"))
+			return 1
+		}
+		RowList := [][2]interface{}{}
+		kvs.ForEach(func(k, v lua.LValue) {
+			Row := [2]interface{}{}
+			// K 只能String
+			if k.Type() == lua.LTString {
+				// create_at 不允许用户填写
+				if Row[0] != "create_at" && Row[0] != "id" {
+					switch v.Type() {
+					case lua.LTString:
+						Row[0] = lua.LVAsString(k)
+						Row[1] = lua.LVAsString(v)
+					case lua.LTNumber:
+						Row[0] = lua.LVAsString(k)
+						Row[1] = float64(lua.LVAsNumber(v))
+					case lua.LTBool:
+						Row[0] = lua.LVAsString(k)
+						Row[1] = bool(lua.LVAsBool(v))
+					case lua.LTNil:
+						Row[0] = lua.LVAsString(k)
+						Row[1] = ""
+					default:
+						Row[0] = lua.LVAsString(k)
+						Row[1] = "" // 不支持其他类型
+					}
+					RowList = append(RowList, Row)
+				}
+			}
+		})
+		// SELECT id FROM data_center_%s ORDER BY id DESC LIMIT 1;
+		id := -1
+		if err := datacenter.DB().
+			Raw(fmt.Sprintf("SELECT id FROM data_center_%s ORDER BY id DESC LIMIT 1;",
+				schema_uuid)).Scan(&id).Error; err != nil {
+			l.Push(lua.LString(err.Error()))
+			return 1
+		}
+		if id < 0 {
+			if err := saveToDataCenter(fmt.Sprintf("data_center_%s", schema_uuid), RowList); err != nil {
+				l.Push(lua.LString(err.Error()))
+			} else {
+				l.Push(lua.LNil)
+			}
+		} else {
+			if err := updateLast(fmt.Sprintf("data_center_%s", schema_uuid), RowList); err != nil {
+				l.Push(lua.LString(err.Error()))
+			} else {
+				l.Push(lua.LNil)
+			}
+		}
+		return 1
+	}
+}
+
+// GenUpdateSql 生成 Update SQL 语句
+// -- 1. 添加自增的主键列
+//     ALTER TABLE your_table ADD COLUMN id INTEGER PRIMARY KEY AUTOINCREMENT;
+// -- 2. 找到最后一行数据
+//     SELECT id FROM your_table ORDER BY id DESC LIMIT 1;
+// -- 3. 使用找到的最后一行的 id 进行更新
+//        UPDATE your_table
+//        SET K1 = 'new_value1',
+//            K2 = 'new_value2',
+//            K3 = 'new_value3'
+//        WHERE condition;
+
+func GenUpdateSql(tableName string, rowList [][2]interface{}) (string, error) {
+	if len(rowList) == 0 {
+		return "", fmt.Errorf("no rows to update")
+	}
+	fieldValuePairs := []string{}
+	for _, row := range rowList {
+		fieldValuePairs = append(fieldValuePairs, fmt.Sprintf("%v=%v", row[0], row[1]))
+	}
+	sql := fmt.Sprintf("UPDATE %s SET %s WHERE id=%v;", tableName, strings.Join(fieldValuePairs, ","), 1)
+	return sql, nil
+}
+
+// Save to local DataCenter
+func updateLast(schema_uuid string, RowList [][2]interface{}) error {
+	Sql, err0 := GenUpdateSql(schema_uuid, RowList)
+	glogger.GLogger.Debug(Sql)
+	if err0 != nil {
+		return err0
+	}
+	err1 := datacenter.DB().Exec(Sql).Error
+	if err1 != nil {
+		return err1
+	}
 	return nil
 }

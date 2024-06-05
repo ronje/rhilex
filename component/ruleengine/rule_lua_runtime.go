@@ -122,7 +122,7 @@ func VerifyLuaSyntax(r *typex.Rule) error {
 			}
 		})
 		if !valid {
-			return errors.New("invalid function type")
+			return errors.New("Invalid function type")
 		}
 	} else {
 		return errors.New("'Actions' must be a functions table")

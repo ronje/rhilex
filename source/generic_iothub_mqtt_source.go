@@ -228,23 +228,20 @@ func (tc *iothub) Start(cctx typex.CCTX) error {
 
 	}
 
-	var connectLostHandler mqtt.ConnectionLostHandler = func(client mqtt.Client, err error) {
-		glogger.GLogger.Warnf("IOTHUB Disconnect: %v, %v try to reconnect", err, tc.status)
-	}
-
 	opts := mqtt.NewClientOptions()
 	opts.AddBroker(fmt.Sprintf("tcp://%s:%v", tc.mainConfig.Host, tc.mainConfig.Port))
 	opts.SetClientID(tc.mainConfig.ClientId)
 	opts.SetUsername(tc.mainConfig.Username)
 	opts.SetPassword(tc.mainConfig.Password)
 	opts.OnConnect = connectHandler
-	opts.OnConnectionLost = connectLostHandler
+	opts.SetConnectionLostHandler(func(client mqtt.Client, err error) {
+		glogger.GLogger.Warn("Mqtt Connect lost:", err)
+	})
 	opts.SetCleanSession(true)
-	opts.SetPingTimeout(30 * time.Second)
-	opts.SetKeepAlive(60 * time.Second)
+	opts.SetAutoReconnect(false)    //不需要自动重连, 交给RHILEX管理
+	opts.SetMaxReconnectInterval(0) // 不需要自动重连, 交给RHILEX管理
 	opts.SetConnectTimeout(5 * time.Second)
-	opts.SetAutoReconnect(false)
-	opts.SetMaxReconnectInterval(0)
+	opts.SetPingTimeout(5 * time.Second)
 	tc.client = mqtt.NewClient(opts)
 	if token := tc.client.Connect(); token.Wait() && token.Error() != nil {
 		return token.Error()
@@ -289,43 +286,7 @@ func (tc *iothub) Details() *typex.InEnd {
 }
 
 func (tc *iothub) DownStream(bytes []byte) (int, error) {
-	var msg iothubUpMsg
-	if err := json.Unmarshal(bytes, &msg); err != nil {
-		return 0, err
-	}
-	//
-	var err error
-	// 属性回复: 兼容腾讯iothub
-	if msg.Method == _iothub_METHOD_CONTROL_REPLY {
-		topic := fmt.Sprintf(tc.PropertyUpTopic, tc.mainConfig.ProductId, tc.mainConfig.DeviceName)
-		err = tc.client.Publish(topic, 1, false, bytes).Error()
-	}
-	// 属性回复: 兼容W3C
-	if msg.Method == _iothub_METHOD_PROPERTY_REPLY {
-		topic := fmt.Sprintf(tc.ActionUpTopic, tc.mainConfig.ProductId, tc.mainConfig.DeviceName)
-		err = tc.client.Publish(topic, 1, false, bytes).Error()
-	}
-	// 事件调用回复
-	if msg.Method == _iothub_METHOD_ACTION_REPLY {
-		topic := fmt.Sprintf(tc.ActionUpTopic, tc.mainConfig.ProductId, tc.mainConfig.DeviceName)
-		err = tc.client.Publish(topic, 1, false, bytes).Error()
-	}
-	// 用户自定义Topic
-	// iothub:usermsg()
-	if msg.Method == "user_topic" {
-		if msg.UserDefineTopic != "" {
-			err = tc.client.Publish(msg.UserDefineTopic, 1, false, bytes).Error()
-		}
-	}
-	// 子设备
-	// iothub:subdevicemsg()
-	if msg.Method == "SUBDEVICE" {
-		if msg.UserDefineTopic != "" {
-			topic := fmt.Sprintf("$gateway/%s/%s", tc.mainConfig.DeviceName, msg.SubDeviceId)
-			err = tc.client.Publish(topic, 1, false, bytes).Error()
-		}
-	}
-	return 0, err
+	return 0, nil
 }
 
 // 上行数据

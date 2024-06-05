@@ -269,6 +269,14 @@ func PublishSchema(c *gin.Context, ruleEngine typex.Rhilex) {
 		if err2 := datacenter.DB().Exec(sql).Error; err2 != nil {
 			return err2
 		}
+		idxSql1 := `CREATE INDEX IF NOT EXISTS idx_id ON %s (id DESC);`
+		if errIdx1 := datacenter.DB().Exec(fmt.Sprintf(idxSql1, tableName)).Error; errIdx1 != nil {
+			return errIdx1
+		}
+		idxSql2 := `CREATE INDEX IF NOT EXISTS idx_create_at ON %s (create_at DESC);`
+		if errIdx2 := datacenter.DB().Exec(fmt.Sprintf(idxSql2, tableName)).Error; errIdx2 != nil {
+			return errIdx2
+		}
 		return nil
 	})
 	if txErr != nil {

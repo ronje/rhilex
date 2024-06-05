@@ -504,11 +504,11 @@ func DeleteRule(c *gin.Context, ruleEngine typex.Rhilex) {
 
 	}
 
-	if err := service.DeleteMRule(uuid); err != nil {
+	if err := service.DeleteMRule(mRule.UUID); err != nil {
 		c.JSON(common.HTTP_OK, common.Error400(err))
 		return
 	}
-	ruleEngine.RemoveRule(uuid)
+	ruleEngine.RemoveRule(mRule.UUID)
 	c.JSON(common.HTTP_OK, common.Ok())
 }
 

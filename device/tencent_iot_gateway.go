@@ -45,15 +45,15 @@ const (
 
 type TencentIoTGatewayConfig struct {
 	// "tcp://$.iotcloud.tencentdevices.com:1883"
-	ServerEndpoint string `json:"serverEndpoint" validate:"required"` //服务地址
-	Mode           string `json:"mode" validate:"required"`           //模式: DEVICE|GATEWAY
-	ProductId      string `json:"productId" validate:"required"`      //产品名
-	DeviceName     string `json:"deviceName" validate:"required"`     //设备名
-	DevicePsk      string `json:"devicePsk" validate:"required"`      //秘钥
-	ClientId       string `json:"clientId" validate:"required"`       //客户端ID
+	// ServerEndpoint string `json:"serverEndpoint" validate:"required"` //服务地址
+	Mode       string `json:"mode" validate:"required"`       //模式: DEVICE|GATEWAY
+	ProductId  string `json:"productId" validate:"required"`  //产品名
+	DeviceName string `json:"deviceName" validate:"required"` //设备名
+	DevicePsk  string `json:"devicePsk" validate:"required"`  //秘钥
+	ClientId   string `json:"clientId" validate:"required"`   //客户端ID
 }
 type TencentIoTGatewayMainConfig struct {
-	CommonConfig TencentIoTGatewayConfig `json:"commonConfig" validate:"required"` // 通用配置
+	CommonConfig TencentIoTGatewayConfig `json:"tencentConfig" validate:"required"` // 通用配置
 }
 
 // 腾讯云物联网平台网关
@@ -78,12 +78,11 @@ func NewTencentIoTGateway(e typex.Rhilex) typex.XDevice {
 	hd.RuleEngine = e
 	hd.mainConfig = TencentIoTGatewayMainConfig{
 		CommonConfig: TencentIoTGatewayConfig{
-			Mode:           "DEVICE",
-			ServerEndpoint: "tcp://%s.iotcloud.tencentdevices.com:1883",
-			ProductId:      "",
-			DeviceName:     "",
-			DevicePsk:      "",
-			ClientId:       "",
+			Mode:       "DEVICE",
+			ProductId:  "",
+			DeviceName: "",
+			DevicePsk:  "",
+			ClientId:   "",
 		},
 	}
 	return hd
@@ -154,13 +153,11 @@ func (hd *TencentIoTGateway) Start(cctx typex.CCTX) error {
 	var connectLostHandler mqtt.ConnectionLostHandler = func(client mqtt.Client, err error) {
 		glogger.GLogger.Warnf("IOTHUB Disconnect: %v, %v try to reconnect", err, hd.status)
 	}
-
 	opts := mqtt.NewClientOptions()
-	// iotcloud.tencentdevices.com
-	// endPoint := "tcp://%s.iotcloud.tencentdevices.com:1883"
-	// hd.mainConfig.CommonConfig.ServerEndpoint = fmt.Sprintf(endPoint, hd.mainConfig.CommonConfig.ProductId)
-	endPoint := "tcp://192.168.1.170:1883"
-	opts.AddBroker(endPoint)
+	endPoint := "tcp://%s.iotcloud.tencentdevices.com:1883"
+	ServerEndpoint := fmt.Sprintf(endPoint, hd.mainConfig.CommonConfig.ProductId)
+	// endPoint := "tcp://192.168.1.170:1883"
+	opts.AddBroker(ServerEndpoint)
 	opts.SetClientID(hd.mqttClientId)
 	opts.SetUsername(hd.mqttUsername)
 	opts.SetPassword(hd.mqttPassword)
@@ -257,10 +254,10 @@ type TencentIotHubMQTTAuthInfo struct {
 func GenerateTencentIotMQTTAuthInfo(productID, deviceName, psk string) (TencentIotHubMQTTAuthInfo, error) {
 	var ai TencentIotHubMQTTAuthInfo
 	var err error
-	connid := randConnID(5)
+	connId := randConnID(5)
 	expiry := time.Now().Add(365 * 24 * time.Hour).Unix()
 	ai.ClientID = productID + deviceName
-	ai.UserName = fmt.Sprintf("%v;%v;%v;%v", ai.ClientID, 12010126, connid, expiry)
+	ai.UserName = fmt.Sprintf("%v;%v;%v;%v", ai.ClientID, 12010126, connId, expiry)
 	key, err := base64.StdEncoding.DecodeString(psk)
 	if err != nil {
 		return ai, err

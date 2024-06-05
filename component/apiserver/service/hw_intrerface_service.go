@@ -17,14 +17,13 @@ package service
 
 import (
 	"encoding/json"
-	"runtime"
 
-	"github.com/hootrhino/rhilex/component/interdb"
 	"github.com/hootrhino/rhilex/component/apiserver/model"
-	"github.com/hootrhino/rhilex/ossupport"
+	"github.com/hootrhino/rhilex/component/interdb"
 	"github.com/hootrhino/rhilex/typex"
 	"github.com/hootrhino/rhilex/utils"
 	"go.bug.st/serial"
+	"gorm.io/gorm"
 )
 
 type UartConfigDto struct {
@@ -96,6 +95,19 @@ func GetHwPortConfig(uuid string) (model.MHwPort, error) {
 *
  */
 func InitHwPortConfig() error {
+	DbTx := interdb.DB()
+	errDbTx := DbTx.Transaction(func(tx *gorm.DB) error {
+		err0 := tx.Session(&gorm.Session{
+			AllowGlobalUpdate: true,
+		}).Delete(&model.MHwPort{}).Error
+		if err0 != nil {
+			return err0
+		}
+		return nil
+	})
+	if errDbTx != nil {
+		return errDbTx
+	}
 	for _, portName := range GetOsPort() {
 
 		Port := model.MHwPort{
@@ -107,17 +119,6 @@ func InitHwPortConfig() error {
 				return portName
 			}(),
 			Description: portName,
-		}
-		// 兼容代码,识别H3网关的参数
-		if typex.DefaultVersionInfo.Product == "EEKIIH3" {
-			if portName == "/dev/ttyS1" {
-				Port.Alias = "RS485接口1(A1B1)"
-				Port.Name = "RS4851(A1B1)"
-			}
-			if portName == "/dev/ttyS2" {
-				Port.Alias = "RS485接口2(A2B2)"
-				Port.Name = "RS4852(A2B2)"
-			}
 		}
 		uartCfg := UartConfigDto{
 			Timeout:  3000,
@@ -146,14 +147,10 @@ func InitHwPortConfig() error {
  */
 func GetOsPort() []string {
 	var ports []string
-	if runtime.GOOS == "windows" {
-		ports, _ = serial.GetPortsList()
-	} else {
-		ports, _ = ossupport.GetPortsListUnix()
-	}
+	ports, _ = serial.GetPortsList()
 	List := []string{}
 	for _, port := range ports {
-		if typex.DefaultVersionInfo.Product == "EEKIIH3" {
+		if typex.DefaultVersionInfo.Product == "RHILEXG1" {
 			// H3的下列串口被系统占用
 			if utils.SContains([]string{
 				"/dev/ttyS0",

@@ -19,10 +19,10 @@ import (
 	"encoding/json"
 
 	"github.com/gin-gonic/gin"
-	"github.com/hootrhino/rhilex/component/hwportmanager"
 	common "github.com/hootrhino/rhilex/component/apiserver/common"
 	"github.com/hootrhino/rhilex/component/apiserver/model"
 	"github.com/hootrhino/rhilex/component/apiserver/service"
+	"github.com/hootrhino/rhilex/component/hwportmanager"
 	"github.com/hootrhino/rhilex/typex"
 	"github.com/hootrhino/rhilex/utils"
 )
@@ -66,6 +66,7 @@ func (u UartConfigVo) JsonString() string {
 *
  */
 func RefreshPortList(c *gin.Context, ruleEngine typex.Rhilex) {
+
 	if err := service.InitHwPortConfig(); err != nil {
 		c.JSON(common.HTTP_OK, common.Error400(err))
 		return
@@ -135,7 +136,7 @@ func UpdateHwPortConfig(c *gin.Context, ruleEngine typex.Rhilex) {
 	// 串口类
 	if MHwPort.Type == "UART" {
 		config := hwportmanager.UartConfig{}
-		utils.BindConfig(MHwPort.GetConfig(), &config)
+		utils.BindSourceConfig(MHwPort.GetConfig(), &config)
 		HwIPort.Config = config
 	}
 	if MHwPort.Type == "FD" {

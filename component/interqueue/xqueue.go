@@ -173,7 +173,7 @@ func StartDataCacheQueue() {
 			case qd := <-xQueue.GetOutQueue():
 				processOutQueueData(qd, qd.E)
 			case <-ticker.C:
-
+				continue
 			}
 		}
 	}(ctx, xQueue)

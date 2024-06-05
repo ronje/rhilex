@@ -99,7 +99,7 @@ func (dm *NgrokClient) Init(config *ini.Section) error {
 		return err
 	}
 	if dm.mainConfig.AuthToken == "default" {
-		return fmt.Errorf("invalid ngrok auth token, More detail go to: https://ngrok.com/docs/getting-started")
+		return fmt.Errorf("Invalid ngrok auth token, More detail go to: https://ngrok.com/docs/getting-started")
 	}
 	if !slices.Contains([]string{"tcp", "http", "https"}, dm.mainConfig.LocalSchema) {
 		return fmt.Errorf("LocalSchema must one of tcp or http or https")

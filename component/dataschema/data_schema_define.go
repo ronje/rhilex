@@ -358,7 +358,7 @@ func CheckPropertyType(s string) error {
 *
  */
 func ValidateRw(s string) error {
-	if utils.SContains([]string{"R", "W", "RW"}, s) {
+	if !utils.SContains([]string{"R", "W", "RW"}, s) {
 		return fmt.Errorf("RW Value Only Support 'R' or 'W' or 'RW'")
 	}
 	return nil

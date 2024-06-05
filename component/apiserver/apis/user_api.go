@@ -10,9 +10,9 @@ import (
 	common "github.com/hootrhino/rhilex/component/apiserver/common"
 	"github.com/hootrhino/rhilex/component/apiserver/model"
 	"github.com/hootrhino/rhilex/component/apiserver/service"
+	"github.com/hootrhino/rhilex/component/internotify"
 	"github.com/hootrhino/rhilex/glogger"
 	"github.com/hootrhino/rhilex/typex"
-	"github.com/hootrhino/rhilex/utils"
 
 	"github.com/dgrijalva/jwt-go"
 	"github.com/gin-gonic/gin"
@@ -138,14 +138,11 @@ func Login(c *gin.Context, ruleEngine typex.Rhilex) {
 		c.JSON(common.HTTP_OK, common.Error400(err))
 		return
 	}
-	UUID := utils.MakeUUID("NOTIFY")
 	Ts := uint64(time.Now().UnixMilli())
 	if _, err := service.Login(u.Username, md5Hash(u.Password)); err != nil {
 		glogger.GLogger.Warn("User Login Failed:", clientIP)
-		service.InsertInternalNotify(model.MInternalNotify{
-			UUID:    UUID,
-			Type:    `WARNING`, // INFO | ERROR | WARNING
-			Status:  1,
+		internotify.Push(internotify.BaseEvent{
+			Type:    `WARNING`,
 			Event:   `event.system.user.login.failed`,
 			Ts:      Ts,
 			Summary: "User Login Failed",
@@ -157,24 +154,21 @@ func Login(c *gin.Context, ruleEngine typex.Rhilex) {
 	}
 	if token, err := generateToken(u.Username); err != nil {
 		glogger.GLogger.Warn("User Login Failed:", clientIP)
-		service.InsertInternalNotify(model.MInternalNotify{
-			UUID:    UUID,
+		internotify.Push(internotify.BaseEvent{
 			Type:    `WARNING`, // INFO | ERROR | WARNING
-			Status:  1,
 			Event:   `event.system.user.login.failed`,
 			Ts:      Ts,
 			Summary: "User Login Failed",
 			Info: fmt.Sprintf(`User Login Failed, Username: %s, RemoteAddr: %s`,
 				u.Username, clientIP),
 		})
+
 		c.JSON(common.HTTP_OK, common.Error400(err))
 		return
 	} else {
 		glogger.GLogger.Info("User Login Success:", clientIP)
-		service.InsertInternalNotify(model.MInternalNotify{
-			UUID:    UUID,
+		internotify.Push(internotify.BaseEvent{
 			Type:    `INFO`, // INFO | ERROR | WARNING
-			Status:  1,
 			Event:   `event.system.user.login.success`,
 			Ts:      Ts,
 			Summary: "User Login Success",
@@ -185,7 +179,31 @@ func Login(c *gin.Context, ruleEngine typex.Rhilex) {
 	}
 }
 
+/*
+*
+* 退出
+*
+ */
 func LogOut(c *gin.Context, ruleEngine typex.Rhilex) {
+
+	type _user struct {
+		Username string `json:"username" binding:"required"`
+		Password string `json:"password" binding:"required"`
+	}
+	clientIP := c.ClientIP()
+	var u _user
+	if err := c.BindJSON(&u); err != nil {
+		c.JSON(common.HTTP_OK, common.Error400(err))
+		return
+	}
+	internotify.Push(internotify.BaseEvent{
+		Type:    `INFO`, // INFO | ERROR | WARNING
+		Event:   `event.system.user.logout.success`,
+		Ts:      uint64(time.Now().UnixMilli()),
+		Summary: "User Logout Success",
+		Info: fmt.Sprintf(`User Logout Success, Username: %s, RemoteAddr: %s`,
+			u.Username, clientIP),
+	})
 	c.JSON(common.HTTP_OK, common.Ok())
 }
 
@@ -253,34 +271,4 @@ func parseToken(tokenString string) (*JwtClaims, error) {
 	} else {
 		return nil, err
 	}
-}
-
-/*
-*
-* 上传头像
-*
- */
-func UploadSysLogo(c *gin.Context, ruleEngine typex.Rhilex) {
-	c.JSON(common.HTTP_OK, common.Ok())
-
-}
-
-/*
-*
-* 加载头像
-*
- */
-func GetSysLogo(c *gin.Context, ruleEngine typex.Rhilex) {
-	c.JSON(common.HTTP_OK, common.Ok())
-
-}
-
-/*
-*
-* 重置站点
-*
- */
-func ResetSiteConfig(c *gin.Context, ruleEngine typex.Rhilex) {
-
-	c.JSON(common.HTTP_OK, common.Ok())
 }

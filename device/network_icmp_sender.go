@@ -53,7 +53,7 @@ func (sender *IcmpSender) Init(devId string, configMap map[string]interface{}) e
 	}
 	for _, ip := range sender.mainConfig.IcmpConfig.Hosts {
 		if net.ParseIP(ip) == nil {
-			return errors.New("invalid ip:" + ip)
+			return errors.New("Invalid ip:" + ip)
 		}
 	}
 	if !*sender.mainConfig.CommonConfig.AutoRequest {

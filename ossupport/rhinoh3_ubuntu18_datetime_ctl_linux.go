@@ -17,10 +17,11 @@ package ossupport
 
 import (
 	"fmt"
-	"golang.org/x/sys/unix"
 	"os/exec"
 	"strings"
 	"time"
+
+	"golang.org/x/sys/unix"
 )
 
 /*

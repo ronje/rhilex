@@ -1,19 +1,21 @@
-# 通用串口收发器
-主要用来操作普通串口。
+# 通用读写串口
+主要用来操作普通串口，只有读操作，不支持指令控制.
 
 ## 配置
 ```json
 {
-    "name": "GENERIC_UART",
-    "type": "GENERIC_UART",
+    "name": "GENERIC_UART_RW",
+    "type": "GENERIC_UART_RW",
     "gid": "DROOT",
     "config": {
         "commonConfig": {
             "tag": "uart",
-            "timeout": 50
+            "timeSlice": 50,
+            "autoRequest": true,
+            "readFormat": "HEX"
         },
-        "portUuid": "COM4"
+        "portUuid": "COM3"
     },
-    "description": "GENERIC_UART"
+    "description": "GENERIC_UART_RW"
 }
 ```

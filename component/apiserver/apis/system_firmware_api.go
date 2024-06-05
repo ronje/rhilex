@@ -106,7 +106,7 @@ func UpgradeFirmWare(c *gin.Context, ruleEngine typex.Rhilex) {
 	}
 	glogger.GLogger.Debugf("Compare MD5:[%s]~[%s]", md51, string(readBytes))
 	if md51 != string(readBytes) {
-		c.JSON(common.HTTP_OK, common.Error("invalid sum md5!"))
+		c.JSON(common.HTTP_OK, common.Error("Invalid sum md5!"))
 		return
 	}
 	if err3 := os.RemoveAll(tempPath); err3 != nil {
@@ -190,7 +190,10 @@ func CheckFileType(filePath string) error {
 		if elfArch != currentArch {
 			return fmt.Errorf("ELF architecture mismatch: %s != %s", elfArch, currentArch)
 		}
-
+	case CheckPEFileMagic(magicNumber):
+		return fmt.Errorf("not support windows PE Format")
+	case CheckDOSHeaderMagic(magicNumber):
+		return fmt.Errorf("not support windows DOS Format")
 	default:
 		return fmt.Errorf("unknown file type")
 	}
@@ -235,4 +238,12 @@ func checkELFArch(file *os.File) (string, error) {
 	default:
 		return "", fmt.Errorf("unknown ELF architecture")
 	}
+}
+
+func CheckPEFileMagic(data [4]byte) bool {
+	return (uint32(data[0]) | uint32(data[1])<<8 | uint32(data[2])<<16 | uint32(data[3])<<24) == 0x50450000
+}
+
+func CheckDOSHeaderMagic(data [4]byte) bool {
+	return (uint32(data[0]) | uint32(data[1])<<8) == 0x5A4D
 }

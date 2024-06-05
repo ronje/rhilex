@@ -5,8 +5,9 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/hootrhino/rhilex/component/cron_task"
+	cron_task "github.com/hootrhino/rhilex/component/crontask"
 	"github.com/hootrhino/rhilex/component/hwportmanager"
+	"github.com/hootrhino/rhilex/component/internotify"
 	"github.com/shirou/gopsutil/cpu"
 
 	"github.com/hootrhino/rhilex/component/apiserver/apis"
@@ -151,7 +152,7 @@ func loadAllPortConfig() {
 		// 串口
 		if MHwPort.Type == "UART" {
 			config := hwportmanager.UartConfig{}
-			if err := utils.BindConfig(MHwPort.GetConfig(), &config); err != nil {
+			if err := utils.BindSourceConfig(MHwPort.GetConfig(), &config); err != nil {
 				glogger.GLogger.Error(err) // 这里必须不能出错
 				continue
 			}
@@ -331,7 +332,6 @@ func (hs *ApiServerPlugin) LoadRoute() {
 		deviceApi.GET("/list", server.AddRoute(apis.ListDevice))
 		deviceApi.PUT("/restart", server.AddRoute(apis.RestartDevice))
 		deviceApi.GET("/deviceErrMsg", server.AddRoute(apis.GetDeviceErrorMsg))
-		deviceApi.GET("/pointErrMsg", server.AddRoute(apis.GetDevicePointErrorMsg))
 	}
 	// Modbus 点位表
 	modbusApi := server.RouteGroup(server.ContextUrl("/modbus_data_sheet"))
@@ -436,9 +436,9 @@ func (hs *ApiServerPlugin) LoadRoute() {
 	// 站内公告
 	internalNotifyApi := server.DefaultApiServer.GetGroup(server.ContextUrl("/notify"))
 	{
-		internalNotifyApi.GET("/list", server.AddRoute(apis.InternalNotifies))
 		internalNotifyApi.PUT("/clear", server.AddRoute(apis.ClearInternalNotifies))
 		internalNotifyApi.PUT("/read", server.AddRoute(apis.ReadInternalNotifies))
+		internalNotifyApi.GET("/pageList", server.AddRoute(apis.PageInternalNotifies))
 	}
 	//
 	// 系统设置
@@ -525,11 +525,9 @@ func GetCpuUsage() {
 		V := calculateCpuPercent(cpuPercent)
 		// TODO 这个比例需要通过参数适配
 		if V > 90 {
-			service.InsertInternalNotify(model.MInternalNotify{
-				UUID:    utils.MakeUUID("NOTIFY"), // UUID
-				Type:    `WARNING`,                // INFO | ERROR | WARNING
-				Status:  1,
-				Event:   `system.cpu.load`, // 字符串
+			internotify.Push(internotify.BaseEvent{
+				Type:    `WARNING`,
+				Event:   `system.cpu.load`,
 				Ts:      uint64(time.Now().UnixMilli()),
 				Summary: "High CPU Usage",
 				Info:    fmt.Sprintf("High CPU Usage: %.2f%%, please maintain the device", V),

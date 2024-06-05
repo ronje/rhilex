@@ -19,6 +19,7 @@ import (
 	"fmt"
 
 	"github.com/hootrhino/rhilex/component/apiserver/model"
+	"github.com/hootrhino/rhilex/component/datacenter"
 	"github.com/hootrhino/rhilex/component/interdb"
 	"gorm.io/gorm"
 )
@@ -37,7 +38,8 @@ func GetDataSchemaWithUUID(uuid string) (model.MIotSchema, error) {
 
 // 删除DataSchema
 func DeleteDataSchemaAndProperty(schemaUuid string) error {
-	err := interdb.DB().Transaction(func(tx *gorm.DB) error {
+	// 清空RHILEX数据库
+	return interdb.DB().Transaction(func(tx *gorm.DB) error {
 		// Delete Schema
 		err2 := tx.Where("uuid=?", schemaUuid).Delete(&model.MIotSchema{}).Error
 		if err2 != nil {
@@ -48,14 +50,13 @@ func DeleteDataSchemaAndProperty(schemaUuid string) error {
 		if err1 != nil {
 			return err1
 		}
-		// Delete data_center
-		err3 := tx.Raw(fmt.Sprintf("DROP TABLE data_center_%s;", schemaUuid)).Error
-		if err3 != nil {
-			return err3
+		// 清空数据中心的表
+		err1Exec := datacenter.DB().Exec(fmt.Sprintf("DROP TABLE data_center_%s;", schemaUuid)).Error
+		if err1Exec != nil {
+			return err1Exec
 		}
 		return nil
 	})
-	return err
 }
 
 // 创建DataSchema

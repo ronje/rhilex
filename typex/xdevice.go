@@ -17,8 +17,8 @@ func (d DeviceType) String() string {
 const (
 	SIEMENS_PLC            DeviceType = "SIEMENS_PLC"            // SIEMENS-S71200
 	GENERIC_MODBUS         DeviceType = "GENERIC_MODBUS"         // 通用Modbus
-	GENERIC_UART           DeviceType = "GENERIC_UART"           // 通用串口
 	GENERIC_SNMP           DeviceType = "GENERIC_SNMP"           // SNMP 支持
+	GENERIC_UART_RW        DeviceType = "GENERIC_UART_RW"        // 通用串口
 	GENERIC_UART_PROTOCOL  DeviceType = "GENERIC_UART_PROTOCOL"  // 通用自定义协议处理器
 	GENERIC_OPCUA          DeviceType = "GENERIC_OPCUA"          // 通用OPCUA
 	GENERIC_CAMERA         DeviceType = "GENERIC_CAMERA"         // 通用摄像头

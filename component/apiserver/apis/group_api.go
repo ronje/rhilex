@@ -34,7 +34,7 @@ func CreateGroup(c *gin.Context, ruleEngine typex.Rhilex) {
 		return
 	}
 	if !utils.SContains([]string{"DEVICE", "USER_LUA_TEMPLATE"}, vvo.Type) {
-		c.JSON(common.HTTP_OK, common.Error400(fmt.Errorf("invalid group type [%s]", vvo.Type)))
+		c.JSON(common.HTTP_OK, common.Error400(fmt.Errorf("Invalid group type [%s]", vvo.Type)))
 		return
 	}
 	Model := model.MGenericGroup{

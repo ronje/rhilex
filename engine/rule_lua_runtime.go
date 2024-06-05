@@ -158,7 +158,7 @@ func LoadRuleLibGroup(r *typex.Rule, e typex.Rhilex) {
 			"Led1On":  rhilexlib.Led1On(e, r.UUID),
 			"Led1Off": rhilexlib.Led1Off(e, r.UUID),
 		}
-		AddRuleLibToGroup(r, e, "rhinopi", Funcs)
+		AddRuleLibToGroup(r, e, "rhilexg1", Funcs)
 	}
 	{
 		Funcs := map[string]func(l *lua.LState) int{
@@ -221,9 +221,10 @@ func LoadRuleLibGroup(r *typex.Rule, e typex.Rhilex) {
 	}
 	{
 		Funcs := map[string]func(l *lua.LState) int{
-			"Save": rhilexlib.InsertToDataCenterTable(e, r.UUID),
-			"List": rhilexlib.QueryDataCenterList(e, r.UUID),
-			"Last": rhilexlib.QueryDataCenterLast(e, r.UUID),
+			"Save":       rhilexlib.InsertToDataCenterTable(e, r.UUID),
+			"List":       rhilexlib.QueryDataCenterList(e, r.UUID),
+			"Last":       rhilexlib.QueryDataCenterLast(e, r.UUID),
+			"UpdateLast": rhilexlib.UpdateDataCenterLast(e, r.UUID),
 		}
 		AddRuleLibToGroup(r, e, "rds", Funcs)
 	}
@@ -235,7 +236,7 @@ func LoadRuleLibGroup(r *typex.Rule, e typex.Rhilex) {
 *
  */
 func LoadExtLuaLib(e typex.Rhilex, r *typex.Rule) error {
-	for _, s := range core.GlobalConfig.ExtLibs.Value {
+	for _, s := range core.GlobalConfig.ExtLibs {
 		err := r.LoadExternLuaLib(s)
 		if err != nil {
 			return err

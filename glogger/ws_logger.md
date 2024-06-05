@@ -41,13 +41,13 @@ $$
 
 ### 常见Topic
 
-| Ws log topic             | 用途             |
-| ------------------------ | ---------------- |
-| plugin/${name}/${uuid}   | 插件的日志       |
-| rule/log/${uuid}         | 规则运行时的日志 |
-| app/console/${uuid}      | app运行地址      |
-| device/rule/test/${uuid} | Test device      |
-| inend/rule/test/${uuid}  | Test inend       |
+| Ws log topic             | 用途               |
+| ------------------------ | ------------------ |
+| plugin/${name}/${uuid}   | 插件的日志         |
+| rule/log/${uuid}         | 规则运行时的日志   |
+| app/console/${uuid}      | app运行的日志      |
+| device/rule/test/${uuid} | Test device 的日志 |
+| inend/rule/test/${uuid}  | Test inend  的日志 |
 
 ### 常见日志示例
 1. 测速

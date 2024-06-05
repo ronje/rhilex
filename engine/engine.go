@@ -119,6 +119,10 @@ func InitRuleEngine(config typex.RhilexConfig) typex.Rhilex {
 	rtspserver.InitRtspServer(__DefaultRuleEngine)
 	// Jpeg Stream Server
 	jpegstream.InitJpegStreamServer(__DefaultRuleEngine)
+	// 内部队列
+	interqueue.StartDataCacheQueue()
+	// InternalEventQueue
+	internotify.StartInternalEventQueue()
 	return __DefaultRuleEngine
 }
 
@@ -132,10 +136,7 @@ func (e *RuleEngine) Start() *typex.RhilexConfig {
 	e.InitDeviceTypeManager()
 	e.InitSourceTypeManager()
 	e.InitTargetTypeManager()
-	// 内部队列
-	interqueue.StartDataCacheQueue()
-	// InternalEventQueue
-	internotify.StartInternalEventQueue()
+	intercache.RegisterSlot("__DefaultRuleEngine")
 	return e.Config
 }
 
@@ -165,47 +166,52 @@ func (e *RuleEngine) Stop() {
 	e.InEnds.Range(func(key, value interface{}) bool {
 		inEnd := value.(*typex.InEnd)
 		if inEnd.Source != nil {
-			glogger.GLogger.Info("Stop InEnd:", inEnd.Name, inEnd.UUID)
+			glogger.GLogger.Infof("Stop InEnd:(%s,%s)", inEnd.Name, inEnd.UUID)
 			e.GetInEnd(inEnd.UUID).State = typex.SOURCE_STOP
 			inEnd.Source.Stop()
 		}
-		glogger.GLogger.Info("Stop InEnd:", inEnd.Name, inEnd.UUID, " Successfully")
+		glogger.GLogger.Infof("Stop InEnd:(%s,%s) Successfully", inEnd.Name, inEnd.UUID)
 		return true
 	})
 	// 停止所有外部资源
 	e.OutEnds.Range(func(key, value interface{}) bool {
 		outEnd := value.(*typex.OutEnd)
 		if outEnd.Target != nil {
-			glogger.GLogger.Info("Stop NewTarget:", outEnd.Name, outEnd.UUID)
+			glogger.GLogger.Infof("Stop NewTarget:(%s,%s)", outEnd.Name, outEnd.UUID)
 			e.GetOutEnd(outEnd.UUID).State = typex.SOURCE_STOP
 			outEnd.Target.Stop()
-			glogger.GLogger.Info("Stop NewTarget:", outEnd.Name, outEnd.UUID, " Successfully")
+			glogger.GLogger.Infof("Stop NewTarget:(%s,%s) Successfully", outEnd.Name, outEnd.UUID)
 		}
 		return true
 	})
 	// 停止所有插件
 	e.Plugins.Range(func(key, value interface{}) bool {
 		plugin := value.(typex.XPlugin)
-		glogger.GLogger.Info("Stop plugin:", plugin.PluginMetaInfo().Name)
+		glogger.GLogger.Infof("Stop plugin:(%s)", plugin.PluginMetaInfo().Name)
 		plugin.Stop()
-		glogger.GLogger.Info("Stop plugin:", plugin.PluginMetaInfo().Name, " Successfully")
+		glogger.GLogger.Infof("Stop plugin:(%s) Successfully", plugin.PluginMetaInfo().Name)
 		return true
 	})
 	// 停止所有设备
 	e.Devices.Range(func(key, value interface{}) bool {
 		Device := value.(*typex.Device)
-		glogger.GLogger.Info("Stop Device:", Device.Name)
+		glogger.GLogger.Infof("Stop Device:(%s)", Device.Name)
 		e.GetDevice(Device.UUID).State = typex.DEV_STOP
 		Device.Device.Stop()
-		glogger.GLogger.Info("Stop Device:", Device.Name, " Successfully")
+		glogger.GLogger.Infof("Stop Device:(%s) Successfully", Device.Name)
 		return true
 	})
+	// Flush Shelly Device Cache
 	glogger.GLogger.Info("Flush Shelly Device Cache")
 	shellymanager.Flush()
-	glogger.GLogger.Info("Flush Modbus Point sheet Cache")
+	// Internal Cache
+	glogger.GLogger.Info("Flush Internal Cache")
 	intercache.Flush()
+	// AI Runtime
 	glogger.GLogger.Info("Stop AI Runtime")
 	aibase.Stop()
+	// UnRegisterSlot
+	intercache.UnRegisterSlot("__DefaultRuleEngine")
 	glogger.GLogger.Info("[√] Stop rhilex successfully")
 	if err := glogger.Close(); err != nil {
 		fmt.Println("Close logger error: ", err)
@@ -340,12 +346,12 @@ func (e *RuleEngine) SaveInEnd(in *typex.InEnd) {
 func (e *RuleEngine) RemoveInEnd(uuid string) {
 	if inEnd := e.GetInEnd(uuid); inEnd != nil {
 		if inEnd.Source != nil {
-			glogger.GLogger.Infof("InEnd [%v] ready to stop", uuid)
+			glogger.GLogger.Infof("InEnd [%s, %s] ready to stop", uuid, inEnd.Name)
 			inEnd.Source.Stop()
-			glogger.GLogger.Infof("InEnd [%v] stopped", uuid)
+			glogger.GLogger.Infof("InEnd [%s, %s] stopped", uuid, inEnd.Name)
 			e.InEnds.Delete(uuid)
+			glogger.GLogger.Infof("InEnd [%s, %s] has been deleted", uuid, inEnd.Name)
 			inEnd = nil
-			glogger.GLogger.Infof("InEnd [%v] has been deleted", uuid)
 		}
 	}
 }
@@ -372,12 +378,12 @@ func (e *RuleEngine) SaveOutEnd(out *typex.OutEnd) {
 func (e *RuleEngine) RemoveOutEnd(uuid string) {
 	if outEnd := e.GetOutEnd(uuid); outEnd != nil {
 		if outEnd.Target != nil {
-			glogger.GLogger.Infof("OutEnd [%v] ready to stop", uuid)
+			glogger.GLogger.Infof("OutEnd [%s, %s] ready to stop", uuid, outEnd.Name)
 			outEnd.Target.Stop()
-			glogger.GLogger.Infof("OutEnd [%v] stopped", uuid)
+			glogger.GLogger.Infof("OutEnd [%s, %s] stopped", uuid, outEnd.Name)
 			e.OutEnds.Delete(uuid)
+			glogger.GLogger.Infof("OutEnd [%s, %s] has been deleted", uuid, outEnd.Name)
 			outEnd = nil
-			glogger.GLogger.Infof("OutEnd [%v] has been deleted", uuid)
 		}
 	}
 }
@@ -534,7 +540,7 @@ func (e *RuleEngine) InitDeviceTypeManager() error {
 			NewDevice: device.NewGenericModbusDevice,
 		},
 	)
-	e.DeviceTypeManager.Register(typex.GENERIC_UART,
+	e.DeviceTypeManager.Register(typex.GENERIC_UART_RW,
 		&typex.XConfig{
 			Engine:    e,
 			NewDevice: device.NewGenericUartDevice,

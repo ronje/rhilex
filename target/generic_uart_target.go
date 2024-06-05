@@ -103,7 +103,7 @@ func (mdev *GenericUart) Start(cctx typex.CCTX) error {
 		}
 	default:
 		{
-			return fmt.Errorf("invalid config:%s", hwPort.Config)
+			return fmt.Errorf("Invalid config:%s", hwPort.Config)
 		}
 	}
 	config := serial.Config{
@@ -190,7 +190,7 @@ func (mdev *GenericUart) To(data interface{}) (interface{}, error) {
 		}
 	}
 	mdev.maxError++
-	return 0, fmt.Errorf("invalid data:%v", data)
+	return 0, fmt.Errorf("Invalid data:%v", data)
 }
 
 func (mdev *GenericUart) Stop() {

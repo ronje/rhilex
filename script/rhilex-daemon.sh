@@ -192,7 +192,11 @@ uninstall(){
     __remove_files "$SERVICE_FILE"
     __remove_files "$WORKING_DIRECTORY/license.*"
     __remove_files "$WORKING_DIRECTORY/rhilex*"
+    __remove_files "$WORKING_DIRECTORY/md5.sum"
+    __remove_files "$WORKING_DIRECTORY/*.txt"
     __remove_files "$WORKING_DIRECTORY/upload/"
+    __remove_files "$STOP_SIGNAL"
+    __remove_files "$UPGRADE_SIGNAL"
     log INFO "rhilex has been uninstalled."
 }
 

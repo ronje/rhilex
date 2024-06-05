@@ -2,7 +2,7 @@
 set -e
 APP=rhilex
 RESPOSITORY="https://github.com/hootrhino"
-ARCHS=("arm64linux" "arm32linux" "x64linux")
+ARCHS=("arm64linux" "arm32linux" "x64linux" "windows")
 
 create_pkg() {
     local target=$1
