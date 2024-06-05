@@ -189,6 +189,7 @@ func SourceCount(c *gin.Context, ruleEngine typex.Rhilex) {
 *
  */
 func GetUartList(c *gin.Context, ruleEngine typex.Rhilex) {
+	
 	c.JSON(common.HTTP_OK, common.OkWithData(service.GetOsPort()))
 }
 
