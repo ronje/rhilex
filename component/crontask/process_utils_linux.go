@@ -1,6 +1,6 @@
 //go:build linux
 
-package cron_task
+package crontask
 
 import (
 	"os/exec"

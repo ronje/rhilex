@@ -5,7 +5,7 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/hootrhino/rhilex/component/cron_task"
+	cron_task "github.com/hootrhino/rhilex/component/crontask"
 	"github.com/hootrhino/rhilex/component/hwportmanager"
 	"github.com/hootrhino/rhilex/component/internotify"
 	"github.com/shirou/gopsutil/cpu"

@@ -1,4 +1,4 @@
-package cron_task
+package crontask
 
 import (
 	"encoding/base64"
