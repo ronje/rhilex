@@ -188,7 +188,7 @@ func (dev *GenericBacnetIpDevice) Start(cctx typex.CCTX) error {
 
 		dev.bacnetClient = client
 		client.SetLogger(glogger.GLogger.Logger)
-		go dev.bacnetClient.ClientRun()
+		go dev.bacnetClient.StartPoll(dev.Ctx)
 		go func(ctx context.Context) {
 			// 定时刷新device列表 后续可以优化下逻辑
 			ticker := time.NewTicker(5 * time.Second)
@@ -341,6 +341,7 @@ func (dev *GenericBacnetIpDevice) Stop() {
 		dev.CancelCTX()
 	}
 	if dev.bacnetClient != nil {
+		dev.bacnetClient.ClientClose(false)
 		dev.bacnetClient.Close()
 	}
 	intercache.UnRegisterSlot(dev.PointId)

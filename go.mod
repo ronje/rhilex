@@ -17,7 +17,7 @@ require (
 	github.com/hootrhino/beautiful-lua-go v0.1.0
 	github.com/hootrhino/go-ais v1.0.0
 	github.com/hootrhino/go-dhcpd-leases v0.0.0-20240116064141-0730f287f9a2
-	github.com/hootrhino/gobacnet v0.0.0-20240603064442-3409cf8f0a46
+	github.com/hootrhino/gobacnet v0.0.0-20240610123851-866a031c9090
 	github.com/hootrhino/gopher-lua v1.0.3
 	github.com/hootrhino/wmi v0.0.0-20230603082700-cfa077a8cf01
 	github.com/itchyny/gojq v0.12.16

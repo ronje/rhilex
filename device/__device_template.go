@@ -21,8 +21,21 @@ import (
 	"github.com/hootrhino/rhilex/utils"
 )
 
+type TemplateDeviceCommonConfig struct {
+}
+
+type TemplateDeviceConfig struct {
+}
+
+type TemplateDeviceMainConfig struct {
+	CommonConfig  TemplateDeviceCommonConfig `json:"commonConfig"`
+	PrivateConfig TemplateDeviceConfig       `json:"templateDeviceConfig"`
+}
+
 type TemplateDevice struct {
 	typex.XStatus
+	status     typex.DeviceState
+	mainConfig TemplateDeviceMainConfig
 }
 
 func NewTemplateDevice(e typex.Rhilex) typex.XDevice {
@@ -31,7 +44,6 @@ func NewTemplateDevice(e typex.Rhilex) typex.XDevice {
 	return hd
 }
 
-//  初始化
 func (hd *TemplateDevice) Init(devId string, configMap map[string]interface{}) error {
 	hd.PointId = devId
 	if err := utils.BindSourceConfig(configMap, &hd.mainConfig); err != nil {
@@ -42,7 +54,6 @@ func (hd *TemplateDevice) Init(devId string, configMap map[string]interface{}) e
 	return nil
 }
 
-// 启动
 func (hd *TemplateDevice) Start(cctx typex.CCTX) error {
 	hd.Ctx = cctx.Ctx
 	hd.CancelCTX = cctx.CancelCTX
@@ -51,41 +62,36 @@ func (hd *TemplateDevice) Start(cctx typex.CCTX) error {
 	return nil
 }
 
-func (hd *TemplateDevice) OnRead(cmd []byte, data []byte) (int, error) {
-
-	return 0, nil
-}
-
-// 把数据写入设备
-func (hd *TemplateDevice) OnWrite(cmd []byte, b []byte) (int, error) {
-	return 0, nil
-}
-
-// 设备当前状态
 func (hd *TemplateDevice) Status() typex.DeviceState {
 	return typex.DEV_UP
 }
 
-// 停止设备
 func (hd *TemplateDevice) Stop() {
 	hd.status = typex.DEV_DOWN
 	hd.CancelCTX()
 }
 
-// 真实设备
 func (hd *TemplateDevice) Details() *typex.Device {
 	return hd.RuleEngine.GetDevice(hd.PointId)
 }
 
-// 状态
 func (hd *TemplateDevice) SetState(status typex.DeviceState) {
 	hd.status = status
-
 }
 
 func (hd *TemplateDevice) OnDCACall(UUID string, Command string, Args interface{}) typex.DCAResult {
 	return typex.DCAResult{}
 }
+
 func (hd *TemplateDevice) OnCtrl(cmd []byte, args []byte) ([]byte, error) {
 	return []byte{}, nil
+}
+
+func (hd *TemplateDevice) OnRead(cmd []byte, data []byte) (int, error) {
+
+	return 0, nil
+}
+
+func (hd *TemplateDevice) OnWrite(cmd []byte, b []byte) (int, error) {
+	return 0, nil
 }

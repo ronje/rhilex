@@ -200,6 +200,7 @@ func (hs *ApiServerPlugin) Init(config *ini.Section) error {
 		&model.MKnd8DataPoint{},
 		&model.MSnmpOid{},
 		&model.MBacnetDataPoint{},
+		&model.MBacnetRouterDataPoint{},
 	)
 	// 初始化所有预制参数
 	server.DefaultApiServer.InitializeGenericOSData()
@@ -475,6 +476,8 @@ func (hs *ApiServerPlugin) LoadRoute() {
 	apis.InitSnmpRoute()
 	// Bacnet Route
 	apis.InitBacnetIpRoute()
+	// Bacnet Router
+	apis.InitBacnetRouterRoute()
 	// Data Schema
 	apis.InitDataSchemaApi()
 	// Data Center
