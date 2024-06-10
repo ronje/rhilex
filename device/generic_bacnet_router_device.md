@@ -21,3 +21,17 @@
     "description": "GENERIC_BACNET_ROUTER"
 }
 ```
+
+## 读写
+对虚拟点位进行操作：
+```lua
+Actions = {
+    function(args)
+        Debug("args=", args)
+        local DeviceId = "DEVICEIBNVQPJ4"
+        device:CtrlDevice(DeviceId, "setValue", json:T2J({ tag = "Temperature", value = 13.14 }))
+        device:CtrlDevice(DeviceId, "setValue", json:T2J({ tag = "Humidity", value = 52.11 }))
+        return true, args
+    end
+}
+```

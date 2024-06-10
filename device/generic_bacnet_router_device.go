@@ -16,6 +16,8 @@
 package device
 
 import (
+	"encoding/json"
+	"fmt"
 	"net"
 	"time"
 
@@ -45,10 +47,15 @@ type BacnetRouterMainConfig struct {
 
 type BacnetRouter struct {
 	typex.XStatus
-	status           typex.DeviceState
-	mainConfig       BacnetRouterMainConfig
-	bacnetClient     bacnet.Client
-	selfPropertyData map[uint32][2]btypes.Object
+	status               typex.DeviceState
+	mainConfig           BacnetRouterMainConfig
+	bacnetClient         bacnet.Client
+	selfPropertyData     map[uint32][2]btypes.Object
+	selfPropertyDataKeys map[string]struct {
+		UUID string
+		Id   uint32
+		Tag  string
+	}
 }
 
 type BacnetRouterDataPoint struct {
@@ -70,6 +77,12 @@ func NewBacnetRouter(e typex.Rhilex) typex.XDevice {
 			NetWorkId: 2580,
 		},
 	}
+	br.selfPropertyData = map[uint32][2]btypes.Object{}
+	br.selfPropertyDataKeys = map[string]struct {
+		UUID string
+		Id   uint32
+		Tag  string
+	}{}
 	br.status = typex.DEV_DOWN
 	return br
 }
@@ -89,20 +102,27 @@ func (br *BacnetRouter) Init(devId string, configMap map[string]interface{}) err
 		glogger.GLogger.Error(err)
 		return err
 	}
-
-	br.selfPropertyData = make(map[uint32][2]btypes.Object)
+	// Map Model to Point
 	for _, mDataPoint := range MBacnetRouterDataPoints {
-		// Map Model to Point
 		// Cache Value
 		intercache.SetValue(br.PointId, mDataPoint.UUID, intercache.CacheValue{
 			UUID:          mDataPoint.UUID,
 			Status:        0,
 			LastFetchTime: uint64(time.Now().UnixMilli()),
 			Value:         "",
-			ErrMsg:        "-/-",
+			ErrMsg:        "",
 		})
 		br.selfPropertyData[mDataPoint.ObjectId] = apdus.NewAIPropertyWithRequiredFields(mDataPoint.Tag,
 			mDataPoint.ObjectId, float32(0), "-/-")
+		br.selfPropertyDataKeys[mDataPoint.Tag] = struct {
+			UUID string
+			Id   uint32
+			Tag  string
+		}{
+			UUID: mDataPoint.UUID,
+			Id:   mDataPoint.ObjectId,
+			Tag:  mDataPoint.Tag,
+		}
 	}
 
 	return nil
@@ -165,8 +185,41 @@ func (br *BacnetRouter) OnDCACall(UUID string, Command string, Args interface{})
 	return typex.DCAResult{}
 }
 
+/*
+*
+* 外部更新
+*
+ */
+type bacnetSetValue struct {
+	Tag   string  `json:"tag"`
+	Value float32 `json:"value"`
+}
+
+// 指令, 支持两个: setValue(k, value)
 func (br *BacnetRouter) OnCtrl(cmd []byte, args []byte) ([]byte, error) {
-	return []byte{}, nil
+	if string(cmd) == "setValue" {
+		setValue := bacnetSetValue{}
+		if errUnmarshal := json.Unmarshal(args, &setValue); errUnmarshal != nil {
+			return nil, errUnmarshal
+		}
+		if DataKey, ok := br.selfPropertyDataKeys[setValue.Tag]; ok {
+			errUpdateAIPropertyValue := br.bacnetClient.GetBacnetIPServer().
+				UpdateAIPropertyValue(DataKey.Id, setValue.Value)
+			if errUpdateAIPropertyValue != nil {
+				return nil, errUpdateAIPropertyValue
+			}
+			intercache.SetValue(br.PointId, DataKey.UUID, intercache.CacheValue{
+				UUID:          DataKey.UUID,
+				Status:        0,
+				LastFetchTime: uint64(time.Now().UnixMilli()),
+				Value:         fmt.Sprintf("%f", setValue.Value),
+				ErrMsg:        "",
+			})
+			return nil, nil
+		}
+		return nil, fmt.Errorf("Tag not exists: %v", setValue.Tag)
+	}
+	return nil, fmt.Errorf("unsupported cmd: %v", cmd)
 }
 
 func (br *BacnetRouter) OnRead(cmd []byte, data []byte) (int, error) {

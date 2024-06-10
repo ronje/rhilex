@@ -43,32 +43,32 @@ type InterCache interface {
 	List() []map[string]CacheValue // 列表
 }
 
-var __DefaultHnc8CnCPointCache *GlobalValueRegistry
+var __DefaultPointCache *GlobalValueRegistry
 
 func RegisterSlot(Slot string) {
-	__DefaultHnc8CnCPointCache.RegisterSlot(Slot)
+	__DefaultPointCache.RegisterSlot(Slot)
 }
 func UnRegisterSlot(Slot string) {
-	__DefaultHnc8CnCPointCache.UnRegisterSlot(Slot)
+	__DefaultPointCache.UnRegisterSlot(Slot)
 }
 func GetSlot(Slot string) map[string]CacheValue {
-	return __DefaultHnc8CnCPointCache.GetSlot(Slot)
+	return __DefaultPointCache.GetSlot(Slot)
 }
 func SetValue(Slot, K string, V CacheValue) {
-	__DefaultHnc8CnCPointCache.SetValue(Slot, K, V)
+	__DefaultPointCache.SetValue(Slot, K, V)
 }
 func GetValue(Slot, K string) CacheValue {
-	return __DefaultHnc8CnCPointCache.GetValue(Slot, K)
+	return __DefaultPointCache.GetValue(Slot, K)
 }
 func DeleteValue(Slot, K string) {
-	__DefaultHnc8CnCPointCache.DeleteValue(Slot, K)
+	__DefaultPointCache.DeleteValue(Slot, K)
 }
 
 func Size() uint64 {
-	return __DefaultHnc8CnCPointCache.Size()
+	return __DefaultPointCache.Size()
 }
 func Flush() {
-	__DefaultHnc8CnCPointCache.Flush()
+	__DefaultPointCache.Flush()
 }
 
 type GlobalValueRegistry struct {
@@ -79,13 +79,13 @@ type GlobalValueRegistry struct {
 }
 
 func InitGlobalValueRegistry(ruleEngine typex.Rhilex) InterCache {
-	__DefaultHnc8CnCPointCache = &GlobalValueRegistry{
+	__DefaultPointCache = &GlobalValueRegistry{
 		ruleEngine: ruleEngine,
 		Slots:      map[string]map[string]CacheValue{},
 		locker:     sync.RWMutex{},
 		slotKeys:   []string{},
 	}
-	return __DefaultHnc8CnCPointCache
+	return __DefaultPointCache
 }
 func (M *GlobalValueRegistry) RegisterSlot(Slot string) {
 	M.locker.Lock()
