@@ -41,7 +41,7 @@ const (
 	__TURN_OFF_ECHO      = "ATE0\r\n"             // ECHO Mode
 	__CURRENT_COPS_CMD   = "AT+COPS?\r\n"         // COPS
 	__GET_ICCID_CMD      = "AT+QCCID\r\n"         // Get ICCID
-	__AT_TIMEOUT         = 300 * time.Millisecond //ms
+	__AT_TIMEOUT         = 300 * time.Millisecond // timeout ms
 	__GET_APN_CFG        = "AT+QICSGP=1\r\n"      // APN
 	__SAVE_CONFIG        = "AT&W\r\n"             // SaveConfig
 	__USB_4G_DEV_PATH    = "/dev/ttyUSB1"         // USB
