@@ -17,7 +17,7 @@ require (
 	github.com/hootrhino/beautiful-lua-go v0.1.0
 	github.com/hootrhino/go-ais v1.0.0
 	github.com/hootrhino/go-dhcpd-leases v0.0.0-20240116064141-0730f287f9a2
-	github.com/hootrhino/gobacnet v0.0.0-20240610123851-866a031c9090
+	github.com/hootrhino/gobacnet v0.0.0-20240610124438-e673dc57700e
 	github.com/hootrhino/gopher-lua v1.0.3
 	github.com/hootrhino/wmi v0.0.0-20230603082700-cfa077a8cf01
 	github.com/itchyny/gojq v0.12.16
@@ -37,6 +37,7 @@ require (
 	github.com/shirou/gopsutil/v3 v3.24.5
 	github.com/sirupsen/logrus v1.9.3
 	github.com/urfave/cli/v2 v2.27.2
+	github.com/vapourismo/knx-go v0.0.0-20240529174927-d4625b0a8913
 	github.com/wwhai/gomodbus v0.2.4
 	github.com/wwhai/goserial v0.2.0
 	github.com/wwhai/ntp v0.3.0

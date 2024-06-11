@@ -28,8 +28,8 @@ type TemplateDeviceConfig struct {
 }
 
 type TemplateDeviceMainConfig struct {
-	CommonConfig  TemplateDeviceCommonConfig `json:"commonConfig"`
-	PrivateConfig TemplateDeviceConfig       `json:"templateDeviceConfig"`
+	CommonConfig         TemplateDeviceCommonConfig `json:"commonConfig"`
+	TemplateDeviceConfig TemplateDeviceConfig       `json:"templateDeviceConfig"`
 }
 
 type TemplateDevice struct {
