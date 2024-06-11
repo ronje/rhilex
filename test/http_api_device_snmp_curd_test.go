@@ -10,8 +10,8 @@ import (
 	"os/exec"
 	"testing"
 
-	"github.com/go-playground/assert/v2"
 	"github.com/hootrhino/rhilex/component/apiserver/model"
+	"github.com/stretchr/testify/assert"
 )
 
 /*

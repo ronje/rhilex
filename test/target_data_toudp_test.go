@@ -9,9 +9,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/go-playground/assert/v2"
 	httpserver "github.com/hootrhino/rhilex/component/apiserver"
 	"github.com/hootrhino/rhilex/component/apiserver/model"
+	"github.com/stretchr/testify/assert"
 
 	"github.com/hootrhino/rhilex/typex"
 )

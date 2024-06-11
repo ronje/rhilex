@@ -4,9 +4,7 @@ import (
 	"encoding/binary"
 	"testing"
 
-	"github.com/go-playground/assert/v2"
-
-
+	"github.com/stretchr/testify/assert"
 )
 
 func Test_binary_to_int(t *testing.T) {
