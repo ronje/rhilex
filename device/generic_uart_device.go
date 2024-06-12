@@ -167,7 +167,7 @@ func (uart *genericUartDevice) Start(cctx typex.CCTX) error {
 					mapV["value"] = ""
 					glogger.GLogger.Error("Not supported type:", uart.mainConfig.RwConfig.ReadFormat)
 				}
-				glogger.GLogger.Debug("Serial Port Read: ", mapV["value"])
+				glogger.GLogger.Debug("Serial Port Read: ", result[:peerCount])
 				bytes, _ := json.Marshal(mapV)
 				uart.RuleEngine.WorkDevice(uart.Details(), string(bytes))
 				for i := 0; i < peerCount; i++ {
