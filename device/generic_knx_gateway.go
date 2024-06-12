@@ -20,24 +20,12 @@ import (
 	"github.com/hootrhino/rhilex/typex"
 	"github.com/hootrhino/rhilex/utils"
 	"github.com/vapourismo/knx-go/knx"
-	"github.com/vapourismo/knx-go/knx/cemi"
-	"github.com/vapourismo/knx-go/knx/dpt"
-	"github.com/vapourismo/knx-go/knx/util"
 )
 
 type KNXGatewayCommonConfig struct {
 }
 
 type KNXGatewayConfig struct {
-	ResendInterval uint64
-	// HeartbeatInterval specifies the time interval which triggers a heartbeat check.
-	HeartbeatInterval uint64
-	// ResponseTimeout specifies how long to wait for a response.
-	ResponseTimeout uint64
-	// SendLocalAddress specifies if local address should be sent on connection request.
-	SendLocalAddress bool
-	// UseTCP configures whether to connect to the gateway using TCP.
-	UseTCP bool
 }
 
 type KNXGatewayMainConfig struct {
@@ -47,9 +35,9 @@ type KNXGatewayMainConfig struct {
 
 type KNXGateway struct {
 	typex.XStatus
-	status     typex.DeviceState
-	mainConfig KNXGatewayMainConfig
-	Router     *knx.Router
+	status      typex.DeviceState
+	mainConfig  KNXGatewayMainConfig
+	GroupTunnel knx.GroupTunnel
 }
 
 func NewKNXGateway(e typex.Rhilex) typex.XDevice {
@@ -71,11 +59,11 @@ func (hd *KNXGateway) Init(devId string, configMap map[string]interface{}) error
 func (hd *KNXGateway) Start(cctx typex.CCTX) error {
 	hd.Ctx = cctx.Ctx
 	hd.CancelCTX = cctx.CancelCTX
-	Router, err := knx.NewRouter("10.0.0.7:3671", knx.DefaultRouterConfig)
+	GroupTunnel, err := knx.NewGroupTunnel("127.0.0.1:3671", knx.DefaultTunnelConfig)
 	if err != nil {
 		return err
 	}
-	hd.Router = Router
+	hd.GroupTunnel = GroupTunnel
 	hd.status = typex.DEV_UP
 	return nil
 }

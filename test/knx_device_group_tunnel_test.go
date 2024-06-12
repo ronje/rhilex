@@ -11,20 +11,13 @@
 // GNU Affero General Public License for more details.
 //
 // You should have received a copy of the GNU Affero General Public License
-// along with this program.  If not, see <http://www.gnu.org/licenses/>.
+// along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 package test
 
 import "testing"
 
-type BspPort struct {
-	IFace  []string // 以太网卡
-	WlFace []string // 无线网卡
-	Audio  []string // 声卡
-	Video  []string // 显卡
-}
-
-// go test -timeout 30s -run ^Test_gen_hd_define github.com/hootrhino/rhilex/test -v -count=1
-func Test_gen_hd_define(t *testing.T) {
+// go test -timeout 30s -run ^Test_knx_group_tunnel github.com/hootrhino/rhilex/test -v -count=1
+func Test_knx_group_tunnel(t *testing.T) {
 
 }
