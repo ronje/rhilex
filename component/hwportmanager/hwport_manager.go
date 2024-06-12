@@ -62,6 +62,11 @@ type HwPortOccupy struct {
 	Type string `json:"type"` // DEVICE, OS,... Other......
 	Name string `json:"name"` // 占用的设备名称
 }
+
+func (O HwPortOccupy) String() string {
+	return fmt.Sprintf("Occupied By: (%s,%s), Type is %s", O.UUID, O.Name, O.Type)
+}
+
 type RhinoH3HwPort struct {
 	UUID        string       `json:"uuid"`        // 接口名称
 	Name        string       `json:"name"`        // 接口名称
