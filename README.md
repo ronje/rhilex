@@ -36,3 +36,6 @@ go build -tags gocv
 ```sh
 bash ./release_pkg.sh
 ```
+
+## 工作流程
+- [指南](./contribute.md "指南")
