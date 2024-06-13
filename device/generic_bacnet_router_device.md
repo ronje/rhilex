@@ -5,8 +5,8 @@
 ```json
 {
     "gid": "DROOT",
-    "name": "GENERIC_BACNET_ROUTER",
-    "type": "GENERIC_BACNET_ROUTER",
+    "name": "BACNET_ROUTER_GW",
+    "type": "BACNET_ROUTER_GW",
     "config": {
         "bacnetRouterConfig": {
             "deviceId": 123,
@@ -18,7 +18,7 @@
             "vendorId": 123
         }
     },
-    "description": "GENERIC_BACNET_ROUTER"
+    "description": "BACNET_ROUTER_GW"
 }
 ```
 

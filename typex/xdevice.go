@@ -24,7 +24,7 @@ const (
 	GENERIC_CAMERA         DeviceType = "GENERIC_CAMERA"         // 通用摄像头
 	GENERIC_AIS_RECEIVER   DeviceType = "GENERIC_AIS_RECEIVER"   // 通用AIS
 	GENERIC_BACNET_IP      DeviceType = "GENERIC_BACNET_IP"      // 通用BacnetIP
-	GENERIC_BACNET_ROUTER  DeviceType = "GENERIC_BACNET_ROUTER"  // 通用 BACNET ROUTER
+	BACNET_ROUTER_GW       DeviceType = "BACNET_ROUTER_GW"       // 通用 BACNET ROUTER
 	RHILEXG1_IR            DeviceType = "RHILEXG1_IR"            // 大犀牛PI的红外线接收器
 	GENERIC_HTTP_DEVICE    DeviceType = "GENERIC_HTTP_DEVICE"    // HTTP采集器
 	HNC8                   DeviceType = "HNC8"                   // 华中数控机床

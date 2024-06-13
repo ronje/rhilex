@@ -594,7 +594,7 @@ func (e *RuleEngine) InitDeviceTypeManager() error {
 			NewDevice: device.NewGenericBacnetIpDevice,
 		},
 	)
-	e.DeviceTypeManager.Register(typex.GENERIC_BACNET_ROUTER,
+	e.DeviceTypeManager.Register(typex.BACNET_ROUTER_GW,
 		&typex.XConfig{
 			Engine:    e,
 			NewDevice: device.NewBacnetRouter,

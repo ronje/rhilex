@@ -85,7 +85,7 @@ func BacnetRouterSheetImport(c *gin.Context, ruleEngine typex.Rhilex) {
 		c.JSON(common.HTTP_OK, common.Error400(errDb))
 		return
 	}
-	if Device.Type != typex.GENERIC_BACNET_ROUTER.String() {
+	if Device.Type != typex.BACNET_ROUTER_GW.String() {
 		c.JSON(common.HTTP_OK,
 			common.Error("Invalid Device Type, Only Support Import BacnetRouter Device"))
 		return
@@ -221,7 +221,7 @@ func BacnetRouterSheetDeleteByUUIDs(c *gin.Context, ruleEngine typex.Rhilex) {
 		c.JSON(common.HTTP_OK, common.Error400(Error))
 		return
 	}
-	err := service.BatchDeleteBacnetDataPoint(form.UUIDs, form.DeviceUUID)
+	err := service.BatchDeleteBacnetRouterPoint(form.UUIDs, form.DeviceUUID)
 	if err != nil {
 		c.JSON(common.HTTP_OK, common.Error400(err))
 		return
@@ -240,7 +240,7 @@ func BacnetRouterSheetDeleteAll(c *gin.Context, ruleEngine typex.Rhilex) {
 		c.JSON(common.HTTP_OK, common.Error400(Error))
 		return
 	}
-	err := service.DeleteAllBacnetDataPointByDeviceUuid(form.DeviceUUID)
+	err := service.DeleteAllBacnetRouterPointByDeviceUuid(form.DeviceUUID)
 	if err != nil {
 		c.JSON(common.HTTP_OK, common.Error400(err))
 		return
@@ -252,8 +252,8 @@ func BacnetRouterSheetDeleteAll(c *gin.Context, ruleEngine typex.Rhilex) {
 
 func BacnetRouterSheetCreateOrUpdate(c *gin.Context, ruleEngine typex.Rhilex) {
 	type Form struct {
-		DeviceUUID string                              `json:"device_uuid"`
-		Points     []dto.BacnetDataPointCreateOrUpdate `json:"points"`
+		DeviceUUID string                                    `json:"device_uuid"`
+		Points     []dto.BacnetRouterDataPointCreateOrUpdate `json:"points"`
 	}
 	form := Form{}
 	err := c.ShouldBindJSON(&form)
@@ -262,7 +262,7 @@ func BacnetRouterSheetCreateOrUpdate(c *gin.Context, ruleEngine typex.Rhilex) {
 		return
 	}
 	for _, Point := range form.Points {
-		if err = checkBacnetPoint(Point); err != nil {
+		if err = checkBacnetRouterPoint(Point); err != nil {
 			c.JSON(common.HTTP_OK, common.Error400(err))
 			return
 		}
@@ -372,15 +372,7 @@ func parseBacnetRouterExcel(r multipart.File,
 
 func checkBacnetRouterPoint(point dto.BacnetRouterDataPointCreateOrUpdate) error {
 	var ValidBacnetObjectType = []string{
-		"AO",
-		"AI",
-		"AV",
-		"BI",
-		"BO",
-		"BV",
-		"MI",
-		"MO",
-		"MV",
+		"AO", "AI", "AV", "BI", "BO", "BV", "MI", "MO", "MV",
 	}
 	contains := lo.Contains(ValidBacnetObjectType, point.ObjectType)
 	if !contains {

@@ -107,9 +107,9 @@ func (br *BacnetRouter) Init(devId string, configMap map[string]interface{}) err
 		// Cache Value
 		intercache.SetValue(br.PointId, mDataPoint.UUID, intercache.CacheValue{
 			UUID:          mDataPoint.UUID,
-			Status:        0,
+			Status:        1,
 			LastFetchTime: uint64(time.Now().UnixMilli()),
-			Value:         "",
+			Value:         "0",
 			ErrMsg:        "",
 		})
 		br.selfPropertyData[mDataPoint.ObjectId] = apdus.NewAIPropertyWithRequiredFields(mDataPoint.Tag,
