@@ -89,7 +89,9 @@ func (q *InternalEventBus) GetSize() int {
  */
 func RemoveSubscriber(name string) {
 	if Channel, Ok := __DefaultInternalEventBus.Subscribers[name]; Ok {
-		close(Channel) // 一定要记住关闭这个channel
+		if _, open := <-Channel; open {
+			close(Channel) // 一定要记住关闭这个channel
+		}
 		delete(__DefaultInternalEventBus.Subscribers, name)
 	}
 }
