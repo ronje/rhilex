@@ -142,7 +142,7 @@ func loadAllPortConfig() {
 		return
 	}
 	for _, MHwPort := range MHwPorts {
-		Port := hwportmanager.RhinoH3HwPort{
+		Port := hwportmanager.SystemHwPort{
 			UUID:        MHwPort.UUID,
 			Name:        MHwPort.Name,
 			Type:        MHwPort.Type,

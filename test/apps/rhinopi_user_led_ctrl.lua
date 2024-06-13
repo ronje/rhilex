@@ -10,9 +10,9 @@ AppDESCRIPTION = ""
 --
 function Main(arg)
     while true do
-        rhinopi:Led1On()
+        rhilexg1:Led1On()
         time:Sleep(200)
-        rhinopi:Led1Off()
+        rhilexg1:Led1Off()
         time:Sleep(200)
     end
 end

@@ -126,7 +126,7 @@ func UpdateHwPortConfig(c *gin.Context, ruleEngine typex.Rhilex) {
 		c.JSON(common.HTTP_OK, common.Error400(err1))
 		return
 	}
-	HwIPort := hwportmanager.RhinoH3HwPort{
+	HwIPort := hwportmanager.SystemHwPort{
 		UUID:        MHwPort.UUID,
 		Name:        MHwPort.Name,
 		Type:        MHwPort.Type,

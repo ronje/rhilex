@@ -76,7 +76,7 @@ func RHILEXG1_DO2Get(rx typex.Rhilex, uuid string) func(L *lua.LState) int {
 * DI 1,2,3 -> gpio 8-9-10
 *
  */
-func H3DI1Get(rx typex.Rhilex, uuid string) func(L *lua.LState) int {
+func RHILEXG1_DI1Get(rx typex.Rhilex, uuid string) func(L *lua.LState) int {
 	return func(l *lua.LState) int {
 		Value, e := archsupport.RHILEXG1_GPIOGetDI1()
 		if e != nil {
@@ -89,7 +89,7 @@ func H3DI1Get(rx typex.Rhilex, uuid string) func(L *lua.LState) int {
 		return 2
 	}
 }
-func H3DI2Get(rx typex.Rhilex, uuid string) func(L *lua.LState) int {
+func RHILEXG1_DI2Get(rx typex.Rhilex, uuid string) func(L *lua.LState) int {
 	return func(l *lua.LState) int {
 		Value, e := archsupport.RHILEXG1_GPIOGetDI2()
 		if e != nil {
@@ -102,7 +102,7 @@ func H3DI2Get(rx typex.Rhilex, uuid string) func(L *lua.LState) int {
 		return 2
 	}
 }
-func H3DI3Get(rx typex.Rhilex, uuid string) func(L *lua.LState) int {
+func RHILEXG1_DI3Get(rx typex.Rhilex, uuid string) func(L *lua.LState) int {
 	return func(l *lua.LState) int {
 		v, e := archsupport.RHILEXG1_GPIOGetDI3()
 		if e != nil {

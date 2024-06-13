@@ -13,7 +13,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-// RhinoH3 固件相关操作
+// System 固件相关操作
 package apis
 
 import (

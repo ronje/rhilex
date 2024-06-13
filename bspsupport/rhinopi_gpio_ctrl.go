@@ -51,19 +51,19 @@ import (
 */
 const (
 	// DO
-	rhinopi_DO1 string = "6"
-	rhinopi_DO2 string = "7"
+	rhilexg1_DO1 string = "6"
+	rhilexg1_DO2 string = "7"
 	// DI
-	rhinopi_DI1 string = "8"
-	rhinopi_DI2 string = "9"
-	rhinopi_DI3 string = "10"
+	rhilexg1_DI1 string = "8"
+	rhilexg1_DI2 string = "9"
+	rhilexg1_DI3 string = "10"
 	// Use LED
-	rhinopi_USER_GPIO string = "20"
+	rhilexg1_USER_GPIO string = "20"
 )
 
 const (
-	rhinopi_Out string = "out"
-	rhinopi_In  string = "in"
+	rhilexg1_Out string = "out"
+	rhilexg1_In  string = "in"
 )
 
 func init() {
@@ -91,37 +91,37 @@ func _RHILEXG1_GPIOAllInit() int {
 	_, err6 := os.Stat(gpio20)
 	if err1 != nil {
 		if strings.Contains(err1.Error(), "no such file or directory") {
-			_RHILEXG1_GPIOInit(rhinopi_DO1, rhinopi_Out)
+			_RHILEXG1_GPIOInit(rhilexg1_DO1, rhilexg1_Out)
 			fmt.Println("RHILEXG1_GPIOAllInit DO1 Out Mode Ok")
 		}
 	}
 	if err2 != nil {
 		if strings.Contains(err2.Error(), "no such file or directory") {
-			_RHILEXG1_GPIOInit(rhinopi_DO2, rhinopi_Out)
+			_RHILEXG1_GPIOInit(rhilexg1_DO2, rhilexg1_Out)
 			fmt.Println("RHILEXG1_GPIOAllInit DO2 Out Mode Ok")
 		}
 	}
 	if err3 != nil {
 		if strings.Contains(err3.Error(), "no such file or directory") {
-			_RHILEXG1_GPIOInit(rhinopi_DI1, rhinopi_In)
+			_RHILEXG1_GPIOInit(rhilexg1_DI1, rhilexg1_In)
 			fmt.Println("RHILEXG1_GPIOAllInit DI1 In Mode Ok")
 		}
 	}
 	if err4 != nil {
 		if strings.Contains(err4.Error(), "no such file or directory") {
-			_RHILEXG1_GPIOInit(rhinopi_DI2, rhinopi_In)
+			_RHILEXG1_GPIOInit(rhilexg1_DI2, rhilexg1_In)
 			fmt.Println("RHILEXG1_GPIOAllInit DI2 In Mode Ok")
 		}
 	}
 	if err5 != nil {
 		if strings.Contains(err5.Error(), "no such file or directory") {
-			_RHILEXG1_GPIOInit(rhinopi_DI3, rhinopi_In)
+			_RHILEXG1_GPIOInit(rhilexg1_DI3, rhilexg1_In)
 			fmt.Println("RHILEXG1_GPIOAllInit DI3 In Mode Ok")
 		}
 	}
 	if err6 != nil {
 		if strings.Contains(err5.Error(), "no such file or directory") {
-			_RHILEXG1_GPIOInit(rhinopi_USER_GPIO, rhinopi_Out)
+			_RHILEXG1_GPIOInit(rhilexg1_USER_GPIO, rhilexg1_Out)
 			fmt.Println("RHILEXG1_GPIOAllInit USER_GPIO Out Mode Ok")
 		}
 	}

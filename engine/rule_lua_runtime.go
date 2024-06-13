@@ -152,9 +152,9 @@ func LoadRuleLibGroup(r *typex.Rule, e typex.Rhilex) {
 			"DO1Get":  rhilexlib.RHILEXG1_DO1Get(e, r.UUID),
 			"DO2Set":  rhilexlib.RHILEXG1_DO2Set(e, r.UUID),
 			"DO2Get":  rhilexlib.RHILEXG1_DO2Get(e, r.UUID),
-			"DI1Get":  rhilexlib.H3DI1Get(e, r.UUID),
-			"DI2Get":  rhilexlib.H3DI2Get(e, r.UUID),
-			"DI3Get":  rhilexlib.H3DI3Get(e, r.UUID),
+			"DI1Get":  rhilexlib.RHILEXG1_DI1Get(e, r.UUID),
+			"DI2Get":  rhilexlib.RHILEXG1_DI2Get(e, r.UUID),
+			"DI3Get":  rhilexlib.RHILEXG1_DI3Get(e, r.UUID),
 			"Led1On":  rhilexlib.Led1On(e, r.UUID),
 			"Led1Off": rhilexlib.Led1Off(e, r.UUID),
 		}

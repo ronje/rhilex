@@ -15,7 +15,7 @@
 
 package vendor
 
-type RhinoH3 struct {
+type System struct {
 }
 
 /*
@@ -23,7 +23,7 @@ type RhinoH3 struct {
 * 初始化硬件参数
 *
  */
-func (Rh3 *RhinoH3) InitBSP() {
+func (G1 *System) InitBSP() {
 
 }
 
@@ -32,7 +32,7 @@ func (Rh3 *RhinoH3) InitBSP() {
  * 初始化操作系统参数
  *
  */
-func (Rh3 *RhinoH3) InitOs() {
+func (G1 *System) InitOs() {
 
 }
 
@@ -41,7 +41,7 @@ func (Rh3 *RhinoH3) InitOs() {
  * 初始化有线网络配置
  *
  */
-func (Rh3 *RhinoH3) InitEthNetwork() {
+func (G1 *System) InitEthNetwork() {
 
 }
 
@@ -50,7 +50,7 @@ func (Rh3 *RhinoH3) InitEthNetwork() {
  * 初始化WIFI
  *
  */
-func (Rh3 *RhinoH3) InitWifi() {
+func (G1 *System) InitWifi() {
 
 }
 
@@ -59,7 +59,7 @@ func (Rh3 *RhinoH3) InitWifi() {
  * 初始化蓝牙
  *
  */
-func (Rh3 *RhinoH3) InitBle() {
+func (G1 *System) InitBle() {
 
 }
 
@@ -68,6 +68,6 @@ func (Rh3 *RhinoH3) InitBle() {
  * 初始化Lora
  *
  */
-func (Rh3 *RhinoH3) InitLora() {
+func (G1 *System) InitLora() {
 
 }

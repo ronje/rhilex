@@ -18,15 +18,15 @@ function Main(arg)
         local _, Error = network:Ping("114.114.114.114");
         if Error ~= nil then
             for i = 1, 5, 1 do
-                rhinopi:Led1On();
+                rhilexg1:Led1On();
                 time:Sleep(50);
-                rhinopi:Led1Off();
+                rhilexg1:Led1Off();
                 time:Sleep(50);
             end;
         else
-            rhinopi:Led1On();
+            rhilexg1:Led1On();
             time:Sleep(50);
-            rhinopi:Led1Off();
+            rhilexg1:Led1Off();
             time:Sleep(50);
         end;
         time:Sleep(5000);

@@ -178,9 +178,9 @@ func LoadAppLibGroup(app *Application, e typex.Rhilex) {
 			"DO1Get":  rhilexlib.RHILEXG1_DO1Get(e, app.UUID),
 			"DO2Set":  rhilexlib.RHILEXG1_DO2Set(e, app.UUID),
 			"DO2Get":  rhilexlib.RHILEXG1_DO2Get(e, app.UUID),
-			"DI1Get":  rhilexlib.H3DI1Get(e, app.UUID),
-			"DI2Get":  rhilexlib.H3DI2Get(e, app.UUID),
-			"DI3Get":  rhilexlib.H3DI3Get(e, app.UUID),
+			"DI1Get":  rhilexlib.RHILEXG1_DI1Get(e, app.UUID),
+			"DI2Get":  rhilexlib.RHILEXG1_DI2Get(e, app.UUID),
+			"DI3Get":  rhilexlib.RHILEXG1_DI3Get(e, app.UUID),
 			"Led1On":  rhilexlib.Led1On(e, app.UUID),
 			"Led1Off": rhilexlib.Led1Off(e, app.UUID),
 		}

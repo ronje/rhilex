@@ -151,7 +151,7 @@ func GetOsPort() []string {
 	List := []string{}
 	for _, port := range ports {
 		if typex.DefaultVersionInfo.Product == "RHILEXG1" {
-			// H3的下列串口被系统占用
+			// RHILEXG1的下列串口被系统占用
 			if utils.SContains([]string{
 				"/dev/ttyS0",
 				"/dev/ttyS3",

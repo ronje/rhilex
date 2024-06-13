@@ -6,7 +6,7 @@
 ## 配置
 ```json
 {
-    "clientId": "rhinopi9791", // 客户端ID
+    "clientId": "rhilexg19791", // 客户端ID
     "host": "127.0.0.1", // 服务地址
     "port": 1883, // 端口
     "username": "hootrhino", // 用户名
