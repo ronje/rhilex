@@ -86,7 +86,6 @@ func (u *InternalEventSource) Test(inEndId string) bool {
 	return true
 }
 
-
 // 来自外面的数据
 func (*InternalEventSource) DownStream([]byte) (int, error) {
 	return 0, nil
@@ -117,13 +116,14 @@ type event struct {
  */
 func (u *InternalEventSource) startInternalEventQueue() {
 	go func(ctx context.Context) {
-		internotify.AddSource()
-		defer internotify.RemoveSource()
+		Queue := make(chan internotify.BaseEvent, 1)
+		internotify.AddSubscriber("InternalEventSource", Queue)
+		defer internotify.RemoveSubscriber("InternalEventSource")
 		for {
 			select {
 			case <-ctx.Done():
 				return
-			case Event := <-internotify.GetQueue():
+			case Event := <-Queue:
 				if u.mainConfig.Type == "ALL" {
 					bytes, _ := json.Marshal(event{
 						Type:  Event.Type,

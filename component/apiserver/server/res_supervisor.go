@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/hootrhino/rhilex/component/intercache"
 	"github.com/hootrhino/rhilex/component/internotify"
 	"github.com/hootrhino/rhilex/component/supervisor"
 	"github.com/hootrhino/rhilex/glogger"
@@ -53,7 +54,16 @@ func StartInSupervisor(InCtx context.Context, in *typex.InEnd, ruleEngine typex.
 		// STOP 设计特殊状态,标记被彻底删除的资源
 		// 资源可能不会及时DOWN
 		if currentIn.Source.Status() == typex.SOURCE_DOWN {
-			info := fmt.Sprintf("Source:(%s,%s) DOWN, supervisor try to Restart", UUID, currentIn.Name)
+			ErrMsg := ""
+			Slot := intercache.GetSlot("__DefaultRuleEngine")
+			if Slot != nil {
+				CacheValue, ok := Slot[currentIn.UUID]
+				if ok {
+					ErrMsg = CacheValue.ErrMsg
+				}
+			}
+			info := fmt.Sprintf("Source:(%s,%s) DOWN, supervisor try to Restart, error message: %s",
+				UUID, currentIn.Name, ErrMsg)
 			glogger.GLogger.Debugf(info)
 			internotify.Push(internotify.BaseEvent{
 				Type:  `WARNING`,
@@ -107,7 +117,16 @@ func StartOutSupervisor(OutCtx context.Context, out *typex.OutEnd, ruleEngine ty
 		}
 		// 资源可能不会及时DOWN
 		if currentOut.Target.Status() == typex.SOURCE_DOWN {
-			info := fmt.Sprintf("OutEnd:(%s,%s) DOWN, supervisor try to Restart", UUID, currentOut.Name)
+			ErrMsg := ""
+			Slot := intercache.GetSlot("__DefaultRuleEngine")
+			if Slot != nil {
+				CacheValue, ok := Slot[currentOut.UUID]
+				if ok {
+					ErrMsg = CacheValue.ErrMsg
+				}
+			}
+			info := fmt.Sprintf("OutEnd:(%s,%s) DOWN, supervisor try to Restart, error message: %s",
+				UUID, currentOut.Name, ErrMsg)
 			glogger.GLogger.Debugf(info)
 			internotify.Push(internotify.BaseEvent{
 				Type:  `WARNING`,
@@ -166,7 +185,16 @@ func StartDeviceSupervisor(DeviceCtx context.Context, device *typex.Device, rule
 
 		// 资源可能不会及时DOWN
 		if currentDevice.Device.Status() == typex.DEV_DOWN {
-			info := fmt.Sprintf("Device:(%s,%s) DOWN, supervisor try to Restart", UUID, currentDevice.Name)
+			ErrMsg := ""
+			Slot := intercache.GetSlot("__DefaultRuleEngine")
+			if Slot != nil {
+				CacheValue, ok := Slot[currentDevice.UUID]
+				if ok {
+					ErrMsg = CacheValue.ErrMsg
+				}
+			}
+			info := fmt.Sprintf("Device:(%s,%s) DOWN, supervisor try to Restart, error message: %s",
+				UUID, currentDevice.Name, ErrMsg)
 			glogger.GLogger.Debugf(info)
 			internotify.Push(internotify.BaseEvent{
 				Type:  `WARNING`,
