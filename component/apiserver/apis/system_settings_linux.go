@@ -49,6 +49,8 @@ func LoadSystemSettingsAPI() {
 		wifiApi.GET("/wifi", server.AddRoute(GetWifi))
 		wifiApi.POST("/wifi", server.AddRoute(SetWifi))
 		wifiApi.GET("/wifi/scan", server.AddRoute(ScanWIFIWithNmcli))
+		wifiApi.GET("/wifi/scanSignal", server.AddRoute(ScanWiFiSignalWithNmcli))
+		wifiApi.GET("/wifi/refreshDNS", server.AddRoute(RefreshDNS))
 	}
 	// time
 	timesApi := server.RouteGroup(server.ContextUrl("/settings"))

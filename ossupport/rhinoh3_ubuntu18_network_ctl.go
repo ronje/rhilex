@@ -17,135 +17,27 @@ package ossupport
 
 import (
 	"fmt"
-	"math"
 	"net"
 	"os/exec"
 	"strings"
 )
 
 //--------------------------------------------------------------------------------------
-// 注意: 这些设置主要是针对System Ubuntu16.04 的，有可能在不同的发行版有不同的指令，不一定通用
+// 注意: 这些设置主要是针对System Ubuntu18.04 的，有可能在不同的发行版有不同的指令，不一定通用
 // ！！！！ Warning: MUST RUN WITH SUDO or ROOT USER  ！！！！
 //--------------------------------------------------------------------------------------
-/*
-*
-* 专门针对RHILEXG1的一些系统指令封装
-*
- */
-func GetWlanList() ([]string, error) {
-	// 执行 nmcli 命令来获取WIFI列表
-	cmd := exec.Command("nmcli", "--fields", "SSID,MODE,FREQ,SIGNAL,BARS,SECURITY", "device", "wifi", "list")
-	output, err := cmd.CombinedOutput()
-	if err != nil {
-		return nil, fmt.Errorf("Error executing nmcli: %s", err.Error()+":"+string(output))
-	}
-	lines := strings.Split(string(output), "\n")
-	var wifiList []string
-	wifiList = append(wifiList, lines...)
-	return wifiList, nil
-}
 
 /*
 *
-* 关闭WIFI开关
+* Ubuntu: 刷新DNS，
 *
  */
-func DisableWifi() error {
-	cmd := exec.Command("nmcli", "radio", "wifi", "off")
+func ReloadDNS() error {
+	cmd := exec.Command("systemctl", "restart", "NetworkManager")
 	output, err := cmd.CombinedOutput()
 	if err != nil {
 		return fmt.Errorf("Error executing nmcli: %s", err.Error()+":"+string(output))
 	}
-	return nil
-}
-
-/*
-*
-* 打开WIFI开关
-*
- */
-func EnableWifi() error {
-	cmd := exec.Command("nmcli", "radio", "wifi", "on")
-	output, err := cmd.CombinedOutput()
-	if err != nil {
-		return fmt.Errorf("Error executing nmcli: %s", err.Error()+":"+string(output))
-	}
-	return nil
-}
-
-/*
-* amixer 设置音量, 输入参数是个数值, 每次增加或者减少1%
-*        amixer set 'Line Out' 1 | grep 'Front Left:' | awk -F '[][]' '{print $2}'
-*
- */
-func SetVolume(v int) (string, error) {
-	shellCmd := "amixer set 'Line Out' %s | grep 'Front Left:' | awk -F '[][]' '{print $2}'"
-	if v > -100 && v < 100 {
-		var cmd *exec.Cmd
-		if v < 0 {
-			cmd = exec.Command("sh", "-c", fmt.Sprintf(shellCmd, fmt.Sprintf("%v%%-", math.Abs(float64(v)))))
-		}
-		if v > 0 {
-			cmd = exec.Command("sh", "-c", fmt.Sprintf(shellCmd, fmt.Sprintf("%v%%+", math.Abs(float64(v)))))
-		}
-		output, err := cmd.CombinedOutput()
-		if err != nil {
-			return "", fmt.Errorf("Error executing nmcli: %s", err.Error()+":"+string(output))
-		}
-		volume := strings.TrimSpace(string(output))
-		return volume, nil
-	}
-	return "", fmt.Errorf("Invalid volume:%v, must be in range [0,100]", v)
-
-}
-
-/*
-*
-  - 获取音量百分比 20%
-    amixer get Master | grep 'Front Left:' | awk -F '[][]' '{print $2}'
-
-*
-*/
-func GetVolume() (string, error) {
-	// 创建一个 Command 对象，执行多个命令通过管道连接
-	cmd := exec.Command("sh", "-c",
-		"amixer get 'Line Out' | grep 'Front Left:' | awk -F '[][]' '{print $2}'")
-	output, err := cmd.CombinedOutput()
-	if err != nil {
-		return "", fmt.Errorf("Error executing nmcli: %s", err.Error()+":"+string(output))
-	}
-	volume := strings.TrimSpace(string(output))
-	return volume, nil
-}
-
-/*
-*
-* Ubuntu16.04 刷新DNS，
-*
- */
-func ReloadDNS16() error {
-	// 执行 /etc/init.d/networking 命令来重新加载DNS缓存
-	cmd := exec.Command("/etc/init.d/networking", "restart")
-	output, err := cmd.CombinedOutput()
-	if err != nil {
-		return fmt.Errorf("Error executing nmcli: %s", err.Error()+":"+string(output))
-	}
-	return nil
-}
-
-/*
-*
-* Ubuntu18+ 刷新DNS，
-*
- */
-func ReloadDNS18xx() error {
-	// 执行 systemd-resolved 命令来重新加载DNS缓存
-	cmd := exec.Command("systemctl", "reload", "systemd-resolved.ossupport")
-	output, err := cmd.CombinedOutput()
-	if err != nil {
-		return fmt.Errorf("Error executing nmcli: %s", err.Error()+":"+string(output))
-	}
-
 	return nil
 }
 

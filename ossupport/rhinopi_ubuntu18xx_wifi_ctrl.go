@@ -1,6 +1,7 @@
 package ossupport
 
 import (
+	"bufio"
 	"fmt"
 	"os"
 	"os/exec"
@@ -106,4 +107,89 @@ func WifiAlreadyConfig(wifiSSIDName string) bool {
 		}
 	}
 	return false
+}
+
+/*
+ *
+ * 扫描
+ *
+ */
+func ScanWlanList() error {
+	cmd := exec.Command("nmcli", "device", "wifi", "rescan")
+	output, err := cmd.CombinedOutput()
+	if err != nil {
+		return fmt.Errorf("Error executing nmcli: %s", err.Error()+":"+string(output))
+	}
+	return nil
+}
+
+/*
+*
+* 获取WIFI列表
+*
+ */
+func GetWlanList() ([]string, error) {
+	// 执行 nmcli 命令来获取WIFI列表
+	cmd := exec.Command("nmcli", "--fields", "SSID,MODE,FREQ,SIGNAL,BARS,SECURITY", "device", "wifi", "list")
+	output, err := cmd.CombinedOutput()
+	if err != nil {
+		return nil, fmt.Errorf("Error executing nmcli: %s", err.Error()+":"+string(output))
+	}
+	lines := strings.Split(string(output), "\n")
+	var wifiList []string
+	wifiList = append(wifiList, lines...)
+	return wifiList, nil
+}
+
+/*
+*
+* 升级版，带上了WIFI信号强度
+*
+ */
+func GetWlanListSignal() ([][2]string, error) {
+	wifiList := [][2]string{}
+	cmd := exec.Command("nmcli", "-t", "-f", "SSID,signal", "device", "wifi", "list")
+	output, err := cmd.Output()
+	if err != nil {
+		return nil, fmt.Errorf("Error executing nmcli: %s", err.Error()+":"+string(output))
+	}
+	lines := bufio.NewScanner(strings.NewReader(string(output)))
+	for lines.Scan() {
+		line := lines.Text()
+		parts := strings.Split(line, ":")
+		if len(parts) == 2 {
+			ssid := parts[0]
+			signal := parts[1]
+			wifiList = append(wifiList, [2]string{ssid, signal})
+		}
+	}
+	return wifiList, nil
+}
+
+/*
+*
+* 关闭WIFI开关
+*
+ */
+func DisableWifi() error {
+	cmd := exec.Command("nmcli", "radio", "wifi", "off")
+	output, err := cmd.CombinedOutput()
+	if err != nil {
+		return fmt.Errorf("Error executing nmcli: %s", err.Error()+":"+string(output))
+	}
+	return nil
+}
+
+/*
+*
+* 打开WIFI开关
+*
+ */
+func EnableWifi() error {
+	cmd := exec.Command("nmcli", "radio", "wifi", "on")
+	output, err := cmd.CombinedOutput()
+	if err != nil {
+		return fmt.Errorf("Error executing nmcli: %s", err.Error()+":"+string(output))
+	}
+	return nil
 }
