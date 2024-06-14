@@ -280,13 +280,13 @@ func initStaticModel() {
 	service.InitGenericGroup(&model.MGenericGroup{
 		UUID:   "DROOT",
 		Type:   "DEVICE",
-		Name:   "默认分组",
+		Name:   "DefaultGroup",
 		Parent: "NULL",
 	})
 	service.InitGenericGroup(&model.MGenericGroup{
 		UUID:   "ULTROOT",
 		Type:   "USER_LUA_TEMPLATE",
-		Name:   "默认分组",
+		Name:   "DefaultGroup",
 		Parent: "NULL",
 	})
 	// 初始化一个用户
