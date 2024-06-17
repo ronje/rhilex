@@ -167,9 +167,9 @@ func (usbm *usbMonitor) Stop() error {
 func (usbm *usbMonitor) PluginMetaInfo() typex.XPluginMetaInfo {
 	return typex.XPluginMetaInfo{
 		UUID:        usbm.uuid,
-		Name:        "USB Hot Plugin Monitor",
+		Name:        "USB Monitor",
 		Version:     "v0.0.1",
-		Description: "",
+		Description: "USB Hot Plugin Monitor",
 	}
 }
 

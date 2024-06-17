@@ -40,7 +40,7 @@ func (usbm *usbMonitor) PluginMetaInfo() typex.XPluginMetaInfo {
 		UUID:        usbm.uuid,
 		Name:        "USB Monitor",
 		Version:     "v0.0.1",
-		Description: "USB Plug Event Monitor",
+		Description: "USB Hot Plugin Monitor",
 	}
 }
 
