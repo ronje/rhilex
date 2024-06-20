@@ -684,6 +684,12 @@ func (e *RuleEngine) InitSourceTypeManager() error {
 *
  */
 func (e *RuleEngine) InitTargetTypeManager() error {
+	e.TargetTypeManager.Register(typex.SEMTECH_UDP_FORWARDER,
+		&typex.XConfig{
+			Engine:    e,
+			NewTarget: target.NewSemtechUdpForwarder,
+		},
+	)
 	e.TargetTypeManager.Register(typex.GENERIC_UART_TARGET,
 		&typex.XConfig{
 			Engine:    e,

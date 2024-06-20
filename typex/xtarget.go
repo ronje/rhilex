@@ -34,6 +34,8 @@ const (
 	GENERIC_UART_TARGET TargetType = "GENERIC_UART_TARGET"
 	// TCP 透传
 	TCP_TRANSPORT TargetType = "TCP_TRANSPORT"
+	// Chirp stack UDP
+	SEMTECH_UDP_FORWARDER TargetType = "SEMTECH_UDP_FORWARDER"
 )
 
 // Stream from source and to target
