@@ -1,5 +1,5 @@
-# RhinoPI 红外接收器
-RhinoPI自带一路红外接收器，当用遥控器的时候可以触发事件。
+# RhilexG1 红外接收器
+RhilexG1自带一路红外接收器，当用遥控器的时候可以触发事件。
 ## 概述
 这段Go语言代码定义了一个名为`device`的包，其中包含了多个导入的库，如`encoding/json`、`fmt`、`syscall`、`time`、`unsafe`以及其他一些GitHub上的库。代码中还定义了一些常量、结构体和函数，主要用于处理设备相关的操作。
 
@@ -28,7 +28,7 @@ RhinoPI自带一路红外接收器，当用遥控器的时候可以触发事件�
 Actions =
 {
     function(args)
-        rhilexlib:Debug(data)
+        Debug(data)
         return true, args
     end
 }

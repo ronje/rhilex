@@ -22,7 +22,7 @@ import (
 
 /*
 *
-* RhinoPi 的软路由配置，该配置主要基于Ubuntu Ip table实现，理论上来说只要有多个网卡就适用
+* Ubuntu Linux 的软路由配置，该配置主要基于Ubuntu Ip table实现，理论上来说只要有多个网卡就适用
 * 但是当前该功能仅适配于Rhino系列的产品，如果需要移植请注意网卡参数。
 *
  */

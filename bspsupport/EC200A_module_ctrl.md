@@ -1,17 +1,17 @@
-# RhinoPi 的4G模组操作接口
+# EC200A 的4G模组操作接口
 ## 简介
-RhinoPi自带一个4G上网模组，可以实现接入移动网络远程上网。该控制接口只可兼容上海移远公司的下列模组：
+EC200A自带一个4G上网模组，可以实现接入移动网络远程上网。该控制接口只可兼容上海移远公司的下列模组：
 - EC200T 系列
 - EC200S 系列
 - EC200A 系列
 - EC200N-CN
-- EC600S-CN
+- EC600S-CNf
 - EC600N-CN
 - EC800N-CN
 - EG912Y-EU
 - EG915N-EU
 
-RhinoPi使用的是 EC200A 系列，更多模块资料请参考此处：https://www.quectel.com/cn/product/ec200a-series 。
+EC200A使用的是 EC200A 系列，更多模块资料请参考此处：https://www.quectel.com/cn/product/ec200a-series 。
 ## 操作
 在shell输入ifconfig即可看到 usb0 网卡，该网卡就是对应的4G模组：
 ```sh

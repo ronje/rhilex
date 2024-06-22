@@ -1,6 +1,6 @@
 # 软路由
 ## 简介
-RhinoPi 的软路由配置，该配置主要基于Ubuntu Ip table实现，理论上来说只要有多个网卡就适用，但是当前该功能仅适配于Rhino系列的产品，如果需要移植请注意网卡参数。
+Ubuntu Linux 的软路由配置，该配置主要基于Ubuntu Ip table实现，理论上来说只要有多个网卡就适用，但是当前该功能仅适配于Rhino系列的产品，如果需要移植请注意网卡参数。
 ## 环境要求
 如果你需要移植这个功能到你自己的设备商，需要安装`dnsmasq`:
 ```sh
@@ -60,7 +60,7 @@ com.                    66948   IN      NS      d.gtld-servers.net.
 更多教程参考这里：https://computingforgeeks.com/install-and-configure-dnsmasq-on-ubuntu
 
 ## 原理
-软路由实现和网卡有关，RhinoPi有以下网卡：
+软路由实现和网卡有关，`rhilexg1`有以下网卡：
 - eth0: 以太网口0
 - eth1: 以太网口1
 - lo: 本地回环
