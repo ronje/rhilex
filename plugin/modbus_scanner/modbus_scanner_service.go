@@ -22,11 +22,11 @@ import (
 	"fmt"
 	"time"
 
+	serial "github.com/hootrhino/goserial"
 	"github.com/hootrhino/rhilex/component/hwportmanager"
 	"github.com/hootrhino/rhilex/glogger"
 	"github.com/hootrhino/rhilex/typex"
 	"github.com/sirupsen/logrus"
-	serial "github.com/wwhai/goserial"
 )
 
 /*

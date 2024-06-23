@@ -5,7 +5,7 @@ import (
 	"testing"
 	"time"
 
-	goserial "github.com/wwhai/goserial"
+	goserial "github.com/hootrhino/goserial"
 )
 
 func Test_goserial(t *testing.T) {

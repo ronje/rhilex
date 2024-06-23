@@ -13,10 +13,10 @@ import (
 
 	"github.com/hootrhino/rhilex/component/hwportmanager"
 
+	serial "github.com/hootrhino/goserial"
 	"github.com/hootrhino/rhilex/glogger"
 	"github.com/hootrhino/rhilex/typex"
 	"github.com/hootrhino/rhilex/utils"
-	serial "github.com/wwhai/goserial"
 )
 
 type _UartCommonConfig struct {

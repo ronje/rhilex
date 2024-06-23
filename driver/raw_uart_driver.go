@@ -6,8 +6,8 @@ import (
 	"errors"
 	"sync"
 
+	serial "github.com/hootrhino/goserial"
 	"github.com/hootrhino/rhilex/typex"
-	serial "github.com/wwhai/goserial"
 )
 
 type rawUartDriver struct {

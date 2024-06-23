@@ -21,7 +21,7 @@ import (
 	"sync"
 	"time"
 
-	serial "github.com/wwhai/goserial"
+	serial "github.com/hootrhino/goserial"
 
 	"github.com/hootrhino/rhilex/component/hwportmanager"
 	"github.com/hootrhino/rhilex/glogger"

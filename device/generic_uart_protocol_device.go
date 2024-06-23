@@ -26,10 +26,10 @@ import (
 	"github.com/hootrhino/rhilex/common"
 	"github.com/hootrhino/rhilex/component/hwportmanager"
 
+	serial "github.com/hootrhino/goserial"
 	"github.com/hootrhino/rhilex/glogger"
 	"github.com/hootrhino/rhilex/typex"
 	"github.com/hootrhino/rhilex/utils"
-	serial "github.com/wwhai/tarmserial"
 )
 
 // 读出来的字节缓冲默认大小
@@ -54,7 +54,7 @@ type GenericUartProtocolDevice struct {
 	typex.XStatus
 	status       typex.DeviceState
 	RuleEngine   typex.Rhilex
-	serialPort   *serial.Port // 串口
+	serialPort   serial.Port // 串口
 	mainConfig   _GenericUartProtocolConfig
 	errorCount   int // 记录最大容错数，默认5次，出错超过5此就重启
 	hwPortConfig hwportmanager.UartConfig
@@ -115,14 +115,14 @@ func (mdev *GenericUartProtocolDevice) Start(cctx typex.CCTX) error {
 	if mdev.mainConfig.CommonConfig.Mode == "UART" {
 
 		config := serial.Config{
-			Name:        mdev.hwPortConfig.Uart,
-			Baud:        mdev.hwPortConfig.BaudRate,
-			Size:        byte(mdev.hwPortConfig.DataBits),
-			Parity:      serial.Parity(mdev.hwPortConfig.Parity[0]),
-			StopBits:    serial.StopBits(mdev.hwPortConfig.StopBits),
-			ReadTimeout: time.Duration(mdev.hwPortConfig.Timeout) * time.Millisecond,
+			Address:  mdev.hwPortConfig.Uart,
+			BaudRate: mdev.hwPortConfig.BaudRate,
+			DataBits: mdev.hwPortConfig.DataBits,
+			Parity:   mdev.hwPortConfig.Parity,
+			StopBits: mdev.hwPortConfig.StopBits,
+			Timeout:  time.Duration(mdev.hwPortConfig.Timeout) * time.Millisecond,
 		}
-		serialPort, err := serial.OpenPort(&config)
+		serialPort, err := serial.Open(&config)
 		if err != nil {
 			glogger.GLogger.Error("serialPort start failed:", err)
 			return err
