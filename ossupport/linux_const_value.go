@@ -30,11 +30,11 @@ const (
 	// 固件保存路径
 	FirmwarePath = "/usr/local/upload/Firmware/Firmware.zip"
 	// 升级日志
-	UpgradeLogPath = "/usr/local/local-upgrade-log.txt"
+	UpgradeLogPath = "/usr/local/rhilex-upgrade-log.txt"
 	// 运行时日志
 	RunningLogPath = "/usr/local/rhilex-log.txt"
 	// 数据恢复日志
-	RecoverLogPath = "/usr/local/local-recover-log.txt"
+	RecoverLogPath = "/usr/local/rhilex-recover-log.txt"
 	// 备份锁
 	BackupLockPath = "/var/run/rhilex-upgrade.lock"
 	// 升级锁
