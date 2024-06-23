@@ -70,12 +70,13 @@ func AddAppLibToGroup(app *Application, rx typex.Rhilex,
 func LoadAppLibGroup(app *Application, e typex.Rhilex) {
 	{
 		Funcs := map[string]func(l *lua.LState) int{
-			"ToHttp":     rhilexlib.DataToHttp(e, app.UUID),
-			"ToMqtt":     rhilexlib.DataToMqtt(e, app.UUID),
-			"ToUdp":      rhilexlib.DataToUdp(e, app.UUID),
-			"ToTcp":      rhilexlib.DataToTcp(e, app.UUID),
-			"ToTdEngine": rhilexlib.DataToTdEngine(e, app.UUID),
-			"ToMongo":    rhilexlib.DataToMongo(e, app.UUID),
+			"ToHttp":       rhilexlib.DataToHttp(e, app.UUID),
+			"ToMqtt":       rhilexlib.DataToMqtt(e, app.UUID),
+			"ToUdp":        rhilexlib.DataToUdp(e, app.UUID),
+			"ToTcp":        rhilexlib.DataToTcp(e, app.UUID),
+			"ToTdEngine":   rhilexlib.DataToTdEngine(e, app.UUID),
+			"ToMongo":      rhilexlib.DataToMongo(e, app.UUID),
+			"ToSemtechUdp": rhilexlib.DataToLoraWanUDP(e, app.UUID),
 		}
 		AddAppLibToGroup(app, e, "data", Funcs)
 	}

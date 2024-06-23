@@ -44,12 +44,13 @@ func AddRuleLibToGroup(r *typex.Rule, rx typex.Rhilex,
 func LoadRuleLibGroup(r *typex.Rule, e typex.Rhilex) {
 	{
 		Funcs := map[string]func(l *lua.LState) int{
-			"ToHttp":     rhilexlib.DataToHttp(e, r.UUID),
-			"ToMqtt":     rhilexlib.DataToMqtt(e, r.UUID),
-			"ToUdp":      rhilexlib.DataToUdp(e, r.UUID),
-			"ToTcp":      rhilexlib.DataToTcp(e, r.UUID),
-			"ToTdEngine": rhilexlib.DataToTdEngine(e, r.UUID),
-			"ToMongo":    rhilexlib.DataToMongo(e, r.UUID),
+			"ToHttp":       rhilexlib.DataToHttp(e, r.UUID),
+			"ToMqtt":       rhilexlib.DataToMqtt(e, r.UUID),
+			"ToUdp":        rhilexlib.DataToUdp(e, r.UUID),
+			"ToTcp":        rhilexlib.DataToTcp(e, r.UUID),
+			"ToTdEngine":   rhilexlib.DataToTdEngine(e, r.UUID),
+			"ToMongo":      rhilexlib.DataToMongo(e, r.UUID),
+			"ToSemtechUdp": rhilexlib.DataToLoraWanUDP(e, r.UUID),
 		}
 		AddRuleLibToGroup(r, e, "data", Funcs)
 	}
