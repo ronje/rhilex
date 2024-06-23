@@ -4,6 +4,7 @@ go 1.22
 
 require (
 	github.com/adrianmo/go-nmea v1.8.0
+	github.com/brocaar/lorawan v0.0.0-20240507141140-a18a1037da07
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/eclipse/paho.mqtt.golang v1.4.3
 	github.com/gin-contrib/graceful v1.0.2
@@ -28,6 +29,7 @@ require (
 	github.com/mattn/go-sqlite3 v1.14.22
 	github.com/mochi-mqtt/server/v2 v2.6.4
 	github.com/nats-io/nats.go v1.36.0
+	github.com/pkg/errors v0.9.1
 	github.com/pkg6/go-sms v0.1.2
 	github.com/plgd-dev/go-coap/v3 v3.3.4
 	github.com/plgd-dev/kit/v2 v2.0.0-20211006190727-057b33161b90
@@ -79,6 +81,7 @@ require (
 	github.com/inconshreveable/log15 v3.0.0-testing.3+incompatible // indirect
 	github.com/inconshreveable/log15/v3 v3.0.0-testing.5 // indirect
 	github.com/itchyny/timefmt-go v0.1.6 // indirect
+	github.com/jacobsa/crypto v0.0.0-20190317225127-9f44e2d11115 // indirect
 	github.com/jinzhu/inflection v1.0.0 // indirect
 	github.com/jinzhu/now v1.1.5 // indirect
 	github.com/jpillora/backoff v1.0.0 // indirect
@@ -100,7 +103,6 @@ require (
 	github.com/pion/dtls/v2 v2.2.8-0.20240501061905-2c36d63320a0 // indirect
 	github.com/pion/logging v0.2.2 // indirect
 	github.com/pion/transport/v3 v3.0.2 // indirect
-	github.com/pkg/errors v0.9.1 // indirect
 	github.com/pkg6/go-requests v0.2.2 // indirect
 	github.com/power-devops/perfstat v0.0.0-20210106213030-5aafc221ea8c // indirect
 	github.com/richardlehane/mscfb v1.0.4 // indirect

@@ -31,14 +31,14 @@
 package target
 
 import (
-	"crypto/rand"
 	"encoding/hex"
-	"encoding/json"
 	"fmt"
 	"net"
 	"time"
 
+	"github.com/brocaar/lorawan"
 	"github.com/hootrhino/rhilex/glogger"
+	"github.com/hootrhino/rhilex/target/semtechudp"
 	"github.com/hootrhino/rhilex/typex"
 	"github.com/hootrhino/rhilex/utils"
 )
@@ -62,9 +62,8 @@ func NewSemtechUdpForwarder(e typex.Rhilex) typex.XTarget {
 	ht.mainConfig = SemtechUdpForwarderConfig{
 		Host:  "127.0.0.1",
 		Port:  1700,
-		GwMac: "00010203AABBCCDD",
+		GwMac: "01020304050607",
 	}
-	ht.mac = [8]byte{}
 	ht.status = typex.SOURCE_DOWN
 	return ht
 }
@@ -82,14 +81,7 @@ func (ht *SemtechUdpForwarder) Init(outEndId string, configMap map[string]interf
 	if len(GwMacByte) != 8 {
 		return fmt.Errorf("invalid mac addr:%s", ht.mainConfig.GwMac)
 	}
-	ht.mac[0] = GwMacByte[0]
-	ht.mac[1] = GwMacByte[1]
-	ht.mac[2] = GwMacByte[2]
-	ht.mac[3] = GwMacByte[3]
-	ht.mac[4] = GwMacByte[4]
-	ht.mac[5] = GwMacByte[5]
-	ht.mac[6] = GwMacByte[6]
-	ht.mac[7] = GwMacByte[7]
+	copy(ht.mac[:], GwMacByte)
 	Ip := net.ParseIP(ht.mainConfig.Host)
 	if Ip == nil {
 		return fmt.Errorf("invalid host format:%v", ht.mainConfig.Host)
@@ -123,8 +115,8 @@ func (ht *SemtechUdpForwarder) Status() typex.SourceState {
 func (ht *SemtechUdpForwarder) To(data interface{}) (interface{}, error) {
 	switch T := data.(type) {
 	case string:
-		SemtechPushMessage := NewSemtechPushMessage(ht.mac, T)
-		SemtechPushMessageByte, err1 := SemtechPushMessage.Encode()
+		SemtechPushMessage := NewSemtechPushMessage(ht.mac, []byte(T))
+		SemtechPushMessageByte, err1 := SemtechPushMessage.MarshalBinary()
 		if err1 != nil {
 			glogger.GLogger.Error(err1)
 			return nil, err1
@@ -179,138 +171,35 @@ func (ht *SemtechUdpForwarder) SendUdpData(data []byte) error {
 	// }
 	// return fmt.Errorf("invalid response:%v", Ack[:N])
 }
-
-// | Bytes | Function                                          |
-// | :---: | ------------------------------------------------- |
-// |   0   | protocol version = 2                              |
-// |  1-2  | same token as the PUSH_DATA packet to acknowledge |
-// |   3   | PUSH_ACK identifier 0x01                          |
-
-/*
-*
-* 赛门铁克UDP数据包
-*
- */
-//  | Bytes  | Function                                                   |
-//  | :----: | ---------------------------------------------------------- |
-//  |   0    | protocol version = 2                                       |
-//  |  1-2   | random token                                               |
-//  |   3    | PUSH_DATA identifier 0x00                                  |
-//  |  4-11  | Gateway unique identifier (MAC address)                    |
-//  | 12-end | JSON object, starting with {, ending with }, see section 4 |
-
-type SemtechPushMessage struct {
-	Version         byte            `json:"-"`                 // 02
-	TokenH          byte            `json:"-"`                 // 00
-	TokenL          byte            `json:"-"`                 // 00
-	Identifier      byte            `json:"-"`                 // 00
-	Mac             [8]byte         `json:"-"`                 // AA BB CC DD EE FF 00 11
-	PushDataPayload PushDataPayload `json:"push_data_payload"` // {...}
-}
-
-func NewSemtechPushMessage(Mac [8]byte, Payload string) SemtechPushMessage {
-	// Token := genToken()
+func NewSemtechPushMessage(Mac [8]byte, Payload []byte) semtechudp.PushDataPacket {
 	currentTime := time.Now().UTC()
-	return SemtechPushMessage{
-		Version:    2,
-		TokenH:     0,
-		TokenL:     0,
-		Identifier: 0,
-		Mac:        Mac,
-		PushDataPayload: PushDataPayload{
-			Rxpk: []rxpk{
+	GatewayMAC := lorawan.EUI64(Mac)
+	return semtechudp.PushDataPacket{
+		ProtocolVersion: 2,
+		RandomToken:     0x1234,
+		GatewayMAC:      GatewayMAC,
+		Payload: semtechudp.PushDataPayload{
+			RXPK: []semtechudp.RXPK{
 				{
-					Time: currentTime.UTC().Format("2006-01-02T15:04:05.999999Z"),
-					Tmst: uint32(time.Now().UnixMilli()),
+					Time: (*semtechudp.CompactTime)(&currentTime),
+					Tmst: uint32(currentTime.UnixMilli()),
 					Chan: 1,
-					Rfch: 1,
+					RFCh: 1,
 					Freq: 868.1,
 					Stat: 1,
 					Modu: "LORA",
-					Datr: "SF7BW125",
-					Codr: "4/5",
-					Rssi: -50,
-					Lsnr: 7.5,
-					Size: len(Payload),
+					DatR: semtechudp.DatR{LoRa: "SF12BW500"},
+					CodR: "4/5",
+					RSSI: -50,
+					LSNR: 7.5,
+					RSig: []semtechudp.RSig{},
+					Size: uint16(len(Payload)),
 					Data: Payload,
+					Meta: map[string]string{
+						"gateway_name": "test-gateway",
+					},
 				},
 			},
 		},
 	}
-}
-
-/*
-*
-* 编码
-*
- */
-func (M SemtechPushMessage) Encode() ([]byte, error) {
-	Packet := []byte{}
-	Packet = append(Packet, M.Version)
-	Packet = append(Packet, M.TokenH)
-	Packet = append(Packet, M.TokenL)
-	Packet = append(Packet, M.Identifier)
-	if bytes, err := json.Marshal(M.PushDataPayload); err != nil {
-		Packet = append(Packet, '{')
-		Packet = append(Packet, '}')
-		return Packet, err
-	} else {
-		Packet = append(Packet, M.Mac[0])
-		Packet = append(Packet, M.Mac[1])
-		Packet = append(Packet, M.Mac[2])
-		Packet = append(Packet, M.Mac[3])
-		Packet = append(Packet, M.Mac[4])
-		Packet = append(Packet, M.Mac[5])
-		Packet = append(Packet, M.Mac[6])
-		Packet = append(Packet, M.Mac[7])
-		Packet = append(Packet, bytes...)
-		return Packet, nil
-	}
-}
-
-// | Bytes | Function                                          |
-// | :---: | ------------------------------------------------- |
-// |   0   | protocol version = 2                              |
-// |  1-2  | same token as the PUSH_DATA packet to acknowledge |
-// |   3   | PUSH_ACK identifier 0x01                          |
-type SemtechPushMessageAck struct {
-	Version    byte
-	Token      uint16
-	Identifier byte
-}
-
-/*
-*
-* 上传RF数据格式
-*
- */
-type rxpk struct {
-	Time string  `json:"time"`
-	Tmst uint32  `json:"tmst"`
-	Chan int     `json:"chan"`
-	Rfch int     `json:"rfch"`
-	Freq float32 `json:"freq"`
-	Stat int     `json:"stat"`
-	Modu string  `json:"modu"`
-	Datr string  `json:"datr"`
-	Codr string  `json:"codr"`
-	Rssi int     `json:"rssi"`
-	Lsnr float64 `json:"lsnr"`
-	Size int     `json:"size"`
-	Data string  `json:"data"`
-}
-
-/*
-*
-* UDP协议
-*
- */
-type PushDataPayload struct {
-	Rxpk []rxpk `json:"rxpk"`
-}
-
-func genToken() [2]byte {
-	var b [2]byte
-	rand.Read(b[:])
-	return b
 }
