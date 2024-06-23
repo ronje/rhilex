@@ -89,38 +89,6 @@ func GetMx01BaseInfo() (Mx01BaseInfo, error) {
 *
  */
 func __Mx01_AT(command string, timeout time.Duration) (string, error) {
-	file, err := os.OpenFile(__USB_4G_DEV_PATH, os.O_RDWR, os.ModePerm)
-	if err != nil {
-		return "", err
-	}
-	defer file.Close()
 
-	// 写入AT指令
-	_, err = file.WriteString(command)
-	if err != nil {
-		return "", err
-	}
-	buffer := [1]byte{}
-	var responseData []byte
-	b1 := 0
-	for {
-		if b1 == 4 {
-			break
-		}
-		deadline := time.Now().Add(timeout)
-		file.SetReadDeadline(deadline)
-		n, err := file.Read(buffer[:])
-		if err != nil {
-			return "", err
-		}
-		if n > 0 {
-			if buffer[0] == 10 {
-				b1++
-			}
-			if buffer[0] != 10 {
-				responseData = append(responseData, buffer[0])
-			}
-		}
-	}
-	return string(responseData), nil
+	return string(""), nil
 }
