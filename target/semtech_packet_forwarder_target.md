@@ -154,7 +154,7 @@ Example (white-spaces, indentation and newlines added for readability):
 {"rxpk":[
 	{
 		"time":"2013-03-31T16:21:17.528002Z",
-		"tmst":3512348611,
+		"tmst":0,
 		"chan":2,
 		"rfch":0,
 		"freq":866.349812,

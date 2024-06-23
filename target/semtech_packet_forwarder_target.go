@@ -159,7 +159,32 @@ func (ht *SemtechUdpForwarder) SendUdpData(data []byte) error {
 		return err
 	}
 	return nil
+	// Ack := [6]byte{}
+	// conn.SetReadDeadline(time.Now().Add(3 * time.Second))
+	// N, err := conn.Read(Ack[:])
+	// if err != nil {
+	// 	return err
+	// }
+	// if N >= 6 {
+	// 	Version := Ack[0]
+	// 	TokenH := Ack[1]
+	// 	TokenL := Ack[2]
+	// 	PushID := Ack[3]
+	// 	if data[0] == Version &&
+	// 		data[1] == TokenH &&
+	// 		data[2] == TokenL &&
+	// 		data[3] == PushID {
+	// 		return nil
+	// 	}
+	// }
+	// return fmt.Errorf("invalid response:%v", Ack[:N])
 }
+
+// | Bytes | Function                                          |
+// | :---: | ------------------------------------------------- |
+// |   0   | protocol version = 2                              |
+// |  1-2  | same token as the PUSH_DATA packet to acknowledge |
+// |   3   | PUSH_ACK identifier 0x01                          |
 
 /*
 *
@@ -175,28 +200,28 @@ func (ht *SemtechUdpForwarder) SendUdpData(data []byte) error {
 //  | 12-end | JSON object, starting with {, ending with }, see section 4 |
 
 type SemtechPushMessage struct {
-	Version         byte              // 02
-	TokenH          byte              //  00
-	TokenL          byte              //  00
-	Identifier      byte              // 00
-	Mac             [8]byte           // AA BB CC DD EE FF 00 11
-	PushDataPayload []PushDataPayload // {...}
+	Version         byte            `json:"-"`                 // 02
+	TokenH          byte            `json:"-"`                 // 00
+	TokenL          byte            `json:"-"`                 // 00
+	Identifier      byte            `json:"-"`                 // 00
+	Mac             [8]byte         `json:"-"`                 // AA BB CC DD EE FF 00 11
+	PushDataPayload PushDataPayload `json:"push_data_payload"` // {...}
 }
 
 func NewSemtechPushMessage(Mac [8]byte, Payload string) SemtechPushMessage {
-	Token := genToken()
+	// Token := genToken()
+	currentTime := time.Now().UTC()
 	return SemtechPushMessage{
 		Version:    2,
-		TokenH:     Token[1],
-		TokenL:     Token[0],
+		TokenH:     0,
+		TokenL:     0,
 		Identifier: 0,
 		Mac:        Mac,
-		PushDataPayload: []PushDataPayload{
-			{
-				// 默认的数据
-				Rxpk: rxpk{
-					Time: time.Now(),
-					Tmst: time.Now().UnixMilli(),
+		PushDataPayload: PushDataPayload{
+			Rxpk: []rxpk{
+				{
+					Time: currentTime.UTC().Format("2006-01-02T15:04:05.999999Z"),
+					Tmst: uint32(time.Now().UnixMilli()),
 					Chan: 1,
 					Rfch: 1,
 					Freq: 868.1,
@@ -212,7 +237,6 @@ func NewSemtechPushMessage(Mac [8]byte, Payload string) SemtechPushMessage {
 			},
 		},
 	}
-
 }
 
 /*
@@ -222,15 +246,24 @@ func NewSemtechPushMessage(Mac [8]byte, Payload string) SemtechPushMessage {
  */
 func (M SemtechPushMessage) Encode() ([]byte, error) {
 	Packet := []byte{}
-	if bytes, err := json.Marshal(M); err != nil {
+	Packet = append(Packet, M.Version)
+	Packet = append(Packet, M.TokenH)
+	Packet = append(Packet, M.TokenL)
+	Packet = append(Packet, M.Identifier)
+	if bytes, err := json.Marshal(M.PushDataPayload); err != nil {
+		Packet = append(Packet, '{')
+		Packet = append(Packet, '}')
 		return Packet, err
 	} else {
-		Packet[0] = M.Version
-		Packet[1] = M.TokenH
-		Packet[2] = M.TokenL
-		Packet[3] = M.Identifier
-		copy(Packet[4:], M.Mac[:]) // MAC
-		copy(Packet[11:], bytes)   // JSON
+		Packet = append(Packet, M.Mac[0])
+		Packet = append(Packet, M.Mac[1])
+		Packet = append(Packet, M.Mac[2])
+		Packet = append(Packet, M.Mac[3])
+		Packet = append(Packet, M.Mac[4])
+		Packet = append(Packet, M.Mac[5])
+		Packet = append(Packet, M.Mac[6])
+		Packet = append(Packet, M.Mac[7])
+		Packet = append(Packet, bytes...)
 		return Packet, nil
 	}
 }
@@ -252,19 +285,19 @@ type SemtechPushMessageAck struct {
 *
  */
 type rxpk struct {
-	Time time.Time `json:"time"`
-	Tmst int64     `json:"tmst"`
-	Chan int       `json:"chan"`
-	Rfch int       `json:"rfch"`
-	Freq float64   `json:"freq"`
-	Stat int       `json:"stat"`
-	Modu string    `json:"modu"`
-	Datr string    `json:"datr"`
-	Codr string    `json:"codr"`
-	Rssi int       `json:"rssi"`
-	Lsnr float64   `json:"lsnr"`
-	Size int       `json:"size"`
-	Data string    `json:"data"`
+	Time string  `json:"time"`
+	Tmst uint32  `json:"tmst"`
+	Chan int     `json:"chan"`
+	Rfch int     `json:"rfch"`
+	Freq float32 `json:"freq"`
+	Stat int     `json:"stat"`
+	Modu string  `json:"modu"`
+	Datr string  `json:"datr"`
+	Codr string  `json:"codr"`
+	Rssi int     `json:"rssi"`
+	Lsnr float64 `json:"lsnr"`
+	Size int     `json:"size"`
+	Data string  `json:"data"`
 }
 
 /*
@@ -273,7 +306,7 @@ type rxpk struct {
 *
  */
 type PushDataPayload struct {
-	Rxpk rxpk `json:"rxpk"`
+	Rxpk []rxpk `json:"rxpk"`
 }
 
 func genToken() [2]byte {
