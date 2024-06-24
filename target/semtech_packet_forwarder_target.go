@@ -150,26 +150,24 @@ func (ht *SemtechUdpForwarder) SendUdpData(data []byte) error {
 	if err != nil {
 		return err
 	}
-	return nil
-	// Ack := [6]byte{}
-	// conn.SetReadDeadline(time.Now().Add(3 * time.Second))
-	// N, err := conn.Read(Ack[:])
-	// if err != nil {
-	// 	return err
-	// }
-	// if N >= 6 {
-	// 	Version := Ack[0]
-	// 	TokenH := Ack[1]
-	// 	TokenL := Ack[2]
-	// 	PushID := Ack[3]
-	// 	if data[0] == Version &&
-	// 		data[1] == TokenH &&
-	// 		data[2] == TokenL &&
-	// 		data[3] == PushID {
-	// 		return nil
-	// 	}
-	// }
-	// return fmt.Errorf("invalid response:%v", Ack[:N])
+	Ack := [4]byte{}
+	conn.SetReadDeadline(time.Now().Add(2 * time.Second))
+	N, err := conn.Read(Ack[:])
+	if err != nil {
+		return err
+	}
+	if N == 4 {
+		Version := Ack[0]
+		TokenH := Ack[1]
+		TokenL := Ack[2]
+		// PushID := Ack[3]
+		if data[0] == Version &&
+			data[1] == TokenH &&
+			data[2] == TokenL {
+			return nil
+		}
+	}
+	return fmt.Errorf("invalid response:%v", Ack[:N])
 }
 func NewSemtechPushMessage(Mac [8]byte, Payload []byte) semtechudp.PushDataPacket {
 	currentTime := time.Now().UTC()
