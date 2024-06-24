@@ -62,7 +62,7 @@ func NewSemtechUdpForwarder(e typex.Rhilex) typex.XTarget {
 	ht.mainConfig = SemtechUdpForwarderConfig{
 		Host:  "127.0.0.1",
 		Port:  1700,
-		GwMac: "01020304050607",
+		GwMac: "0102030405060708",
 	}
 	ht.status = typex.SOURCE_DOWN
 	return ht
