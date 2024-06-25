@@ -20,7 +20,6 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/hootrhino/rhilex/common"
 	"github.com/hootrhino/rhilex/glogger"
 	"github.com/hootrhino/rhilex/typex"
 	"github.com/hootrhino/rhilex/utils"
@@ -34,17 +33,26 @@ import (
 * 单向的MQTT客户端，不支持subscribe，订阅了不生效
 *
  */
+type MqttTargetConfig struct {
+	Host     string `json:"host" validate:"required" title:"服务地址"`
+	Port     int    `json:"port" validate:"required" title:"服务端口"`
+	ClientId string `json:"clientId" validate:"required" title:"客户端ID"`
+	Username string `json:"username" validate:"required" title:"连接账户"`
+	Password string `json:"password" validate:"required" title:"连接密码"`
+	PubTopic string `json:"pubTopic" title:"上报TOPIC" info:"上报TOPIC"` // 上报数据的 Topic
+	SubTopic string `json:"subTopic" title:"订阅TOPIC" info:"订阅TOPIC"` // 上报数据的 Topic
+}
 type mqttOutEndTarget struct {
 	typex.XStatus
 	client     mqtt.Client
-	mainConfig common.MqttConfig
+	mainConfig MqttTargetConfig
 	status     typex.SourceState
 }
 
 func NewMqttTarget(e typex.Rhilex) typex.XTarget {
 	m := new(mqttOutEndTarget)
 	m.RuleEngine = e
-	m.mainConfig = common.MqttConfig{
+	m.mainConfig = MqttTargetConfig{
 		Host: "127.0.0.1",
 		Port: 1883,
 	}

@@ -675,6 +675,12 @@ func (e *RuleEngine) InitSourceTypeManager() error {
 			NewSource: source.NewGenericMqttSource,
 		},
 	)
+	e.SourceTypeManager.Register(typex.GENERIC_MQTT_SERVER,
+		&typex.XConfig{
+			Engine:    e,
+			NewSource: source.NewMqttServer,
+		},
+	)
 	return nil
 }
 
@@ -684,6 +690,7 @@ func (e *RuleEngine) InitSourceTypeManager() error {
 *
  */
 func (e *RuleEngine) InitTargetTypeManager() error {
+
 	e.TargetTypeManager.Register(typex.SEMTECH_UDP_FORWARDER,
 		&typex.XConfig{
 			Engine:    e,

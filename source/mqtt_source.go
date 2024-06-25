@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/hootrhino/rhilex/common"
 	"github.com/hootrhino/rhilex/glogger"
 	"github.com/hootrhino/rhilex/typex"
 	"github.com/hootrhino/rhilex/utils"
@@ -12,16 +11,29 @@ import (
 	mqtt "github.com/eclipse/paho.mqtt.golang"
 )
 
+type MqttSourceConfig struct {
+	Host     string `json:"host" validate:"required" title:"服务地址"`
+	Port     int    `json:"port" validate:"required" title:"服务端口"`
+	ClientId string `json:"clientId" validate:"required" title:"客户端ID"`
+	Username string `json:"username" validate:"required" title:"连接账户"`
+	Password string `json:"password" validate:"required" title:"连接密码"`
+	PubTopic string `json:"pubTopic" title:"上报TOPIC" info:"上报TOPIC"` // 上报数据的 Topic
+	SubTopic string `json:"subTopic" title:"订阅TOPIC" info:"订阅TOPIC"` // 上报数据的 Topic
+}
 type mqttInEndSource struct {
 	typex.XStatus
 	client     mqtt.Client
-	mainConfig common.MqttConfig
+	mainConfig MqttSourceConfig
 	status     typex.SourceState
 }
 
 func NewMqttInEndSource(e typex.Rhilex) typex.XSource {
 	m := new(mqttInEndSource)
 	m.RuleEngine = e
+	m.mainConfig = MqttSourceConfig{
+		Host: "127.0.0.1",
+		Port: 1883,
+	}
 	return m
 }
 

@@ -18,7 +18,9 @@ const (
 	RHILEX_UDP      InEndType = "RHILEX_UDP"
 	GENERIC_IOT_HUB InEndType = "GENERIC_IOT_HUB"
 	INTERNAL_EVENT  InEndType = "INTERNAL_EVENT" // 内部消息
-	GENERIC_MQTT    InEndType = "GENERIC_MQTT"   // 通用MQTT
+	GENERIC_MQTT    InEndType = "GENERIC_MQTT"   // 通用 MQTT
+	// Mqtt Server
+	GENERIC_MQTT_SERVER InEndType = "GENERIC_MQTT_SERVER"
 )
 
 // XStatus for source status
