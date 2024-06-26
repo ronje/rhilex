@@ -28,6 +28,7 @@ import (
 	"github.com/hootrhino/rhilex/component/interkv"
 	"github.com/hootrhino/rhilex/component/rhilexmanager"
 	"github.com/hootrhino/rhilex/component/ruleengine"
+	transceiver "github.com/hootrhino/rhilex/component/transceivercom/transceiver"
 	core "github.com/hootrhino/rhilex/config"
 
 	intercache "github.com/hootrhino/rhilex/component/intercache"
@@ -89,6 +90,8 @@ func InitRuleEngine(config typex.RhilexConfig) typex.Rhilex {
 		Devices:           &sync.Map{},
 		Config:            &config,
 	}
+	// Init Transceiver Communicator Manager
+	transceiver.InitTransceiverCommunicatorManager(__DefaultRuleEngine)
 	// Internal DB
 	interdb.Init(__DefaultRuleEngine, __DEFAULT_DB_PATH)
 	// Internal kv Store
