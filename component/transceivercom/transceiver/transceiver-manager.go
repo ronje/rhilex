@@ -22,6 +22,7 @@ import (
 
 	"github.com/hootrhino/rhilex/component/transceivercom"
 	mx01ble "github.com/hootrhino/rhilex/component/transceivercom/mx01-ble"
+	"github.com/hootrhino/rhilex/glogger"
 
 	"github.com/hootrhino/rhilex/typex"
 )
@@ -41,10 +42,13 @@ func InitTransceiverCommunicatorManager(R typex.Rhilex) {
 	initDefaultModule()
 }
 
-func (TM *TransceiverCommunicatorManager) Load(name string, config map[string]any,
+func (TM *TransceiverCommunicatorManager) Load(name string, config transceivercom.TransceiverConfig,
 	tc transceivercom.TransceiverCommunicator) error {
+	glogger.GLogger.Debugf("transceiver Load:(%s, %v, %s)", name, config, tc.Info().String())
+
 	if _, ok := TM.Transceivers.Load(name); !ok {
 		if err := tc.Start(config); err != nil {
+			glogger.GLogger.Error(err)
 			return err
 		}
 		TM.Transceivers.Store(name, tc)
@@ -75,7 +79,7 @@ func (TM *TransceiverCommunicatorManager) UnLoad(name string) {
 	}
 }
 
-func (TM *TransceiverCommunicatorManager) Ctrl(name, cmd []byte,
+func (TM *TransceiverCommunicatorManager) Ctrl(name string, cmd []byte,
 	timeout time.Duration) ([]byte, error) {
 	if value, ok := TM.Transceivers.Load(name); ok {
 		switch T := value.(type) {

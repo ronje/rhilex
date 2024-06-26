@@ -482,6 +482,8 @@ func (hs *ApiServerPlugin) LoadRoute() {
 	apis.InitDataSchemaApi()
 	// Data Center
 	apis.InitDataCenterApi()
+	// Transceiver
+	apis.InitTransceiverRoute()
 }
 
 // ApiServerPlugin Start

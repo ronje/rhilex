@@ -15,7 +15,20 @@
 
 package transceivercom
 
-import "time"
+import (
+	"encoding/json"
+	"time"
+)
+
+type TransceiverConfig map[string]any
+
+func (O TransceiverConfig) String() string {
+	if bytes, err := json.Marshal(O); err != nil {
+		return "{}"
+	} else {
+		return string(bytes)
+	}
+}
 
 type TransceiverType uint8
 
@@ -43,10 +56,18 @@ const (
 )
 
 type CommunicatorInfo struct {
-	Name   string
-	Model  string
-	Type   TransceiverType
-	Vendor string
+	Name   string          `json:"name"`
+	Model  string          `json:"model"`
+	Type   TransceiverType `json:"type"`
+	Vendor string          `json:"vendor"`
+}
+
+func (O CommunicatorInfo) String() string {
+	if bytes, err := json.Marshal(O); err != nil {
+		return "{}"
+	} else {
+		return string(bytes)
+	}
 }
 
 type TransceiverStatus struct {
@@ -55,7 +76,7 @@ type TransceiverStatus struct {
 }
 
 type TransceiverCommunicator interface {
-	Start(map[string]any) error
+	Start(TransceiverConfig) error
 	Ctrl(cmd []byte, timeout time.Duration) ([]byte, error)
 	Status() TransceiverStatus
 	Info() CommunicatorInfo

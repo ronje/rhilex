@@ -32,11 +32,11 @@ type Mx01BLE struct {
 func NewMx01BLE(R typex.Rhilex) transceivercom.TransceiverCommunicator {
 	return &Mx01BLE{R: R, mainConfig: Mx01BLEConfig{}}
 }
-func (tc *Mx01BLE) Start(map[string]any) error {
+func (tc *Mx01BLE) Start(transceivercom.TransceiverConfig) error {
 	return nil
 }
 func (tc *Mx01BLE) Ctrl(cmd []byte, timeout time.Duration) ([]byte, error) {
-	return nil, nil
+	return []byte("OK"), nil
 }
 func (tc *Mx01BLE) Info() transceivercom.CommunicatorInfo {
 	return transceivercom.CommunicatorInfo{
