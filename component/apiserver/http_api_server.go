@@ -201,6 +201,7 @@ func (hs *ApiServerPlugin) Init(config *ini.Section) error {
 		&model.MSnmpOid{},
 		&model.MBacnetDataPoint{},
 		&model.MBacnetRouterDataPoint{},
+		&model.MDataPoint{},
 	)
 	// 初始化所有预制参数
 	server.DefaultApiServer.InitializeGenericOSData()
@@ -484,6 +485,8 @@ func (hs *ApiServerPlugin) LoadRoute() {
 	apis.InitDataCenterApi()
 	// Transceiver
 	apis.InitTransceiverRoute()
+	// ata Point Route
+	apis.InitDataPointRoute()
 }
 
 // ApiServerPlugin Start
