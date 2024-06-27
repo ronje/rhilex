@@ -35,6 +35,14 @@ func InitMqttSourceServerRoute() {
 * 获取Mqtt客户端
 *
  */
+type MqttClient struct {
+	ID           string `json:"id"`
+	Remote       string `json:"remote"`
+	Listener     string `json:"listener"`
+	Username     string `json:"username"`
+	CleanSession bool   `json:"cleanSession"`
+}
+
 func MqttClients(c *gin.Context, ruleEngine typex.Rhilex) {
 	uuid, _ := c.GetQuery("uuid")
 	pager, err := service.ReadPageRequest(c)
@@ -47,7 +55,18 @@ func MqttClients(c *gin.Context, ruleEngine typex.Rhilex) {
 		switch T := Inend.Source.(type) {
 		case *source.MqttServer:
 			Clients := T.Clients((pager.Current), (pager.Size))
-			Result := service.WrapPageResult(*pager, Clients, int64(Clients.Len()))
+			result := []MqttClient{}
+			for _, v := range Clients.GetAll() {
+				c := MqttClient{
+					ID:           v.ID,
+					Remote:       v.Net.Remote,
+					Username:     string(v.Properties.Username),
+					CleanSession: v.Properties.Clean,
+					Listener:     v.Net.Listener,
+				}
+				result = append(result, c)
+			}
+			Result := service.WrapPageResult(*pager, result, int64(Clients.Len()))
 			c.JSON(common.HTTP_OK, common.OkWithData(Result))
 			return
 		}
