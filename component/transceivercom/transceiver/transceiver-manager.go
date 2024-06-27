@@ -69,6 +69,15 @@ func (TM *TransceiverCommunicatorManager) List() []transceivercom.CommunicatorIn
 	return List
 }
 
+func (TM *TransceiverCommunicatorManager) Get(name string) transceivercom.TransceiverCommunicator {
+	if value, ok := TM.Transceivers.Load(name); ok {
+		switch T := value.(type) {
+		case transceivercom.TransceiverCommunicator:
+			return T
+		}
+	}
+	return nil
+}
 func (TM *TransceiverCommunicatorManager) UnLoad(name string) {
 	if value, ok := TM.Transceivers.Load(name); ok {
 		switch T := value.(type) {

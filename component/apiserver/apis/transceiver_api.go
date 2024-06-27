@@ -41,6 +41,7 @@ type TransceiverInfoVo struct {
 	Model  string `json:"model"`
 	Type   int    `json:"type"`
 	Status int    `json:"status"`
+	ErrMsg error  `json:"errMsg"`
 	Vendor string `json:"vendor"`
 }
 
@@ -52,13 +53,19 @@ type TransceiverInfoVo struct {
 func TransceiverList(c *gin.Context, ruleEngine typex.Rhilex) {
 	TransceiverInfos := []TransceiverInfoVo{}
 	for _, Info := range transceiver.List() {
-		TransceiverInfos = append(TransceiverInfos, TransceiverInfoVo{
+		TransceiverIn := TransceiverInfoVo{
 			Name:   Info.Name,
 			Model:  Info.Name,
 			Type:   int(Info.Type),
-			Status: int(Info.Status),
 			Vendor: Info.Vendor,
-		})
+		}
+		TransceiverCommunicator := transceiver.GetCommunicator(Info.Name)
+		if TransceiverCommunicator != nil {
+			Status := TransceiverCommunicator.Status()
+			TransceiverIn.Status = int(Status.Code)
+			TransceiverIn.ErrMsg = Status.Error
+		}
+		TransceiverInfos = append(TransceiverInfos, TransceiverIn)
 	}
 	c.JSON(common.HTTP_OK, common.OkWithData(TransceiverInfos))
 }

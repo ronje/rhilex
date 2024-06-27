@@ -39,6 +39,11 @@ func List() []transceivercom.CommunicatorInfo {
 	return DefaultTransceiverCommunicatorManager.List()
 }
 
+// List
+func GetCommunicator(name string) transceivercom.TransceiverCommunicator {
+	return DefaultTransceiverCommunicatorManager.Get(name)
+}
+
 // Stop
 func Stop() {
 	for _, TC := range DefaultTransceiverCommunicatorManager.List() {

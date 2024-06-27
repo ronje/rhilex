@@ -16,11 +16,10 @@
 package mx01ble
 
 import (
-	"context"
 	"time"
 
-	"github.com/hootrhino/rhilex/component/internotify"
 	"github.com/hootrhino/rhilex/component/transceivercom"
+	"github.com/hootrhino/rhilex/glogger"
 	"github.com/hootrhino/rhilex/typex"
 )
 
@@ -35,23 +34,24 @@ func NewMx01BLE(R typex.Rhilex) transceivercom.TransceiverCommunicator {
 	return &Mx01BLE{R: R, mainConfig: Mx01BLEConfig{}}
 }
 func (tc *Mx01BLE) Start(transceivercom.TransceiverConfig) error {
-	go func() {
-		select {
-		case <-context.Background().Done():
-			return
-		default:
-		}
-		for {
-			internotify.Push(internotify.BaseEvent{
-				Type:    "transceiver.upstream.data",
-				Event:   "transceiver.upstream.data.MX01-BLE-Module",
-				Ts:      uint64(time.Now().UnixMilli()),
-				Summary: "transceiver.upstream.data",
-				Info:    []byte("HELLO WORLD\r\n"),
-			})
-			time.Sleep(3 * time.Second)
-		}
-	}()
+	// go func() {
+	// 	select {
+	// 	case <-context.Background().Done():
+	// 		return
+	// 	default:
+	// 	}
+	// 	for {
+	// 		internotify.Push(internotify.BaseEvent{
+	// 			Type:    "transceiver.upstream.data",
+	// 			Event:   "transceiver.upstream.data.MX01-BLE-Module",
+	// 			Ts:      uint64(time.Now().UnixMilli()),
+	// 			Summary: "transceiver.upstream.data",
+	// 			Info:    []byte("HELLO WORLD\r\n"),
+	// 		})
+	// 		time.Sleep(3 * time.Second)
+	// 	}
+	// }()
+	glogger.GLogger.Info("MX01-BLE-Module Started")
 	return nil
 }
 func (tc *Mx01BLE) Ctrl(cmd []byte, timeout time.Duration) ([]byte, error) {
@@ -72,5 +72,6 @@ func (tc *Mx01BLE) Status() transceivercom.TransceiverStatus {
 	}
 }
 func (tc *Mx01BLE) Stop() {
+	glogger.GLogger.Info("MX01-BLE-Module Stopped")
 
 }
