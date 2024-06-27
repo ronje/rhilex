@@ -90,8 +90,7 @@ func InitRuleEngine(config typex.RhilexConfig) typex.Rhilex {
 		Devices:           &sync.Map{},
 		Config:            &config,
 	}
-	// Init Transceiver Communicator Manager
-	transceiver.InitTransceiverCommunicatorManager(__DefaultRuleEngine)
+
 	// Internal DB
 	interdb.Init(__DefaultRuleEngine, __DEFAULT_DB_PATH)
 	// Internal kv Store
@@ -124,8 +123,8 @@ func InitRuleEngine(config typex.RhilexConfig) typex.Rhilex {
 	jpegstream.InitJpegStreamServer(__DefaultRuleEngine)
 	// 内部队列
 	interqueue.StartDataCacheQueue()
-	// InternalEventQueue
-	internotify.StartInternalEventQueue()
+	// Init Transceiver Communicator Manager
+	transceiver.InitTransceiverCommunicatorManager(__DefaultRuleEngine)
 	return __DefaultRuleEngine
 }
 
@@ -215,6 +214,9 @@ func (e *RuleEngine) Stop() {
 	aibase.Stop()
 	// UnRegisterSlot
 	intercache.UnRegisterSlot("__DefaultRuleEngine")
+	//
+	glogger.GLogger.Info("Stop transceiver")
+	transceiver.Stop()
 	glogger.GLogger.Info("[√] Stop rhilex successfully")
 	if err := glogger.Close(); err != nil {
 		fmt.Println("Close logger error: ", err)
@@ -624,6 +626,12 @@ func (e *RuleEngine) InitDeviceTypeManager() error {
 *
  */
 func (e *RuleEngine) InitSourceTypeManager() error {
+	e.SourceTypeManager.Register(typex.COMTC_EVENT_FORWARDER,
+		&typex.XConfig{
+			Engine:    e,
+			NewSource: source.NewTransceiverForwarder,
+		},
+	)
 	e.SourceTypeManager.Register(typex.MQTT,
 		&typex.XConfig{
 			Engine:    e,

@@ -18,6 +18,7 @@ package source
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 
 	"github.com/hootrhino/rhilex/component/internotify"
 	"github.com/hootrhino/rhilex/typex"
@@ -116,9 +117,13 @@ type event struct {
  */
 func (u *InternalEventSource) startInternalEventQueue() {
 	go func(ctx context.Context) {
-		Queue := make(chan internotify.BaseEvent, 1)
-		internotify.AddSubscriber("InternalEventSource", Queue)
-		defer internotify.RemoveSubscriber("InternalEventSource")
+		Queue := make(chan internotify.BaseEvent, 64)
+		ID := fmt.Sprintf("InternalEventSource:%s", u.PointId)
+		internotify.AddSubscriber(internotify.Subscriber{
+			Id:      ID,
+			Channel: &Queue,
+		})
+		defer internotify.RemoveSubscriber(ID)
 		for {
 			select {
 			case <-ctx.Done():
