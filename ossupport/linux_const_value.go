@@ -42,7 +42,7 @@ const (
 	// 数据备份
 	DataBackupPath = MainWorkDir + "upload/Backup/"
 	// 备份数据库
-	RecoveryDbPath = DataBackupPath + "recovery.db"
+	RecoveryDbPath = DataBackupPath + "rhilex.db"
 	// 数据中心库
 	RecoveryDataCenterPath = DataBackupPath + "rhilex_datacenter.db"
 )
