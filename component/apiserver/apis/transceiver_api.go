@@ -39,7 +39,8 @@ func InitTransceiverRoute() {
 type TransceiverInfoVo struct {
 	Name   string `json:"name"`
 	Model  string `json:"model"`
-	Type   uint8  `json:"type"`
+	Type   int    `json:"type"`
+	Status int    `json:"status"`
 	Vendor string `json:"vendor"`
 }
 
@@ -54,7 +55,8 @@ func TransceiverList(c *gin.Context, ruleEngine typex.Rhilex) {
 		TransceiverInfos = append(TransceiverInfos, TransceiverInfoVo{
 			Name:   Info.Name,
 			Model:  Info.Name,
-			Type:   uint8(Info.Type),
+			Type:   int(Info.Type),
+			Status: int(Info.Status),
 			Vendor: Info.Vendor,
 		})
 	}
