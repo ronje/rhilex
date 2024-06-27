@@ -229,6 +229,12 @@ func LoadRuleLibGroup(r *typex.Rule, e typex.Rhilex) {
 		}
 		AddRuleLibToGroup(r, e, "rds", Funcs)
 	}
+	{
+		Funcs := map[string]func(l *lua.LState) int{
+			"Ctrl": rhilexlib.CtrlComRF(e),
+		}
+		AddRuleLibToGroup(r, e, "rfcom", Funcs)
+	}
 }
 
 /*
