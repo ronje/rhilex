@@ -18,3 +18,11 @@
 ![mx01](image/mx01-ble/1719544708698.png)
 MX-01 蓝牙模组是一款支持低功耗蓝牙协议的串口透传模组；模组具有小体积、高性能、高性价 比、低功耗、平台兼容性强等优点；可以帮助用户快速掌握蓝牙技术，加速产品开发；模组已兼容的 软件平台包括：IOS 应用程序、 Android 应用程序、微信小程序等。MCU 通过串口连接模组，可与手 机、平板等设备进行数据通讯，轻松实现智能无线控制和数据采集；模组广泛应用在智能家居、共享 售货机等领域。
 
+## Topic
+| Topic                   | Args   | Result(HTTP返回JSON里的data字段)        |
+| ----------------------- | ------ | --------------------------------------- |
+| ble.mx01.cmd.send       | ""     | String                                  |
+| ble.mx01.opt.close      | ""     | String                                  |
+| ble.mx01.opt.setnotify  | String | String                                  |
+| ble.mx01.info.connected | ""     | String: "AA:BB:CC:DD:EE:FF:00:11"       |
+| ble.mx01.info.service   | ""     | JSON String:{"r":"0xFFFF","w":"0xFFFF"} |

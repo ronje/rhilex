@@ -79,8 +79,9 @@ func TransceiverList(c *gin.Context, ruleEngine typex.Rhilex) {
 
 type TransceiverCtrlCmd struct {
 	Name   string `json:"name"`
-	Cmd    string `json:"cmd"`
-	Result string `json:"result,omitempty"`
+	Topic  string `json:"topic"`
+	Args   string `json:"args"`
+	Result any    `json:"result,omitempty"`
 }
 
 /*
@@ -94,8 +95,11 @@ func TransceiverCtrl(c *gin.Context, ruleEngine typex.Rhilex) {
 		c.JSON(common.HTTP_OK, common.Error400(err))
 		return
 	}
-	Result, Err := transceiver.Ctrl(transceiverCtrlCmdVo.Name,
-		[]byte(transceiverCtrlCmdVo.Cmd), 300*time.Millisecond)
+	Result, Err := transceiver.Ctrl(
+		transceiverCtrlCmdVo.Name,
+		[]byte(transceiverCtrlCmdVo.Topic),
+		[]byte(transceiverCtrlCmdVo.Args),
+		300*time.Millisecond)
 	if Err != nil {
 		c.JSON(common.HTTP_OK, common.Error400(Err))
 		return
@@ -112,7 +116,6 @@ func TransceiverCtrl(c *gin.Context, ruleEngine typex.Rhilex) {
 func TransceiverDetail(c *gin.Context, ruleEngine typex.Rhilex) {
 	Name, _ := c.GetQuery("name")
 	TransceiverCommunicator := transceiver.GetCommunicator(Name)
-
 	if TransceiverCommunicator != nil {
 		Info := TransceiverCommunicator.Info()
 		TransceiverIn := TransceiverInfoVo{

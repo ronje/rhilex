@@ -16,6 +16,7 @@
 package ec200a4g
 
 import (
+	"os"
 	"time"
 
 	"github.com/hootrhino/rhilex/component/transceivercom"
@@ -31,13 +32,19 @@ type EC200ADtu struct {
 }
 
 func NewEC200ADtu(R typex.Rhilex) transceivercom.TransceiverCommunicator {
+	env := os.Getenv("ARCHSUPPORT")
+	if env == "RHILEXG1" {
+		glogger.GLogger.Info("EC200A Init 4G")
+		__EC200AInit4G()
+		glogger.GLogger.Info("EC200A Init 4G Ok.")
+	}
 	return &EC200ADtu{R: R, mainConfig: EC200ADtuConfig{}}
 }
 func (tc *EC200ADtu) Start(transceivercom.TransceiverConfig) error {
 	glogger.GLogger.Info("EC200ADtu Started")
 	return nil
 }
-func (tc *EC200ADtu) Ctrl(cmd []byte, timeout time.Duration) ([]byte, error) {
+func (tc *EC200ADtu) Ctrl(topic, args []byte, timeout time.Duration) ([]byte, error) {
 	return []byte("OK"), nil
 }
 func (tc *EC200ADtu) Info() transceivercom.CommunicatorInfo {

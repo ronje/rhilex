@@ -79,7 +79,7 @@ type TransceiverStatus struct {
 
 type TransceiverCommunicator interface {
 	Start(TransceiverConfig) error
-	Ctrl(cmd []byte, timeout time.Duration) ([]byte, error)
+	Ctrl(topic, args []byte, timeout time.Duration) ([]byte, error)
 	Status() TransceiverStatus
 	Info() CommunicatorInfo
 	Stop()

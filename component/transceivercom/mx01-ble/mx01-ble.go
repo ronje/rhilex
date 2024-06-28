@@ -54,7 +54,7 @@ func (tc *Mx01BLE) Start(transceivercom.TransceiverConfig) error {
 	glogger.GLogger.Info("MX01-BLE-Module Started")
 	return nil
 }
-func (tc *Mx01BLE) Ctrl(cmd []byte, timeout time.Duration) ([]byte, error) {
+func (tc *Mx01BLE) Ctrl(topic, args []byte, timeout time.Duration) ([]byte, error) {
 	return []byte("OK"), nil
 }
 func (tc *Mx01BLE) Info() transceivercom.CommunicatorInfo {

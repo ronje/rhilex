@@ -31,8 +31,9 @@ import (
 func CtrlComRF(rx typex.Rhilex) func(l *lua.LState) int {
 	return func(l *lua.LState) int {
 		Name := l.ToString(2)
-		cmd := l.ToString(3)
-		Result, Err := transceiver.Ctrl(Name, []byte(cmd), 300*time.Millisecond)
+		Topic := l.ToString(3)
+		Args := l.ToString(4)
+		Result, Err := transceiver.Ctrl(Name, []byte(Topic), []byte(Args), 300*time.Millisecond)
 		if Err != nil {
 			l.Push(lua.LNil)
 			l.Push(lua.LString(Err.Error()))

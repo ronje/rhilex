@@ -1,4 +1,4 @@
-// Copyright (C) 2023 wwhai
+// Copyright (C) 2024 wwhai
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License as
@@ -11,9 +11,9 @@
 // GNU Affero General Public License for more details.
 //
 // You should have received a copy of the GNU Affero General Public License
-// along with this program.  If not, see <http://www.gnu.org/licenses/>.
+// along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-package archsupport
+package ec200a4g
 
 import (
 	"fmt"
@@ -46,15 +46,6 @@ const (
 	__SAVE_CONFIG        = "AT&W\r\n"             // SaveConfig
 	__USB_4G_DEV_PATH    = "/dev/ttyUSB1"         // USB
 )
-
-func init() {
-	env := os.Getenv("ARCHSUPPORT")
-	if env == "RHILEXG1" {
-		fmt.Println("EC200A Init 4G")
-		__EC200AInit4G()
-		fmt.Println("EC200A Init 4G Ok.")
-	}
-}
 
 /*
 *

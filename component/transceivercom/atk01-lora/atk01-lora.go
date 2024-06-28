@@ -37,7 +37,7 @@ func (tc *ATK01Lora) Start(transceivercom.TransceiverConfig) error {
 	glogger.GLogger.Info("EC200ADtu Started")
 	return nil
 }
-func (tc *ATK01Lora) Ctrl(cmd []byte, timeout time.Duration) ([]byte, error) {
+func (tc *ATK01Lora) Ctrl(topic, args []byte, timeout time.Duration) ([]byte, error) {
 	return []byte("OK"), nil
 }
 func (tc *ATK01Lora) Info() transceivercom.CommunicatorInfo {

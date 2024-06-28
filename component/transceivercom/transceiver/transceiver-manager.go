@@ -90,12 +90,12 @@ func (TM *TransceiverCommunicatorManager) UnLoad(name string) {
 	}
 }
 
-func (TM *TransceiverCommunicatorManager) Ctrl(name string, cmd []byte,
+func (TM *TransceiverCommunicatorManager) Ctrl(name string, topic, args []byte,
 	timeout time.Duration) ([]byte, error) {
 	if value, ok := TM.Transceivers.Load(name); ok {
 		switch T := value.(type) {
 		case transceivercom.TransceiverCommunicator:
-			return T.Ctrl(cmd, timeout)
+			return T.Ctrl(topic, args, timeout)
 		}
 	}
 	return nil, fmt.Errorf("transceiver not exists: %s", name)
