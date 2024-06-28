@@ -112,9 +112,23 @@ func TransceiverCtrl(c *gin.Context, ruleEngine typex.Rhilex) {
 func TransceiverDetail(c *gin.Context, ruleEngine typex.Rhilex) {
 	Name, _ := c.GetQuery("name")
 	TransceiverCommunicator := transceiver.GetCommunicator(Name)
+
 	if TransceiverCommunicator != nil {
-		TCInfo := TransceiverCommunicator.Info()
-		c.JSON(common.HTTP_OK, common.OkWithData(TCInfo))
+		Info := TransceiverCommunicator.Info()
+		TransceiverIn := TransceiverInfoVo{
+			Name:     Info.Name,
+			Model:    Info.Name,
+			Type:     int(Info.Type),
+			Vendor:   Info.Vendor,
+			Mac:      Info.Mac,
+			Firmware: Info.Firmware,
+		}
+		Status := TransceiverCommunicator.Status()
+		TransceiverIn.Status = int(Status.Code)
+		if Status.Error != nil {
+			TransceiverIn.ErrMsg = Status.Error.Error()
+		}
+		c.JSON(common.HTTP_OK, common.OkWithData(TransceiverIn))
 		return
 	}
 	c.JSON(common.HTTP_OK, common.Error("Transceiver not exists:"+Name))

@@ -52,7 +52,7 @@ func (tc *EC200ADtu) Info() transceivercom.CommunicatorInfo {
 }
 func (tc *EC200ADtu) Status() transceivercom.TransceiverStatus {
 	return transceivercom.TransceiverStatus{
-		Code:  transceivercom.TC_UP,
+		Code:  transceivercom.TC_DOWN,
 		Error: nil,
 	}
 }

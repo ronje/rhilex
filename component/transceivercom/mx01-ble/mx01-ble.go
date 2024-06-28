@@ -69,7 +69,7 @@ func (tc *Mx01BLE) Info() transceivercom.CommunicatorInfo {
 }
 func (tc *Mx01BLE) Status() transceivercom.TransceiverStatus {
 	return transceivercom.TransceiverStatus{
-		Code:  transceivercom.TC_UP,
+		Code:  transceivercom.TC_ERROR,
 		Error: nil,
 	}
 }
