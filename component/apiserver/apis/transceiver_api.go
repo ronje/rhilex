@@ -45,7 +45,7 @@ type TransceiverInfoVo struct {
 	Mac      string `json:"mac"`
 	Firmware string `json:"firmware"`
 	Status   int    `json:"status"`
-	ErrMsg   error  `json:"errMsg"`
+	ErrMsg   string `json:"errMsg"`
 }
 
 /*
@@ -68,7 +68,9 @@ func TransceiverList(c *gin.Context, ruleEngine typex.Rhilex) {
 		if TransceiverCommunicator != nil {
 			Status := TransceiverCommunicator.Status()
 			TransceiverIn.Status = int(Status.Code)
-			TransceiverIn.ErrMsg = Status.Error
+			if Status.Error != nil {
+				TransceiverIn.ErrMsg = Status.Error.Error()
+			}
 		}
 		TransceiverInfos = append(TransceiverInfos, TransceiverIn)
 	}
