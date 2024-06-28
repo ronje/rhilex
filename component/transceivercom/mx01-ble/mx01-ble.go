@@ -59,10 +59,12 @@ func (tc *Mx01BLE) Ctrl(cmd []byte, timeout time.Duration) ([]byte, error) {
 }
 func (tc *Mx01BLE) Info() transceivercom.CommunicatorInfo {
 	return transceivercom.CommunicatorInfo{
-		Name:   "MX01-BLE-Module",
-		Model:  "MX-01S",
-		Type:   transceivercom.BLE,
-		Vendor: "SHENZHEN-MIAOXIANG-TECH",
+		Name:     "MX01-BLE-Module",
+		Model:    "MX-01S",
+		Type:     transceivercom.BLE,
+		Vendor:   "SHENZHEN-MIAOXIANG-technology",
+		Mac:      "00:00:00:00:00:00:00:00",
+		Firmware: "0.0.0",
 	}
 }
 func (tc *Mx01BLE) Status() transceivercom.TransceiverStatus {

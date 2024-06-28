@@ -34,15 +34,18 @@ func InitTransceiverRoute() {
 	route := server.RouteGroup(server.ContextUrl("/transceiver"))
 	route.POST("/ctrl", server.AddRoute(TransceiverCtrl))
 	route.GET("/list", server.AddRoute(TransceiverList))
+	route.GET("/detail", server.AddRoute(TransceiverDetail))
 }
 
 type TransceiverInfoVo struct {
-	Name   string `json:"name"`
-	Model  string `json:"model"`
-	Type   int    `json:"type"`
-	Status int    `json:"status"`
-	ErrMsg error  `json:"errMsg"`
-	Vendor string `json:"vendor"`
+	Name     string `json:"name"`
+	Model    string `json:"model"`
+	Type     int    `json:"type"`
+	Vendor   string `json:"vendor"`
+	Mac      string `json:"mac"`
+	Firmware string `json:"firmware"`
+	Status   int    `json:"status"`
+	ErrMsg   error  `json:"errMsg"`
 }
 
 /*
@@ -54,10 +57,12 @@ func TransceiverList(c *gin.Context, ruleEngine typex.Rhilex) {
 	TransceiverInfos := []TransceiverInfoVo{}
 	for _, Info := range transceiver.List() {
 		TransceiverIn := TransceiverInfoVo{
-			Name:   Info.Name,
-			Model:  Info.Name,
-			Type:   int(Info.Type),
-			Vendor: Info.Vendor,
+			Name:     Info.Name,
+			Model:    Info.Name,
+			Type:     int(Info.Type),
+			Vendor:   Info.Vendor,
+			Mac:      Info.Mac,
+			Firmware: Info.Firmware,
 		}
 		TransceiverCommunicator := transceiver.GetCommunicator(Info.Name)
 		if TransceiverCommunicator != nil {
@@ -95,4 +100,20 @@ func TransceiverCtrl(c *gin.Context, ruleEngine typex.Rhilex) {
 	}
 	transceiverCtrlCmdVo.Result = string(Result)
 	c.JSON(common.HTTP_OK, common.OkWithData(transceiverCtrlCmdVo))
+}
+
+/*
+*
+* 详情数据，比如常见的指令表，资源等
+*
+ */
+func TransceiverDetail(c *gin.Context, ruleEngine typex.Rhilex) {
+	Name, _ := c.GetQuery("name")
+	TransceiverCommunicator := transceiver.GetCommunicator(Name)
+	if TransceiverCommunicator != nil {
+		TCInfo := TransceiverCommunicator.Info()
+		c.JSON(common.HTTP_OK, common.OkWithData(TCInfo))
+		return
+	}
+	c.JSON(common.HTTP_OK, common.Error("Transceiver not exists:"+Name))
 }

@@ -21,7 +21,10 @@ import (
 	"time"
 
 	"github.com/hootrhino/rhilex/component/transceivercom"
+	atk01lora "github.com/hootrhino/rhilex/component/transceivercom/atk01-lora"
+	ec200a4g "github.com/hootrhino/rhilex/component/transceivercom/ec200a-4g"
 	mx01ble "github.com/hootrhino/rhilex/component/transceivercom/mx01-ble"
+
 	"github.com/hootrhino/rhilex/glogger"
 
 	"github.com/hootrhino/rhilex/typex"
@@ -45,7 +48,6 @@ func InitTransceiverCommunicatorManager(R typex.Rhilex) {
 func (TM *TransceiverCommunicatorManager) Load(name string, config transceivercom.TransceiverConfig,
 	tc transceivercom.TransceiverCommunicator) error {
 	glogger.GLogger.Debugf("transceiver Load:(%s, %v, %s)", name, config, tc.Info().String())
-
 	if _, ok := TM.Transceivers.Load(name); !ok {
 		if err := tc.Start(config); err != nil {
 			glogger.GLogger.Error(err)
@@ -115,6 +117,25 @@ func (TM *TransceiverCommunicatorManager) Status(name string) (transceivercom.Tr
 *
  */
 func initDefaultModule() {
-	Mx01 := mx01ble.NewMx01BLE(DefaultTransceiverCommunicatorManager.R)
-	DefaultTransceiverCommunicatorManager.Load(Mx01.Info().Name, map[string]any{}, Mx01)
+	{
+		Mx01 := mx01ble.NewMx01BLE(DefaultTransceiverCommunicatorManager.R)
+		err := DefaultTransceiverCommunicatorManager.Load(Mx01.Info().Name, map[string]any{}, Mx01)
+		if err != nil {
+			panic(err)
+		}
+	}
+	{
+		EC200A := ec200a4g.NewEC200ADtu(DefaultTransceiverCommunicatorManager.R)
+		err := DefaultTransceiverCommunicatorManager.Load(EC200A.Info().Name, map[string]any{}, EC200A)
+		if err != nil {
+			panic(err)
+		}
+	}
+	{
+		ATK01 := atk01lora.NewATK01Lora(DefaultTransceiverCommunicatorManager.R)
+		err := DefaultTransceiverCommunicatorManager.Load(ATK01.Info().Name, map[string]any{}, ATK01)
+		if err != nil {
+			panic(err)
+		}
+	}
 }
