@@ -18,6 +18,7 @@ package ec200a4g
 import (
 	"encoding/json"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/hootrhino/rhilex/component/transceivercom"
@@ -58,11 +59,7 @@ type CSQInfo struct {
 func (tc *EC200ADtu) Ctrl(topic, args []byte, timeout time.Duration) ([]byte, error) {
 	glogger.GLogger.Debug("EC200ADtu.Ctrl=", topic, string(args))
 	if string(topic) == "mn4g.ec200a.info.csq" {
-		CSQInfo1 := CSQInfo{
-			Cops:  "CMCC",
-			Csq:   15,
-			ICCID: "00000000",
-		}
+		CSQInfo1 := Get4GBaseInfo()
 		bytes, _ := json.Marshal(CSQInfo1)
 		return bytes, nil
 	}
@@ -92,4 +89,44 @@ func (tc *EC200ADtu) Status() transceivercom.TransceiverStatus {
 }
 func (tc *EC200ADtu) Stop() {
 	glogger.GLogger.Info("EC200ADtu Stopped")
+}
+
+/*
+*
+* 获取4G数据
+*
+ */
+func Get4GBaseInfo() CSQInfo {
+	info := CSQInfo{
+		ICCID: "00000000",
+		Csq:   0,
+		Cops:  "ERROR",
+	}
+	csq := EC200AGet4G_CSQ("/dev/ttyUSB1")
+	if csq == 0 {
+		time.Sleep(100 * time.Millisecond)
+		csq = EC200AGet4G_CSQ("/dev/ttyUSB1")
+	}
+	cops, err1 := EC200AGetCOPS("/dev/ttyUSB1")
+	if err1 != nil {
+		return info
+	}
+	cm := "UNKNOWN"
+	if strings.Contains(cops, "CMCC") {
+		cm = "CHINA CMCC"
+	}
+	if strings.Contains(cops, "MOBILE") {
+		cm = "CHINA MOBILE"
+	}
+	if strings.Contains(cops, "UNICOM") {
+		cm = "CHINA UNICOM"
+	}
+	iccid, err2 := EC200AGetICCID("/dev/ttyUSB1")
+	if err2 != nil {
+		return info
+	}
+	info.Cops = cm
+	info.Csq = csq
+	info.ICCID = iccid
+	return info
 }

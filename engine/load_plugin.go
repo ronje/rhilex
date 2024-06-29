@@ -28,7 +28,7 @@ import (
 // │ Init ├───►│ Load ├───►│ Stop │
 // └──────┘    └──────┘    └──────┘
 func (e *RuleEngine) LoadPlugin(sectionK string, p typex.XPlugin) error {
-	section := utils.GetINISection(core.INIPath, sectionK)
+	section := utils.GetINISection(core.GlobalConfig.IniPath, sectionK)
 	if err := p.Init(section); err != nil {
 		return err
 	}

@@ -32,7 +32,6 @@ import (
 )
 
 var GlobalConfig typex.RhilexConfig
-var INIPath string
 
 // Init config, First to run!
 func InitGlobalConfig(path string) typex.RhilexConfig {
@@ -42,7 +41,6 @@ func InitGlobalConfig(path string) typex.RhilexConfig {
 		log.Fatalf("Fail to read config file: %v", err)
 		os.Exit(1)
 	}
-	INIPath = path
 	GlobalConfig = typex.RhilexConfig{
 		IniPath: path,
 	}
