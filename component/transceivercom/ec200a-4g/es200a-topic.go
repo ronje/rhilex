@@ -15,6 +15,6 @@
 
 package ec200a4g
 
-var GET_CSQ = "mn4g.ec200a.info.csq"
+var GET_CSQ = "mn4g.ec200a.info"
 var RESTART = "mn4g.ec200a.opt.restart"
 var SEND_AT = "mn4g.ec200a.cmd.send"

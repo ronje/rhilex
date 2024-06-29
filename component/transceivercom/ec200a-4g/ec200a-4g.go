@@ -58,7 +58,7 @@ type CSQInfo struct {
 
 func (tc *EC200ADtu) Ctrl(topic, args []byte, timeout time.Duration) ([]byte, error) {
 	glogger.GLogger.Debug("EC200ADtu.Ctrl=", topic, string(args))
-	if string(topic) == "mn4g.ec200a.info.csq" {
+	if string(topic) == "mn4g.ec200a.info" {
 		CSQInfo1 := Get4GBaseInfo()
 		bytes, _ := json.Marshal(CSQInfo1)
 		return bytes, nil

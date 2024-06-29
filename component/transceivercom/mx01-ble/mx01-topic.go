@@ -15,6 +15,6 @@
 
 package mx01ble
 
-var GET_ALL_INFO = "ble.mx01.info.all"
+var GET_ALL_INFO = "ble.mx01.info"
 var RESTART = "ble.mx01.opt.restart"
 var SEND_AT = "ble.mx01.cmd.send"

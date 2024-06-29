@@ -16,14 +16,19 @@
 package mx01ble
 
 import (
+	"context"
+	"io"
+	"os"
+	"strings"
+	"sync"
+	"time"
+
 	serial "github.com/hootrhino/goserial"
 	mx01 "github.com/hootrhino/rhilex-goat/bsp/mx01"
 	"github.com/hootrhino/rhilex-goat/device"
 	"github.com/hootrhino/rhilex/component/transceivercom"
 	"github.com/hootrhino/rhilex/glogger"
 	"github.com/hootrhino/rhilex/typex"
-	"os"
-	"time"
 )
 
 type Mx01BLEConfig struct {
@@ -33,10 +38,11 @@ type Mx01BLE struct {
 	R          typex.Rhilex
 	mainConfig Mx01BLEConfig
 	mx01       device.Device
+	locker     sync.Mutex
 }
 
 func NewMx01BLE(R typex.Rhilex) transceivercom.TransceiverCommunicator {
-	return &Mx01BLE{R: R, mainConfig: Mx01BLEConfig{
+	return &Mx01BLE{R: R, locker: sync.Mutex{}, mainConfig: Mx01BLEConfig{
 		ComConfig: transceivercom.TransceiverConfig{
 			Address:   "COM1",
 			BaudRate:  9600,
@@ -66,6 +72,40 @@ func (tc *Mx01BLE) Start(transceivercom.TransceiverConfig) error {
 		}
 		tc.mx01 = mx01.NewMX01("mx01", serialPort)
 		tc.mx01.Flush()
+
+		wg := sync.WaitGroup{}
+		wg.Add(1)
+		go func(io io.ReadWriteCloser) {
+			var responseData [256]byte
+			Ctx, Cancel := context.WithTimeout(context.Background(),
+				time.Duration(tc.mainConfig.ComConfig.ATTimeout))
+			acc := 0
+			defer wg.Done()
+			defer Cancel()
+			for {
+				select {
+				case <-Ctx.Done():
+					return
+				default:
+					N, errRead := io.Read(responseData[acc:])
+					if errRead != nil {
+						if strings.Contains(errRead.Error(), "timeout") {
+							if N > 0 {
+								acc += N
+							}
+							continue
+						}
+						return
+					}
+					if N > 0 {
+						acc += N
+					}
+				}
+				glogger.GLogger.Debug("Mx01BLE Received:", responseData[:acc])
+				acc = 0
+			}
+		}(serialPort)
+		wg.Wait()
 		glogger.GLogger.Info("MX01-BLE-Module Init Ok.")
 	}
 	glogger.GLogger.Info("MX01-BLE-Module Started")
