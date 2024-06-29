@@ -19,6 +19,8 @@ import (
 	"bytes"
 	"encoding/binary"
 	"fmt"
+
+	"github.com/hootrhino/rhilex/utils"
 )
 
 // 定义报文结构体
@@ -35,7 +37,7 @@ type Packet struct {
 
 // 假设已经有一个名为crc16的函数可用
 func crc16(data []byte) uint16 {
-	return 0
+	return utils.CRC16(data)
 }
 
 // 初始化报文结构体的函数
@@ -48,7 +50,8 @@ func NewPacket(t byte, dID byte, mID uint16, d []byte, dLen int) Packet {
 	p.DataLength = byte(dLen)
 	p.Data = make([]byte, dLen)
 	copy(p.Data, d)
-	p.Crc = crc16(append([]byte{p.StartFlag, p.MessageType, p.DeviceID, byte(p.MessageID >> 8), byte(p.MessageID & 0xFF), p.DataLength}, p.Data...))
+	p.Crc = crc16(append([]byte{p.StartFlag, p.MessageType, p.DeviceID, byte(p.MessageID >> 8),
+		byte(p.MessageID & 0xFF), p.DataLength}, p.Data...))
 	p.EndFlag = 0xFE
 	return p
 }
