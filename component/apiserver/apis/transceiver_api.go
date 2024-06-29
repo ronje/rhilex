@@ -58,7 +58,7 @@ func TransceiverList(c *gin.Context, ruleEngine typex.Rhilex) {
 	for _, Info := range transceiver.List() {
 		TransceiverIn := TransceiverInfoVo{
 			Name:     Info.Name,
-			Model:    Info.Name,
+			Model:    Info.Model,
 			Type:     int(Info.Type),
 			Vendor:   Info.Vendor,
 			Mac:      Info.Mac,
@@ -120,7 +120,7 @@ func TransceiverDetail(c *gin.Context, ruleEngine typex.Rhilex) {
 		Info := TransceiverCommunicator.Info()
 		TransceiverIn := TransceiverInfoVo{
 			Name:     Info.Name,
-			Model:    Info.Name,
+			Model:    Info.Model,
 			Type:     int(Info.Type),
 			Vendor:   Info.Vendor,
 			Mac:      Info.Mac,

@@ -38,7 +38,7 @@ type Mx01BLE struct {
 func NewMx01BLE(R typex.Rhilex) transceivercom.TransceiverCommunicator {
 	return &Mx01BLE{R: R, mainConfig: Mx01BLEConfig{
 		ComConfig: transceivercom.TransceiverConfig{
-			Address:   "COM3",
+			Address:   "COM1",
 			BaudRate:  9600,
 			DataBits:  8,
 			Parity:    "N",
@@ -76,8 +76,8 @@ func (tc *Mx01BLE) Ctrl(topic, args []byte, timeout time.Duration) ([]byte, erro
 }
 func (tc *Mx01BLE) Info() transceivercom.CommunicatorInfo {
 	return transceivercom.CommunicatorInfo{
-		Name:     "MX01-BLE-Module",
-		Model:    "MX-01",
+		Name:     "MX01",
+		Model:    "MX01-BLE",
 		Type:     transceivercom.BLE,
 		Vendor:   "SHENZHEN-MIAOXIANG-technology",
 		Mac:      "00:00:00:00:00:00:00:00",

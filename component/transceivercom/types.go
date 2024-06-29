@@ -53,6 +53,8 @@ const (
 	NBIoT     TransceiverType = 9
 	LORA      TransceiverType = 10
 	LORA_WAN  TransceiverType = 11
+	IR        TransceiverType = 12
+	BEEP      TransceiverType = 13
 )
 
 type TransceiverStatusCode uint8

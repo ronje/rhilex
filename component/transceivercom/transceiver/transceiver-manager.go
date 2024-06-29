@@ -130,7 +130,8 @@ func initDefaultRFModule() {
 		Mx01 := mx01ble.NewMx01BLE(DefaultTransceiverCommunicatorManager.R)
 		err := DefaultTransceiverCommunicatorManager.Load(Mx01.Info().Name, Config, Mx01)
 		if err != nil {
-			panic(err)
+			glogger.GLogger.Fatal(err1)
+			os.Exit(1)
 		}
 	}
 	{
@@ -143,7 +144,8 @@ func initDefaultRFModule() {
 		EC200A := ec200a4g.NewEC200ADtu(DefaultTransceiverCommunicatorManager.R)
 		err := DefaultTransceiverCommunicatorManager.Load(EC200A.Info().Name, Config, EC200A)
 		if err != nil {
-			panic(err)
+			glogger.GLogger.Fatal(err1)
+			os.Exit(1)
 		}
 	}
 	{
@@ -156,7 +158,8 @@ func initDefaultRFModule() {
 		ATK01 := atk01lora.NewATK01Lora(DefaultTransceiverCommunicatorManager.R)
 		err := DefaultTransceiverCommunicatorManager.Load(ATK01.Info().Name, Config, ATK01)
 		if err != nil {
-			panic(err)
+			glogger.GLogger.Fatal(err1)
+			os.Exit(1)
 		}
 	}
 }

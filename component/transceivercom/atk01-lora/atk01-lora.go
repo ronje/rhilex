@@ -42,8 +42,8 @@ func (tc *ATK01Lora) Ctrl(topic, args []byte, timeout time.Duration) ([]byte, er
 }
 func (tc *ATK01Lora) Info() transceivercom.CommunicatorInfo {
 	return transceivercom.CommunicatorInfo{
-		Name:     "ATK-01-LORA",
-		Model:    "ATK-01-SX1278",
+		Name:     "ATK01",
+		Model:    "ATK01-LORA-SX1278",
 		Type:     transceivercom.LORA,
 		Vendor:   "GUANGZHOU-ZHENGDIAN-YUANZI technology",
 		Mac:      "00:00:00:00:00:00:00:00",
