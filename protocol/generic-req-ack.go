@@ -35,6 +35,11 @@ type Packet struct {
 	EndFlag     byte
 }
 
+func (p Packet) String() string {
+	return fmt.Sprintf("Packet{StartFlag: 0x%02X, MessageType: 0x%02X, DeviceID: 0x%02X, MessageID: 0x%04X, DataLength: %d, Data: %s, CRC: 0x%04X, EndFlag: 0x%02X}",
+		p.StartFlag, p.MessageType, p.DeviceID, p.MessageID, p.DataLength, string(p.Data), p.Crc, p.EndFlag)
+}
+
 // 假设已经有一个名为crc16的函数可用
 func crc16(data []byte) uint16 {
 	return utils.CRC16(data)
@@ -58,14 +63,7 @@ func NewPacket(t byte, dID byte, mID uint16, d []byte, dLen int) Packet {
 
 // 打印报文内容的函数
 func (p Packet) PrintPacket() {
-	fmt.Printf("Start Flag: 0x%02X\n", p.StartFlag)
-	fmt.Printf("Message Type: %d\n", p.MessageType)
-	fmt.Printf("Device ID: %d\n", p.DeviceID)
-	fmt.Printf("Message ID: %d\n", p.MessageID)
-	fmt.Printf("Data Length: %d\n", p.DataLength)
-	fmt.Printf("Data: %s\n", string(p.Data))
-	fmt.Printf("CRC: 0x%04X\n", p.Crc)
-	fmt.Printf("End Flag: 0x%02X\n", p.EndFlag)
+	fmt.Printf(p.String())
 }
 
 // 构造主动上报报文的函数
@@ -140,30 +138,4 @@ func ParsePacket(packetData []byte) (Packet, error) {
 	}
 
 	return p, nil
-}
-func TestSRA() {
-	// 模拟接收到的数据包
-	receivedPacketData := []byte{
-		0xFF, 0x01, 0x01, 0x00, 0x01, 0x0C,
-		'R', 'e', 'p', 'o', 'r', 't', ' ', 'D', 'a', 't', 'a',
-		0xAB, 0xCD, 0xFE}
-
-	// 解析数据包
-	parsedPacket, err := ParsePacket(receivedPacketData)
-	if err != nil {
-		fmt.Println("Error parsing packet:", err)
-		return
-	}
-	parsedPacket.PrintPacket()
-	// 构造主动上报报文
-	reportPacket := ConstructReportPacket(0x01, 0x0001, "Report Data")
-	reportPacket.PrintPacket()
-
-	// 构造网关下发命令报文
-	commandPacket := ConstructCommandPacket(0x01, 0x0002, "Command Data")
-	commandPacket.PrintPacket()
-
-	// 构造设备回复报文
-	replyPacket := ConstructReplyPacket(0x01, 0x0002, "Reply Data")
-	replyPacket.PrintPacket()
 }
