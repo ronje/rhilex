@@ -57,34 +57,33 @@ func NewMx01BLE(R typex.Rhilex) transceivercom.TransceiverCommunicator {
 func (tc *Mx01BLE) Start(Config transceivercom.TransceiverConfig) error {
 	env := os.Getenv("BLESUPPORT")
 	if env == "MX01" {
-		//
-	}
-	glogger.GLogger.Info("MX01-BLE-Module Init")
-	config := serial.Config{
-		Address:  Config.Address,
-		BaudRate: Config.BaudRate,
-		DataBits: Config.DataBits,
-		Parity:   Config.Parity,
-		StopBits: Config.StopBits,
-		Timeout:  time.Duration(tc.mainConfig.ComConfig.IOTimeout) * time.Millisecond,
-	}
-	serialPort, err := serial.Open(&config)
-	if err != nil {
-		return err
-	}
-	tc.mx01 = mx01.NewMX01("mx01", serialPort)
-	tc.mx01.Flush()
-	go func(io io.ReadWriteCloser) {
-		for {
-			N, Bytes := utils.ReadInLeastTimeout(context.Background(), io,
-				time.Duration(tc.mainConfig.ComConfig.ATTimeout)*time.Millisecond)
-			if N > 0 {
-				glogger.GLogger.Debug("ReadInLeastTimeout: ", Bytes[:N])
-			}
+		glogger.GLogger.Info("MX01-BLE-Module Init")
+		config := serial.Config{
+			Address:  Config.Address,
+			BaudRate: Config.BaudRate,
+			DataBits: Config.DataBits,
+			Parity:   Config.Parity,
+			StopBits: Config.StopBits,
+			Timeout:  time.Duration(tc.mainConfig.ComConfig.IOTimeout) * time.Millisecond,
 		}
+		serialPort, err := serial.Open(&config)
+		if err != nil {
+			return err
+		}
+		tc.mx01 = mx01.NewMX01("mx01", serialPort)
+		tc.mx01.Flush()
+		go func(io io.ReadWriteCloser) {
+			for {
+				N, Bytes := utils.ReadInLeastTimeout(context.Background(), io,
+					time.Duration(tc.mainConfig.ComConfig.ATTimeout)*time.Millisecond)
+				if N > 0 {
+					glogger.GLogger.Debug("ReadInLeastTimeout: ", Bytes[:N])
+				}
+			}
 
-	}(serialPort)
-	glogger.GLogger.Info("MX01-BLE-Module Started")
+		}(serialPort)
+		glogger.GLogger.Info("MX01-BLE-Module Started")
+	}
 	return nil
 }
 func (tc *Mx01BLE) Ctrl(topic, args []byte, timeout time.Duration) ([]byte, error) {
