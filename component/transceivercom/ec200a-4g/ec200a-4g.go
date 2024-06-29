@@ -16,6 +16,7 @@
 package ec200a4g
 
 import (
+	"encoding/json"
 	"os"
 	"time"
 
@@ -25,6 +26,7 @@ import (
 )
 
 type EC200ADtuConfig struct {
+	Address string
 }
 type EC200ADtu struct {
 	R          typex.Rhilex
@@ -32,19 +34,44 @@ type EC200ADtu struct {
 }
 
 func NewEC200ADtu(R typex.Rhilex) transceivercom.TransceiverCommunicator {
-	env := os.Getenv("ARCHSUPPORT")
-	if env == "RHILEXG1" {
+	return &EC200ADtu{R: R, mainConfig: EC200ADtuConfig{
+		Address: "/dev/ttyUSB1",
+	}}
+}
+func (tc *EC200ADtu) Start(config transceivercom.TransceiverConfig) error {
+	env := os.Getenv("4GSUPPORT")
+	if env == "EC200A" {
 		glogger.GLogger.Info("EC200A Init 4G")
-		__EC200AInit4G()
+		InitEC200A4G(config.Address)
 		glogger.GLogger.Info("EC200A Init 4G Ok.")
 	}
-	return &EC200ADtu{R: R, mainConfig: EC200ADtuConfig{}}
-}
-func (tc *EC200ADtu) Start(transceivercom.TransceiverConfig) error {
 	glogger.GLogger.Info("EC200ADtu Started")
 	return nil
 }
+
+type CSQInfo struct {
+	Cops  string `json:"cops"`
+	Csq   int    `json:"csq"`
+	ICCID string `json:"iccid"`
+}
+
 func (tc *EC200ADtu) Ctrl(topic, args []byte, timeout time.Duration) ([]byte, error) {
+	glogger.GLogger.Debug("EC200ADtu.Ctrl=", topic, string(args))
+	if string(topic) == "mn4g.ec200a.info.csq" {
+		CSQInfo1 := CSQInfo{
+			Cops:  "CMCC",
+			Csq:   15,
+			ICCID: "00000000",
+		}
+		bytes, _ := json.Marshal(CSQInfo1)
+		return bytes, nil
+	}
+	if string(topic) == "mn4g.ec200a.opt.restart" {
+		return []byte("OK"), nil
+	}
+	if string(topic) == "mn4g.ec200a.cmd.send" {
+		return []byte("OK"), nil
+	}
 	return []byte("OK"), nil
 }
 func (tc *EC200ADtu) Info() transceivercom.CommunicatorInfo {

@@ -43,7 +43,9 @@ func InitGlobalConfig(path string) typex.RhilexConfig {
 		os.Exit(1)
 	}
 	INIPath = path
-	GlobalConfig = typex.RhilexConfig{}
+	GlobalConfig = typex.RhilexConfig{
+		IniPath: path,
+	}
 	GlobalConfig.Init()
 	if err := cfg.Section("app").MapTo(&GlobalConfig); err != nil {
 		log.Fatalf("Fail to map config file: %v", err)

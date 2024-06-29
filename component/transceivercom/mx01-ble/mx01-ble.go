@@ -16,41 +16,58 @@
 package mx01ble
 
 import (
-	"time"
-
+	serial "github.com/hootrhino/goserial"
+	mx01 "github.com/hootrhino/rhilex-goat/bsp/mx01"
+	"github.com/hootrhino/rhilex-goat/device"
 	"github.com/hootrhino/rhilex/component/transceivercom"
 	"github.com/hootrhino/rhilex/glogger"
 	"github.com/hootrhino/rhilex/typex"
+	"os"
+	"time"
 )
 
 type Mx01BLEConfig struct {
+	ComConfig transceivercom.TransceiverConfig
 }
 type Mx01BLE struct {
 	R          typex.Rhilex
 	mainConfig Mx01BLEConfig
+	mx01       device.Device
 }
 
 func NewMx01BLE(R typex.Rhilex) transceivercom.TransceiverCommunicator {
-	return &Mx01BLE{R: R, mainConfig: Mx01BLEConfig{}}
+	return &Mx01BLE{R: R, mainConfig: Mx01BLEConfig{
+		ComConfig: transceivercom.TransceiverConfig{
+			Address:   "COM3",
+			BaudRate:  9600,
+			DataBits:  8,
+			Parity:    "N",
+			StopBits:  1,
+			IOTimeout: 50,  // IOTimeout * time.Millisecond
+			ATTimeout: 200, // ATRwTimeout * time.Millisecond
+		},
+	}}
 }
 func (tc *Mx01BLE) Start(transceivercom.TransceiverConfig) error {
-	// go func() {
-	// 	select {
-	// 	case <-context.Background().Done():
-	// 		return
-	// 	default:
-	// 	}
-	// 	for {
-	// 		internotify.Push(internotify.BaseEvent{
-	// 			Type:    "transceiver.upstream.data",
-	// 			Event:   "transceiver.upstream.data.MX01-BLE-Module",
-	// 			Ts:      uint64(time.Now().UnixMilli()),
-	// 			Summary: "transceiver.upstream.data",
-	// 			Info:    []byte("HELLO WORLD\r\n"),
-	// 		})
-	// 		time.Sleep(3 * time.Second)
-	// 	}
-	// }()
+	env := os.Getenv("BLESUPPORT")
+	if env == "MX01" {
+		glogger.GLogger.Info("MX01-BLE-Module Init")
+		config := serial.Config{
+			Address:  tc.mainConfig.ComConfig.Address,
+			BaudRate: tc.mainConfig.ComConfig.BaudRate,
+			DataBits: tc.mainConfig.ComConfig.DataBits,
+			Parity:   tc.mainConfig.ComConfig.Parity,
+			StopBits: tc.mainConfig.ComConfig.StopBits,
+			Timeout:  time.Duration(tc.mainConfig.ComConfig.IOTimeout) * time.Millisecond,
+		}
+		serialPort, err := serial.Open(&config)
+		if err != nil {
+			return err
+		}
+		tc.mx01 = mx01.NewMX01("mx01", serialPort)
+		tc.mx01.Flush()
+		glogger.GLogger.Info("MX01-BLE-Module Init Ok.")
+	}
 	glogger.GLogger.Info("MX01-BLE-Module Started")
 	return nil
 }
@@ -60,7 +77,7 @@ func (tc *Mx01BLE) Ctrl(topic, args []byte, timeout time.Duration) ([]byte, erro
 func (tc *Mx01BLE) Info() transceivercom.CommunicatorInfo {
 	return transceivercom.CommunicatorInfo{
 		Name:     "MX01-BLE-Module",
-		Model:    "MX-01S",
+		Model:    "MX-01",
 		Type:     transceivercom.BLE,
 		Vendor:   "SHENZHEN-MIAOXIANG-technology",
 		Mac:      "00:00:00:00:00:00:00:00",
@@ -75,5 +92,7 @@ func (tc *Mx01BLE) Status() transceivercom.TransceiverStatus {
 }
 func (tc *Mx01BLE) Stop() {
 	glogger.GLogger.Info("MX01-BLE-Module Stopped")
-
+	if tc.mx01 != nil {
+		tc.mx01.Close()
+	}
 }

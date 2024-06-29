@@ -17,6 +17,7 @@ package transceivercom
 
 import (
 	"fmt"
+	"os"
 	"sync"
 	"time"
 
@@ -24,6 +25,8 @@ import (
 	atk01lora "github.com/hootrhino/rhilex/component/transceivercom/atk01-lora"
 	ec200a4g "github.com/hootrhino/rhilex/component/transceivercom/ec200a-4g"
 	mx01ble "github.com/hootrhino/rhilex/component/transceivercom/mx01-ble"
+	core "github.com/hootrhino/rhilex/config"
+	"github.com/hootrhino/rhilex/utils"
 
 	"github.com/hootrhino/rhilex/glogger"
 
@@ -42,7 +45,7 @@ func InitTransceiverCommunicatorManager(R typex.Rhilex) {
 		R:            R,
 		Transceivers: sync.Map{},
 	}
-	initDefaultModule()
+	initDefaultRFModule()
 }
 
 func (TM *TransceiverCommunicatorManager) Load(name string, config transceivercom.TransceiverConfig,
@@ -116,24 +119,42 @@ func (TM *TransceiverCommunicatorManager) Status(name string) (transceivercom.Tr
 * Load Default Modules
 *
  */
-func initDefaultModule() {
+func initDefaultRFModule() {
 	{
+		Config := transceivercom.TransceiverConfig{}
+		err1 := utils.INIToStruct(core.GlobalConfig.IniPath, "transceiver.mx01", &Config)
+		if err1 != nil {
+			glogger.GLogger.Fatal(err1)
+			os.Exit(1)
+		}
 		Mx01 := mx01ble.NewMx01BLE(DefaultTransceiverCommunicatorManager.R)
-		err := DefaultTransceiverCommunicatorManager.Load(Mx01.Info().Name, map[string]any{}, Mx01)
+		err := DefaultTransceiverCommunicatorManager.Load(Mx01.Info().Name, Config, Mx01)
 		if err != nil {
 			panic(err)
 		}
 	}
 	{
+		Config := transceivercom.TransceiverConfig{}
+		err1 := utils.INIToStruct(core.GlobalConfig.IniPath, "transceiver.ec200a", &Config)
+		if err1 != nil {
+			glogger.GLogger.Fatal(err1)
+			os.Exit(1)
+		}
 		EC200A := ec200a4g.NewEC200ADtu(DefaultTransceiverCommunicatorManager.R)
-		err := DefaultTransceiverCommunicatorManager.Load(EC200A.Info().Name, map[string]any{}, EC200A)
+		err := DefaultTransceiverCommunicatorManager.Load(EC200A.Info().Name, Config, EC200A)
 		if err != nil {
 			panic(err)
 		}
 	}
 	{
+		Config := transceivercom.TransceiverConfig{}
+		err1 := utils.INIToStruct(core.GlobalConfig.IniPath, "transceiver.atk01", &Config)
+		if err1 != nil {
+			glogger.GLogger.Fatal(err1)
+			os.Exit(1)
+		}
 		ATK01 := atk01lora.NewATK01Lora(DefaultTransceiverCommunicatorManager.R)
-		err := DefaultTransceiverCommunicatorManager.Load(ATK01.Info().Name, map[string]any{}, ATK01)
+		err := DefaultTransceiverCommunicatorManager.Load(ATK01.Info().Name, Config, ATK01)
 		if err != nil {
 			panic(err)
 		}

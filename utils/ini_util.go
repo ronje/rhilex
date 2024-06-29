@@ -27,7 +27,7 @@ func INIToStruct(iniPath string, s string, v interface{}) error {
 
 /*
 *
-* GetINI
+* Get INI Section
 *
  */
 func GetINISection(iniPath string, s string) *ini.Section {

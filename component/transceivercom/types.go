@@ -20,7 +20,15 @@ import (
 	"time"
 )
 
-type TransceiverConfig map[string]any
+type TransceiverConfig struct {
+	Address   string `ini:"address" json:"uart" validate:"required"`
+	IOTimeout int64  `ini:"io_timeout" json:"ioTimeout" validate:"required"`
+	ATTimeout int64  `ini:"at_timeout" json:"atRwTimeout" validate:"required"`
+	BaudRate  int    `ini:"baud_rate" json:"baudRate" validate:"required"`
+	DataBits  int    `ini:"data_bits" json:"dataBits" validate:"required"`
+	Parity    string `ini:"parity" json:"parity" validate:"required"`
+	StopBits  int    `ini:"stop_bits" json:"stopBits" validate:"required"`
+}
 
 func (O TransceiverConfig) String() string {
 	if bytes, err := json.Marshal(O); err != nil {
