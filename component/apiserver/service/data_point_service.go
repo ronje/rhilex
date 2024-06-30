@@ -5,6 +5,14 @@ import (
 	"github.com/hootrhino/rhilex/component/interdb"
 )
 
+func BatchCreate(list []model.MDataPoint) error {
+	return interdb.DB().Create(list).Error
+}
+
+func BatchUpdate(list []model.MDataPoint) error {
+	return interdb.DB().Updates(list).Error
+}
+
 func DeleteByUuids(deviceUuid string, uuids []string) error {
 	return interdb.DB().
 		Where("uuid IN ? AND device_uuid=?", uuids, deviceUuid).

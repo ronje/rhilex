@@ -7,6 +7,7 @@ import (
 	"github.com/hootrhino/rhilex/component/apiserver/model"
 	"github.com/hootrhino/rhilex/component/apiserver/server"
 	"github.com/hootrhino/rhilex/component/apiserver/service"
+	"github.com/hootrhino/rhilex/component/apiserver/service/validatormanager"
 	"github.com/hootrhino/rhilex/component/intercache"
 	"github.com/hootrhino/rhilex/component/interdb"
 	"github.com/hootrhino/rhilex/typex"
@@ -17,7 +18,7 @@ func InitDataPointRoute() {
 	route.POST(("/sheetImport"), server.AddRoute(DataPointSheetImport))
 	route.GET(("/sheetExport"), server.AddRoute(DataPointSheetExport))
 	route.GET(("/list"), server.AddRoute(DataPointSheetPageList))
-	route.POST(("/update"), server.AddRoute(DataPointSheetCreateOrUpdate))
+	route.POST(("/update"), server.AddRouteV2(DataPointSheetCreateOrUpdate))
 	route.DELETE(("/delIds"), server.AddRoute(DataPointSheetDeleteByUUIDs))
 	route.DELETE(("/delAll"), server.AddRoute(DataPointSheetDeleteAll))
 }
@@ -92,20 +93,58 @@ func DataPointSheetPageList(c *gin.Context, ruleEngine typex.Rhilex) {
 	c.JSON(common.HTTP_OK, common.OkWithData(Result))
 }
 
-func DataPointSheetCreateOrUpdate(c *gin.Context, ruleEngine typex.Rhilex) {
+func DataPointSheetCreateOrUpdate(c *gin.Context, ruleEngine typex.Rhilex) (any, error) {
 	type Form struct {
-		DeviceUUID string                              `json:"device_uuid"`
-		Points     []dto.BacnetDataPointCreateOrUpdate `json:"points"`
+		DeviceUUID string                           `json:"device_uuid"`
+		Points     []dto.DataPointCreateOrUpdateDTO `json:"points"`
 	}
 	form := Form{}
 	err := c.ShouldBindJSON(&form)
 	if err != nil {
-		c.JSON(common.HTTP_OK, common.Error400(err))
-		return
+		return nil, err
 	}
-	// TODO 从device_uuid中获取其类型，类型获取对应的validator、import、export方法
+	device, err := service.GetMDeviceWithUUID(form.DeviceUUID)
+	if err != nil {
+		return nil, err
+	}
+
+	validator, err := validatormanager.GetByType(device.Type)
+	if err != nil {
+		return nil, err
+	}
+
+	creates := make([]model.MDataPoint, 0, len(form.Points))
+	updates := make([]model.MDataPoint, 0, len(form.Points))
+	for i := range form.Points {
+		point, err := validator.Validate(form.Points[i])
+		if err != nil {
+			return nil, err
+		}
+		point.DeviceUuid = form.DeviceUUID
+		if point.UUID == "" ||
+			point.UUID == "new" ||
+			point.UUID == "copy" {
+			creates = append(creates, point)
+		} else {
+			updates = append(updates, point)
+		}
+	}
+	if len(creates) > 0 {
+		err := service.BatchCreate(creates)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if len(updates) > 0 {
+		err := service.BatchUpdate(updates)
+		if err != nil {
+			return nil, err
+		}
+	}
+
 	ruleEngine.RestartDevice(form.DeviceUUID)
-	c.JSON(common.HTTP_OK, common.Ok())
+	return nil, nil
 }
 
 func DataPointSheetDeleteByUUIDs(c *gin.Context, ruleEngine typex.Rhilex) {
