@@ -11,15 +11,15 @@ type ModbusValidator struct {
 
 func (v ModbusValidator) Validate(dto dto.DataPointCreateOrUpdateDTO) (model.MDataPoint, error) {
 	//TODO implement me
-	panic("implement me")
+	return model.MDataPoint{}, nil
 }
 
-func (v ModbusValidator) Import(file *excelize.File) ([]model.MDataPoint, error) {
+func (v ModbusValidator) ParseImportFile(file *excelize.File) ([]model.MDataPoint, error) {
 	//TODO implement me
-	panic("implement me")
+	return nil, nil
 }
 
-func (v ModbusValidator) Export(list []model.MDataPoint) (*excelize.File, error) {
+func (v ModbusValidator) Export(file *excelize.File, list []model.MDataPoint) error {
 	//TODO implement me
-	panic("implement me")
+	return nil
 }

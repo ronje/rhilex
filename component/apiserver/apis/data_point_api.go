@@ -1,6 +1,7 @@
 package apis
 
 import (
+	"errors"
 	"github.com/gin-gonic/gin"
 	common "github.com/hootrhino/rhilex/component/apiserver/common"
 	"github.com/hootrhino/rhilex/component/apiserver/dto"
@@ -10,7 +11,9 @@ import (
 	"github.com/hootrhino/rhilex/component/apiserver/service/validatormanager"
 	"github.com/hootrhino/rhilex/component/intercache"
 	"github.com/hootrhino/rhilex/component/interdb"
+	"github.com/hootrhino/rhilex/glogger"
 	"github.com/hootrhino/rhilex/typex"
+	"github.com/xuri/excelize/v2"
 )
 
 func InitDataPointRoute() {
@@ -24,16 +27,100 @@ func InitDataPointRoute() {
 }
 
 func DataPointSheetImport(c *gin.Context, ruleEngine typex.Rhilex) {
-	// device_uuid
-	// file: points
-	// import framework
-	// TODO validator
+	// 解析 multipart/form-data 类型的请求体
+	err := c.Request.ParseMultipartForm(1024 * 1024 * 10)
+	if err != nil {
+		c.JSON(common.HTTP_OK, common.Error400(err))
+		return
+	}
+	deviceUuid := c.Request.Form.Get("device_uuid")
+	if deviceUuid == "" {
+		err = errors.New("device_uuid is not allow empty")
+		c.JSON(common.HTTP_OK, common.Error400(err))
+		return
+	}
+	device, err := service.GetMDeviceWithUUID(deviceUuid)
+	if err != nil {
+		c.JSON(common.HTTP_OK, common.Error400(err))
+		return
+	}
+	validator, err := validatormanager.GetByType(device.Type)
+	if err != nil {
+		c.JSON(common.HTTP_OK, common.Error400(err))
+		return
+	}
+	file, header, err := c.Request.FormFile("file")
+	if err != nil {
+		c.JSON(common.HTTP_OK, common.Error400(err))
+		return
+	}
+	defer file.Close()
+	contentType := header.Header.Get("Content-Type")
+	if contentType != "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" &&
+		contentType != "application/vnd.ms-excel" {
+		c.JSON(common.HTTP_OK, common.Error("File Must be Excel Sheet"))
+		return
+	}
+	// 判断文件大小是否符合要求（10MB）
+	if header.Size > 1024*1024*10 {
+		c.JSON(common.HTTP_OK, common.Error("Excel file size cannot be greater than 10MB"))
+		return
+	}
+
+	// parse
+	excelFile, err := excelize.OpenReader(file)
+	if err != nil {
+		c.JSON(common.HTTP_OK, common.Error("read file failed"))
+		return
+	}
+	defer func() {
+		excelFile.Close()
+	}()
+	points, err := validator.ParseImportFile(excelFile)
+	if err != nil {
+		c.JSON(common.HTTP_OK, common.Error400(err))
+		return
+	}
+	err = service.BatchDataPointCreate(points)
+	if err != nil {
+		c.JSON(common.HTTP_OK, common.Error400(err))
+		return
+	}
+	ruleEngine.RestartDevice(deviceUuid)
+	c.JSON(common.HTTP_OK, common.Ok())
 }
 
 func DataPointSheetExport(c *gin.Context, ruleEngine typex.Rhilex) {
-	// device_uuid
-	// export framework
-	// TODO validator
+	deviceUuid, _ := c.GetQuery("device_uuid")
+	device, err := service.GetMDeviceWithUUID(deviceUuid)
+	if err != nil {
+		c.JSON(common.HTTP_OK, common.Error400(err))
+		return
+	}
+	validator, err := validatormanager.GetByType(device.Type)
+	if err != nil {
+		c.JSON(common.HTTP_OK, common.Error400(err))
+		return
+	}
+	points, err := service.ListDataPointByUuid(deviceUuid)
+	if err != nil {
+		c.JSON(common.HTTP_OK, common.Error400(err))
+		return
+	}
+	xlsx := excelize.NewFile()
+	defer func() {
+		if err := xlsx.Close(); err != nil {
+			glogger.GLogger.Errorf("close excel file, err=%v", err)
+		}
+	}()
+
+	err = validator.Export(xlsx, points)
+	if err != nil {
+		c.JSON(common.HTTP_OK, common.Error400(err))
+		return
+	}
+
+	xlsx.WriteTo(c.Writer)
 }
 
 func DataPointSheetPageList(c *gin.Context, ruleEngine typex.Rhilex) {
@@ -130,14 +217,14 @@ func DataPointSheetCreateOrUpdate(c *gin.Context, ruleEngine typex.Rhilex) (any,
 		}
 	}
 	if len(creates) > 0 {
-		err := service.BatchCreate(creates)
+		err := service.BatchDataPointCreate(creates)
 		if err != nil {
 			return nil, err
 		}
 	}
 
 	if len(updates) > 0 {
-		err := service.BatchUpdate(updates)
+		err := service.BatchDataPointUpdate(updates)
 		if err != nil {
 			return nil, err
 		}
@@ -157,7 +244,7 @@ func DataPointSheetDeleteByUUIDs(c *gin.Context, ruleEngine typex.Rhilex) {
 		c.JSON(common.HTTP_OK, common.Error400(err))
 		return
 	}
-	err := service.DeleteByUuids(form.DeviceUUID, form.UUIDs)
+	err := service.BatchDeleteDataPointByUuids(form.DeviceUUID, form.UUIDs)
 	if err != nil {
 		c.JSON(common.HTTP_OK, common.Error400(err))
 		return
@@ -175,7 +262,7 @@ func DataPointSheetDeleteAll(c *gin.Context, ruleEngine typex.Rhilex) {
 		c.JSON(common.HTTP_OK, common.Error400(Error))
 		return
 	}
-	err := service.DeleteAllByDeviceUuid(form.DeviceUUID)
+	err := service.BatchDeleteDataPointByDeviceUuid(form.DeviceUUID)
 	if err != nil {
 		c.JSON(common.HTTP_OK, common.Error400(err))
 		return

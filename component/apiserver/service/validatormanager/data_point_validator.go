@@ -11,8 +11,8 @@ import (
 
 type Validator interface {
 	Validate(dto dto.DataPointCreateOrUpdateDTO) (model.MDataPoint, error)
-	Import(file *excelize.File) ([]model.MDataPoint, error)
-	Export(list []model.MDataPoint) (*excelize.File, error)
+	ParseImportFile(file *excelize.File) ([]model.MDataPoint, error)
+	Export(file *excelize.File, list []model.MDataPoint) error
 }
 
 func GetByType(protocol string) (Validator, error) {
