@@ -17,6 +17,7 @@ package mx01ble
 
 import (
 	"context"
+	"fmt"
 	"io"
 	"os"
 	"sync"
@@ -57,7 +58,7 @@ func NewMx01BLE(R typex.Rhilex) transceivercom.TransceiverCommunicator {
 func (tc *Mx01BLE) Start(Config transceivercom.TransceiverConfig) error {
 	env := os.Getenv("BLESUPPORT")
 	if env == "MX01" {
-		glogger.GLogger.Info("MX01-BLE-Module Init")
+		glogger.GLogger.Info("MX01-BLE Init")
 		config := serial.Config{
 			Address:  Config.Address,
 			BaudRate: Config.BaudRate,
@@ -77,12 +78,12 @@ func (tc *Mx01BLE) Start(Config transceivercom.TransceiverConfig) error {
 				N, Bytes := utils.ReadInLeastTimeout(context.Background(), io,
 					time.Duration(tc.mainConfig.ComConfig.ATTimeout)*time.Millisecond)
 				if N > 0 {
-					glogger.GLogger.Debug("ReadInLeastTimeout: ", Bytes[:N])
+					glogger.GLogger.Debug("MX01-BLE Read Data: ", Bytes[:N])
 				}
 			}
 
 		}(serialPort)
-		glogger.GLogger.Info("MX01-BLE-Module Started")
+		glogger.GLogger.Info("MX01-BLE Started")
 	}
 	return nil
 }
@@ -102,11 +103,11 @@ func (tc *Mx01BLE) Info() transceivercom.CommunicatorInfo {
 func (tc *Mx01BLE) Status() transceivercom.TransceiverStatus {
 	return transceivercom.TransceiverStatus{
 		Code:  transceivercom.TC_ERROR,
-		Error: nil,
+		Error: fmt.Errorf("NOT SUPPORT"),
 	}
 }
 func (tc *Mx01BLE) Stop() {
-	glogger.GLogger.Info("MX01-BLE-Module Stopped")
+	glogger.GLogger.Info("MX01-BLE Stopped")
 	if tc.mx01 != nil {
 		tc.mx01.Close()
 	}

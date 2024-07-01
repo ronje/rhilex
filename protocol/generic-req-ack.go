@@ -18,6 +18,7 @@ package protocol
 import (
 	"bytes"
 	"encoding/binary"
+	"encoding/json"
 	"fmt"
 
 	"github.com/hootrhino/rhilex/utils"
@@ -35,9 +36,12 @@ type Packet struct {
 	EndFlag     byte
 }
 
-func (p Packet) String() string {
-	return fmt.Sprintf("Packet{StartFlag: 0x%02X, MessageType: 0x%02X, DeviceID: 0x%02X, MessageID: 0x%04X, DataLength: %d, Data: %s, CRC: 0x%04X, EndFlag: 0x%02X}",
-		p.StartFlag, p.MessageType, p.DeviceID, p.MessageID, p.DataLength, string(p.Data), p.Crc, p.EndFlag)
+func (P Packet) String() string {
+	if bytes, err := json.Marshal(P); err != nil {
+		return ""
+	} else {
+		return string(bytes)
+	}
 }
 
 // 假设已经有一个名为crc16的函数可用
@@ -63,7 +67,7 @@ func NewPacket(t byte, dID byte, mID uint16, d []byte, dLen int) Packet {
 
 // 打印报文内容的函数
 func (p Packet) PrintPacket() {
-	fmt.Printf(p.String())
+	fmt.Println(p.String())
 }
 
 // 构造主动上报报文的函数

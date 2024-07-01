@@ -17,6 +17,7 @@ package ec200a4g
 
 import (
 	"encoding/json"
+	"fmt"
 	"os"
 	"strings"
 	"time"
@@ -83,8 +84,8 @@ func (tc *EC200ADtu) Info() transceivercom.CommunicatorInfo {
 }
 func (tc *EC200ADtu) Status() transceivercom.TransceiverStatus {
 	return transceivercom.TransceiverStatus{
-		Code:  transceivercom.TC_DOWN,
-		Error: nil,
+		Code:  transceivercom.TC_ERROR,
+		Error: fmt.Errorf("NOT SUPPORT"),
 	}
 }
 func (tc *EC200ADtu) Stop() {

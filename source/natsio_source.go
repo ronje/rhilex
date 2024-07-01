@@ -51,13 +51,12 @@ func (nt *natsSource) Start(cctx typex.CCTX) error {
 
 	if err != nil {
 		return err
-	} else {
-		nt.natsConnector = nc
-		//
-		nt.subscribeNats()
-		nt.status = typex.SOURCE_UP
-		return nil
 	}
+	nt.natsConnector = nc
+	nt.subscribeNats()
+	nt.status = typex.SOURCE_UP
+	return nil
+
 }
 
 // 测试资源状态
