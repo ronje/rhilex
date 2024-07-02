@@ -39,14 +39,14 @@ type ATK01Lora struct {
 	locker     sync.Mutex
 	mainConfig ATK01LoraConfig
 	serialPort serial.Port
-	DataBuffer []byte
+	DataBuffer chan []byte
 }
 
 func NewATK01Lora(R typex.Rhilex) transceivercom.TransceiverCommunicator {
 	return &ATK01Lora{
 		R:          R,
 		locker:     sync.Mutex{},
-		DataBuffer: make([]byte, 1024),
+		DataBuffer: make(chan []byte, 1024),
 		mainConfig: ATK01LoraConfig{
 			ComConfig: transceivercom.TransceiverConfig{
 				Address:   "COM1",
@@ -61,78 +61,130 @@ func NewATK01Lora(R typex.Rhilex) transceivercom.TransceiverCommunicator {
 }
 func (tc *ATK01Lora) Start(Config transceivercom.TransceiverConfig) error {
 	env := os.Getenv("LORASUPPORT")
-	if env == "ATK01" {
-		{
-			glogger.GLogger.Info("ATK01-LORA-SX1278 Init")
-			config := serial.Config{
-				Address:  Config.Address,
-				BaudRate: Config.BaudRate,
-				DataBits: Config.DataBits,
-				Parity:   Config.Parity,
-				StopBits: Config.StopBits,
-				Timeout:  time.Duration(tc.mainConfig.ComConfig.IOTimeout) * time.Millisecond,
+	if env != "ATK01" {
+		// return nil
+	}
+	glogger.GLogger.Info("ATK01-LORA-SX1278 Init")
+	config := serial.Config{
+		Address:  Config.Address,
+		BaudRate: Config.BaudRate,
+		DataBits: Config.DataBits,
+		Parity:   Config.Parity,
+		StopBits: Config.StopBits,
+		Timeout:  time.Duration(tc.mainConfig.ComConfig.IOTimeout) * time.Millisecond,
+	}
+	serialPort, err := serial.Open(&config)
+	if err != nil {
+		return err
+	}
+	tc.serialPort = serialPort
+	go func(io io.ReadWriteCloser) {
+		buffer := make([]byte, 1024)
+		byteACC := 0         // 计数器而不是下标
+		cursor := 0          // 用来标记数据当前读到哪里了
+		edgeSignal1 := false // 两个边沿
+		edgeSignal2 := false // 两个边沿
+		for {
+			select {
+			case <-typex.GCTX.Done():
+				return
+			default:
 			}
-			serialPort, err := serial.Open(&config)
-			if err != nil {
-				return err
+			N, errR := io.Read(buffer[byteACC:])
+			if errR != nil {
+				if !strings.Contains(errR.Error(), "timeout") {
+					glogger.GLogger.Error(errR)
+					return
+				}
 			}
-			tc.serialPort = serialPort
-			go func(io io.ReadWriteCloser) {
-				buffer := [1024]byte{}
-				var acc int          // 计数器而不是下标
-				edgeSignal1 := false // 两个边沿
-				edgeSignal2 := false // 两个边沿
-				Bytes := [1]byte{}   // 读一个字节出来
-				for {
-					select {
-					case <-typex.GCTX.Done():
-						return
-					default:
+			if N == 0 {
+				continue
+			}
+			byteACC += N
+			if byteACC > 1024 {
+				glogger.GLogger.Error("exceeds the maximum buffer size")
+				if !edgeSignal1 || !edgeSignal2 {
+					byteACC = 0
+					edgeSignal1 = false
+					edgeSignal2 = false
+				}
+				continue
+			}
+			dataStartPos := 0 // 0xEE ->
+			dataEndPos := 0   // <- \n
+			for i := cursor; i < byteACC; i++ {
+				currentByte := buffer[i]
+				cursor++
+				if byteACC >= 2 && !edgeSignal1 {
+					if currentByte == 0xEF && buffer[i-1] == 0xEE {
+						edgeSignal1 = true
+						dataStartPos = i
 					}
-					N, errR := io.Read(Bytes[:])
-					if errR != nil {
-						if !strings.Contains(errR.Error(), "timeout") {
-							glogger.GLogger.Error(errR)
-							return
-						}
-					}
-					if N == 0 {
+				}
+				if byteACC > 4 {
+					if !edgeSignal1 {
 						continue
 					}
-					currentByte := Bytes[0]
-					buffer[acc] = currentByte
-					if acc > 0 {
-						if currentByte == '\xEF' && buffer[acc-1] == '\xEE' {
-							edgeSignal1 = true
-						}
-						if currentByte == '\n' && buffer[acc-1] == '\r' {
-							// 注意：CRC校验不包含包头和包尾 [......)
-							dataStartPos := 2
-							crcPosL := acc - 2
-							crcPosH := acc - 3
-							crcByte := [2]byte{buffer[crcPosH], buffer[crcPosL]}
+					if currentByte == 0x0A && buffer[i-1] == 0x0D {
+						if edgeSignal1 {
+							dataEndPos = i
+							crcL := dataEndPos - 2
+							crcH := crcL - 1
+							crcByte := [2]byte{buffer[crcH], buffer[crcL]}
 							crcCheckedValue := uint16(crcByte[0])<<8 | uint16(crcByte[1])
-							dataBytes := buffer[dataStartPos:crcPosH]
-							crcCalculatedValue := utils.CRC16(dataBytes)
+							CurrentPkt := buffer[dataStartPos+1 : dataEndPos-3]
+							crcCalculatedValue := utils.CRC16(CurrentPkt)
 							if crcCalculatedValue == crcCheckedValue {
 								edgeSignal2 = true
+							} else {
+								glogger.GLogger.Errorf("CRC Check Error: (Checked=%d,Calculated=%d), data=%v",
+									crcCheckedValue, crcCalculatedValue, CurrentPkt)
+								// byteACC -= cursor // 出错后丢包
+								// cursor -= cursor  // 出错后丢包
+								edgeSignal1 = false
+								edgeSignal2 = false
 							}
 						}
 					}
-					// ++______--++_______--++_______--
 					if edgeSignal1 && edgeSignal2 {
-						glogger.GLogger.Debug(buffer[:acc+1])
-						acc = 0
+						tc.DataBuffer <- buffer[dataStartPos+1 : dataEndPos-3]
+						// glogger.GLogger.Debug(buffer[dataStartPos+1 : dataEndPos-3])
+						if cursor >= byteACC {
+							byteACC = 0
+							cursor = 0
+						}
 						edgeSignal1 = false
 						edgeSignal2 = false
 					}
-					acc++
 				}
-			}(tc.serialPort)
+			}
 		}
-		glogger.GLogger.Info("ATK01-LORA-SX1278 Started")
-	}
+	}(tc.serialPort)
+	go func(Chan chan []byte) {
+		for {
+			select {
+			case <-typex.GCTX.Done():
+				return
+			case Data := <-Chan:
+				glogger.GLogger.Debug(Data)
+			}
+		}
+	}(tc.DataBuffer)
+	glogger.GLogger.Info("ATK01-LORA-SX1278 Started")
 	return nil
+}
+
+/*
+*
+* 递归解析
+*
+ */
+func ParsePacket(binary []byte, offset int) {
+	if len((binary)) == 0 {
+		return
+	}
+	N := 0
+	ParsePacket(binary[offset+N:], offset+N)
 }
 func (tc *ATK01Lora) Ctrl(topic, args []byte, timeout time.Duration) ([]byte, error) {
 	if string(topic) == "lora.atk01.cmd.send" {
@@ -164,4 +216,14 @@ func (tc *ATK01Lora) Stop() {
 		tc.serialPort.Close()
 	}
 	glogger.GLogger.Info("EC200ADtu Stopped")
+}
+func ShiftBytes(N int, Bytes *[]byte) {
+	if Bytes == nil || len(*Bytes) == 0 || N == 0 {
+		return
+	}
+	N = N % len(*Bytes)
+	bytes := *Bytes
+	front := bytes[N:]
+	back := bytes[:N]
+	*Bytes = append(front, back...)
 }
