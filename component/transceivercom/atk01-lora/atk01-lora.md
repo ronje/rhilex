@@ -80,57 +80,67 @@ EE EF 01 02 03 04 05 06 07 08 09 01 02 03 04 05 06 07 08 09 8F C2 0D 0A
 
 ## 案例
 ```c
+/*
+Arduino UNO软串口通信
+*/
+#include <Arduino.h>
+#include <SoftwareSerial.h>
+SoftwareSerial atk01(2, 3); // RX, TX
 
-#include <stdio.h>
-#include <stdint.h>
-
-// 定义包的最大长度
-#define MAX_PACKET_SIZE 50
-
-// 定义数据包结构体
-typedef struct {
-    uint8_t start_byte1;
-    uint8_t start_byte2;
-    uint8_t data1;
-    uint8_t data2;
-    uint8_t end_byte1;
-    uint8_t end_byte2;
-} Packet;
-
-int main() {
-    // 创建数据包对象
-    Packet packet;
-
-    // 设置数据包内容
-    packet.start_byte1 = 0xEE;
-    packet.start_byte2 = 0xEF;
-    packet.data1 = 0x01;
-    packet.data2 = 0x02;
-    packet.end_byte1 = 0x8F;
-    packet.end_byte2 = 0xC2;
-
-    // 假设这里需要将数据包发送出去，可以打印出来模拟发送
-    uint8_t buffer[MAX_PACKET_SIZE];
-    int index = 0;
-
-    // 拼接数据包
-    buffer[index++] = packet.start_byte1;
-    buffer[index++] = packet.start_byte2;
-    buffer[index++] = packet.data1;
-    buffer[index++] = packet.data2;
-    buffer[index++] = packet.end_byte1;
-    buffer[index++] = packet.end_byte2;
-
-    // 假设发送数据包的函数 sendPacket(buffer, index);
-
-    // 打印发送的数据包内容，仅用于调试
-    printf("Sending Packet: ");
-    for (int i = 0; i < index; ++i) {
-        printf("%02X ", buffer[i]);
-    }
-    printf("\n");
-
-    return 0;
+void setup()
+{
+  Serial.begin(9600);
+  while (!Serial)
+  {
+  }
+  atk01.begin(9600);
+}
+const uint8_t data1[] = {
+    (uint8_t)0xEE,
+    (uint8_t)0xEF,
+    (uint8_t)0x01,
+    (uint8_t)0x03,
+    (uint8_t)0x00,
+    (uint8_t)0x00,
+    (uint8_t)0x00,
+    (uint8_t)0x02,
+    (uint8_t)0x04,
+    (uint8_t)0xD2,
+    (uint8_t)0x16,
+    (uint8_t)0xE2,
+    (uint8_t)0xD2,
+    (uint8_t)0x63,
+    (uint8_t)0x0D,
+    (uint8_t)0x0A,
+};
+const uint8_t data2[] = {
+    (uint8_t)0xEE,
+    (uint8_t)0xEF,
+    (uint8_t)0x01,
+    (uint8_t)0x03,
+    (uint8_t)0x63,
+    (uint8_t)0x0D,
+    (uint8_t)0x0A,
+};
+void loop()
+{
+  for (size_t i = 0; i < 16; i++)
+  {
+    atk01.write(data1[i]);
+  }
+  for (size_t i = 0; i < 7; i++)
+  {
+    atk01.write(data2[i]);
+  }
+  for (size_t i = 0; i < 16; i++)
+  {
+    atk01.write(data1[i]);
+  }
+  for (size_t i = 0; i < 7; i++)
+  {
+    atk01.write(data2[i]);
+  }
+  delay(10);
 }
 
 ```

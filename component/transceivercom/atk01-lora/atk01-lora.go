@@ -79,11 +79,14 @@ func (tc *ATK01Lora) Start(Config transceivercom.TransceiverConfig) error {
 	}
 	tc.serialPort = serialPort
 	go func(io io.ReadWriteCloser) {
-		buffer := make([]byte, 1024)
+		MAX_BUFFER_SIZE := 1024 * 10 * 10
+		buffer := make([]byte, MAX_BUFFER_SIZE)
 		byteACC := 0         // 计数器而不是下标
 		cursor := 0          // 用来标记数据当前读到哪里了
 		edgeSignal1 := false // 两个边沿
 		edgeSignal2 := false // 两个边沿
+		dataStartPos := 0    // 0xEE ->
+		dataEndPos := 0      // <- \n
 		for {
 			select {
 			case <-typex.GCTX.Done():
@@ -101,7 +104,7 @@ func (tc *ATK01Lora) Start(Config transceivercom.TransceiverConfig) error {
 				continue
 			}
 			byteACC += N
-			if byteACC > 1024 {
+			if byteACC > MAX_BUFFER_SIZE {
 				glogger.GLogger.Error("exceeds the maximum buffer size")
 				if !edgeSignal1 || !edgeSignal2 {
 					byteACC = 0
@@ -110,8 +113,7 @@ func (tc *ATK01Lora) Start(Config transceivercom.TransceiverConfig) error {
 				}
 				continue
 			}
-			dataStartPos := 0 // 0xEE ->
-			dataEndPos := 0   // <- \n
+
 			for i := cursor; i < byteACC; i++ {
 				currentByte := buffer[i]
 				cursor++
@@ -132,13 +134,13 @@ func (tc *ATK01Lora) Start(Config transceivercom.TransceiverConfig) error {
 							crcH := crcL - 1
 							crcByte := [2]byte{buffer[crcH], buffer[crcL]}
 							crcCheckedValue := uint16(crcByte[0])<<8 | uint16(crcByte[1])
-							CurrentPkt := buffer[dataStartPos+1 : dataEndPos-3]
-							crcCalculatedValue := utils.CRC16(CurrentPkt)
+							currentPkt := buffer[dataStartPos+1 : dataEndPos-3]
+							crcCalculatedValue := utils.CRC16(currentPkt)
 							if crcCalculatedValue == crcCheckedValue {
 								edgeSignal2 = true
 							} else {
 								glogger.GLogger.Errorf("CRC Check Error: (Checked=%d,Calculated=%d), data=%v",
-									crcCheckedValue, crcCalculatedValue, CurrentPkt)
+									crcCheckedValue, crcCalculatedValue, currentPkt)
 								// byteACC -= cursor // 出错后丢包
 								// cursor -= cursor  // 出错后丢包
 								edgeSignal1 = false
@@ -152,6 +154,10 @@ func (tc *ATK01Lora) Start(Config transceivercom.TransceiverConfig) error {
 						if cursor >= byteACC {
 							byteACC = 0
 							cursor = 0
+						} else {
+							offset := byteACC - cursor
+							copy(buffer[0:], buffer[offset:])
+							byteACC += offset
 						}
 						edgeSignal1 = false
 						edgeSignal2 = false
