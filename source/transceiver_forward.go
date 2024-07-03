@@ -120,8 +120,8 @@ func (u *TransceiverForwarder) startInternalEventQueue(ctxU context.Context) {
 			case <-ctxU.Done():
 				return
 			case Event := <-*Subscriber.Channel:
-				// 过滤不感去兴趣的事件
-				// "transceiver.upstream.data.$ComName"
+				// 过滤不感兴趣的事件
+				// "transceiver.up.data.$ComName"
 				if !strings.Contains(Event.Event, u.mainConfig.ComName) {
 					continue
 				}

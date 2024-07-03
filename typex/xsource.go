@@ -10,19 +10,17 @@ func (i InEndType) String() string {
 }
 
 const (
-	MQTT            InEndType = "MQTT"
-	HTTP            InEndType = "HTTP"
-	COAP            InEndType = "COAP"
-	GRPC            InEndType = "GRPC"
-	NATS_SERVER     InEndType = "NATS_SERVER"
-	RHILEX_UDP      InEndType = "RHILEX_UDP"
-	GENERIC_IOT_HUB InEndType = "GENERIC_IOT_HUB"
-	INTERNAL_EVENT  InEndType = "INTERNAL_EVENT" // 内部消息
-	GENERIC_MQTT    InEndType = "GENERIC_MQTT"   // 通用 MQTT
-	// Mqtt Server
-	GENERIC_MQTT_SERVER InEndType = "GENERIC_MQTT_SERVER"
-	// 外设通信模块事件
-	COMTC_EVENT_FORWARDER InEndType = "COMTC_EVENT_FORWARDER"
+	MQTT                  InEndType = "MQTT"
+	HTTP                  InEndType = "HTTP"
+	COAP                  InEndType = "COAP"
+	GRPC                  InEndType = "GRPC"
+	NATS_SERVER           InEndType = "NATS_SERVER"
+	RHILEX_UDP            InEndType = "RHILEX_UDP"
+	GENERIC_IOT_HUB       InEndType = "GENERIC_IOT_HUB"
+	INTERNAL_EVENT        InEndType = "INTERNAL_EVENT"        // 内部消息
+	GENERIC_MQTT          InEndType = "GENERIC_MQTT"          // 通用 MQTT
+	GENERIC_MQTT_SERVER   InEndType = "GENERIC_MQTT_SERVER"   // Mqtt Server
+	COMTC_EVENT_FORWARDER InEndType = "COMTC_EVENT_FORWARDER" // 外设通信模块事件
 )
 
 // XStatus for source status

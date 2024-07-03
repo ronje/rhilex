@@ -47,7 +47,7 @@ type BaseEvent struct {
 }
 
 func (be BaseEvent) String() string {
-	return fmt.Sprintf(`Event: [%s], [%s], %s`, be.Type, be.Event, be.Info)
+	return fmt.Sprintf(`Event: [%s], [%s], %v`, be.Type, be.Event, be.Info)
 }
 
 /*
@@ -162,8 +162,8 @@ func StartInternalEventQueue(IB1 *InternalEventBus) {
 					*Subscriber.Channel <- Event
 				}
 				// 把来自通信模块的数据忽略，不要写入本地日志记录
-				// Event = "transceiver.upstream.data.$ComName"
-				if Event.Type == "transceiver.upstream.data" {
+				// Event = "transceiver.up.data.$ComName"
+				if Event.Type == "transceiver.up.data" {
 					continue
 				}
 				// glogger.GLogger.Debug("Internal Event:", Event)

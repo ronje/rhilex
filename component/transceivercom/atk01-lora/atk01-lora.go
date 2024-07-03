@@ -25,6 +25,7 @@ import (
 
 	serial "github.com/hootrhino/goserial"
 
+	"github.com/hootrhino/rhilex/component/internotify"
 	"github.com/hootrhino/rhilex/component/transceivercom"
 	"github.com/hootrhino/rhilex/glogger"
 	"github.com/hootrhino/rhilex/typex"
@@ -46,7 +47,7 @@ func NewATK01Lora(R typex.Rhilex) transceivercom.TransceiverCommunicator {
 	return &ATK01Lora{
 		R:          R,
 		locker:     sync.Mutex{},
-		DataBuffer: make(chan []byte, 1024),
+		DataBuffer: make(chan []byte, 102400),
 		mainConfig: ATK01LoraConfig{
 			ComConfig: transceivercom.TransceiverConfig{
 				Address:   "COM1",
@@ -59,10 +60,16 @@ func NewATK01Lora(R typex.Rhilex) transceivercom.TransceiverCommunicator {
 			},
 		}}
 }
+
+/*
+*
+* Start
+*
+ */
 func (tc *ATK01Lora) Start(Config transceivercom.TransceiverConfig) error {
 	env := os.Getenv("LORASUPPORT")
 	if env != "ATK01" {
-		// return nil
+		return nil
 	}
 	glogger.GLogger.Info("ATK01-LORA-SX1278 Init")
 	config := serial.Config{
@@ -82,11 +89,10 @@ func (tc *ATK01Lora) Start(Config transceivercom.TransceiverConfig) error {
 		MAX_BUFFER_SIZE := 1024 * 10 * 10
 		buffer := make([]byte, MAX_BUFFER_SIZE)
 		byteACC := 0         // 计数器而不是下标
-		cursor := 0          // 用来标记数据当前读到哪里了
 		edgeSignal1 := false // 两个边沿
 		edgeSignal2 := false // 两个边沿
-		dataStartPos := 0    // 0xEE ->
-		dataEndPos := 0      // <- \n
+		expectPacket := make([]byte, 256)
+
 		for {
 			select {
 			case <-typex.GCTX.Done():
@@ -106,67 +112,54 @@ func (tc *ATK01Lora) Start(Config transceivercom.TransceiverConfig) error {
 			byteACC += N
 			if byteACC > 256 { // 单个包最大256字节
 				if !edgeSignal1 || !edgeSignal2 {
-					glogger.GLogger.Error("exceeds the maximum buffer size, will flush all data!")
+					glogger.GLogger.Error("maximum data packet length(256) exceeded, will flush all data!")
 					for i := 0; i < byteACC; i++ {
 						buffer[i] = '\x00'
 					}
 					byteACC = 0
-					cursor = 0
 					edgeSignal1 = false
 					edgeSignal2 = false
 				}
 				continue
 			}
-
-			for i := cursor; i < byteACC; i++ {
-				currentByte := buffer[i]
-				cursor++
-				if byteACC >= 2 && !edgeSignal1 {
-					if currentByte == 0xEF && buffer[i-1] == 0xEE {
-						edgeSignal1 = true
-						dataStartPos = i
-					}
-				}
-				if byteACC > 4 {
-					if !edgeSignal1 {
-						continue
-					}
-					if currentByte == 0x0A && buffer[i-1] == 0x0D {
-						if edgeSignal1 {
-							dataEndPos = i
-							crcL := dataEndPos - 2
-							crcH := crcL - 1
-							crcByte := [2]byte{buffer[crcH], buffer[crcL]}
-							crcCheckedValue := uint16(crcByte[0])<<8 | uint16(crcByte[1])
-							currentPkt := buffer[dataStartPos+1 : dataEndPos-3]
-							crcCalculatedValue := utils.CRC16(currentPkt)
-							if crcCalculatedValue == crcCheckedValue {
-								edgeSignal2 = true
-							} else {
-								glogger.GLogger.Errorf("CRC Check Error: (Checked=%d,Calculated=%d), data=%v",
-									crcCheckedValue, crcCalculatedValue, currentPkt)
-								// byteACC -= cursor // 出错后丢包
-								// cursor -= cursor  // 出错后丢包
-								edgeSignal1 = false
-								edgeSignal2 = false
-							}
+			expectPacketACC := 0
+			expectPacketLength := 0
+			for i, currentByte := range buffer[:byteACC] {
+				expectPacketACC++
+				if !edgeSignal1 {
+					if expectPacketACC >= 2 {
+						if currentByte == 0xEF && buffer[i-1] == 0xEE {
+							edgeSignal1 = true
 						}
 					}
-					if edgeSignal1 && edgeSignal2 {
-						tc.DataBuffer <- buffer[dataStartPos+1 : dataEndPos-3]
-						// glogger.GLogger.Debug(buffer[dataStartPos+1 : dataEndPos-3])
-						if cursor >= byteACC {
-							byteACC = 0
-							cursor = 0
-						} else {
-							offset := byteACC - cursor
-							copy(buffer[0:], buffer[offset:])
-							byteACC += offset
-						}
-						edgeSignal1 = false
-						edgeSignal2 = false
+				}
+				if !edgeSignal1 || expectPacketACC < 4 {
+					continue
+				}
+				if edgeSignal1 {
+					if currentByte == 0x0A && buffer[expectPacketACC-2] == 0x0D {
+						expectPacketLength = copy(expectPacket, buffer[:expectPacketACC-1])
+						edgeSignal2 = true
 					}
 				}
+				if !edgeSignal1 || !edgeSignal2 {
+					continue
+				}
+				if edgeSignal1 && edgeSignal2 {
+					tc.DataBuffer <- expectPacket[2 : expectPacketLength-1]
+				}
+				if expectPacketACC < byteACC {
+					if !edgeSignal1 || !edgeSignal2 {
+						copy(buffer[0:], buffer[expectPacketACC-1:byteACC])
+						byteACC = byteACC - expectPacketACC
+					}
+				} else {
+					byteACC = 0
+				}
+				expectPacketLength = 0
+				expectPacketACC = 0
+				edgeSignal1 = false
+				edgeSignal2 = false
 			}
 		}
 	}(tc.serialPort)
@@ -175,8 +168,27 @@ func (tc *ATK01Lora) Start(Config transceivercom.TransceiverConfig) error {
 			select {
 			case <-typex.GCTX.Done():
 				return
-			case Data := <-Chan:
-				glogger.GLogger.Debug(Data)
+			case buffer := <-Chan:
+				glogger.GLogger.Debug("Received:", buffer)
+				Len := len(buffer)
+				if Len > 2 {
+					crcByte := [2]byte{buffer[Len-2], buffer[Len-1]}
+					crcCheckedValue := uint16(crcByte[0])<<8 | uint16(crcByte[1])
+					crcCalculatedValue := utils.CRC16(buffer[:Len-2])
+					if crcCalculatedValue != crcCheckedValue {
+						glogger.GLogger.Errorf("CRC Check Error: (Checked=%d,Calculated=%d), data=%v",
+							crcCheckedValue, crcCalculatedValue, buffer)
+						continue
+					}
+					internotify.Push(internotify.BaseEvent{
+						Type:    "transceiver.up.data",
+						Event:   "transceiver.up.data.atk01",
+						Ts:      uint64(time.Now().UnixMilli()),
+						Summary: "transceiver.up.data",
+						Info:    buffer,
+					})
+				}
+
 			}
 		}
 	}(tc.DataBuffer)
@@ -207,7 +219,7 @@ func (tc *ATK01Lora) Ctrl(topic, args []byte, timeout time.Duration) ([]byte, er
 }
 func (tc *ATK01Lora) Info() transceivercom.CommunicatorInfo {
 	return transceivercom.CommunicatorInfo{
-		Name:     "ATK01",
+		Name:     "atk01",
 		Model:    "ATK01-LORA-SX1278",
 		Type:     transceivercom.LORA,
 		Vendor:   "GUANGZHOU-ZHENGDIAN-YUANZI technology",

@@ -74,7 +74,7 @@ func (tc *EC200ADtu) Ctrl(topic, args []byte, timeout time.Duration) ([]byte, er
 }
 func (tc *EC200ADtu) Info() transceivercom.CommunicatorInfo {
 	return transceivercom.CommunicatorInfo{
-		Name:     "EC200A",
+		Name:     "ec200a",
 		Model:    "EC200A-4G-DTU-CAT4",
 		Type:     transceivercom.MN4G,
 		Vendor:   "Quectel technology",

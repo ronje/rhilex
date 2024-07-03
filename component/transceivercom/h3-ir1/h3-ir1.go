@@ -122,10 +122,10 @@ func (ird *H3IR1) Ctrl(topic, args []byte, timeout time.Duration) ([]byte, error
 }
 func (ird *H3IR1) Info() transceivercom.CommunicatorInfo {
 	return transceivercom.CommunicatorInfo{
-		Name:     "ATK01",
-		Model:    "ATK01-LORA-SX1278",
-		Type:     transceivercom.LORA,
-		Vendor:   "GUANGZHOU-ZHENGDIAN-YUANZI technology",
+		Name:     "ir1",
+		Model:    "ir1-nec",
+		Type:     transceivercom.IR,
+		Vendor:   "NEC-IR",
 		Mac:      "00:00:00:00:00:00:00:00",
 		Firmware: "0.0.0",
 	}

@@ -92,7 +92,7 @@ func (tc *Mx01BLE) Ctrl(topic, args []byte, timeout time.Duration) ([]byte, erro
 }
 func (tc *Mx01BLE) Info() transceivercom.CommunicatorInfo {
 	return transceivercom.CommunicatorInfo{
-		Name:     "MX01",
+		Name:     "mx01",
 		Model:    "MX01-BLE",
 		Type:     transceivercom.BLE,
 		Vendor:   "SHENZHEN-MIAOXIANG-technology",
