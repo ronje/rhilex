@@ -61,14 +61,15 @@ func keyFunc(c *gin.Context) string {
 	return c.ClientIP()
 }
 func errorHandler(c *gin.Context, info Info) {
-	c.JSON(400, response.Error("Too many requests. Try again in 3s"))
+	c.JSON(400, response.Error("Too many requests. Try again after 3s"))
 }
 func StartRhilexApiServer(ruleEngine typex.Rhilex, port int) {
-	if core.GlobalConfig.AppDebugMode {
-		gin.SetMode(gin.DebugMode)
-	} else {
-		gin.SetMode(gin.ReleaseMode)
-	}
+	gin.SetMode(gin.ReleaseMode)
+	// if core.GlobalConfig.AppDebugMode {
+	// 	gin.SetMode(gin.DebugMode)
+	// } else {
+	// 	gin.SetMode(gin.ReleaseMode)
+	// }
 	server := RhilexApiServer{
 		ginEngine:  gin.New(),
 		ruleEngine: ruleEngine,
@@ -280,13 +281,13 @@ func initStaticModel() {
 	service.InitGenericGroup(&model.MGenericGroup{
 		UUID:   "DROOT",
 		Type:   "DEVICE",
-		Name:   "默认分组",
+		Name:   "DefaultGroup",
 		Parent: "NULL",
 	})
 	service.InitGenericGroup(&model.MGenericGroup{
 		UUID:   "ULTROOT",
 		Type:   "USER_LUA_TEMPLATE",
-		Name:   "默认分组",
+		Name:   "DefaultGroup",
 		Parent: "NULL",
 	})
 	// 初始化一个用户

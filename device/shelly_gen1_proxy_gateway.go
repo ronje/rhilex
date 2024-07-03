@@ -246,3 +246,6 @@ func (Shelly *ShellyGen1ProxyGateway) OnDCACall(UUID string, Command string, Arg
 func (Shelly *ShellyGen1ProxyGateway) OnCtrl(cmd []byte, args []byte) ([]byte, error) {
 	return []byte{}, nil
 }
+func (Shelly *ShellyGen1ProxyGateway) GetConfig() ShellyMainConfig {
+	return Shelly.mainConfig
+}

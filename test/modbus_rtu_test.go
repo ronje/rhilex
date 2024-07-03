@@ -6,8 +6,8 @@ import (
 	"testing"
 	"time"
 
+	modbus "github.com/hootrhino/gomodbus"
 	"github.com/hootrhino/rhilex/glogger"
-	modbus "github.com/wwhai/gomodbus"
 )
 
 var keys = [8]uint16{0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07}

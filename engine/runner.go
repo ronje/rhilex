@@ -24,7 +24,6 @@ import (
 	wdog "github.com/hootrhino/rhilex/plugin/generic_watchdog"
 	modbusscrc "github.com/hootrhino/rhilex/plugin/modbus_crc_tools"
 	modbusscanner "github.com/hootrhino/rhilex/plugin/modbus_scanner"
-	mqttserver "github.com/hootrhino/rhilex/plugin/mqtt_server"
 	ngrokc "github.com/hootrhino/rhilex/plugin/ngrokc"
 	ttyterminal "github.com/hootrhino/rhilex/plugin/ttyd_terminal"
 	usbmonitor "github.com/hootrhino/rhilex/plugin/usb_monitor"
@@ -80,7 +79,7 @@ func RunRhilex(iniPath string) {
 
 // loadPlugin 根据Ini配置信息，加载插件
 func loadPlugin(engine typex.Rhilex) {
-	cfg, _ := ini.ShadowLoad(core.INIPath)
+	cfg, _ := ini.ShadowLoad(core.GlobalConfig.IniPath)
 	sections := cfg.ChildSections("plugin")
 	for _, section := range sections {
 		name := strings.TrimPrefix(section.Name(), "plugin.")
@@ -93,9 +92,6 @@ func loadPlugin(engine typex.Rhilex) {
 			continue
 		}
 		var plugin typex.XPlugin
-		if name == "mqtt_server" {
-			plugin = mqttserver.NewMqttServer()
-		}
 		if name == "usbmonitor" {
 			plugin = usbmonitor.NewUsbMonitor()
 		}

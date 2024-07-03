@@ -11,6 +11,7 @@ import (
 	common "github.com/hootrhino/rhilex/component/apiserver/common"
 	"github.com/hootrhino/rhilex/component/apiserver/server"
 	"github.com/hootrhino/rhilex/component/shellymanager"
+	"github.com/hootrhino/rhilex/device"
 	"github.com/hootrhino/rhilex/typex"
 	"github.com/hootrhino/rhilex/utils"
 	"github.com/hootrhino/rhilex/utils/tinyarp"
@@ -215,7 +216,17 @@ func ShellyDeviceDetail(c *gin.Context, ruleEngine typex.Rhilex) {
  */
 func ScanShellyDevice(c *gin.Context, ruleEngine typex.Rhilex) {
 	uuid, _ := c.GetQuery("uuid")
-	cidr, _ := c.GetQuery("cidr")
+	Device := ruleEngine.GetDevice(uuid)
+	cidr := ""
+	if Device != nil {
+		switch T := Device.Device.(type) {
+		case *device.ShellyGen1ProxyGateway:
+			cidr = T.GetConfig().ShellyConfig.NetworkCidr
+		default:
+			c.JSON(common.HTTP_OK, common.Error400(fmt.Errorf("unsupported type:%v", T)))
+			return
+		}
+	}
 	if _, _, errParseCIDR := net.ParseCIDR(cidr); errParseCIDR != nil {
 		c.JSON(common.HTTP_OK, common.Error400(errParseCIDR))
 		return

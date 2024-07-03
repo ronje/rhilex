@@ -70,12 +70,13 @@ func AddAppLibToGroup(app *Application, rx typex.Rhilex,
 func LoadAppLibGroup(app *Application, e typex.Rhilex) {
 	{
 		Funcs := map[string]func(l *lua.LState) int{
-			"ToHttp":     rhilexlib.DataToHttp(e, app.UUID),
-			"ToMqtt":     rhilexlib.DataToMqtt(e, app.UUID),
-			"ToUdp":      rhilexlib.DataToUdp(e, app.UUID),
-			"ToTcp":      rhilexlib.DataToTcp(e, app.UUID),
-			"ToTdEngine": rhilexlib.DataToTdEngine(e, app.UUID),
-			"ToMongo":    rhilexlib.DataToMongo(e, app.UUID),
+			"ToHttp":       rhilexlib.DataToHttp(e, app.UUID),
+			"ToMqtt":       rhilexlib.DataToMqtt(e, app.UUID),
+			"ToUdp":        rhilexlib.DataToUdp(e, app.UUID),
+			"ToTcp":        rhilexlib.DataToTcp(e, app.UUID),
+			"ToTdEngine":   rhilexlib.DataToTdEngine(e, app.UUID),
+			"ToMongo":      rhilexlib.DataToMongo(e, app.UUID),
+			"ToSemtechUdp": rhilexlib.DataToLoraWanUDP(e, app.UUID),
 		}
 		AddAppLibToGroup(app, e, "data", Funcs)
 	}
@@ -178,9 +179,9 @@ func LoadAppLibGroup(app *Application, e typex.Rhilex) {
 			"DO1Get":  rhilexlib.RHILEXG1_DO1Get(e, app.UUID),
 			"DO2Set":  rhilexlib.RHILEXG1_DO2Set(e, app.UUID),
 			"DO2Get":  rhilexlib.RHILEXG1_DO2Get(e, app.UUID),
-			"DI1Get":  rhilexlib.H3DI1Get(e, app.UUID),
-			"DI2Get":  rhilexlib.H3DI2Get(e, app.UUID),
-			"DI3Get":  rhilexlib.H3DI3Get(e, app.UUID),
+			"DI1Get":  rhilexlib.RHILEXG1_DI1Get(e, app.UUID),
+			"DI2Get":  rhilexlib.RHILEXG1_DI2Get(e, app.UUID),
+			"DI3Get":  rhilexlib.RHILEXG1_DI3Get(e, app.UUID),
 			"Led1On":  rhilexlib.Led1On(e, app.UUID),
 			"Led1Off": rhilexlib.Led1Off(e, app.UUID),
 		}
@@ -260,5 +261,11 @@ func LoadAppLibGroup(app *Application, e typex.Rhilex) {
 			"UpdateLast": rhilexlib.UpdateDataCenterLast(e, app.UUID),
 		}
 		AddAppLibToGroup(app, e, "rds", Funcs)
+	}
+	{
+		Funcs := map[string]func(l *lua.LState) int{
+			"Ctrl": rhilexlib.CtrlComRF(e),
+		}
+		AddAppLibToGroup(app, e, "rfcom", Funcs)
 	}
 }

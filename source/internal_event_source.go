@@ -18,6 +18,7 @@ package source
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 
 	"github.com/hootrhino/rhilex/component/internotify"
 	"github.com/hootrhino/rhilex/typex"
@@ -86,7 +87,6 @@ func (u *InternalEventSource) Test(inEndId string) bool {
 	return true
 }
 
-
 // 来自外面的数据
 func (*InternalEventSource) DownStream([]byte) (int, error) {
 	return 0, nil
@@ -117,13 +117,18 @@ type event struct {
  */
 func (u *InternalEventSource) startInternalEventQueue() {
 	go func(ctx context.Context) {
-		internotify.AddSource()
-		defer internotify.RemoveSource()
+		Queue := make(chan internotify.BaseEvent, 64)
+		ID := fmt.Sprintf("InternalEventSource:%s", u.PointId)
+		internotify.AddSubscriber(internotify.Subscriber{
+			Id:      ID,
+			Channel: &Queue,
+		})
+		defer internotify.RemoveSubscriber(ID)
 		for {
 			select {
 			case <-ctx.Done():
 				return
-			case Event := <-internotify.GetQueue():
+			case Event := <-Queue:
 				if u.mainConfig.Type == "ALL" {
 					bytes, _ := json.Marshal(event{
 						Type:  Event.Type,

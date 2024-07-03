@@ -185,12 +185,15 @@ func (sd *genericSnmpDevice) Start(cctx typex.CCTX) error {
 			if len(snmpOids) < 1 {
 				goto END
 			}
-			if bytes, err := json.Marshal(snmpOids); err != nil {
-				glogger.GLogger.Error(err)
-			} else {
-				glogger.GLogger.Debug(string(bytes))
-				sd.RuleEngine.WorkDevice(sd.Details(), string(bytes))
+			for _, snmpOid := range snmpOids {
+				if bytes, err := json.Marshal(snmpOid); err != nil {
+					glogger.GLogger.Error(err)
+				} else {
+					glogger.GLogger.Debug(string(bytes))
+					sd.RuleEngine.WorkDevice(sd.Details(), string(bytes))
+				}
 			}
+
 		END:
 			<-ticker.C
 		}

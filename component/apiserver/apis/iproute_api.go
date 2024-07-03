@@ -329,7 +329,7 @@ func GetNmcliDeviceShow(c *gin.Context, ruleEngine typex.Rhilex) {
 		c.JSON(common.HTTP_OK, common.Error("interface not exists"))
 		return
 	}
-	cmd := exec.Command("nmcli", "device", "show", "eth0")
+	cmd := exec.Command("nmcli", "device", "show", ifaceName)
 	nmcliOutput, err := cmd.Output()
 	if err != nil {
 		c.JSON(common.HTTP_OK, common.Error400(err))

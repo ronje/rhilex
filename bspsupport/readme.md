@@ -6,7 +6,7 @@
 
 ### RHILEXG1 网关
 
-RHILEXG1 是 RHILEX 团队的默认硬件，操作系统为 `64位OpenWrt、Armbian`, CPU 架构为 `64位全志H3`。RHILEXG1 网关的lua标准库命名空间为 `rhinopi`。
+RHILEXG1 是 RHILEX 团队的默认硬件，操作系统为 `64位OpenWrt、Armbian`, CPU 架构为 `32位全志H3`。
 
 ### 树莓派4B+
 
@@ -22,24 +22,24 @@ ARCHSUPPORT=RHILEXG1 rhilex run
 
 ## 支持硬件列表
 
-| 硬件名             | 环境参数  | 示例                              |
-| ------------------ | --------- | --------------------------------- |
-| RHILEXG1 H3版本网关   | RHILEXG1   | `ARCHSUPPORT=RHILEXG1 rhilex run`   |
-| RHILEXG1 T507版本网关 | RHILEXG1T507 | `ARCHSUPPORT=RHILEXG1T507 rhilex run` |
-| RHILEXG1 T113版本网关 | RHILEXG1T113 | `ARCHSUPPORT=RHILEXG1T113 rhilex run` |
-| 树莓派4B、4B+      | RPI4      | `ARCHSUPPORT=RPI4B rhilex run`     |
-| 玩客云S805         | WKYS805   | `ARCHSUPPORT=WKYS805 rhilex run`   |
+| 硬件名                    | 环境参数     | 示例                                  |
+| ------------------------- | ------------ | ------------------------------------- |
+| RHILEXG1 RHILEXG1版本网关 | RHILEXG1     | `ARCHSUPPORT=RHILEXG1 rhilex run`     |
+| RHILEXG1 T507版本网关     | RHILEXG1T507 | `ARCHSUPPORT=RHILEXG1T507 rhilex run` |
+| RHILEXG1 T113版本网关     | RHILEXG1T113 | `ARCHSUPPORT=RHILEXG1T113 rhilex run` |
+| 树莓派4B、4B+             | RPI4         | `ARCHSUPPORT=RPI4B rhilex run`        |
+| 玩客云S805                | WKYS805      | `ARCHSUPPORT=WKYS805 rhilex run`      |
 
 > 警告: 这些属于板级高级功能，和硬件架构以及外设有关，默认关闭。 如果你自己需要定制，最好针对自己的硬件进行跨平台适配, 如果没有指定平台，可能会导致预料之外的结果。
 
 ## 常见函数
 
-### RHILEXG1 H3版本网关
+### RHILEXG1版本网关
 
 1. GPIO 设置
 
    ```lua
-   rhinopi:GPIOSet(Pin, Value)
+   rhilexg1:GPIOSet(Pin, Value)
    ```
    参数表
 
@@ -50,7 +50,7 @@ ARCHSUPPORT=RHILEXG1 rhilex run
 2. GPIO 获取
 
    ```lua
-   rhinopi:GPIOGet(Pin)
+   rhilexg1:GPIOGet(Pin)
    ```
    | 参数名 | 类型 | 说明     |
    | ------ | ---- | -------- |
@@ -75,9 +75,9 @@ end
 ```lua
 function Main(arg)
     while true do
-        rhinopi:GPIOSet(6, 1)
+        rhilexg1:GPIOSet(6, 1)
         time:Sleep(2000)
-        rhinopi:GPIOSet(7, 0)
+        rhilexg1:GPIOSet(7, 0)
         time:Sleep(2000)
     end
 end

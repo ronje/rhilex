@@ -32,11 +32,11 @@ import (
 	intercache "github.com/hootrhino/rhilex/component/intercache"
 	"github.com/hootrhino/rhilex/component/interdb"
 
+	modbus "github.com/hootrhino/gomodbus"
 	core "github.com/hootrhino/rhilex/config"
 	"github.com/hootrhino/rhilex/glogger"
 	"github.com/hootrhino/rhilex/typex"
 	"github.com/hootrhino/rhilex/utils"
-	modbus "github.com/wwhai/gomodbus"
 )
 
 // 这是个通用Modbus采集器, 主要用来在通用场景下采集数据，因此需要配合规则引擎来使用
@@ -360,7 +360,6 @@ func (mdev *generic_modbus_device) Start(cctx typex.CCTX) error {
 	if *mdev.mainConfig.CommonConfig.AutoRequest {
 		mdev.retryTimes = 0
 		go func(ctx context.Context) {
-			buffer := make([]byte, common.T_64KB)
 			for {
 				select {
 				case <-ctx.Done():
@@ -371,24 +370,22 @@ func (mdev *generic_modbus_device) Start(cctx typex.CCTX) error {
 					{
 					}
 				}
-				n := 0
-				var err error
+				ReadRegisterValues := []ReadRegisterValue{}
 				if mdev.mainConfig.CommonConfig.Mode == "UART" {
-					n, err = mdev.RTURead(buffer)
+					ReadRegisterValues = mdev.RTURead()
 				}
 				if mdev.mainConfig.CommonConfig.Mode == "TCP" {
-					n, err = mdev.TCPRead(buffer)
+					ReadRegisterValues = mdev.TCPRead()
 				}
-				if err != nil {
-					glogger.GLogger.Error(err)
-					mdev.retryTimes++
-					continue
+
+				for _, ReadRegisterValue := range ReadRegisterValues {
+					if bytes, errMarshal := json.Marshal(ReadRegisterValue); errMarshal != nil {
+						mdev.retryTimes++
+						glogger.GLogger.Error(errMarshal)
+					} else {
+						mdev.RuleEngine.WorkDevice(mdev.Details(), string(bytes))
+					}
 				}
-				// [] {} ""
-				if n < 3 {
-					continue
-				}
-				mdev.RuleEngine.WorkDevice(mdev.Details(), string(buffer[:n]))
 			}
 
 		}(mdev.Ctx)
@@ -396,6 +393,12 @@ func (mdev *generic_modbus_device) Start(cctx typex.CCTX) error {
 
 	mdev.status = typex.DEV_UP
 	return nil
+}
+func (mdev *generic_modbus_device) RTURead() []ReadRegisterValue {
+	return mdev.modbusRead()
+}
+func (mdev *generic_modbus_device) TCPRead() []ReadRegisterValue {
+	return mdev.modbusRead()
 }
 
 // 从设备里面读数据出来
@@ -488,8 +491,6 @@ func (mdev *generic_modbus_device) Stop() {
 	}
 	if mdev.mainConfig.CommonConfig.Mode == "UART" {
 		hwportmanager.FreeInterfaceBusy(mdev.mainConfig.PortUuid)
-	}
-	if mdev.mainConfig.CommonConfig.Mode == "UART" {
 		if mdev.rtuHandler != nil {
 			mdev.rtuHandler.Close()
 		}
@@ -524,7 +525,7 @@ func (mdev *generic_modbus_device) OnCtrl([]byte, []byte) ([]byte, error) {
 * 返回给Lua的数据结构,经过精简后的寄存器
 *
  */
-type RegJsonValue struct {
+type ReadRegisterValue struct {
 	Tag           string `json:"tag"`
 	Alias         string `json:"alias"`
 	SlaverId      byte   `json:"slaverId"`
@@ -537,21 +538,21 @@ type RegJsonValue struct {
 * 串口模式
 *
  */
-func (mdev *generic_modbus_device) modbusRead(buffer []byte) (int, error) {
+func (mdev *generic_modbus_device) modbusRead() []ReadRegisterValue {
 	if *mdev.mainConfig.CommonConfig.EnableOptimize {
-		return mdev.modbusGroupRead(buffer)
+		return mdev.modbusGroupRead()
 	} else {
-		return mdev.modbusSingleRead(buffer)
+		return mdev.modbusSingleRead()
 	}
 }
 
-func (mdev *generic_modbus_device) modbusSingleRead(buffer []byte) (int, error) {
+func (mdev *generic_modbus_device) modbusSingleRead() []ReadRegisterValue {
 	var err error
 	var results []byte
-	RegisterRWs := []RegJsonValue{}
+	RegisterRWs := []ReadRegisterValue{}
 	count := len(mdev.Registers)
 	if mdev.Client == nil {
-		return 0, fmt.Errorf("modbus client id not valid")
+		return RegisterRWs
 	}
 	// modbusRead: 当读多字节寄存器的时候，需要考虑UTF8
 	// Modbus收到的数据全部放进这个全局缓冲区内
@@ -585,7 +586,7 @@ func (mdev *generic_modbus_device) modbusSingleRead(buffer []byte) (int, error) 
 			// ValidData := [4]byte{0, 0, 0, 0}
 			copy(__modbusReadResult[:], results[:])
 			Value := utils.ParseModbusValue(r.DataType, r.DataOrder, float32(r.Weight), __modbusReadResult)
-			Reg := RegJsonValue{
+			Reg := ReadRegisterValue{
 				Tag:           r.Tag,
 				SlaverId:      r.SlaverId,
 				Alias:         r.Alias,
@@ -621,7 +622,7 @@ func (mdev *generic_modbus_device) modbusSingleRead(buffer []byte) (int, error) 
 			// ValidData := [4]byte{0, 0, 0, 0}
 			copy(__modbusReadResult[:], results[:])
 			Value := utils.ParseModbusValue(r.DataType, r.DataOrder, float32(r.Weight), __modbusReadResult)
-			Reg := RegJsonValue{
+			Reg := ReadRegisterValue{
 				Tag:           r.Tag,
 				SlaverId:      r.SlaverId,
 				Alias:         r.Alias,
@@ -659,7 +660,7 @@ func (mdev *generic_modbus_device) modbusSingleRead(buffer []byte) (int, error) 
 			copy(__modbusReadResult[:], results[:])
 			Value := utils.ParseModbusValue(r.DataType, r.DataOrder, float32(r.Weight), __modbusReadResult)
 
-			Reg := RegJsonValue{
+			Reg := ReadRegisterValue{
 				Tag:           r.Tag,
 				SlaverId:      r.SlaverId,
 				Alias:         r.Alias,
@@ -696,7 +697,7 @@ func (mdev *generic_modbus_device) modbusSingleRead(buffer []byte) (int, error) 
 			// ValidData := [4]byte{0, 0, 0, 0}
 			copy(__modbusReadResult[:], results[:])
 			Value := utils.ParseModbusValue(r.DataType, r.DataOrder, float32(r.Weight), __modbusReadResult)
-			Reg := RegJsonValue{
+			Reg := ReadRegisterValue{
 				Tag:           r.Tag,
 				SlaverId:      r.SlaverId,
 				Alias:         r.Alias,
@@ -714,13 +715,11 @@ func (mdev *generic_modbus_device) modbusSingleRead(buffer []byte) (int, error) 
 		}
 		time.Sleep(time.Duration(r.Frequency) * time.Millisecond)
 	}
-	bytes, _ := json.Marshal(RegisterRWs)
-	copy(buffer, bytes)
-	return len(bytes), nil
+	return RegisterRWs
 }
 
-func (mdev *generic_modbus_device) modbusGroupRead(buffer []byte) (int, error) {
-	jsonValueGroups := make([]RegJsonValue, 0)
+func (mdev *generic_modbus_device) modbusGroupRead() []ReadRegisterValue {
+	jsonValueGroups := make([]ReadRegisterValue, 0)
 	var __modbusReadResult = [256]byte{0} // 放在栈上提高效率
 
 	for _, group := range mdev.RegisterGroups {
@@ -743,7 +742,7 @@ func (mdev *generic_modbus_device) modbusGroupRead(buffer []byte) (int, error) {
 				offsetBit := offsetAddr % uint16(8)
 				value := (buf[offsetByte] >> offsetBit) & 0x1
 				ts := time.Now().UnixMilli()
-				jsonVal := RegJsonValue{
+				jsonVal := ReadRegisterValue{
 					Tag:           r.Tag,
 					SlaverId:      r.SlaverId,
 					Alias:         r.Alias,
@@ -774,7 +773,7 @@ func (mdev *generic_modbus_device) modbusGroupRead(buffer []byte) (int, error) {
 				value := (buf[offsetByte] >> offsetBit) & 0x1
 
 				ts := time.Now().UnixMilli()
-				jsonVal := RegJsonValue{
+				jsonVal := ReadRegisterValue{
 					Tag:           r.Tag,
 					SlaverId:      r.SlaverId,
 					Alias:         r.Alias,
@@ -805,7 +804,7 @@ func (mdev *generic_modbus_device) modbusGroupRead(buffer []byte) (int, error) {
 				value := utils.ParseModbusValue(r.DataType, r.DataOrder, float32(r.Weight), __modbusReadResult)
 
 				ts := time.Now().UnixMilli()
-				jsonVal := RegJsonValue{
+				jsonVal := ReadRegisterValue{
 					Tag:           r.Tag,
 					SlaverId:      r.SlaverId,
 					Alias:         r.Alias,
@@ -837,7 +836,7 @@ func (mdev *generic_modbus_device) modbusGroupRead(buffer []byte) (int, error) {
 				value := utils.ParseModbusValue(r.DataType, r.DataOrder, float32(r.Weight), __modbusReadResult)
 
 				ts := time.Now().UnixMilli()
-				jsonVal := RegJsonValue{
+				jsonVal := ReadRegisterValue{
 					Tag:           r.Tag,
 					SlaverId:      r.SlaverId,
 					Alias:         r.Alias,
@@ -858,16 +857,5 @@ func (mdev *generic_modbus_device) modbusGroupRead(buffer []byte) (int, error) {
 
 		time.Sleep(time.Duration(group.Frequency) * time.Millisecond)
 	}
-	if len(jsonValueGroups) != 0 {
-		bytes, _ := json.Marshal(jsonValueGroups)
-		copy(buffer, bytes)
-		return len(bytes), nil
-	}
-	return 0, nil
-}
-func (mdev *generic_modbus_device) RTURead(buffer []byte) (int, error) {
-	return mdev.modbusRead(buffer)
-}
-func (mdev *generic_modbus_device) TCPRead(buffer []byte) (int, error) {
-	return mdev.modbusRead(buffer)
+	return jsonValueGroups
 }

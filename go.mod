@@ -4,58 +4,60 @@ go 1.22
 
 require (
 	github.com/adrianmo/go-nmea v1.8.0
+	github.com/brocaar/lorawan v0.0.0-20240507141140-a18a1037da07
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/eclipse/paho.mqtt.golang v1.4.3
 	github.com/gin-contrib/graceful v1.0.2
 	github.com/gin-contrib/static v1.1.2
 	github.com/gin-gonic/gin v1.10.0
-	github.com/go-playground/validator/v10 v10.21.0
+	github.com/go-playground/validator/v10 v10.22.0
 	github.com/google/uuid v1.6.0
 	github.com/gopcua/opcua v0.5.3
-	github.com/gorilla/websocket v1.5.1
+	github.com/gorilla/websocket v1.5.3
 	github.com/gosnmp/gosnmp v1.37.0
 	github.com/hootrhino/beautiful-lua-go v0.1.0
 	github.com/hootrhino/go-ais v1.0.0
 	github.com/hootrhino/go-dhcpd-leases v0.0.0-20240116064141-0730f287f9a2
-	github.com/hootrhino/gobacnet v0.0.0-20240603064442-3409cf8f0a46
+	github.com/hootrhino/gobacnet v0.0.0-20240610124438-e673dc57700e
+	github.com/hootrhino/gomodbus v0.2.5
 	github.com/hootrhino/gopher-lua v1.0.3
+	github.com/hootrhino/goserial v0.2.1
+	github.com/hootrhino/rhilex-goat v0.0.0-20240628144111-889ce143bbd4
 	github.com/hootrhino/wmi v0.0.0-20230603082700-cfa077a8cf01
 	github.com/itchyny/gojq v0.12.16
 	github.com/jinzhu/copier v0.4.0
 	github.com/lithammer/shortuuid/v4 v4.0.0
 	github.com/mattn/go-sqlite3 v1.14.22
 	github.com/mochi-mqtt/server/v2 v2.6.4
-	github.com/nats-io/nats.go v1.35.0
+	github.com/nats-io/nats.go v1.36.0
+	github.com/pkg/errors v0.9.1
 	github.com/pkg6/go-sms v0.1.2
 	github.com/plgd-dev/go-coap/v3 v3.3.4
 	github.com/plgd-dev/kit/v2 v2.0.0-20211006190727-057b33161b90
 	github.com/robfig/cron/v3 v3.0.1
 	github.com/robinson/gos7 v0.0.0-20240315073918-1f14519e4846
-	github.com/rs/zerolog v1.33.0
 	github.com/samber/lo v1.39.0
 	github.com/shirou/gopsutil v3.21.11+incompatible
 	github.com/shirou/gopsutil/v3 v3.24.5
 	github.com/sirupsen/logrus v1.9.3
 	github.com/urfave/cli/v2 v2.27.2
-	github.com/wwhai/gomodbus v0.2.4
-	github.com/wwhai/goserial v0.2.0
+	github.com/vapourismo/knx-go v0.0.0-20240529174927-d4625b0a8913
 	github.com/wwhai/ntp v0.3.0
-	github.com/wwhai/tarmserial v1.0.0
 	github.com/wwhai/tinycache v0.0.0-20191004192108-46f407853014
 	github.com/xuri/excelize/v2 v2.8.1
 	go.bug.st/serial v1.6.2
-	go.mongodb.org/mongo-driver v1.15.0
-	gocv.io/x/gocv v0.36.1
+	go.mongodb.org/mongo-driver v1.15.1
+	gocv.io/x/gocv v0.37.0
 	golang.ngrok.com/ngrok v1.9.1
-	golang.org/x/exp v0.0.0-20240531132922-fd00a4e0eefc
-	golang.org/x/sys v0.20.0
+	golang.org/x/exp v0.0.0-20240613232115-7f521ea00fb8
+	golang.org/x/sys v0.21.0
 	google.golang.org/grpc v1.64.0
-	google.golang.org/protobuf v1.34.1
+	google.golang.org/protobuf v1.34.2
 	gopkg.in/ini.v1 v1.67.0
 	gopkg.in/natefinch/lumberjack.v2 v2.2.1
 	gopkg.in/square/go-jose.v2 v2.6.0
 	gopkg.in/yaml.v2 v2.4.0
-	gorm.io/driver/sqlite v1.5.5
+	gorm.io/driver/sqlite v1.5.6
 	gorm.io/gorm v1.25.10
 )
 
@@ -80,6 +82,7 @@ require (
 	github.com/inconshreveable/log15 v3.0.0-testing.3+incompatible // indirect
 	github.com/inconshreveable/log15/v3 v3.0.0-testing.5 // indirect
 	github.com/itchyny/timefmt-go v0.1.6 // indirect
+	github.com/jacobsa/crypto v0.0.0-20190317225127-9f44e2d11115 // indirect
 	github.com/jinzhu/inflection v1.0.0 // indirect
 	github.com/jinzhu/now v1.1.5 // indirect
 	github.com/jpillora/backoff v1.0.0 // indirect
@@ -101,12 +104,11 @@ require (
 	github.com/pion/dtls/v2 v2.2.8-0.20240501061905-2c36d63320a0 // indirect
 	github.com/pion/logging v0.2.2 // indirect
 	github.com/pion/transport/v3 v3.0.2 // indirect
-	github.com/pkg/errors v0.9.1 // indirect
 	github.com/pkg6/go-requests v0.2.2 // indirect
 	github.com/power-devops/perfstat v0.0.0-20210106213030-5aafc221ea8c // indirect
 	github.com/richardlehane/mscfb v1.0.4 // indirect
 	github.com/richardlehane/msoleps v1.0.3 // indirect
-	github.com/rs/xid v1.5.0 // indirect
+	github.com/rs/xid v1.4.0 // indirect
 	github.com/russross/blackfriday/v2 v2.1.0 // indirect
 	github.com/shoenig/go-m1cpu v0.1.6 // indirect
 	github.com/tklauser/go-sysconf v0.3.12 // indirect
@@ -130,6 +132,6 @@ require (
 	golang.org/x/sync v0.7.0 // indirect
 	golang.org/x/term v0.20.0 // indirect
 	golang.org/x/text v0.15.0 // indirect
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20240528184218-531527333157 // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20240617180043-68d350f18fd4 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )

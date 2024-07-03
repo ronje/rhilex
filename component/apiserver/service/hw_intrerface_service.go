@@ -91,10 +91,10 @@ func GetHwPortConfig(uuid string) (model.MHwPort, error) {
 
 /*
 *
-* 初始化网卡配置参数
+* 重置
 *
  */
-func InitHwPortConfig() error {
+func ResetHwPortConfig() error {
 	DbTx := interdb.DB()
 	errDbTx := DbTx.Transaction(func(tx *gorm.DB) error {
 		err0 := tx.Session(&gorm.Session{
@@ -108,6 +108,16 @@ func InitHwPortConfig() error {
 	if errDbTx != nil {
 		return errDbTx
 	}
+	return InitHwPortConfig()
+}
+
+/*
+*
+* 初始化网卡配置参数
+*
+ */
+func InitHwPortConfig() error {
+
 	for _, portName := range GetOsPort() {
 
 		Port := model.MHwPort{
@@ -151,7 +161,7 @@ func GetOsPort() []string {
 	List := []string{}
 	for _, port := range ports {
 		if typex.DefaultVersionInfo.Product == "RHILEXG1" {
-			// H3的下列串口被系统占用
+			// RHILEXG1的下列串口被系统占用
 			if utils.SContains([]string{
 				"/dev/ttyS0",
 				"/dev/ttyS3",

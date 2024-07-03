@@ -142,7 +142,7 @@ func loadAllPortConfig() {
 		return
 	}
 	for _, MHwPort := range MHwPorts {
-		Port := hwportmanager.RhinoH3HwPort{
+		Port := hwportmanager.SystemHwPort{
 			UUID:        MHwPort.UUID,
 			Name:        MHwPort.Name,
 			Type:        MHwPort.Type,
@@ -200,6 +200,8 @@ func (hs *ApiServerPlugin) Init(config *ini.Section) error {
 		&model.MKnd8DataPoint{},
 		&model.MSnmpOid{},
 		&model.MBacnetDataPoint{},
+		&model.MBacnetRouterDataPoint{},
+		&model.MDataPoint{},
 	)
 	// 初始化所有预制参数
 	server.DefaultApiServer.InitializeGenericOSData()
@@ -475,10 +477,18 @@ func (hs *ApiServerPlugin) LoadRoute() {
 	apis.InitSnmpRoute()
 	// Bacnet Route
 	apis.InitBacnetIpRoute()
+	// Bacnet Router
+	apis.InitBacnetRouterRoute()
 	// Data Schema
 	apis.InitDataSchemaApi()
 	// Data Center
 	apis.InitDataCenterApi()
+	// Transceiver
+	apis.InitTransceiverRoute()
+	// ata Point Route
+	apis.InitDataPointRoute()
+	// Mqtt Server
+	apis.InitMqttSourceServerRoute()
 }
 
 // ApiServerPlugin Start

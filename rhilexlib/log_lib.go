@@ -1,6 +1,8 @@
 package rhilexlib
 
 import (
+	"strings"
+
 	lua "github.com/hootrhino/gopher-lua"
 	"github.com/hootrhino/rhilex/glogger"
 	"github.com/hootrhino/rhilex/typex"
@@ -52,9 +54,25 @@ func DebugRule(rx typex.Rhilex, uuid string) func(L *lua.LState) int {
 				content += "\t"
 			}
 		}
-		glogger.GLogger.WithFields(logrus.Fields{
-			"topic": "rule/log/" + uuid,
-		}).Info(content)
+		// ::::TEST_RULE:::: 用来标记是否是测试数据
+		TestPrefix := "::::TEST_RULE::::"
+		if strings.HasPrefix(content, TestPrefix) {
+			if content[len(TestPrefix):] == "" {
+				glogger.GLogger.WithFields(logrus.Fields{
+					"topic": "rule/log/test/" + uuid,
+				}).Info("<Empty Output>")
+			} else {
+				glogger.GLogger.WithFields(logrus.Fields{
+					"topic": "rule/log/test/" + uuid,
+				}).Info(content[len(TestPrefix):])
+			}
+
+		} else {
+			glogger.GLogger.WithFields(logrus.Fields{
+				"topic": "rule/log/" + uuid,
+			}).Info(content)
+		}
+
 		return 0
 	}
 }

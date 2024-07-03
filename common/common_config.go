@@ -24,21 +24,6 @@ type IcmpConfig struct {
 
 /*
 *
-* MQTT 连接配置
-*
- */
-type MqttConfig struct {
-	Host     string `json:"host" validate:"required" title:"服务地址"`
-	Port     int    `json:"port" validate:"required" title:"服务端口"`
-	ClientId string `json:"clientId" validate:"required" title:"客户端ID"`
-	Username string `json:"username" validate:"required" title:"连接账户"`
-	Password string `json:"password" validate:"required" title:"连接密码"`
-	PubTopic string `json:"pubTopic" title:"上报TOPIC" info:"上报TOPIC"` // 上报数据的 Topic
-	SubTopic string `json:"subTopic" title:"订阅TOPIC" info:"订阅TOPIC"` // 上报数据的 Topic
-}
-
-/*
-*
 * 4.19重构
 *
  */

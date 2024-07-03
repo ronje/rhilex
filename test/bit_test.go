@@ -5,7 +5,7 @@ import (
 
 	"github.com/hootrhino/rhilex/rhilexlib"
 
-	"github.com/go-playground/assert/v2"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestReverseBitOrder(t *testing.T) {

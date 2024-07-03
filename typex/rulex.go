@@ -13,6 +13,7 @@ type Secret struct {
 	Value []string `ini:"value,,allowshadow"`
 }
 type RhilexConfig struct {
+	IniPath               string
 	AppId                 string   `ini:"app_id" json:"appId"`
 	MaxQueueSize          int      `ini:"max_queue_size" json:"maxQueueSize"`
 	SourceRestartInterval int      `ini:"resource_restart_interval" json:"sourceRestartInterval"`

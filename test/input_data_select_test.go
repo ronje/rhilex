@@ -7,7 +7,7 @@ import (
 
 	"testing"
 
-	"github.com/go-playground/assert/v2"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestJq1(t *testing.T) {

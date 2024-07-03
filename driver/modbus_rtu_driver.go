@@ -5,10 +5,10 @@ import (
 	"encoding/json"
 	"time"
 
+	modbus "github.com/hootrhino/gomodbus"
 	"github.com/hootrhino/rhilex/common"
 	"github.com/hootrhino/rhilex/glogger"
 	"github.com/hootrhino/rhilex/typex"
-	modbus "github.com/wwhai/gomodbus"
 )
 
 /*

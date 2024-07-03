@@ -11,8 +11,8 @@ import (
 	"github.com/hootrhino/rhilex/component/apiserver/service"
 	"github.com/hootrhino/rhilex/component/interqueue"
 	"github.com/hootrhino/rhilex/component/ruleengine"
+	transceivercom "github.com/hootrhino/rhilex/component/transceivercom/transceiver"
 	"github.com/hootrhino/rhilex/glogger"
-	"github.com/sirupsen/logrus"
 
 	"github.com/hootrhino/rhilex/typex"
 	"github.com/hootrhino/rhilex/utils"
@@ -579,10 +579,7 @@ func TestSourceCallback(c *gin.Context, ruleEngine typex.Rhilex) {
 		c.JSON(common.HTTP_OK, common.Error(fmt.Sprintf("'InEnd' not exists: %v", form.UUID)))
 		return
 	}
-	glogger.GLogger.WithFields(logrus.Fields{
-		"topic": "inend/rule/test/" + form.UUID,
-	}).Info(form.TestData)
-	err1 := interqueue.DefaultDataCacheQueue.PushInQueue(inend, form.TestData)
+	err1 := interqueue.DefaultDataCacheQueue.PushInQueue(inend, "::::TEST_RULE::::"+form.TestData)
 	if err1 != nil {
 		c.JSON(common.HTTP_OK, common.Error400(err1))
 		return
@@ -611,10 +608,7 @@ func TestOutEndCallback(c *gin.Context, ruleEngine typex.Rhilex) {
 		c.JSON(common.HTTP_OK, common.Error(fmt.Sprintf("'OutEnd' not exists: %v", form.UUID)))
 		return
 	}
-	glogger.GLogger.WithFields(logrus.Fields{
-		"topic": "outend/rule/test/" + form.UUID,
-	}).Info(form.TestData)
-	err1 := interqueue.DefaultDataCacheQueue.PushOutQueue(outend, form.TestData)
+	err1 := interqueue.DefaultDataCacheQueue.PushOutQueue(outend, "::::TEST_RULE::::"+form.TestData)
 	if err1 != nil {
 		c.JSON(common.HTTP_OK, common.Error400(err1))
 		return
@@ -637,15 +631,12 @@ func TestDeviceCallback(c *gin.Context, ruleEngine typex.Rhilex) {
 		c.JSON(common.HTTP_OK, common.Error400(err))
 		return
 	}
-	glogger.GLogger.WithFields(logrus.Fields{
-		"topic": "device/rule/test/" + form.UUID,
-	}).Info(form.TestData)
 	device := ruleEngine.GetDevice(form.UUID)
 	if device == nil {
 		c.JSON(common.HTTP_OK, common.Error(fmt.Sprintf("'Device' not exists: %v", form.UUID)))
 		return
 	}
-	err1 := interqueue.DefaultDataCacheQueue.PushDeviceQueue(device, form.TestData)
+	err1 := interqueue.DefaultDataCacheQueue.PushDeviceQueue(device, "::::TEST_RULE::::"+form.TestData)
 	if err1 != nil {
 		c.JSON(common.HTTP_OK, common.Error400(err1))
 		return
@@ -736,6 +727,7 @@ func GetAllResources(c *gin.Context, ruleEngine typex.Rhilex) {
 	OutEnds := []RhilexResource{}
 	Devices := []RhilexResource{}
 	Schemas := []RhilexResource{}
+	RfComs := []RhilexResource{}
 	for _, v := range MDevices {
 		Devices = append(Devices, RhilexResource{
 			UUID: v.UUID,
@@ -755,10 +747,17 @@ func GetAllResources(c *gin.Context, ruleEngine typex.Rhilex) {
 			Name: v.Name,
 		})
 	}
+	for _, v := range transceivercom.List() {
+		RfComs = append(RfComs, RhilexResource{
+			UUID: v.Name,
+			Name: v.Name,
+		})
+	}
 	c.JSON(common.HTTP_OK, common.OkWithData(map[string]any{
 		"devices": Devices,
 		"outends": OutEnds,
 		"schemas": Schemas,
+		"rfcoms":  RfComs,
 	}))
 }
 

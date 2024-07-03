@@ -53,13 +53,14 @@ func (hh *httpInEndSource) Start(cctx typex.CCTX) error {
 		err := c.BindJSON(&inForm)
 		if err != nil {
 			c.JSON(500, gin.H{
+				"code":    500,
 				"message": err.Error(),
 			})
 		} else {
 			hh.RuleEngine.WorkInEnd(hh.RuleEngine.GetInEnd(hh.PointId), inForm.Data)
 			c.JSON(200, gin.H{
 				"message": "success",
-				"code":    0,
+				"code":    200,
 			})
 		}
 	})

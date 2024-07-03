@@ -24,12 +24,14 @@ const (
 	GENERIC_CAMERA         DeviceType = "GENERIC_CAMERA"         // 通用摄像头
 	GENERIC_AIS_RECEIVER   DeviceType = "GENERIC_AIS_RECEIVER"   // 通用AIS
 	GENERIC_BACNET_IP      DeviceType = "GENERIC_BACNET_IP"      // 通用BacnetIP
-	RHILEXG1_IR            DeviceType = "RHILEXG1_IR"            // 大犀牛PI的红外线接收器
-	GENERIC_HTTP_DEVICE    DeviceType = "GENERIC_HTTP_DEVICE"    // GENERIC_HTTP
+	BACNET_ROUTER_GW       DeviceType = "BACNET_ROUTER_GW"       // 通用 BACNET ROUTER
+	GENERIC_HTTP_DEVICE    DeviceType = "GENERIC_HTTP_DEVICE"    // HTTP采集器
 	HNC8                   DeviceType = "HNC8"                   // 华中数控机床
 	KDN                    DeviceType = "KDN"                    // 凯帝恩控机床
 	SMART_HOME_CONTROLLER  DeviceType = "SMART_HOME_CONTROLLER"  // Shelly gen1
-	TENCENT_IOTHUB_GATEWAY DeviceType = "TENCENT_IOTHUB_GATEWAY" // TENCENT_IOTHUB_GATEWAY
+	TENCENT_IOTHUB_GATEWAY DeviceType = "TENCENT_IOTHUB_GATEWAY" // 腾讯云物联网平台
+	LORA_WAN_GATEWAY       DeviceType = "LORA_WAN_GATEWAY"       // LoraWan
+	KNX_GATEWAY            DeviceType = "KNX_GATEWAY"            // KNX 网关
 
 )
 

@@ -171,8 +171,6 @@ func (s1200 *SIEMENS_PLC) Start(cctx typex.CCTX) error {
 		return nil
 	}
 	go func(ctx context.Context) {
-		// 数据缓冲区,最大4KB
-		dataBuffer := make([]byte, common.T_4KB)
 		for {
 			select {
 			case <-ctx.Done():
@@ -184,25 +182,14 @@ func (s1200 *SIEMENS_PLC) Start(cctx typex.CCTX) error {
 				}
 			}
 			s1200.locker.Lock()
-			// CMD 参数无用
-			n, err := s1200.Read([]byte(""), dataBuffer)
+			ReadPLCRegisterValues := s1200.Read()
 			s1200.locker.Unlock()
-			if err != nil {
-				glogger.GLogger.Error(err)
-				s1200.status = typex.DEV_DOWN
-				return
-			}
-			// [] {} ""
-			if n < 3 {
-				continue
-			}
-			ok, err := s1200.RuleEngine.WorkDevice(
-				s1200.RuleEngine.GetDevice(s1200.PointId),
-				string(dataBuffer[:n]),
-			)
-			// glogger.GLogger.Debug(string(dataBuffer[:n]))
-			if !ok {
-				glogger.GLogger.Error(err)
+			for _, v := range ReadPLCRegisterValues {
+				if bytes, err := json.Marshal(v); err != nil {
+					glogger.GLogger.Error(err)
+				} else {
+					s1200.RuleEngine.WorkDevice(s1200.Details(), string(bytes))
+				}
 			}
 		}
 
@@ -212,7 +199,7 @@ func (s1200 *SIEMENS_PLC) Start(cctx typex.CCTX) error {
 
 // 从设备里面读数据出来
 func (s1200 *SIEMENS_PLC) OnRead(cmd []byte, data []byte) (int, error) {
-	return s1200.Read(cmd, data)
+	return 0, nil
 }
 
 // 把数据写入设备
@@ -274,15 +261,15 @@ var rData = [common.T_2KB]byte{} // 一次最大接受2KB数据
 // SIEMENS_PLC: 当读多字节寄存器的时候，需要考虑UTF8
 var __siemensReadResult = [256]byte{0}
 
-type SiemensJsonValue struct {
+type ReadPLCRegisterValue struct {
 	Tag           string `json:"tag"`
 	Alias         string `json:"alias"`
 	LastFetchTime uint64 `json:"lastFetchTime"`
 	Value         string `json:"value"`
 }
 
-func (s1200 *SIEMENS_PLC) Read(cmd []byte, data []byte) (int, error) {
-	values := []SiemensJsonValue{}
+func (s1200 *SIEMENS_PLC) Read() []ReadPLCRegisterValue {
+	values := []ReadPLCRegisterValue{}
 	for uuid, db := range s1200.__SiemensDataPoints {
 		//DB 4字节
 		if db.AddressType == "DB" {
@@ -306,7 +293,7 @@ func (s1200 *SIEMENS_PLC) Read(cmd []byte, data []byte) (int, error) {
 			copy(__siemensReadResult[:], rData[:db.DataSize])
 			Value := utils.ParseModbusValue(db.DataBlockType, db.DataBlockOrder,
 				float32(*db.Weight), __siemensReadResult)
-			values = append(values, SiemensJsonValue{
+			values = append(values, ReadPLCRegisterValue{
 				Tag:           db.Tag,
 				Alias:         db.Alias,
 				Value:         Value,
@@ -325,7 +312,5 @@ func (s1200 *SIEMENS_PLC) Read(cmd []byte, data []byte) (int, error) {
 		}
 		time.Sleep(time.Duration(*db.Frequency) * time.Millisecond)
 	}
-	bytes, _ := json.Marshal(values)
-	copy(data, bytes)
-	return len(bytes), nil
+	return values
 }

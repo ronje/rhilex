@@ -47,7 +47,7 @@ type BaseEvent struct {
 }
 
 func (be BaseEvent) String() string {
-	return fmt.Sprintf(`Event: [%s], [%s], %s`, be.Type, be.Event, be.Info)
+	return fmt.Sprintf(`Event: [%s], [%s], %v`, be.Type, be.Event, be.Info)
 }
 
 /*
@@ -75,19 +75,39 @@ func Push(e BaseEvent) error {
 type InternalEventBus struct {
 	Queue       chan BaseEvent
 	rhilex      typex.Rhilex
-	SourceCount uint
+	Subscribers map[string]Subscriber
 }
 
 func (q *InternalEventBus) GetSize() int {
 	return cap(q.Queue)
 }
-func RemoveSource() {
-	if __DefaultInternalEventBus.SourceCount > 0 {
-		__DefaultInternalEventBus.SourceCount--
+
+type Subscriber struct {
+	Id      string
+	Channel *chan BaseEvent
+}
+
+/*
+*
+* 取消外部订阅
+*
+ */
+func RemoveSubscriber(name string) {
+	if Subscriber, Ok := __DefaultInternalEventBus.Subscribers[name]; Ok {
+		close(*Subscriber.Channel) // 一定要记住关闭这个channel
+		delete(__DefaultInternalEventBus.Subscribers, name)
 	}
 }
-func AddSource() {
-	__DefaultInternalEventBus.SourceCount++
+
+/*
+*
+* 加入一个外部订阅者
+*
+ */
+func AddSubscriber(Subscriber Subscriber) {
+	if _, Ok := __DefaultInternalEventBus.Subscribers[Subscriber.Id]; !Ok {
+		__DefaultInternalEventBus.Subscribers[Subscriber.Id] = Subscriber
+	}
 }
 func GetQueue() chan BaseEvent {
 	return __DefaultInternalEventBus.Queue
@@ -103,7 +123,9 @@ func GetQueue() chan BaseEvent {
 func InitInternalEventBus(r typex.Rhilex, MaxQueueSize int) *InternalEventBus {
 	__DefaultInternalEventBus = new(InternalEventBus)
 	__DefaultInternalEventBus.Queue = make(chan BaseEvent, 1024)
+	__DefaultInternalEventBus.Subscribers = map[string]Subscriber{}
 	__DefaultInternalEventBus.rhilex = r
+	StartInternalEventQueue(__DefaultInternalEventBus)
 	return __DefaultInternalEventBus
 }
 
@@ -124,31 +146,37 @@ type MInternalNotify struct {
 	Info      string    `gorm:"not null"` // 消息内容，是个文本，详情显示
 }
 
-func StartInternalEventQueue() {
-	go func(ctx context.Context, InternalEventBus *InternalEventBus) {
+func StartInternalEventQueue(IB1 *InternalEventBus) {
+	go func(ctx context.Context, IB2 *InternalEventBus) {
 		ticker := time.NewTicker(100 * time.Millisecond)
 		defer ticker.Stop()
 		for {
-			// 当无订阅者时，及时释放channel里面的数据
-			if __DefaultInternalEventBus.SourceCount == 0 {
-				select {
-				case <-ctx.Done():
-					return
-				case <-ticker.C:
-					continue // 防止超时死锁
-				case Event := <-InternalEventBus.Queue:
-					// glogger.GLogger.Debug("Internal Event:", Event)
-					interdb.DB().Table("m_internal_notifies").Save(&MInternalNotify{
-						UUID:    utils.MakeUUID("NOTIFY"),
-						Type:    Event.Type, // INFO | ERROR | WARNING
-						Status:  1,          // Default unread
-						Event:   Event.Event,
-						Ts:      Event.Ts,
-						Summary: "RHILEX Internal Event: " + Event.Event,
-						Info:    Event.String(),
-					})
+			select {
+			case <-ctx.Done():
+				return
+			case <-ticker.C:
+				continue // 防止超时死锁
+			case Event := <-IB2.Queue:
+				// 将消息推给订阅者
+				for _, Subscriber := range IB2.Subscribers {
+					*Subscriber.Channel <- Event
 				}
+				// 把来自通信模块的数据忽略，不要写入本地日志记录
+				// Event = "transceiver.up.data.$ComName"
+				if Event.Type == "transceiver.up.data" {
+					continue
+				}
+				// glogger.GLogger.Debug("Internal Event:", Event)
+				interdb.DB().Table("m_internal_notifies").Save(&MInternalNotify{
+					UUID:    utils.MakeUUID("NOTIFY"),
+					Type:    Event.Type,  // INFO | ERROR | WARNING
+					Status:  1,           // Default unread
+					Event:   Event.Event, // 事件
+					Ts:      Event.Ts,    // Unix毫秒 时间戳
+					Summary: "RHILEX Internal Event: " + Event.Event,
+					Info:    Event.String(),
+				})
 			}
 		}
-	}(typex.GCTX, __DefaultInternalEventBus)
+	}(typex.GCTX, IB1)
 }

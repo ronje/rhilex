@@ -23,13 +23,13 @@ AppDESCRIPTION = ""
 
 function Main(arg)
     while true do
-        rhinopi:DO1Set(0)
+        rhilexg1:DO1Set(0)
         time:Sleep(1000)
-        rhinopi:DO1Set(1)
+        rhilexg1:DO1Set(1)
         time:Sleep(1000)
-        rhinopi:DO2Set(0)
+        rhilexg1:DO2Set(0)
         time:Sleep(1000)
-        rhinopi:DO2Set(1)
+        rhilexg1:DO2Set(1)
     end
     return 0
 end

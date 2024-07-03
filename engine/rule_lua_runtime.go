@@ -44,12 +44,13 @@ func AddRuleLibToGroup(r *typex.Rule, rx typex.Rhilex,
 func LoadRuleLibGroup(r *typex.Rule, e typex.Rhilex) {
 	{
 		Funcs := map[string]func(l *lua.LState) int{
-			"ToHttp":     rhilexlib.DataToHttp(e, r.UUID),
-			"ToMqtt":     rhilexlib.DataToMqtt(e, r.UUID),
-			"ToUdp":      rhilexlib.DataToUdp(e, r.UUID),
-			"ToTcp":      rhilexlib.DataToTcp(e, r.UUID),
-			"ToTdEngine": rhilexlib.DataToTdEngine(e, r.UUID),
-			"ToMongo":    rhilexlib.DataToMongo(e, r.UUID),
+			"ToHttp":       rhilexlib.DataToHttp(e, r.UUID),
+			"ToMqtt":       rhilexlib.DataToMqtt(e, r.UUID),
+			"ToUdp":        rhilexlib.DataToUdp(e, r.UUID),
+			"ToTcp":        rhilexlib.DataToTcp(e, r.UUID),
+			"ToTdEngine":   rhilexlib.DataToTdEngine(e, r.UUID),
+			"ToMongo":      rhilexlib.DataToMongo(e, r.UUID),
+			"ToSemtechUdp": rhilexlib.DataToLoraWanUDP(e, r.UUID),
 		}
 		AddRuleLibToGroup(r, e, "data", Funcs)
 	}
@@ -152,9 +153,9 @@ func LoadRuleLibGroup(r *typex.Rule, e typex.Rhilex) {
 			"DO1Get":  rhilexlib.RHILEXG1_DO1Get(e, r.UUID),
 			"DO2Set":  rhilexlib.RHILEXG1_DO2Set(e, r.UUID),
 			"DO2Get":  rhilexlib.RHILEXG1_DO2Get(e, r.UUID),
-			"DI1Get":  rhilexlib.H3DI1Get(e, r.UUID),
-			"DI2Get":  rhilexlib.H3DI2Get(e, r.UUID),
-			"DI3Get":  rhilexlib.H3DI3Get(e, r.UUID),
+			"DI1Get":  rhilexlib.RHILEXG1_DI1Get(e, r.UUID),
+			"DI2Get":  rhilexlib.RHILEXG1_DI2Get(e, r.UUID),
+			"DI3Get":  rhilexlib.RHILEXG1_DI3Get(e, r.UUID),
 			"Led1On":  rhilexlib.Led1On(e, r.UUID),
 			"Led1Off": rhilexlib.Led1Off(e, r.UUID),
 		}
@@ -227,6 +228,12 @@ func LoadRuleLibGroup(r *typex.Rule, e typex.Rhilex) {
 			"UpdateLast": rhilexlib.UpdateDataCenterLast(e, r.UUID),
 		}
 		AddRuleLibToGroup(r, e, "rds", Funcs)
+	}
+	{
+		Funcs := map[string]func(l *lua.LState) int{
+			"Ctrl": rhilexlib.CtrlComRF(e),
+		}
+		AddRuleLibToGroup(r, e, "rfcom", Funcs)
 	}
 }
 

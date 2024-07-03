@@ -6,7 +6,9 @@ import (
 	"errors"
 	"runtime"
 	"strings"
+	"time"
 
+	"github.com/hootrhino/rhilex/component/internotify"
 	"github.com/hootrhino/rhilex/glogger"
 	"github.com/hootrhino/rhilex/typex"
 
@@ -84,12 +86,17 @@ func (usbm *usbMonitor) Start(_ typex.Rhilex) error {
 			// add@/devices/pci0000:00/0000:00:14.0/usb1/1-1/1-1:1.0/ttyUSB0
 			n, _, _ := unix.Recvfrom(fd, data, 0)
 			if n > 16 {
-
 				Msg := parseType(data, n)
 				if len(Msg) > 0 {
 					glogger.GLogger.Info(Msg)
+					internotify.Push(internotify.BaseEvent{
+						Type:    `WARNING`,
+						Event:   `system.usb.event`,
+						Ts:      uint64(time.Now().UnixMilli()),
+						Summary: "USB Device Event",
+						Info:    Msg,
+					})
 				}
-
 			}
 		}
 
@@ -160,9 +167,9 @@ func (usbm *usbMonitor) Stop() error {
 func (usbm *usbMonitor) PluginMetaInfo() typex.XPluginMetaInfo {
 	return typex.XPluginMetaInfo{
 		UUID:        usbm.uuid,
-		Name:        "USB Hot Plugin Monitor",
+		Name:        "USB Monitor",
 		Version:     "v0.0.1",
-		Description: "",
+		Description: "USB Hot Plugin Monitor",
 	}
 }
 

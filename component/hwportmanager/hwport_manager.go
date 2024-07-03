@@ -15,7 +15,7 @@
 
 /*
 *
-* RhinoPi 硬件接口相关管理
+* RhilexG1 硬件接口相关管理
 * 警告：此处会随着硬件不同而不兼容，要移植的时候记得统一一下目标硬件的端口
 *
  */
@@ -46,7 +46,7 @@ func InitHwPortsManager(rhilex typex.Rhilex) *HwPortsManager {
 
 /*
 *
-* 这里记录一些H3网关的硬件接口信息,同时记录串口是否被占用等
+* 这里记录一些RHILEXG1网关的硬件接口信息,同时记录串口是否被占用等
 *
  */
 type UartConfig struct {
@@ -62,7 +62,12 @@ type HwPortOccupy struct {
 	Type string `json:"type"` // DEVICE, OS,... Other......
 	Name string `json:"name"` // 占用的设备名称
 }
-type RhinoH3HwPort struct {
+
+func (O HwPortOccupy) String() string {
+	return fmt.Sprintf("Occupied By: (%s,%s), Type is %s", O.UUID, O.Name, O.Type)
+}
+
+type SystemHwPort struct {
 	UUID        string       `json:"uuid"`        // 接口名称
 	Name        string       `json:"name"`        // 接口名称
 	Alias       string       `json:"alias"`       // 别名
@@ -73,7 +78,7 @@ type RhinoH3HwPort struct {
 	Config      interface{}  `json:"config"`      // 配置, 串口配置、或者网卡、USB等
 }
 
-func (v RhinoH3HwPort) String() string {
+func (v SystemHwPort) String() string {
 	b, _ := json.Marshal(v)
 	return string(b)
 }
@@ -83,11 +88,11 @@ func (v RhinoH3HwPort) String() string {
 * 加载配置到运行时, 需要刷新与配置相关的所有设备
 *
  */
-func SetHwPort(Port RhinoH3HwPort) {
+func SetHwPort(Port SystemHwPort) {
 	__HwPortsManager.Interfaces.Store(Port.Name, Port)
 	refreshHwPort(Port.Name)
 }
-func RefreshPort(Port RhinoH3HwPort) {
+func RefreshPort(Port SystemHwPort) {
 	__HwPortsManager.Interfaces.Store(Port.Name, Port)
 	refreshHwPort(Port.Name)
 }
@@ -102,7 +107,7 @@ func refreshHwPort(name string) {
 	if !ok {
 		return
 	}
-	Port := Object.(RhinoH3HwPort)
+	Port := Object.(SystemHwPort)
 	if Port.Busy {
 		if Port.OccupyBy.Type == "DEVICE" {
 			UUID := Port.OccupyBy.UUID
@@ -120,11 +125,11 @@ func refreshHwPort(name string) {
 * 获取一个运行时状态
 *
  */
-func GetHwPort(name string) (RhinoH3HwPort, error) {
+func GetHwPort(name string) (SystemHwPort, error) {
 	if Object, ok := __HwPortsManager.Interfaces.Load(name); ok {
-		return Object.(RhinoH3HwPort), nil
+		return Object.(SystemHwPort), nil
 	}
-	return RhinoH3HwPort{}, fmt.Errorf("interface not exists:%s", name)
+	return SystemHwPort{}, fmt.Errorf("interface not exists:%s", name)
 }
 
 /*
@@ -132,11 +137,11 @@ func GetHwPort(name string) (RhinoH3HwPort, error) {
 * 所有的接口
 *
  */
-func AllHwPort() []RhinoH3HwPort {
-	result := []RhinoH3HwPort{}
+func AllHwPort() []SystemHwPort {
+	result := []SystemHwPort{}
 	__HwPortsManager.Interfaces.Range(func(key, Object any) bool {
 		// 如果不是被rhilex占用；则需要检查是否被操作系统进程占用了
-		Port := Object.(RhinoH3HwPort)
+		Port := Object.(SystemHwPort)
 		if Port.OccupyBy.Type != "DEVICE" {
 			if err := CheckSerialBusy(Port.Name); err != nil {
 				SetInterfaceBusy(Port.Name, HwPortOccupy{
@@ -162,7 +167,7 @@ func AllHwPort() []RhinoH3HwPort {
  */
 func SetInterfaceBusy(name string, OccupyBy HwPortOccupy) {
 	if Object, ok := __HwPortsManager.Interfaces.Load(name); ok {
-		Port := Object.(RhinoH3HwPort)
+		Port := Object.(SystemHwPort)
 		Port.Busy = true
 		Port.OccupyBy = OccupyBy
 		__HwPortsManager.Interfaces.Store(name, Port)
@@ -176,7 +181,7 @@ func SetInterfaceBusy(name string, OccupyBy HwPortOccupy) {
  */
 func FreeInterfaceBusy(name string) {
 	if Object, ok := __HwPortsManager.Interfaces.Load(name); ok {
-		Port := Object.(RhinoH3HwPort)
+		Port := Object.(SystemHwPort)
 		if Port.OccupyBy.Type == "DEVICE" {
 			Port.Busy = false
 			Port.OccupyBy = HwPortOccupy{

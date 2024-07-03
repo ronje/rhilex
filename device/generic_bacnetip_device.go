@@ -188,7 +188,7 @@ func (dev *GenericBacnetIpDevice) Start(cctx typex.CCTX) error {
 
 		dev.bacnetClient = client
 		client.SetLogger(glogger.GLogger.Logger)
-		go dev.bacnetClient.ClientRun()
+		go dev.bacnetClient.StartPoll(dev.Ctx)
 		go func(ctx context.Context) {
 			// 定时刷新device列表 后续可以优化下逻辑
 			ticker := time.NewTicker(5 * time.Second)
@@ -233,11 +233,14 @@ func (dev *GenericBacnetIpDevice) Start(cctx typex.CCTX) error {
 			default:
 			}
 
-			read, err2 := dev.ReadProperty()
-			if err2 != nil {
-				glogger.GLogger.Error(err2)
-			} else {
-				dev.RuleEngine.WorkDevice(dev.Details(), string(read))
+			ReadBacnetValues := dev.ReadProperty()
+			for _, ReadBacnetValue := range ReadBacnetValues {
+				if bytes, err := json.Marshal(ReadBacnetValue); err != nil {
+					glogger.GLogger.Error(err)
+				} else {
+					glogger.GLogger.Debug(string(bytes))
+					dev.RuleEngine.WorkDevice(dev.Details(), string(bytes))
+				}
 			}
 			<-ticker.C
 		}
@@ -248,15 +251,10 @@ func (dev *GenericBacnetIpDevice) Start(cctx typex.CCTX) error {
 }
 
 func (dev *GenericBacnetIpDevice) OnRead(cmd []byte, data []byte) (int, error) {
-	read, err := dev.ReadProperty()
-	if err != nil {
-		return 0, err
-	}
-	len := copy(data, read)
-	return len, nil
+	return 0, nil
 }
 
-type ReturnValue struct {
+type ReadBacnetValue struct {
 	Tag              string      `json:"tag"`
 	DeviceId         uint32      `json:"deviceId"`
 	PropertyType     string      `json:"propertyType"`
@@ -269,8 +267,8 @@ type ReturnValue struct {
 * 局域网广播
 *
  */
-func (dev *GenericBacnetIpDevice) ReadProperty() ([]byte, error) {
-	retMap := map[string]ReturnValue{}
+func (dev *GenericBacnetIpDevice) ReadProperty() []ReadBacnetValue {
+	ReadBacnetValues := []ReadBacnetValue{}
 	for _, SubDeviceDataPoint := range dev.SubDeviceDataPoints {
 		var bacnetDeviceId uint32
 		if dev.mainConfig.BacnetConfig.Mode == "SINGLE" {
@@ -293,33 +291,31 @@ func (dev *GenericBacnetIpDevice) ReadProperty() ([]byte, error) {
 					UpdateAIPropertyValue(uint32(SubDeviceDataPoint.ObjectId), float32(0))
 				continue
 			}
-			ReturnValue := ReturnValue{
+			ReadBacnetValue := ReadBacnetValue{
 				Tag:              SubDeviceDataPoint.Tag,
 				DeviceId:         bacnetDeviceId,
 				PropertyType:     property.Object.ID.Type.String(),
 				PropertyInstance: uint32(property.Object.ID.Instance),
 			}
 			if len(property.Object.Properties) > 0 {
-				ReturnValue.Value = property.Object.Properties[0].Data
+				ReadBacnetValue.Value = property.Object.Properties[0].Data
 			} else {
-				ReturnValue.Value = uint32(0)
+				ReadBacnetValue.Value = uint32(0)
 			}
-			retMap[SubDeviceDataPoint.Tag] = ReturnValue
+			ReadBacnetValues = append(ReadBacnetValues, ReadBacnetValue)
 			dev.bacnetClient.GetBacnetIPServer().
-				UpdateAIPropertyValue(uint32(SubDeviceDataPoint.ObjectId), ReturnValue.Value)
+				UpdateAIPropertyValue(uint32(SubDeviceDataPoint.ObjectId), ReadBacnetValue.Value)
 
 			intercache.SetValue(dev.PointId, SubDeviceDataPoint.UUID, intercache.CacheValue{
 				UUID:          SubDeviceDataPoint.UUID,
 				Status:        1,
 				LastFetchTime: uint64(time.Now().UnixMilli()),
-				Value:         fmt.Sprintf("%v", ReturnValue.Value),
+				Value:         fmt.Sprintf("%v", ReadBacnetValue.Value),
 				ErrMsg:        "",
 			})
 		}
 	}
-	bytes, _ := json.Marshal(retMap)
-	glogger.GLogger.Debug("Bacnet Client.ReadProperty", string(bytes))
-	return bytes, nil
+	return ReadBacnetValues
 }
 
 func (dev *GenericBacnetIpDevice) OnWrite(cmd []byte, data []byte) (int, error) {
@@ -341,6 +337,7 @@ func (dev *GenericBacnetIpDevice) Stop() {
 		dev.CancelCTX()
 	}
 	if dev.bacnetClient != nil {
+		dev.bacnetClient.ClientClose(false)
 		dev.bacnetClient.Close()
 	}
 	intercache.UnRegisterSlot(dev.PointId)

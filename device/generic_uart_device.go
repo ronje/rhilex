@@ -13,10 +13,10 @@ import (
 
 	"github.com/hootrhino/rhilex/component/hwportmanager"
 
+	serial "github.com/hootrhino/goserial"
 	"github.com/hootrhino/rhilex/glogger"
 	"github.com/hootrhino/rhilex/typex"
 	"github.com/hootrhino/rhilex/utils"
-	serial "github.com/wwhai/goserial"
 )
 
 type _UartCommonConfig struct {
@@ -30,8 +30,7 @@ type _UartRwConfig struct {
 type _UartMainConfig struct {
 	CommonConfig _UartCommonConfig `json:"commonConfig" validate:"required"`
 	RwConfig     _UartRwConfig     `json:"rwConfig" validate:"required"`
-
-	PortUuid string `json:"portUuid" validate:"required"`
+	PortUuid     string            `json:"portUuid" validate:"required"`
 }
 
 type genericUartDevice struct {
@@ -77,8 +76,8 @@ func (uart *genericUartDevice) Init(devId string, configMap map[string]interface
 		glogger.GLogger.Error(err)
 		return err
 	}
-	if uart.mainConfig.RwConfig.TimeSlice < 50 {
-		errA := fmt.Errorf("TimeSlice Must Great than 50, but current is: %v",
+	if uart.mainConfig.RwConfig.TimeSlice < 30 {
+		errA := fmt.Errorf("TimeSlice Must Great than 30, but current is: %v",
 			uart.mainConfig.RwConfig.TimeSlice)
 		glogger.GLogger.Error(errA)
 		return errA
@@ -157,7 +156,7 @@ func (uart *genericUartDevice) Start(cctx typex.CCTX) error {
 				case "HEX":
 					mapV["value"] = hex.EncodeToString(result[:peerCount])
 				case "RAW":
-					Value := []uint32{}
+					Value := []uint32{} // JSON会把[]Uint8识别为二进制，然后转换成Base64
 					for i := 0; i < peerCount; i++ {
 						Value = append(Value, uint32(result[i]))
 					}
@@ -168,9 +167,12 @@ func (uart *genericUartDevice) Start(cctx typex.CCTX) error {
 					mapV["value"] = ""
 					glogger.GLogger.Error("Not supported type:", uart.mainConfig.RwConfig.ReadFormat)
 				}
-				glogger.GLogger.Debug("Serial Port Read: ", mapV["value"])
+				glogger.GLogger.Debug("Serial Port Read: ", result[:peerCount])
 				bytes, _ := json.Marshal(mapV)
 				uart.RuleEngine.WorkDevice(uart.Details(), string(bytes))
+				for i := 0; i < peerCount; i++ {
+					result[i] = 0 // 清空
+				}
 				peerCount = 0 // re-init index
 			default:
 				n, errR := io.ReadAtLeast(uart.serialPort, result[peerCount:], 1)

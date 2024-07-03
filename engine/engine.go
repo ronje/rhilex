@@ -28,6 +28,7 @@ import (
 	"github.com/hootrhino/rhilex/component/interkv"
 	"github.com/hootrhino/rhilex/component/rhilexmanager"
 	"github.com/hootrhino/rhilex/component/ruleengine"
+	transceiver "github.com/hootrhino/rhilex/component/transceivercom/transceiver"
 	core "github.com/hootrhino/rhilex/config"
 
 	intercache "github.com/hootrhino/rhilex/component/intercache"
@@ -89,6 +90,7 @@ func InitRuleEngine(config typex.RhilexConfig) typex.Rhilex {
 		Devices:           &sync.Map{},
 		Config:            &config,
 	}
+
 	// Internal DB
 	interdb.Init(__DefaultRuleEngine, __DEFAULT_DB_PATH)
 	// Internal kv Store
@@ -121,8 +123,8 @@ func InitRuleEngine(config typex.RhilexConfig) typex.Rhilex {
 	jpegstream.InitJpegStreamServer(__DefaultRuleEngine)
 	// 内部队列
 	interqueue.StartDataCacheQueue()
-	// InternalEventQueue
-	internotify.StartInternalEventQueue()
+	// Init Transceiver Communicator Manager
+	transceiver.InitTransceiverCommunicatorManager(__DefaultRuleEngine)
 	return __DefaultRuleEngine
 }
 
@@ -212,6 +214,9 @@ func (e *RuleEngine) Stop() {
 	aibase.Stop()
 	// UnRegisterSlot
 	intercache.UnRegisterSlot("__DefaultRuleEngine")
+	//
+	glogger.GLogger.Info("Stop transceiver")
+	transceiver.Stop()
 	glogger.GLogger.Info("[√] Stop rhilex successfully")
 	if err := glogger.Close(); err != nil {
 		fmt.Println("Close logger error: ", err)
@@ -498,6 +503,18 @@ func (e *RuleEngine) RestartDevice(uuid string) error {
  */
 
 func (e *RuleEngine) InitDeviceTypeManager() error {
+	e.DeviceTypeManager.Register(typex.KNX_GATEWAY,
+		&typex.XConfig{
+			Engine:    e,
+			NewDevice: device.NewKNXGateway,
+		},
+	)
+	e.DeviceTypeManager.Register(typex.LORA_WAN_GATEWAY,
+		&typex.XConfig{
+			Engine:    e,
+			NewDevice: device.NewLoraGateway,
+		},
+	)
 	e.DeviceTypeManager.Register(typex.TENCENT_IOTHUB_GATEWAY,
 		&typex.XConfig{
 			Engine:    e,
@@ -520,12 +537,6 @@ func (e *RuleEngine) InitDeviceTypeManager() error {
 		&typex.XConfig{
 			Engine:    e,
 			NewDevice: device.NewVideoCamera,
-		},
-	)
-	e.DeviceTypeManager.Register(typex.RHILEXG1_IR,
-		&typex.XConfig{
-			Engine:    e,
-			NewDevice: device.NewIRDevice,
 		},
 	)
 	e.DeviceTypeManager.Register(typex.SIEMENS_PLC,
@@ -582,6 +593,12 @@ func (e *RuleEngine) InitDeviceTypeManager() error {
 			NewDevice: device.NewGenericBacnetIpDevice,
 		},
 	)
+	e.DeviceTypeManager.Register(typex.BACNET_ROUTER_GW,
+		&typex.XConfig{
+			Engine:    e,
+			NewDevice: device.NewBacnetRouter,
+		},
+	)
 	e.DeviceTypeManager.Register(typex.HNC8,
 		&typex.XConfig{
 			Engine:    e,
@@ -603,6 +620,12 @@ func (e *RuleEngine) InitDeviceTypeManager() error {
 *
  */
 func (e *RuleEngine) InitSourceTypeManager() error {
+	e.SourceTypeManager.Register(typex.COMTC_EVENT_FORWARDER,
+		&typex.XConfig{
+			Engine:    e,
+			NewSource: source.NewTransceiverForwarder,
+		},
+	)
 	e.SourceTypeManager.Register(typex.MQTT,
 		&typex.XConfig{
 			Engine:    e,
@@ -657,6 +680,12 @@ func (e *RuleEngine) InitSourceTypeManager() error {
 			NewSource: source.NewGenericMqttSource,
 		},
 	)
+	e.SourceTypeManager.Register(typex.GENERIC_MQTT_SERVER,
+		&typex.XConfig{
+			Engine:    e,
+			NewSource: source.NewMqttServer,
+		},
+	)
 	return nil
 }
 
@@ -666,6 +695,13 @@ func (e *RuleEngine) InitSourceTypeManager() error {
 *
  */
 func (e *RuleEngine) InitTargetTypeManager() error {
+
+	e.TargetTypeManager.Register(typex.SEMTECH_UDP_FORWARDER,
+		&typex.XConfig{
+			Engine:    e,
+			NewTarget: target.NewSemtechUdpForwarder,
+		},
+	)
 	e.TargetTypeManager.Register(typex.GENERIC_UART_TARGET,
 		&typex.XConfig{
 			Engine:    e,
