@@ -113,6 +113,26 @@ type MDevice struct {
 	Description string
 }
 
+// 点位
+type MDataPoint struct {
+	RhilexModel
+	UUID       string `gorm:"uniqueIndex"`
+	DeviceUuid string `gorm:"not null"`
+	Tag        string `gorm:"not null"`
+	Alias      string `gorm:"not null"`
+	Frequency  int    `gorm:"not null"`
+	Config     string `gorm:"not null"`
+}
+
+func (mdp MDataPoint) GetConfig() map[string]interface{} {
+	result := make(map[string]interface{})
+	err := json.Unmarshal([]byte(mdp.Config), &result)
+	if err != nil {
+		return map[string]interface{}{}
+	}
+	return result
+}
+
 func (md MDevice) GetConfig() map[string]interface{} {
 	result := make(map[string]interface{})
 	err := json.Unmarshal([]byte(md.Config), &result)
