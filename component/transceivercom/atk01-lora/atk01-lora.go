@@ -104,10 +104,14 @@ func (tc *ATK01Lora) Start(Config transceivercom.TransceiverConfig) error {
 				continue
 			}
 			byteACC += N
-			if byteACC > MAX_BUFFER_SIZE {
-				glogger.GLogger.Error("exceeds the maximum buffer size")
+			if byteACC > 256 { // 单个包最大256字节
 				if !edgeSignal1 || !edgeSignal2 {
+					glogger.GLogger.Error("exceeds the maximum buffer size, will flush all data!")
+					for i := 0; i < byteACC; i++ {
+						buffer[i] = '\x00'
+					}
 					byteACC = 0
+					cursor = 0
 					edgeSignal1 = false
 					edgeSignal2 = false
 				}
