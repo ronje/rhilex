@@ -23,9 +23,16 @@ import (
 )
 
 // Ctrl
-func Ctrl(name string, cmd []byte, timeout time.Duration) ([]byte, error) {
-	glogger.GLogger.Debugf("transceiver Ctrl:(%s, %s, %d)", name, string(cmd), timeout)
-	return DefaultTransceiverCommunicatorManager.Ctrl(name, cmd, timeout)
+func Ctrl(name string, topic, args []byte, timeout time.Duration) ([]byte, error) {
+	glogger.GLogger.Debugf("transceiver Ctrl:(%s, %s, %s, %d)",
+		name, string(topic), string(args), timeout)
+	return DefaultTransceiverCommunicatorManager.Ctrl(name, topic, args, timeout)
+}
+
+// Unload
+func Unload(name string) {
+	glogger.GLogger.Infof("transceiver Unload:(%s)", name)
+	DefaultTransceiverCommunicatorManager.UnLoad(name)
 }
 
 // List
@@ -33,8 +40,14 @@ func List() []transceivercom.CommunicatorInfo {
 	return DefaultTransceiverCommunicatorManager.List()
 }
 
+// List
+func GetCommunicator(name string) transceivercom.TransceiverCommunicator {
+	return DefaultTransceiverCommunicatorManager.Get(name)
+}
+
 // Stop
-func Unload(name string) {
-	glogger.GLogger.Infof("transceiver Unload:(%s)", name)
-	DefaultTransceiverCommunicatorManager.UnLoad(name)
+func Stop() {
+	for _, TC := range DefaultTransceiverCommunicatorManager.List() {
+		Unload(TC.Name)
+	}
 }

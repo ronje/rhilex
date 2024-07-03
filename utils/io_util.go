@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"strings"
 	"time"
 )
 
@@ -46,11 +47,11 @@ func ReadAtLeast(ctx context.Context, r io.Reader, buf []byte, min int) (n int, 
 
 /*
 *
-* 时间片读写请求
+* 时间片读写请求(该函数已经被优化为ReadInLeastTimeout，除了历史遗留以后不要用，后期全面迁移)
 *
  */
 func SliceRequest(ctx context.Context,
-	iio io.ReadWriter, writeBytes []byte,
+	iio io.ReadWriteCloser, writeBytes []byte,
 	resultBuffer []byte,
 	showError bool,
 	td time.Duration) (int, error) {
@@ -67,7 +68,7 @@ func SliceRequest(ctx context.Context,
 *
  */
 func SliceReceiveWithError(ctx context.Context,
-	iio io.Reader, resultBuffer []byte, td time.Duration) (int, error) {
+	iio io.ReadWriteCloser, resultBuffer []byte, td time.Duration) (int, error) {
 	return SliceReceive(ctx, iio, resultBuffer, true, td)
 }
 
@@ -77,7 +78,7 @@ func SliceReceiveWithError(ctx context.Context,
 *
  */
 func SliceReceiveWithoutError(ctx context.Context,
-	iio io.Reader, resultBuffer []byte, td time.Duration) (int, error) {
+	iio io.ReadWriteCloser, resultBuffer []byte, td time.Duration) (int, error) {
 	return SliceReceive(ctx, iio, resultBuffer, false, td)
 }
 
@@ -86,43 +87,11 @@ func SliceReceiveWithoutError(ctx context.Context,
 * 通过一个定时时间片读取
 *
  */
-func SliceReceive(ctx context.Context, iio io.Reader, resultBuffer []byte,
-	showError bool, td time.Duration) (int, error) {
-	sliceTimer := time.NewTimer(td)
-	sliceTimer.Stop()
-	var errR error
-	peerCount := 0
-	readCount := 0
-	for {
-		select {
-		case <-ctx.Done():
-			return peerCount, nil
-		case <-sliceTimer.C:
-			return peerCount, nil
-		default:
-		}
-		readCount, errR = iio.Read(resultBuffer[peerCount:])
-		if errR != nil {
-			if showError {
-				return peerCount, errR
-			}
-		}
-		if readCount != 0 {
-			sliceTimer.Reset(td)
-			peerCount += readCount
-		}
-	}
-}
-
-/*
-*
-* 某个时间片期望最少收到字节数
-*
- */
-func SliceReceiveAtLeast(ctx context.Context,
-	iio io.Reader, resultBuffer []byte, td time.Duration, min int) (int, error) {
-	// 后期实现
-	return 0, nil
+func SliceReceive(ctx context.Context, io io.ReadWriteCloser, resultBuffer []byte,
+	showError bool, timeout time.Duration) (int, error) {
+	N, B := ReadInLeastTimeout(ctx, io, timeout)
+	copy(resultBuffer, B[:N])
+	return N, nil
 }
 
 /*
@@ -156,4 +125,38 @@ func CLog(format string, v ...interface{}) {
 	logLine := fmt.Sprintf("[%s] %s", timestamp, logMsg)
 	fmt.Print(logLine)
 	fmt.Println()
+}
+
+/*
+*
+* 在timeout内读取N个字节
+*
+ */
+func ReadInLeastTimeout(ctx context.Context,
+	io io.ReadWriteCloser, timeout time.Duration) (int, []byte) {
+	var responseData [256]byte
+	CtxR, Cancel := context.WithTimeout(context.Background(), timeout)
+	acc := 0
+	defer Cancel()
+	for {
+		select {
+		case <-ctx.Done():
+			return acc, responseData[:acc]
+		case <-CtxR.Done():
+			return acc, responseData[:acc]
+		default:
+		}
+		N, errRead := io.Read(responseData[acc:])
+		if errRead != nil {
+			if strings.Contains(errRead.Error(), "timeout") {
+				if N > 0 {
+					acc += N
+				}
+				continue
+			}
+		}
+		if N > 0 {
+			acc += N
+		}
+	}
 }

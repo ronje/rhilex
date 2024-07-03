@@ -20,8 +20,10 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	archsupport "github.com/hootrhino/rhilex/bspsupport"
+
 	common "github.com/hootrhino/rhilex/component/apiserver/common"
+	ec200a4g "github.com/hootrhino/rhilex/component/transceivercom/ec200a-4g"
+
 	"github.com/hootrhino/rhilex/typex"
 )
 
@@ -31,7 +33,7 @@ import (
 *
  */
 func EC200ARestart4G(c *gin.Context, ruleEngine typex.Rhilex) {
-	_, err := archsupport.EC200ARestart4G()
+	_, err := ec200a4g.EC200ARestart4G("/dev/ttyUSB1")
 	if err != nil {
 		c.JSON(common.HTTP_OK, common.Error400(err))
 		return
@@ -45,12 +47,12 @@ func EC200ARestart4G(c *gin.Context, ruleEngine typex.Rhilex) {
 *
  */
 func Get4GBaseInfo(c *gin.Context, ruleEngine typex.Rhilex) {
-	csq := archsupport.EC200AGet4G_CSQ()
+	csq := ec200a4g.EC200AGet4G_CSQ("/dev/ttyUSB1")
 	if csq == 0 {
 		time.Sleep(100 * time.Millisecond)
-		csq = archsupport.EC200AGet4G_CSQ()
+		csq = ec200a4g.EC200AGet4G_CSQ("/dev/ttyUSB1")
 	}
-	cops, err1 := archsupport.EC200AGetCOPS()
+	cops, err1 := ec200a4g.EC200AGetCOPS("/dev/ttyUSB1")
 	if err1 != nil {
 		c.JSON(common.HTTP_OK, common.Error400(err1))
 		return
@@ -65,7 +67,7 @@ func Get4GBaseInfo(c *gin.Context, ruleEngine typex.Rhilex) {
 	if strings.Contains(cops, "UNICOM") {
 		cm = "中国联通"
 	}
-	iccid, err2 := archsupport.EC200AGetICCID()
+	iccid, err2 := ec200a4g.EC200AGetICCID("/dev/ttyUSB1")
 	if err2 != nil {
 		c.JSON(common.HTTP_OK, common.Error400(err2))
 		return
@@ -93,14 +95,14 @@ func Get4GBaseInfo(c *gin.Context, ruleEngine typex.Rhilex) {
 *
  */
 func Get4G_CSQ(c *gin.Context, ruleEngine typex.Rhilex) {
-	c.JSON(common.HTTP_OK, common.OkWithData(archsupport.EC200AGet4G_CSQ()))
+	c.JSON(common.HTTP_OK, common.OkWithData(ec200a4g.EC200AGet4G_CSQ("/dev/ttyUSB1")))
 }
 
 // (1,"CHINA MOBILE","CMCC","46000",0),
 // (3,"CHN-UNICOM","UNICOM","46001",7),
 // +COPS: 0,0,\"CHINA MOBILE\",7
 func Get4GCOPS(c *gin.Context, ruleEngine typex.Rhilex) {
-	result, err := archsupport.EC200AGetCOPS()
+	result, err := ec200a4g.EC200AGetCOPS("/dev/ttyUSB1")
 	if err != nil {
 		c.JSON(common.HTTP_OK, common.Error400(err))
 	} else {
@@ -136,7 +138,7 @@ type APNFormVo struct {
 
 // 目前暂时用不到
 func GetAPN(c *gin.Context, ruleEngine typex.Rhilex) {
-	if _, err := archsupport.EC200AGetAPN(); err != nil {
+	if _, err := ec200a4g.EC200AGetAPN("/dev/ttyUSB1"); err != nil {
 		c.JSON(common.HTTP_OK, common.Error400(err))
 		return
 	}
@@ -160,7 +162,8 @@ func SetAPN(c *gin.Context, ruleEngine typex.Rhilex) {
 		c.JSON(common.HTTP_OK, common.Error400(err))
 		return
 	}
-	if _, err := archsupport.EC200ASetAPN(
+	if _, err := ec200a4g.EC200ASetAPN(
+		"/dev/ttyUSB1",
 		form.PTytpe, form.APN, form.Username, form.Password, form.Auth, form.CDMAPWD,
 	); err != nil {
 		c.JSON(common.HTTP_OK, common.Error400(err))
@@ -170,7 +173,7 @@ func SetAPN(c *gin.Context, ruleEngine typex.Rhilex) {
 
 }
 func Get4GICCID(c *gin.Context, ruleEngine typex.Rhilex) {
-	result, err := archsupport.EC200AGetICCID()
+	result, err := ec200a4g.EC200AGetICCID("/dev/ttyUSB1")
 	if err != nil {
 		c.JSON(common.HTTP_OK, common.Error400(err))
 	} else {

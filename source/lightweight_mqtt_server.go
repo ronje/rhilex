@@ -130,6 +130,13 @@ func (*MqttServer) UpStream([]byte) (int, error) {
 	return 0, nil
 }
 
+func (ms *MqttServer) Clients(page, size int) *mqtt.Clients {
+	return ms.server.Clients
+}
+func (ms *MqttServer) FindClients(clientId string) (*mqtt.Client, bool) {
+	return ms.server.Clients.Get(clientId)
+}
+
 // AuthHooks is an authentication hook which allows connection access
 // for all users and read and write access to all topics.
 type AuthHook struct {

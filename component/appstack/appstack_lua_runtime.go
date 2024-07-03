@@ -262,4 +262,10 @@ func LoadAppLibGroup(app *Application, e typex.Rhilex) {
 		}
 		AddAppLibToGroup(app, e, "rds", Funcs)
 	}
+	{
+		Funcs := map[string]func(l *lua.LState) int{
+			"Ctrl": rhilexlib.CtrlComRF(e),
+		}
+		AddAppLibToGroup(app, e, "rfcom", Funcs)
+	}
 }

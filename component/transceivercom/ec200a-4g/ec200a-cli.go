@@ -1,4 +1,4 @@
-// Copyright (C) 2023 wwhai
+// Copyright (C) 2024 wwhai
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License as
@@ -11,9 +11,9 @@
 // GNU Affero General Public License for more details.
 //
 // You should have received a copy of the GNU Affero General Public License
-// along with this program.  If not, see <http://www.gnu.org/licenses/>.
+// along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-package archsupport
+package ec200a4g
 
 import (
 	"fmt"
@@ -44,17 +44,8 @@ const (
 	__AT_TIMEOUT         = 300 * time.Millisecond // timeout ms
 	__GET_APN_CFG        = "AT+QICSGP=1\r\n"      // APN
 	__SAVE_CONFIG        = "AT&W\r\n"             // SaveConfig
-	__USB_4G_DEV_PATH    = "/dev/ttyUSB1"         // USB
+	// __USB_4G_DEV_PATH    = "/dev/ttyUSB1"         // USB
 )
-
-func init() {
-	env := os.Getenv("ARCHSUPPORT")
-	if env == "RHILEXG1" {
-		fmt.Println("EC200A Init 4G")
-		__EC200AInit4G()
-		fmt.Println("EC200A Init 4G Ok.")
-	}
-}
 
 /*
 *
@@ -72,13 +63,13 @@ OK
 AT+QICSGP=1,1,"UNINET","","",1 //配置场景 1，APN 配置为"UNINET"（中国联通）。
 OK\ERROR
 */
-func EC200AGetAPN() (string, error) {
-	return __EC200A_AT(__GET_APN_CFG, __AT_TIMEOUT)
+func EC200AGetAPN(path string) (string, error) {
+	return __EC200A_AT(path, __GET_APN_CFG, __AT_TIMEOUT)
 }
 
 // 场景恒等于1
-func EC200ASetAPN(ptype int, apn, username, password string, auth, cdmaPwd int) (string, error) {
-	return __EC200A_AT(fmt.Sprintf(`AT+QICSGP=1,%d,"%s","%s","%s",%d,%d`,
+func EC200ASetAPN(path string, ptype int, apn, username, password string, auth, cdmaPwd int) (string, error) {
+	return __EC200A_AT(path, fmt.Sprintf(`AT+QICSGP=1,%d,"%s","%s","%s",%d,%d`,
 		ptype, apn, username, password, auth, cdmaPwd), __AT_TIMEOUT)
 }
 
@@ -92,8 +83,8 @@ func EC200ASetAPN(ptype int, apn, username, password string, auth, cdmaPwd int) 
   - 20-31：非常强的信号，信号质量非常好。
     EC200AGet4G_CSQ: 返回值代表信号格
 */
-func EC200AGet4G_CSQ() int {
-	return __Get4G_CSQ()
+func EC200AGet4G_CSQ(path string) int {
+	return __Get4G_CSQ(path)
 }
 
 /*
@@ -106,13 +97,13 @@ func EC200AGet4G_CSQ() int {
 (3,"CHN-CT","CT","46011",7),
 (1,"460 15","460 15","46015",7),,(0-4),(0-2)
 */
-func EC200AGetCOPS() (string, error) {
+func EC200AGetCOPS(path string) (string, error) {
 	// +COPS: 0,0,"CHINA MOBILE",7
 	// +COPS: 0,0,"CHIN-UNICOM",7
-	return __EC200A_AT(__CURRENT_COPS_CMD, __AT_TIMEOUT)
+	return __EC200A_AT(path, __CURRENT_COPS_CMD, __AT_TIMEOUT)
 }
-func EC200ARestart4G() (string, error) {
-	return __EC200A_AT(__RESET_AT_CMD, __AT_TIMEOUT)
+func EC200ARestart4G(path string) (string, error) {
+	return __EC200A_AT(path, __RESET_AT_CMD, __AT_TIMEOUT)
 }
 
 /*
@@ -120,13 +111,13 @@ func EC200ARestart4G() (string, error) {
 * 获取ICCID, 用户查询电话卡号
 * +QCCID: 89860025128306012474
  */
-func EC200AGetICCID() (string, error) {
-	return __EC200A_AT(__GET_ICCID_CMD, __AT_TIMEOUT)
+func EC200AGetICCID(path string) (string, error) {
+	return __EC200A_AT(path, __GET_ICCID_CMD, __AT_TIMEOUT)
 
 }
-func __Get4G_CSQ() int {
+func __Get4G_CSQ(path string) int {
 	csq := 0
-	file, err := os.OpenFile(__USB_4G_DEV_PATH, os.O_RDWR, os.ModePerm)
+	file, err := os.OpenFile(path, os.O_RDWR, os.ModePerm)
 	if err != nil {
 		return csq
 	}
@@ -183,55 +174,55 @@ func __Get4G_CSQ() int {
 * 初始化4G模组
 *
  */
-func __EC200AInit4G() {
-	if err := turnOffEcho(); err != nil {
+func InitEC200A4G(path string) {
+	if err := turnOffEcho(path); err != nil {
 		fmt.Println("EC200AInit4G turnOffEcho error:", err)
 		return
 	}
 	fmt.Println("EC200AInit4G turnOffEcho ok.")
-	if err := setDriverMode(); err != nil {
+	if err := setDriverMode(path); err != nil {
 		fmt.Println("EC200AInit4G setDriverMode error:", err)
 		return
 	}
 	fmt.Println("EC200AInit4G setDriverMode ok.")
-	if err := setDial(); err != nil {
+	if err := setDial(path); err != nil {
 		fmt.Println("EC200AInit4G setDial error:", err)
 		return
 	}
 	fmt.Println("EC200AInit4G setDial ok.")
-	if err := setNetMode(); err != nil {
+	if err := setNetMode(path); err != nil {
 		fmt.Println("EC200AInit4G setNetMode error:", err)
 		return
 	}
 	fmt.Println("EC200AInit4G setNetMode ok.")
-	if err := resetCard(); err != nil {
+	if err := resetCard(path); err != nil {
 		fmt.Println("EC200AInit4G resetCard error:", err)
 		return
 	}
 	fmt.Println("EC200AInit4G resetCard ok.")
 
 }
-func turnOffEcho() error {
-	return __ExecuteAT(__TURN_OFF_ECHO)
+func turnOffEcho(path string) error {
+	return __ExecuteAT(path, __TURN_OFF_ECHO)
 }
-func setDriverMode() error {
-	return __ExecuteAT(__DRIVER_MODE_AT_CMD)
+func setDriverMode(path string) error {
+	return __ExecuteAT(path, __DRIVER_MODE_AT_CMD)
 }
-func setDial() error {
-	return __ExecuteAT(__DIAL_AT_CMD)
+func setDial(path string) error {
+	return __ExecuteAT(path, __DIAL_AT_CMD)
 }
-func setNetMode() error {
-	return __ExecuteAT(__NET_MODE_AT_CMD)
+func setNetMode(path string) error {
+	return __ExecuteAT(path, __NET_MODE_AT_CMD)
 }
-func resetCard() error {
-	return __ExecuteAT(__RESET_AT_CMD)
+func resetCard(path string) error {
+	return __ExecuteAT(path, __RESET_AT_CMD)
 }
-func __ExecuteAT(cmd string) error {
-	_, err0 := __EC200A_AT(cmd, __AT_TIMEOUT)
+func __ExecuteAT(path string, cmd string) error {
+	_, err0 := __EC200A_AT(path, cmd, __AT_TIMEOUT)
 	if err0 != nil {
 		return err0
 	}
-	_, err1 := __EC200A_AT(__SAVE_CONFIG, __AT_TIMEOUT)
+	_, err1 := __EC200A_AT(path, __SAVE_CONFIG, __AT_TIMEOUT)
 	if err1 != nil {
 		return err1
 	}
@@ -258,9 +249,9 @@ func __ExecuteAT(cmd string) error {
 
 *
 */
-func __EC200A_AT(command string, timeout time.Duration) (string, error) {
+func __EC200A_AT(path string, command string, timeout time.Duration) (string, error) {
 	// 打开设备文件以供读写
-	file, err := os.OpenFile(__USB_4G_DEV_PATH, os.O_RDWR, os.ModePerm)
+	file, err := os.OpenFile(path, os.O_RDWR, os.ModePerm)
 	if err != nil {
 		return "", err
 	}

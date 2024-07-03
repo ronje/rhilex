@@ -79,7 +79,7 @@ func RunRhilex(iniPath string) {
 
 // loadPlugin 根据Ini配置信息，加载插件
 func loadPlugin(engine typex.Rhilex) {
-	cfg, _ := ini.ShadowLoad(core.INIPath)
+	cfg, _ := ini.ShadowLoad(core.GlobalConfig.IniPath)
 	sections := cfg.ChildSections("plugin")
 	for _, section := range sections {
 		name := strings.TrimPrefix(section.Name(), "plugin.")

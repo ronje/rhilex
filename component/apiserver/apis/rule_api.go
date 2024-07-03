@@ -11,6 +11,7 @@ import (
 	"github.com/hootrhino/rhilex/component/apiserver/service"
 	"github.com/hootrhino/rhilex/component/interqueue"
 	"github.com/hootrhino/rhilex/component/ruleengine"
+	transceivercom "github.com/hootrhino/rhilex/component/transceivercom/transceiver"
 	"github.com/hootrhino/rhilex/glogger"
 
 	"github.com/hootrhino/rhilex/typex"
@@ -726,6 +727,7 @@ func GetAllResources(c *gin.Context, ruleEngine typex.Rhilex) {
 	OutEnds := []RhilexResource{}
 	Devices := []RhilexResource{}
 	Schemas := []RhilexResource{}
+	RfComs := []RhilexResource{}
 	for _, v := range MDevices {
 		Devices = append(Devices, RhilexResource{
 			UUID: v.UUID,
@@ -745,10 +747,17 @@ func GetAllResources(c *gin.Context, ruleEngine typex.Rhilex) {
 			Name: v.Name,
 		})
 	}
+	for _, v := range transceivercom.List() {
+		RfComs = append(RfComs, RhilexResource{
+			UUID: v.Name,
+			Name: v.Name,
+		})
+	}
 	c.JSON(common.HTTP_OK, common.OkWithData(map[string]any{
 		"devices": Devices,
 		"outends": OutEnds,
 		"schemas": Schemas,
+		"rfcoms":  RfComs,
 	}))
 }
 

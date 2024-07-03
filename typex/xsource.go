@@ -21,6 +21,8 @@ const (
 	GENERIC_MQTT    InEndType = "GENERIC_MQTT"   // 通用 MQTT
 	// Mqtt Server
 	GENERIC_MQTT_SERVER InEndType = "GENERIC_MQTT_SERVER"
+	// 外设通信模块事件
+	COMTC_EVENT_FORWARDER InEndType = "COMTC_EVENT_FORWARDER"
 )
 
 // XStatus for source status

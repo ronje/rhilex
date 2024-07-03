@@ -20,7 +20,15 @@ import (
 	"time"
 )
 
-type TransceiverConfig map[string]any
+type TransceiverConfig struct {
+	Address   string `ini:"address" json:"uart" validate:"required"`
+	IOTimeout int64  `ini:"io_timeout" json:"ioTimeout" validate:"required"`
+	ATTimeout int64  `ini:"at_timeout" json:"atRwTimeout" validate:"required"`
+	BaudRate  int    `ini:"baudrate" json:"baudRate" validate:"required"`
+	DataBits  int    `ini:"databits" json:"dataBits" validate:"required"`
+	Parity    string `ini:"parity" json:"parity" validate:"required"`
+	StopBits  int    `ini:"stop_bits" json:"stopBits" validate:"required"`
+}
 
 func (O TransceiverConfig) String() string {
 	if bytes, err := json.Marshal(O); err != nil {
@@ -45,6 +53,8 @@ const (
 	NBIoT     TransceiverType = 9
 	LORA      TransceiverType = 10
 	LORA_WAN  TransceiverType = 11
+	IR        TransceiverType = 12
+	BEEP      TransceiverType = 13
 )
 
 type TransceiverStatusCode uint8
@@ -56,10 +66,12 @@ const (
 )
 
 type CommunicatorInfo struct {
-	Name   string          `json:"name"`
-	Model  string          `json:"model"`
-	Type   TransceiverType `json:"type"`
-	Vendor string          `json:"vendor"`
+	Name     string          `json:"name"`
+	Model    string          `json:"model"`
+	Mac      string          `json:"mac"`
+	Firmware string          `json:"firmware"`
+	Type     TransceiverType `json:"type"`
+	Vendor   string          `json:"vendor"`
 }
 
 func (O CommunicatorInfo) String() string {
@@ -77,7 +89,7 @@ type TransceiverStatus struct {
 
 type TransceiverCommunicator interface {
 	Start(TransceiverConfig) error
-	Ctrl(cmd []byte, timeout time.Duration) ([]byte, error)
+	Ctrl(topic, args []byte, timeout time.Duration) ([]byte, error)
 	Status() TransceiverStatus
 	Info() CommunicatorInfo
 	Stop()

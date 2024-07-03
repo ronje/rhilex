@@ -487,6 +487,8 @@ func (hs *ApiServerPlugin) LoadRoute() {
 	apis.InitTransceiverRoute()
 	// ata Point Route
 	apis.InitDataPointRoute()
+	// Mqtt Server
+	apis.InitMqttSourceServerRoute()
 }
 
 // ApiServerPlugin Start

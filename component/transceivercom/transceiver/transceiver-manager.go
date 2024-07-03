@@ -17,11 +17,17 @@ package transceivercom
 
 import (
 	"fmt"
+	"os"
 	"sync"
 	"time"
 
 	"github.com/hootrhino/rhilex/component/transceivercom"
+	atk01lora "github.com/hootrhino/rhilex/component/transceivercom/atk01-lora"
+	ec200a4g "github.com/hootrhino/rhilex/component/transceivercom/ec200a-4g"
 	mx01ble "github.com/hootrhino/rhilex/component/transceivercom/mx01-ble"
+	core "github.com/hootrhino/rhilex/config"
+	"github.com/hootrhino/rhilex/utils"
+
 	"github.com/hootrhino/rhilex/glogger"
 
 	"github.com/hootrhino/rhilex/typex"
@@ -39,13 +45,12 @@ func InitTransceiverCommunicatorManager(R typex.Rhilex) {
 		R:            R,
 		Transceivers: sync.Map{},
 	}
-	initDefaultModule()
+	initDefaultRFModule()
 }
 
 func (TM *TransceiverCommunicatorManager) Load(name string, config transceivercom.TransceiverConfig,
 	tc transceivercom.TransceiverCommunicator) error {
 	glogger.GLogger.Debugf("transceiver Load:(%s, %v, %s)", name, config, tc.Info().String())
-
 	if _, ok := TM.Transceivers.Load(name); !ok {
 		if err := tc.Start(config); err != nil {
 			glogger.GLogger.Error(err)
@@ -69,6 +74,15 @@ func (TM *TransceiverCommunicatorManager) List() []transceivercom.CommunicatorIn
 	return List
 }
 
+func (TM *TransceiverCommunicatorManager) Get(name string) transceivercom.TransceiverCommunicator {
+	if value, ok := TM.Transceivers.Load(name); ok {
+		switch T := value.(type) {
+		case transceivercom.TransceiverCommunicator:
+			return T
+		}
+	}
+	return nil
+}
 func (TM *TransceiverCommunicatorManager) UnLoad(name string) {
 	if value, ok := TM.Transceivers.Load(name); ok {
 		switch T := value.(type) {
@@ -79,12 +93,12 @@ func (TM *TransceiverCommunicatorManager) UnLoad(name string) {
 	}
 }
 
-func (TM *TransceiverCommunicatorManager) Ctrl(name string, cmd []byte,
+func (TM *TransceiverCommunicatorManager) Ctrl(name string, topic, args []byte,
 	timeout time.Duration) ([]byte, error) {
 	if value, ok := TM.Transceivers.Load(name); ok {
 		switch T := value.(type) {
 		case transceivercom.TransceiverCommunicator:
-			return T.Ctrl(cmd, timeout)
+			return T.Ctrl(topic, args, timeout)
 		}
 	}
 	return nil, fmt.Errorf("transceiver not exists: %s", name)
@@ -105,7 +119,47 @@ func (TM *TransceiverCommunicatorManager) Status(name string) (transceivercom.Tr
 * Load Default Modules
 *
  */
-func initDefaultModule() {
-	Mx01 := mx01ble.NewMx01BLE(DefaultTransceiverCommunicatorManager.R)
-	DefaultTransceiverCommunicatorManager.Load(Mx01.Info().Name, map[string]any{}, Mx01)
+func initDefaultRFModule() {
+	{
+		Config := transceivercom.TransceiverConfig{}
+		err1 := utils.INIToStruct(core.GlobalConfig.IniPath, "transceiver.mx01", &Config)
+		if err1 != nil {
+			glogger.GLogger.Fatal(err1)
+			os.Exit(1)
+		}
+		Mx01 := mx01ble.NewMx01BLE(DefaultTransceiverCommunicatorManager.R)
+		err := DefaultTransceiverCommunicatorManager.Load(Mx01.Info().Name, Config, Mx01)
+		if err != nil {
+			glogger.GLogger.Fatal(err1)
+			os.Exit(1)
+		}
+	}
+	{
+		Config := transceivercom.TransceiverConfig{}
+		err1 := utils.INIToStruct(core.GlobalConfig.IniPath, "transceiver.ec200a", &Config)
+		if err1 != nil {
+			glogger.GLogger.Fatal(err1)
+			os.Exit(1)
+		}
+		EC200A := ec200a4g.NewEC200ADtu(DefaultTransceiverCommunicatorManager.R)
+		err := DefaultTransceiverCommunicatorManager.Load(EC200A.Info().Name, Config, EC200A)
+		if err != nil {
+			glogger.GLogger.Fatal(err1)
+			os.Exit(1)
+		}
+	}
+	{
+		Config := transceivercom.TransceiverConfig{}
+		err1 := utils.INIToStruct(core.GlobalConfig.IniPath, "transceiver.atk01", &Config)
+		if err1 != nil {
+			glogger.GLogger.Fatal(err1)
+			os.Exit(1)
+		}
+		ATK01 := atk01lora.NewATK01Lora(DefaultTransceiverCommunicatorManager.R)
+		err := DefaultTransceiverCommunicatorManager.Load(ATK01.Info().Name, Config, ATK01)
+		if err != nil {
+			glogger.GLogger.Fatal(err1)
+			os.Exit(1)
+		}
+	}
 }
