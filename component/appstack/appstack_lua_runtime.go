@@ -166,10 +166,11 @@ func LoadAppLibGroup(app *Application, e typex.Rhilex) {
 	}
 	{
 		Funcs := map[string]func(l *lua.LState) int{
-			"F5":  rhilexlib.F5(e, app.UUID),
-			"F6":  rhilexlib.F6(e, app.UUID),
-			"F15": rhilexlib.F15(e, app.UUID),
-			"F16": rhilexlib.F16(e, app.UUID),
+			"F5":        rhilexlib.F5(e, app.UUID),
+			"F6":        rhilexlib.F6(e, app.UUID),
+			"F15":       rhilexlib.F15(e, app.UUID),
+			"F16":       rhilexlib.F16(e, app.UUID),
+			"ParseByte": rhilexlib.ParseModbusByte(e, app.UUID),
 		}
 		AddAppLibToGroup(app, e, "modbus", Funcs)
 	}
