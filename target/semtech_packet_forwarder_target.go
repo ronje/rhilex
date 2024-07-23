@@ -121,9 +121,14 @@ func (ht *SemtechUdpForwarder) To(data interface{}) (interface{}, error) {
 			glogger.GLogger.Error(err1)
 			return nil, err1
 		}
-		if err2 := ht.SendUdpData(SemtechPushMessageByte); err2 != nil {
-			glogger.GLogger.Error(err2)
-			return nil, err2
+		PushAck, errAck := ht.SendUdpData(SemtechPushMessageByte)
+		if errAck != nil {
+			glogger.GLogger.Error(errAck)
+			return nil, errAck
+		}
+		if errCheckAck := checkAck(PushAck); errCheckAck != nil {
+			glogger.GLogger.Error(errCheckAck)
+			return nil, errCheckAck
 		}
 	default:
 		return 0, fmt.Errorf("invalid data type: %v", data)
@@ -140,41 +145,107 @@ func (ht *SemtechUdpForwarder) Stop() {
 func (ht *SemtechUdpForwarder) Details() *typex.OutEnd {
 	return ht.RuleEngine.GetOutEnd(ht.PointId)
 }
-func (ht *SemtechUdpForwarder) SendUdpData(data []byte) error {
+
+/*
+*
+* 向 SemTech UDP Forwarder发送UDP包
+*
+ */
+func (ht *SemtechUdpForwarder) SendUdpData(data []byte) ([]byte, error) {
 	conn, err := net.DialUDP("udp", nil, ht.addr)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	defer conn.Close()
 	_, err = conn.Write(data)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	Ack := [4]byte{}
 	conn.SetReadDeadline(time.Now().Add(2 * time.Second))
 	N, err := conn.Read(Ack[:])
 	if err != nil {
-		return err
+		return nil, err
 	}
-	if N == 4 {
-		Version := Ack[0]
-		TokenH := Ack[1]
-		TokenL := Ack[2]
-		// PushID := Ack[3]
-		if data[0] == Version &&
-			data[1] == TokenH &&
-			data[2] == TokenL {
-			return nil
+	return Ack[:N], nil
+
+}
+
+/*
+*
+* 从UDP转发器拉取数据
+*
+ */
+func (ht *SemtechUdpForwarder) PullDownlinkData() {
+	for {
+		select {
+		case <-ht.Ctx.Done():
+			return
+		default:
 		}
+		PullDataPacket := semtechudp.PullDataPacket{
+			ProtocolVersion: 2,
+			RandomToken:     0x0305,
+			GatewayMAC:      ht.mac,
+		}
+		PullDataPacketBytes, err := PullDataPacket.MarshalBinary()
+		if err != nil {
+			glogger.GLogger.Error(err)
+			continue
+		}
+		PullAck, errAck := ht.SendUdpData(PullDataPacketBytes)
+		if errAck != nil {
+			glogger.GLogger.Error(errAck)
+			continue
+		}
+		if errCheckAck := checkAck(PullAck); errCheckAck != nil {
+			glogger.GLogger.Error(errCheckAck)
+			continue
+		}
+		PullACKPacket := semtechudp.PullACKPacket{
+			ProtocolVersion: 2,
+			RandomToken:     0x0305,
+		}
+		RespACKPacketBytes, errPull := PullACKPacket.MarshalBinary()
+		if errPull != nil {
+			glogger.GLogger.Error(errPull)
+			continue
+		}
+		RespAck, errRespAck := ht.SendUdpData(RespACKPacketBytes)
+		if errRespAck != nil {
+			glogger.GLogger.Error(errRespAck)
+			continue
+		}
+		PullRespPacket := semtechudp.PullRespPacket{}
+		errUnmarshal := PullRespPacket.UnmarshalBinary(RespAck)
+		if errUnmarshal != nil {
+			glogger.GLogger.Error(errUnmarshal)
+			continue
+		}
+		glogger.GLogger.Debug("semtechudp Forwarder PullResp:", PullRespPacket.String())
+		time.Sleep(1 * time.Second)
 	}
-	return fmt.Errorf("invalid response:%v", Ack[:N])
+
+}
+
+// 3125 -> 2531
+func checkAck(ack []byte) error {
+	if len(ack) == 4 {
+		Version := ack[0]
+		TokenH := ack[2] // 大端 -> 小端
+		TokenL := ack[1] // 大端 -> 小端
+		PushID := ack[3]
+		glogger.GLogger.Debug("checkAck:", Version, TokenH, TokenL, PushID)
+		return nil
+	}
+	return fmt.Errorf("error ack:%v", ack)
 }
 func NewSemtechPushMessage(Mac [8]byte, Payload []byte) semtechudp.PushDataPacket {
 	currentTime := time.Now().UTC()
 	GatewayMAC := lorawan.EUI64(Mac)
 	return semtechudp.PushDataPacket{
 		ProtocolVersion: 2,
-		RandomToken:     0x1234,
+		RandomToken:     0x0305,
 		GatewayMAC:      GatewayMAC,
 		Payload: semtechudp.PushDataPayload{
 			RXPK: []semtechudp.RXPK{
@@ -183,7 +254,7 @@ func NewSemtechPushMessage(Mac [8]byte, Payload []byte) semtechudp.PushDataPacke
 					Tmst: uint32(currentTime.UnixMilli()),
 					Chan: 1,
 					RFCh: 1,
-					Freq: 868.1,
+					Freq: 868.1, //EU868
 					Stat: 1,
 					Modu: "LORA",
 					DatR: semtechudp.DatR{LoRa: "SF12BW500"},
@@ -194,7 +265,8 @@ func NewSemtechPushMessage(Mac [8]byte, Payload []byte) semtechudp.PushDataPacke
 					Size: uint16(len(Payload)),
 					Data: Payload,
 					Meta: map[string]string{
-						"gateway_name": "test-gateway",
+						"gateway_mac": fmt.Sprintf("%X:%X:%X:%X:%X:%X:%X:%X",
+							Mac[0], Mac[1], Mac[2], Mac[3], Mac[4], Mac[5], Mac[6], Mac[7]),
 					},
 				},
 			},

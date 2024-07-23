@@ -14,36 +14,36 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 package semtechudp
+
 import (
 	"encoding/binary"
 	"errors"
 )
 
-// PushACKPacket is used by the server to acknowledge immediately all the
-// PUSH_DATA packets received.
-type PushACKPacket struct {
+// PullACKPacket is used by the server to confirm that the network route is
+// open and that the server can send PULL_RESP packets at any time.
+type PullACKPacket struct {
 	ProtocolVersion uint8
 	RandomToken     uint16
 }
 
 // MarshalBinary marshals the object in binary form.
-func (p PushACKPacket) MarshalBinary() ([]byte, error) {
+func (p PullACKPacket) MarshalBinary() ([]byte, error) {
 	out := make([]byte, 4)
 	out[0] = p.ProtocolVersion
 	binary.LittleEndian.PutUint16(out[1:3], p.RandomToken)
-	out[3] = byte(PushACK)
+	out[3] = byte(PullACK)
 	return out, nil
 }
 
 // UnmarshalBinary decodes the object from binary form.
-func (p *PushACKPacket) UnmarshalBinary(data []byte) error {
+func (p *PullACKPacket) UnmarshalBinary(data []byte) error {
 	if len(data) != 4 {
 		return errors.New("gateway: 4 bytes of data are expected")
 	}
-	if data[3] != byte(PushACK) {
-		return errors.New("gateway: identifier mismatch (PUSH_ACK expected)")
+	if data[3] != byte(PullACK) {
+		return errors.New("gateway: identifier mismatch (PULL_ACK expected)")
 	}
-
 	if !protocolSupported(data[0]) {
 		return ErrInvalidProtocolVersion
 	}

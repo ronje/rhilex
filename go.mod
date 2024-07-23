@@ -5,6 +5,7 @@ go 1.22
 require (
 	github.com/adrianmo/go-nmea v1.8.0
 	github.com/brocaar/lorawan v0.0.0-20240507141140-a18a1037da07
+	github.com/chirpstack/chirpstack/api/go/v4 v4.8.1
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/eclipse/paho.mqtt.golang v1.4.3
 	github.com/gin-contrib/graceful v1.0.2
@@ -28,8 +29,11 @@ require (
 	github.com/jinzhu/copier v0.4.0
 	github.com/lithammer/shortuuid/v4 v4.0.0
 	github.com/mattn/go-sqlite3 v1.14.22
+	github.com/mitchellh/go-homedir v1.1.0
 	github.com/mochi-mqtt/server/v2 v2.6.4
+	github.com/muka/go-bluetooth v0.0.0-20240701044517-04c4f09c514e
 	github.com/nats-io/nats.go v1.36.0
+	github.com/patrikeh/go-deep v0.0.0-20230427173908-a2775168ab3d
 	github.com/pkg/errors v0.9.1
 	github.com/pkg6/go-sms v0.1.2
 	github.com/plgd-dev/go-coap/v3 v3.3.4
@@ -40,6 +44,9 @@ require (
 	github.com/shirou/gopsutil v3.21.11+incompatible
 	github.com/shirou/gopsutil/v3 v3.24.5
 	github.com/sirupsen/logrus v1.9.3
+	github.com/stretchr/testify v1.9.0
+	github.com/suapapa/go_eddystone v1.3.1
+	github.com/tbrandon/mbserver v0.0.0-20231208015628-36eb59221ac2
 	github.com/urfave/cli/v2 v2.27.2
 	github.com/vapourismo/knx-go v0.0.0-20240529174927-d4625b0a8913
 	github.com/wwhai/ntp v0.3.0
@@ -62,6 +69,16 @@ require (
 )
 
 require (
+	github.com/davecgh/go-spew v1.1.1 // indirect
+	github.com/fatih/structs v1.1.0 // indirect
+	github.com/goburrow/serial v0.1.0 // indirect
+	github.com/godbus/dbus/v5 v5.0.3 // indirect
+	github.com/pmezard/go-difflib v1.0.0 // indirect
+)
+
+require (
+	github.com/Kowiste/ProfinetServer v0.0.0-20200929093941-9c422ae1f008
+	github.com/bluele/gcache v0.0.2
 	github.com/bytedance/sonic v1.11.6 // indirect
 	github.com/bytedance/sonic/loader v0.1.1 // indirect
 	github.com/cloudwego/base64x v0.1.4 // indirect
@@ -127,7 +144,7 @@ require (
 	go.uber.org/multierr v1.11.0 // indirect
 	golang.ngrok.com/muxado/v2 v2.0.0 // indirect
 	golang.org/x/arch v0.8.0 // indirect
-	golang.org/x/crypto v0.23.0 // indirect
+	golang.org/x/crypto v0.23.0
 	golang.org/x/net v0.25.0 // indirect
 	golang.org/x/sync v0.7.0 // indirect
 	golang.org/x/term v0.20.0 // indirect
