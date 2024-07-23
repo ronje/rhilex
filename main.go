@@ -231,7 +231,7 @@ func main() {
 			},
 			{
 				Name:   "active",
-				Usage:  "active -H host -U rhino -P hoot",
+				Usage:  "active -H host -U [username] -P [password] -IF [IFACE NAME]",
 				Hidden: true,
 				Flags: []cli.Flag{
 					&cli.StringFlag{
@@ -249,6 +249,10 @@ func main() {
 					&cli.StringFlag{
 						Name:  "P",
 						Usage: "active admin password",
+					},
+					&cli.StringFlag{
+						Name:  "IF",
+						Usage: "active interface name",
 					},
 				},
 
@@ -269,17 +273,24 @@ func main() {
 					if password == "" {
 						return fmt.Errorf("[LICENCE ACTIVE]: missing admin 'password' parameter")
 					}
+					iface := c.String("IF")
+					if iface == "" {
+						return fmt.Errorf("[LICENCE ACTIVE]: missing admin 'iface' parameter")
+					}
 					// linux
 					if runtime.GOOS == "linux" {
-						macAddr, err := ossupport.GetLinuxMacAddr("eth0")
+						macAddr, err := ossupport.GetLinuxMacAddr(iface)
 						if err != nil {
 							return fmt.Errorf("[LICENCE ACTIVE]: Get Local Mac Address error: %s", err)
 						}
 						// Commercial version will implement it
-						// rhilex active -H https://127.0.0.1/api/v1/device-active -U admin -P 123456
+						// rhilex active
+						//     \ -H https://127.0.0.1/api/v1/device-active
+						//     \ -U admin -P 123456 -IF eth0
 						// - H: Active Server Host
 						// - U: Active Server Account
 						// - P: Active Server Password
+						// - IF: Active IFace name
 						err1 := utils.FetchLoadLicense(host, sn, username, password, macAddr)
 						if err1 != nil {
 							return fmt.Errorf("[LICENCE ACTIVE]: Fetch license failed, error: %s", err1)
@@ -288,7 +299,7 @@ func main() {
 					}
 					if runtime.GOOS == "windows" {
 						// Just for test
-						macAddr, err0 := ossupport.GetWindowsMACAddress()
+						macAddr, err0 := ossupport.GetWindowsFirstMacAddress()
 						if err0 != nil {
 							return fmt.Errorf("[LICENCE ACTIVE]: Get Local Mac Address error: %s", err0)
 						}
@@ -324,6 +335,7 @@ func main() {
 					if licPath == "" {
 						return fmt.Errorf("[LICENCE ACTIVE]: missing admin 'lic' parameter")
 					}
+					// rhilex validate -lic ./license.lic -key ./license.key
 					LocalLicense, err := utils.ValidateLicense(keyPath, licPath)
 					if err != nil {
 						return fmt.Errorf("[LICENCE ACTIVE]: Validate License Failed: %s", err.Error())

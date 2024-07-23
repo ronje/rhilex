@@ -20,23 +20,24 @@ import (
 	"gopkg.in/ini.v1"
 )
 
-// 00001 & rhino & hoot & FF:FF:FF:FF:FF:FF & 0 & 0
+// 00001 & rhino & hoot & eth0 & FF:FF:FF:FF:FF:FF & 0 & 0
 func ParseAuthInfo(info string) (typex.LocalLicense, error) {
 	LocalLicense := typex.LocalLicense{}
 	ss := strings.Split(info, "&")
-	if len(ss) == 6 {
-		BeginAuthorize, err1 := strconv.ParseInt(ss[4], 10, 64)
+	if len(ss) == 7 {
+		BeginAuthorize, err1 := strconv.ParseInt(ss[5], 10, 64)
 		if err1 != nil {
 			return LocalLicense, err1
 		}
-		EndAuthorize, err2 := strconv.ParseInt(ss[5], 10, 64)
+		EndAuthorize, err2 := strconv.ParseInt(ss[6], 10, 64)
 		if err2 != nil {
 			return LocalLicense, err2
 		}
 		LocalLicense.DeviceID = ss[0]
 		LocalLicense.AuthorizeAdmin = ss[1]
 		LocalLicense.AuthorizePassword = ss[2]
-		LocalLicense.MAC = ss[3]
+		LocalLicense.Iface = ss[3]
+		LocalLicense.MAC = ss[4]
 		LocalLicense.BeginAuthorize = BeginAuthorize
 		LocalLicense.EndAuthorize = EndAuthorize
 		return LocalLicense, nil
@@ -97,10 +98,10 @@ func validateLicense(key_path, license_path string) error {
 	localMac := ""
 	var err3 error
 	if runtime.GOOS == "windows" {
-		localMac, err3 = ossupport.GetWindowsMACAddress()
+		localMac, err3 = ossupport.GetWindowsFirstMacAddress()
 	}
 	if runtime.GOOS == "linux" {
-		localMac, err3 = ossupport.GetLinuxMacAddr("eth0")
+		localMac, err3 = ossupport.GetLinuxMacAddr(LocalLicense.Iface)
 	}
 	if err3 != nil {
 		glogger.GLogger.Fatal(err3)

@@ -41,8 +41,6 @@ import (
 	"github.com/hootrhino/rhilex/component/intermetric"
 	"github.com/hootrhino/rhilex/component/internotify"
 	"github.com/hootrhino/rhilex/component/interqueue"
-	"github.com/hootrhino/rhilex/component/jpegstream"
-	"github.com/hootrhino/rhilex/component/rtspserver"
 	"github.com/hootrhino/rhilex/component/trailer"
 	"github.com/hootrhino/rhilex/device"
 	"github.com/hootrhino/rhilex/glogger"
@@ -117,10 +115,6 @@ func InitRuleEngine(config typex.RhilexConfig) typex.Rhilex {
 	interqueue.InitDataCacheQueue(__DefaultRuleEngine, core.GlobalConfig.MaxQueueSize)
 	// Data center: future version maybe support
 	datacenter.InitDataCenter(__DefaultRuleEngine)
-	// Rtsp server
-	rtspserver.InitRtspServer(__DefaultRuleEngine)
-	// Jpeg Stream Server
-	jpegstream.InitJpegStreamServer(__DefaultRuleEngine)
 	// 内部队列
 	interqueue.StartDataCacheQueue()
 	// Init Transceiver Communicator Manager

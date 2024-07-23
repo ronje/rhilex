@@ -25,6 +25,7 @@ type LocalLicense struct {
 	AuthorizePassword string `json:"authorize_password"` // 证书签发人密钥
 	BeginAuthorize    int64  `json:"begin_authorize"`    // 证书授权开始时间
 	EndAuthorize      int64  `json:"end_authorize"`      // 证书授权结束时间
+	Iface             string `json:"iface"`              // 设备硬件MAC地址，一般取以太网卡
 	MAC               string `json:"mac"`                // 设备硬件MAC地址，一般取以太网卡
 	License           string `json:"license"`            // 公钥, 发给用户设备
 }
