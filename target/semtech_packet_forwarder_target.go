@@ -121,6 +121,7 @@ func (ht *SemtechUdpForwarder) To(data interface{}) (interface{}, error) {
 			glogger.GLogger.Error(err1)
 			return nil, err1
 		}
+		glogger.GLogger.Debug("Semtech Udp Forwarder:", string(SemtechPushMessageByte))
 		PushAck, errAck := ht.SendUdpData(SemtechPushMessageByte)
 		if errAck != nil {
 			glogger.GLogger.Error(errAck)
@@ -252,12 +253,13 @@ func NewSemtechPushMessage(Mac [8]byte, Payload []byte) semtechudp.PushDataPacke
 				{
 					Time: (*semtechudp.CompactTime)(&currentTime),
 					Tmst: uint32(currentTime.UnixMilli()),
+					Tmms: new(int64),
 					Chan: 1,
 					RFCh: 1,
 					Freq: 868.1, //EU868
 					Stat: 1,
 					Modu: "LORA",
-					DatR: semtechudp.DatR{LoRa: "SF12BW500"},
+					DatR: semtechudp.DatR{LoRa: "SF7BW125"},
 					CodR: "4/5",
 					RSSI: -50,
 					LSNR: 7.5,
@@ -265,7 +267,8 @@ func NewSemtechPushMessage(Mac [8]byte, Payload []byte) semtechudp.PushDataPacke
 					Size: uint16(len(Payload)),
 					Data: Payload,
 					Meta: map[string]string{
-						"gateway_mac": fmt.Sprintf("%X:%X:%X:%X:%X:%X:%X:%X",
+						"name": "rhilex",
+						"gateway_id": fmt.Sprintf("%X%X%X%X%X%X%X%X",
 							Mac[0], Mac[1], Mac[2], Mac[3], Mac[4], Mac[5], Mac[6], Mac[7]),
 					},
 				},

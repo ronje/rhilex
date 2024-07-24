@@ -29,7 +29,7 @@ func Test_DataToSemtechUdp(t *testing.T) {
 		"SEMTECH_UDP_FORWARDER", "SEMTECH_UDP_FORWARDER", map[string]interface{}{
 			"host": "192.168.10.163",
 			"port": 1700,
-			"mac":  "c75849e94b590597",
+			"mac":  "a46a4de31a346180",
 		},
 	)
 	SEMTECH_UDP_FORWARDER.UUID = "SEMTECH_UDP_FORWARDER"

@@ -57,7 +57,7 @@ import (
 * 全局默认引擎，未来主要留给外部使用
 *
  */
-var __DefaultRuleEngine typex.Rhilex
+var __DefaultRuleEngine *RuleEngine
 
 const __DEFAULT_DB_PATH string = "./rhilex.db"
 
@@ -650,10 +650,16 @@ func (e *RuleEngine) InitSourceTypeManager() error {
 			NewSource: source.NewNatsSource,
 		},
 	)
-	e.SourceTypeManager.Register(typex.RHILEX_UDP,
+	e.SourceTypeManager.Register(typex.UDP_SERVER,
 		&typex.XConfig{
 			Engine:    e,
 			NewSource: source.NewUdpInEndSource,
+		},
+	)
+	e.SourceTypeManager.Register(typex.TCP_SERVER,
+		&typex.XConfig{
+			Engine:    e,
+			NewSource: source.NewTcpSource,
 		},
 	)
 	e.SourceTypeManager.Register(typex.GENERIC_IOT_HUB,
@@ -764,18 +770,18 @@ func (e *RuleEngine) InitTargetTypeManager() error {
 * 0.6.8 New Api: 将注册权交给设备
 *-----------------------------------------------------------------
  */
-func (e *RuleEngine) RegisterNewDevice(Type typex.DeviceType, Cfg *typex.XConfig) error {
-	Cfg.Engine = e
-	e.DeviceTypeManager.Register(Type, Cfg)
+func RegisterNewDevice(Type typex.DeviceType, Cfg *typex.XConfig) error {
+	Cfg.Engine = __DefaultRuleEngine
+	__DefaultRuleEngine.DeviceTypeManager.Register(Type, Cfg)
 	return nil
 }
-func (e *RuleEngine) RegisterNewSource(Type typex.InEndType, Cfg *typex.XConfig) error {
-	Cfg.Engine = e
-	e.SourceTypeManager.Register(Type, Cfg)
+func RegisterNewSource(Type typex.InEndType, Cfg *typex.XConfig) error {
+	Cfg.Engine = __DefaultRuleEngine
+	__DefaultRuleEngine.SourceTypeManager.Register(Type, Cfg)
 	return nil
 }
-func (e *RuleEngine) RegisterNewTarget(Type typex.TargetType, Cfg *typex.XConfig) error {
-	Cfg.Engine = e
-	e.TargetTypeManager.Register(Type, Cfg)
+func RegisterNewTarget(Type typex.TargetType, Cfg *typex.XConfig) error {
+	Cfg.Engine = __DefaultRuleEngine
+	__DefaultRuleEngine.TargetTypeManager.Register(Type, Cfg)
 	return nil
 }
