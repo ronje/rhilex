@@ -21,6 +21,7 @@ require (
 	github.com/hootrhino/go-dhcpd-leases v0.0.0-20240116064141-0730f287f9a2
 	github.com/hootrhino/gobacnet v0.0.0-20240610124438-e673dc57700e
 	github.com/hootrhino/gomodbus v0.2.5
+	github.com/hootrhino/gomodbus-server v0.1.7
 	github.com/hootrhino/gopher-lua v1.0.3
 	github.com/hootrhino/goserial v0.2.1
 	github.com/hootrhino/rhilex-goat v0.0.0-20240628144111-889ce143bbd4
@@ -31,7 +32,6 @@ require (
 	github.com/mattn/go-sqlite3 v1.14.22
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/mochi-mqtt/server/v2 v2.6.4
-	github.com/muka/go-bluetooth v0.0.0-20240701044517-04c4f09c514e
 	github.com/nats-io/nats.go v1.36.0
 	github.com/patrikeh/go-deep v0.0.0-20230427173908-a2775168ab3d
 	github.com/pkg/errors v0.9.1
@@ -45,8 +45,6 @@ require (
 	github.com/shirou/gopsutil/v3 v3.24.5
 	github.com/sirupsen/logrus v1.9.3
 	github.com/stretchr/testify v1.9.0
-	github.com/suapapa/go_eddystone v1.3.1
-	github.com/tbrandon/mbserver v0.0.0-20231208015628-36eb59221ac2
 	github.com/urfave/cli/v2 v2.27.2
 	github.com/vapourismo/knx-go v0.0.0-20240529174927-d4625b0a8913
 	github.com/wwhai/ntp v0.3.0
@@ -70,9 +68,6 @@ require (
 
 require (
 	github.com/davecgh/go-spew v1.1.1 // indirect
-	github.com/fatih/structs v1.1.0 // indirect
-	github.com/goburrow/serial v0.1.0 // indirect
-	github.com/godbus/dbus/v5 v5.0.3 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 )
 

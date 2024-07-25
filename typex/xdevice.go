@@ -16,7 +16,8 @@ func (d DeviceType) String() string {
 // 支持的设备类型
 const (
 	SIEMENS_PLC            DeviceType = "SIEMENS_PLC"            // SIEMENS-S71200
-	GENERIC_MODBUS         DeviceType = "GENERIC_MODBUS"         // 通用Modbus
+	GENERIC_MODBUS_MASTER  DeviceType = "GENERIC_MODBUS_MASTER"  // 通用 GENERIC_MODBUS_MASTER
+	GENERIC_MODBUS_SLAVER  DeviceType = "GENERIC_MODBUS_SLAVER"  // 通用 GENERIC_MODBUS_SLAVER
 	GENERIC_SNMP           DeviceType = "GENERIC_SNMP"           // SNMP 支持
 	GENERIC_UART_RW        DeviceType = "GENERIC_UART_RW"        // 通用串口
 	GENERIC_UART_PROTOCOL  DeviceType = "GENERIC_UART_PROTOCOL"  // 通用自定义协议处理器

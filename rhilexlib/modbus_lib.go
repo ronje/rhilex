@@ -102,7 +102,7 @@ func F5(rx typex.Rhilex, uuid string) func(l *lua.LState) int {
 			return 1
 		}
 
-		if Device.Type != typex.GENERIC_MODBUS {
+		if Device.Type != typex.GENERIC_MODBUS_MASTER {
 			l.Push(lua.LString("Only support GENERIC_MODBUS device"))
 			return 1
 		}
@@ -151,7 +151,7 @@ func F6(rx typex.Rhilex, uuid string) func(l *lua.LState) int {
 			return 1
 		}
 
-		if Device.Type != typex.GENERIC_MODBUS {
+		if Device.Type != typex.GENERIC_MODBUS_MASTER {
 			l.Push(lua.LString("Only support GENERIC_MODBUS device"))
 			return 1
 		}
@@ -201,7 +201,7 @@ func F15(rx typex.Rhilex, uuid string) func(l *lua.LState) int {
 			l.Push(lua.LString("Device is not exists"))
 			return 1
 		}
-		if Device.Type != typex.GENERIC_MODBUS {
+		if Device.Type != typex.GENERIC_MODBUS_MASTER {
 			l.Push(lua.LString("Only support GENERIC_MODBUS device"))
 			return 1
 		}
@@ -249,7 +249,7 @@ func F16(rx typex.Rhilex, uuid string) func(l *lua.LState) int {
 			l.Push(lua.LString("Device is not exists"))
 			return 1
 		}
-		if Device.Type != typex.GENERIC_MODBUS {
+		if Device.Type != typex.GENERIC_MODBUS_MASTER {
 			l.Push(lua.LString("Only support GENERIC_MODBUS device"))
 			return 1
 		}

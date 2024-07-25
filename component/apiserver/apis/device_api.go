@@ -176,7 +176,7 @@ func DeleteDevice(c *gin.Context, ruleEngine typex.Rhilex) {
 	}
 
 	// 检查是否通用Modbus设备.需要同步删除点位表记录
-	if Mdev.Type == typex.GENERIC_MODBUS.String() {
+	if Mdev.Type == typex.GENERIC_MODBUS_MASTER.String() {
 		if err := service.DeleteAllModbusPointByDevice(uuid); err != nil {
 			c.JSON(common.HTTP_OK, common.Error400(err))
 			return

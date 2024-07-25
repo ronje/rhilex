@@ -81,6 +81,16 @@ func NewGenericSnmpDevice(e typex.Rhilex) typex.XDevice {
 	return sd
 }
 
+// 数据模型
+type SnmpSchemaProperty struct {
+	UUID          string
+	Status        int    // 0 正常；1 错误，填充 ErrMsg
+	ErrMsg        string // 错误信息
+	LastFetchTime uint64 // 最后更新时间
+	Name          string // 变量关联名
+	Value         any    // 运行时值
+}
+
 //  初始化
 func (sd *genericSnmpDevice) Init(devId string, configMap map[string]interface{}) error {
 	sd.PointId = devId
@@ -113,17 +123,17 @@ func (sd *genericSnmpDevice) Init(devId string, configMap map[string]interface{}
 	}
 	if sd.mainConfig.SchemaId != "" {
 		intercache.RegisterSlot(sd.PointId)
-		var SchemaProperties []SchemaProperty
+		var SchemaProperties []SnmpSchemaProperty
 		dataSchemaLoadError := interdb.DB().Table("m_iot_properties").
 			Where("schema_id=?", sd.mainConfig.SchemaId).Find(&SchemaProperties).Error
 		if dataSchemaLoadError != nil {
 			return dataSchemaLoadError
 		}
 		LastFetchTime := uint64(time.Now().UnixMilli())
-		for _, MSchemaProperty := range SchemaProperties {
-			intercache.SetValue(sd.PointId, MSchemaProperty.Name,
+		for _, MSnmpSchemaProperty := range SchemaProperties {
+			intercache.SetValue(sd.PointId, MSnmpSchemaProperty.Name,
 				intercache.CacheValue{
-					UUID:          MSchemaProperty.UUID,
+					UUID:          MSnmpSchemaProperty.UUID,
 					LastFetchTime: LastFetchTime,
 					Value:         "-",
 				})

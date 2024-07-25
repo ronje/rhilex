@@ -539,10 +539,16 @@ func (e *RuleEngine) InitDeviceTypeManager() error {
 			NewDevice: device.NewSIEMENS_PLC,
 		},
 	)
-	e.DeviceTypeManager.Register(typex.GENERIC_MODBUS,
+	e.DeviceTypeManager.Register(typex.GENERIC_MODBUS_MASTER,
 		&typex.XConfig{
 			Engine:    e,
-			NewDevice: device.NewGenericModbusDevice,
+			NewDevice: device.NewGenericModbusMaster,
+		},
+	)
+	e.DeviceTypeManager.Register(typex.GENERIC_MODBUS_SLAVER,
+		&typex.XConfig{
+			Engine:    e,
+			NewDevice: device.NewGenericModbusSlaver,
 		},
 	)
 	e.DeviceTypeManager.Register(typex.GENERIC_UART_RW,
