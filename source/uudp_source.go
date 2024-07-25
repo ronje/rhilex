@@ -4,58 +4,60 @@ import (
 	"context"
 	"net"
 
-	"github.com/hootrhino/rhilex/common"
 	"github.com/hootrhino/rhilex/glogger"
 	"github.com/hootrhino/rhilex/typex"
 	"github.com/hootrhino/rhilex/utils"
 )
 
+type RHILEXUdpConfig struct {
+	Host          string `json:"host" validate:"required" title:"服务地址"`
+	Port          int    `json:"port" validate:"required" title:"服务端口"`
+	MaxDataLength int    `json:"maxDataLength" title:"最大数据包"`
+}
 type udpSource struct {
 	typex.XStatus
 	uDPConn    *net.UDPConn
-	mainConfig common.RHILEXUdpConfig
+	mainConfig RHILEXUdpConfig
 	status     typex.SourceState
 }
 
 func NewUdpInEndSource(e typex.Rhilex) typex.XSource {
-	u := udpSource{}
-	u.mainConfig = common.RHILEXUdpConfig{}
-	u.RuleEngine = e
-	return &u
+	udps := udpSource{}
+	udps.mainConfig = RHILEXUdpConfig{
+		Host:          "0.0.0.0",
+		Port:          6200,
+		MaxDataLength: 1024,
+	}
+	udps.RuleEngine = e
+	return &udps
 }
 
-func (u *udpSource) Start(cctx typex.CCTX) error {
-	u.Ctx = cctx.Ctx
-	u.CancelCTX = cctx.CancelCTX
+func (udps *udpSource) Start(cctx typex.CCTX) error {
+	udps.Ctx = cctx.Ctx
+	udps.CancelCTX = cctx.CancelCTX
 
-	addr := &net.UDPAddr{IP: net.ParseIP(u.mainConfig.Host), Port: u.mainConfig.Port}
+	addr := &net.UDPAddr{IP: net.ParseIP(udps.mainConfig.Host), Port: udps.mainConfig.Port}
 	var err error
-	if u.uDPConn, err = net.ListenUDP("udp", addr); err != nil {
+	if udps.uDPConn, err = net.ListenUDP("udp", addr); err != nil {
 		glogger.GLogger.Error(err)
 		return err
 	}
-	u.status = typex.SOURCE_UP
+	udps.status = typex.SOURCE_UP
 	go func(ctx context.Context, u1 *udpSource) {
-		if u.mainConfig.MaxDataLength == 0 {
-			u.mainConfig.MaxDataLength = 4096
-		}
-		data := make([]byte, u.mainConfig.MaxDataLength)
+		data := make([]byte, udps.mainConfig.MaxDataLength)
 		for {
 			select {
 			case <-ctx.Done():
-				{
-					return
-				}
+				return
 			default:
-				{
-				}
 			}
 			n, remoteAddr, err := u1.uDPConn.ReadFromUDP(data)
 			if err != nil {
 				glogger.GLogger.Error(err.Error())
 				continue
 			}
-			work, err := u.RuleEngine.WorkInEnd(u.RuleEngine.GetInEnd(u.PointId), string(data[:n]))
+			glogger.GLogger.Debug("UDP Server Received:", data[:n])
+			work, err := udps.RuleEngine.WorkInEnd(udps.RuleEngine.GetInEnd(udps.PointId), string(data[:n]))
 			if !work {
 				glogger.GLogger.Error(err)
 				continue
@@ -66,40 +68,40 @@ func (u *udpSource) Start(cctx typex.CCTX) error {
 				glogger.GLogger.Error(err)
 			}
 		}
-	}(u.Ctx, u)
-	u.status = typex.SOURCE_UP
-	glogger.GLogger.Infof("UDP source started on [%v]:%v", u.mainConfig.Host, u.mainConfig.Port)
+	}(udps.Ctx, udps)
+	udps.status = typex.SOURCE_UP
+	glogger.GLogger.Infof("UDP source started on [%v]:%v", udps.mainConfig.Host, udps.mainConfig.Port)
 	return nil
 
 }
 
-func (u *udpSource) Details() *typex.InEnd {
-	return u.RuleEngine.GetInEnd(u.PointId)
+func (udps *udpSource) Details() *typex.InEnd {
+	return udps.RuleEngine.GetInEnd(udps.PointId)
 }
 
-func (u *udpSource) Test(inEndId string) bool {
+func (udps *udpSource) Test(inEndId string) bool {
 	return true
 }
 
-func (u *udpSource) Init(inEndId string, configMap map[string]interface{}) error {
-	u.PointId = inEndId
-	if err := utils.BindSourceConfig(configMap, &u.mainConfig); err != nil {
+func (udps *udpSource) Init(inEndId string, configMap map[string]interface{}) error {
+	udps.PointId = inEndId
+	if err := utils.BindSourceConfig(configMap, &udps.mainConfig); err != nil {
 		return err
 	}
 	return nil
 }
 
-func (u *udpSource) Status() typex.SourceState {
+func (udps *udpSource) Status() typex.SourceState {
 	return typex.SOURCE_UP
 }
 
-func (u *udpSource) Stop() {
-	u.status = typex.SOURCE_DOWN
-	if u.CancelCTX != nil {
-		u.CancelCTX()
+func (udps *udpSource) Stop() {
+	udps.status = typex.SOURCE_DOWN
+	if udps.CancelCTX != nil {
+		udps.CancelCTX()
 	}
-	if u.uDPConn != nil {
-		err := u.uDPConn.Close()
+	if udps.uDPConn != nil {
+		err := udps.uDPConn.Close()
 		if err != nil {
 			glogger.GLogger.Error(err)
 		}

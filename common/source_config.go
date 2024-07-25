@@ -22,15 +22,3 @@ type GenericMqttConfig struct {
 	Qos       int      `json:"qos" validate:"required" title:"数据质量"`
 	SubTopics []string `json:"subTopics" title:"订阅topic组"`
 }
-
-/*
-*
-* 自定义UDP协议
-*
- */
-
-type RHILEXUdpConfig struct {
-	Host          string `json:"host" validate:"required" title:"服务地址"`
-	Port          int    `json:"port" validate:"required" title:"服务端口"`
-	MaxDataLength int    `json:"maxDataLength" title:"最大数据包"`
-}
