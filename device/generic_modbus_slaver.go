@@ -140,12 +140,9 @@ func (mdev *ModbusSlaver) Start(cctx typex.CCTX) error {
 		0x01, 0x01, 0x01, 0x01, 0x01,
 		0x01, 0x01, 0x01, 0x01, 0x01,
 	}
-
-	// mdev.server.RegisterFunctionHandler(3,
-	// 	func(s *mbserver.Server, frame mbserver.Framer) ([]byte, *mbserver.Exception) {
-	// 		glogger.GLogger.Debug("Received Modbus Request:", frame.GetFunction(), frame.GetData())
-	// 		return frame.Bytes(), &mbserver.Success
-	// 	})
+	mdev.server.SetOnRequest(func(s *mbserver.Server, frame mbserver.Framer) {
+		glogger.GLogger.Debug("Received Modbus Request:", frame.GetFunction(), frame.GetData())
+	})
 	if mdev.mainConfig.CommonConfig.Mode == "UART" {
 		hwPort, err := hwportmanager.GetHwPort(mdev.mainConfig.PortUuid)
 		if err != nil {

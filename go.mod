@@ -21,7 +21,7 @@ require (
 	github.com/hootrhino/go-dhcpd-leases v0.0.0-20240116064141-0730f287f9a2
 	github.com/hootrhino/gobacnet v0.0.0-20240610124438-e673dc57700e
 	github.com/hootrhino/gomodbus v0.2.5
-	github.com/hootrhino/gomodbus-server v0.1.7
+	github.com/hootrhino/gomodbus-server v0.1.9
 	github.com/hootrhino/gopher-lua v1.0.3
 	github.com/hootrhino/goserial v0.2.1
 	github.com/hootrhino/rhilex-goat v0.0.0-20240628144111-889ce143bbd4

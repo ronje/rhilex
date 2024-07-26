@@ -36,7 +36,7 @@ import (
 	"github.com/xuri/excelize/v2"
 )
 
-type ModbusPointVo struct {
+type ModbusSlaverPointVo struct {
 	UUID          string   `json:"uuid,omitempty"`
 	DeviceUUID    string   `json:"device_uuid"`
 	Tag           string   `json:"tag"`
@@ -62,8 +62,8 @@ type ModbusPointVo struct {
 *  http://127.0.0.1:2580/api/v1/modbus_data_sheet/export
  */
 
-// ModbusPoints 获取modbus_excel类型的点位数据
-func ModbusPointsExport(c *gin.Context, ruleEngine typex.Rhilex) {
+// ModbusSlaverPoints 获取modbus_excel类型的点位数据
+func ModbusSlaverPointsExport(c *gin.Context, ruleEngine typex.Rhilex) {
 	deviceUuid, _ := c.GetQuery("device_uuid")
 
 	var records []model.MModbusDataPoint
@@ -116,7 +116,7 @@ func ModbusPointsExport(c *gin.Context, ruleEngine typex.Rhilex) {
 // `m_modbus_data_points`.`device_uuid` = "DEVICEDQNLO8"
 // ORDER BY
 // created_at DESC LIMIT 2 OFFSET 10
-func ModbusSheetPageList(c *gin.Context, ruleEngine typex.Rhilex) {
+func ModbusSlaverSheetPageList(c *gin.Context, ruleEngine typex.Rhilex) {
 	pager, err := service.ReadPageRequest(c)
 	if err != nil {
 		c.JSON(common.HTTP_OK, common.Error400(err))
@@ -139,12 +139,12 @@ func ModbusSheetPageList(c *gin.Context, ruleEngine typex.Rhilex) {
 		c.JSON(common.HTTP_OK, common.Error400(result.Error))
 		return
 	}
-	recordsVo := []ModbusPointVo{}
+	recordsVo := []ModbusSlaverPointVo{}
 
 	for _, record := range records {
 		Slot := intercache.GetSlot(deviceUuid)
 		Value, ok := Slot[record.UUID]
-		Vo := ModbusPointVo{
+		Vo := ModbusSlaverPointVo{
 			UUID:          record.UUID,
 			DeviceUUID:    record.DeviceUuid,
 			Tag:           record.Tag,
@@ -184,7 +184,7 @@ func ModbusSheetPageList(c *gin.Context, ruleEngine typex.Rhilex) {
 * 删除单行
 *
  */
-func ModbusSheetDeleteAll(c *gin.Context, ruleEngine typex.Rhilex) {
+func ModbusSlaverSheetDeleteAll(c *gin.Context, ruleEngine typex.Rhilex) {
 	type Form struct {
 		UUIDs      []string `json:"uuids"`
 		DeviceUUID string   `json:"device_uuid"`
@@ -209,7 +209,7 @@ func ModbusSheetDeleteAll(c *gin.Context, ruleEngine typex.Rhilex) {
 *删除
 *
  */
-func ModbusSheetDelete(c *gin.Context, ruleEngine typex.Rhilex) {
+func ModbusSlaverSheetDelete(c *gin.Context, ruleEngine typex.Rhilex) {
 	type Form struct {
 		UUIDs      []string `json:"uuids"`
 		DeviceUUID string   `json:"device_uuid"`
@@ -234,7 +234,7 @@ func ModbusSheetDelete(c *gin.Context, ruleEngine typex.Rhilex) {
 * 检查点位合法性
 *
  */
-func checkModbusDataPoints(M ModbusPointVo) error {
+func checkModbusSlaverDataPoints(M ModbusSlaverPointVo) error {
 	if M.Tag == "" {
 		return fmt.Errorf("'Missing required param 'tag'")
 	}
@@ -314,39 +314,39 @@ func checkModbusDataPoints(M ModbusPointVo) error {
 * 更新点位表
 *
  */
-func ModbusSheetUpdate(c *gin.Context, ruleEngine typex.Rhilex) {
+func ModbusSlaverSheetUpdate(c *gin.Context, ruleEngine typex.Rhilex) {
 	type Form struct {
-		DeviceUUID       string          `json:"device_uuid"`
-		ModbusDataPoints []ModbusPointVo `json:"modbus_data_points"`
+		DeviceUUID       string                `json:"device_uuid"`
+		ModbusDataPoints []ModbusSlaverPointVo `json:"modbus_data_points"`
 	}
-	// ModbusDataPoints := []ModbusPointVo{}
+	// ModbusSlaverDataPoints := []ModbusPointVo{}
 	form := Form{}
 	err := c.ShouldBindJSON(&form)
 	if err != nil {
 		c.JSON(common.HTTP_OK, common.Error400(err))
 		return
 	}
-	for _, ModbusDataPoint := range form.ModbusDataPoints {
-		if err := checkModbusDataPoints(ModbusDataPoint); err != nil {
+	for _, ModbusSlaverDataPoint := range form.ModbusDataPoints {
+		if err := checkModbusSlaverDataPoints(ModbusSlaverDataPoint); err != nil {
 			c.JSON(common.HTTP_OK, common.Error400(err))
 			return
 		}
-		if ModbusDataPoint.UUID == "" ||
-			ModbusDataPoint.UUID == "new" ||
-			ModbusDataPoint.UUID == "copy" {
+		if ModbusSlaverDataPoint.UUID == "" ||
+			ModbusSlaverDataPoint.UUID == "new" ||
+			ModbusSlaverDataPoint.UUID == "copy" {
 			NewRow := model.MModbusDataPoint{
 				UUID:       utils.ModbusPointUUID(),
-				DeviceUuid: ModbusDataPoint.DeviceUUID,
-				Tag:        ModbusDataPoint.Tag,
-				Alias:      ModbusDataPoint.Alias,
-				Function:   ModbusDataPoint.Function,
-				SlaverId:   ModbusDataPoint.SlaverId,
-				Address:    ModbusDataPoint.Address,
-				Frequency:  ModbusDataPoint.Frequency,
-				Quantity:   ModbusDataPoint.Quantity,
-				DataType:   ModbusDataPoint.DataType,
-				DataOrder:  ModbusDataPoint.DataOrder,
-				Weight:     utils.HandleZeroValue(ModbusDataPoint.Weight),
+				DeviceUuid: ModbusSlaverDataPoint.DeviceUUID,
+				Tag:        ModbusSlaverDataPoint.Tag,
+				Alias:      ModbusSlaverDataPoint.Alias,
+				Function:   ModbusSlaverDataPoint.Function,
+				SlaverId:   ModbusSlaverDataPoint.SlaverId,
+				Address:    ModbusSlaverDataPoint.Address,
+				Frequency:  ModbusSlaverDataPoint.Frequency,
+				Quantity:   ModbusSlaverDataPoint.Quantity,
+				DataType:   ModbusSlaverDataPoint.DataType,
+				DataOrder:  ModbusSlaverDataPoint.DataOrder,
+				Weight:     utils.HandleZeroValue(ModbusSlaverDataPoint.Weight),
 			}
 			err0 := service.InsertModbusPointPosition(NewRow)
 			if err0 != nil {
@@ -355,18 +355,18 @@ func ModbusSheetUpdate(c *gin.Context, ruleEngine typex.Rhilex) {
 			}
 		} else {
 			OldRow := model.MModbusDataPoint{
-				UUID:       ModbusDataPoint.UUID,
-				DeviceUuid: ModbusDataPoint.DeviceUUID,
-				Tag:        ModbusDataPoint.Tag,
-				Alias:      ModbusDataPoint.Alias,
-				Function:   ModbusDataPoint.Function,
-				SlaverId:   ModbusDataPoint.SlaverId,
-				Address:    ModbusDataPoint.Address,
-				Frequency:  ModbusDataPoint.Frequency,
-				Quantity:   ModbusDataPoint.Quantity,
-				DataType:   ModbusDataPoint.DataType,
-				DataOrder:  ModbusDataPoint.DataOrder,
-				Weight:     utils.HandleZeroValue(ModbusDataPoint.Weight),
+				UUID:       ModbusSlaverDataPoint.UUID,
+				DeviceUuid: ModbusSlaverDataPoint.DeviceUUID,
+				Tag:        ModbusSlaverDataPoint.Tag,
+				Alias:      ModbusSlaverDataPoint.Alias,
+				Function:   ModbusSlaverDataPoint.Function,
+				SlaverId:   ModbusSlaverDataPoint.SlaverId,
+				Address:    ModbusSlaverDataPoint.Address,
+				Frequency:  ModbusSlaverDataPoint.Frequency,
+				Quantity:   ModbusSlaverDataPoint.Quantity,
+				DataType:   ModbusSlaverDataPoint.DataType,
+				DataOrder:  ModbusSlaverDataPoint.DataOrder,
+				Weight:     utils.HandleZeroValue(ModbusSlaverDataPoint.Weight),
 			}
 			err0 := service.UpdateModbusPoint(OldRow)
 			if err0 != nil {
@@ -380,14 +380,14 @@ func ModbusSheetUpdate(c *gin.Context, ruleEngine typex.Rhilex) {
 
 }
 
-type DeviceDto struct {
+type SlaverDeviceDto struct {
 	UUID   string
 	Name   string
 	Type   string
 	Config string
 }
 
-func (md DeviceDto) GetConfig() map[string]interface{} {
+func (md SlaverDeviceDto) GetConfig() map[string]interface{} {
 	result := make(map[string]interface{})
 	err := json.Unmarshal([]byte(md.Config), &result)
 	if err != nil {
@@ -396,8 +396,8 @@ func (md DeviceDto) GetConfig() map[string]interface{} {
 	return result
 }
 
-// ModbusSheetImport 上传Excel文件
-func ModbusSheetImport(c *gin.Context, ruleEngine typex.Rhilex) {
+// ModbusSlaverSheetImport 上传Excel文件
+func ModbusSlaverSheetImport(c *gin.Context, ruleEngine typex.Rhilex) {
 	// 解析 multipart/form-data 类型的请求体
 	err := c.Request.ParseMultipartForm(1024 * 1024 * 10)
 	if err != nil {
@@ -421,9 +421,9 @@ func ModbusSheetImport(c *gin.Context, ruleEngine typex.Rhilex) {
 		c.JSON(common.HTTP_OK, common.Error400(errDb))
 		return
 	}
-	if Device.Type != typex.GENERIC_MODBUS_MASTER.String() {
+	if Device.Type != typex.GENERIC_MODBUS_SLAVER.String() {
 		c.JSON(common.HTTP_OK,
-			common.Error("Invalid Device Type, Only Support Import Modbus Device"))
+			common.Error("Invalid Device Type, Only Support Import ModbusSlaver Device"))
 		return
 	}
 
@@ -439,7 +439,7 @@ func ModbusSheetImport(c *gin.Context, ruleEngine typex.Rhilex) {
 		return
 	}
 	// 只取第一张表，而且名字必须是Sheet1
-	list, err := parseModbusPointExcel(file, "Sheet1", deviceUuid)
+	list, err := parseModbusSlaverPointExcel(file, "Sheet1", deviceUuid)
 	if err != nil {
 		c.JSON(common.HTTP_OK, common.Error400(err))
 		return
@@ -458,7 +458,7 @@ func ModbusSheetImport(c *gin.Context, ruleEngine typex.Rhilex) {
 *
  */
 
-func parseModbusPointExcel(r io.Reader, sheetName string,
+func parseModbusSlaverPointExcel(r io.Reader, sheetName string,
 	deviceUuid string) (list []model.MModbusDataPoint, err error) {
 	excelFile, err := excelize.OpenReader(r)
 	if err != nil {
@@ -514,7 +514,7 @@ func parseModbusPointExcel(r io.Reader, sheetName string,
 		Frequency := int64(frequency)
 		Quantity := uint16(quantity)
 
-		if err := checkModbusDataPoints(ModbusPointVo{
+		if err := checkModbusSlaverDataPoints(ModbusSlaverPointVo{
 			Tag:       tag,
 			Alias:     alias,
 			Function:  &Function,

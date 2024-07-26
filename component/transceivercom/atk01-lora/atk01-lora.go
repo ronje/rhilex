@@ -99,6 +99,9 @@ func (tc *ATK01Lora) startSerialPort() (serial.Port, error) {
 		Parity:   tc.mainConfig.ComConfig.Parity,
 		StopBits: tc.mainConfig.ComConfig.StopBits,
 		Timeout:  time.Duration(tc.mainConfig.ComConfig.IOTimeout) * time.Millisecond,
+		RS485: serial.RS485Config{
+			
+		},
 	}
 	serialPort, err := serial.Open(&config)
 	if err != nil {
