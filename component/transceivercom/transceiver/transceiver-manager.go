@@ -23,6 +23,7 @@ import (
 
 	"github.com/hootrhino/rhilex/component/transceivercom"
 	atk01lora "github.com/hootrhino/rhilex/component/transceivercom/atk01-lora"
+	cvtdlora "github.com/hootrhino/rhilex/component/transceivercom/cvtd-lora"
 	ec200a4g "github.com/hootrhino/rhilex/component/transceivercom/ec200a-4g"
 	mx01ble "github.com/hootrhino/rhilex/component/transceivercom/mx01-ble"
 	core "github.com/hootrhino/rhilex/config"
@@ -157,6 +158,20 @@ func initDefaultRFModule() {
 		}
 		ATK01 := atk01lora.NewATK01Lora(DefaultTransceiverCommunicatorManager.R)
 		err := DefaultTransceiverCommunicatorManager.Load(ATK01.Info().Name, Config, ATK01)
+		if err != nil {
+			glogger.GLogger.Fatal(err1)
+			os.Exit(1)
+		}
+	}
+	{
+		Config := transceivercom.TransceiverConfig{}
+		err1 := utils.INIToStruct(core.GlobalConfig.IniPath, "transceiver.cvtd01", &Config)
+		if err1 != nil {
+			glogger.GLogger.Fatal(err1)
+			os.Exit(1)
+		}
+		Cvtd01 := cvtdlora.NewCvtdLora(DefaultTransceiverCommunicatorManager.R)
+		err := DefaultTransceiverCommunicatorManager.Load(Cvtd01.Info().Name, Config, Cvtd01)
 		if err != nil {
 			glogger.GLogger.Fatal(err1)
 			os.Exit(1)

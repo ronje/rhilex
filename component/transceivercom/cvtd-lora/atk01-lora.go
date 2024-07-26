@@ -13,7 +13,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-package atk01lora
+package CvtdLora
 
 import (
 	"fmt"
@@ -32,23 +32,23 @@ import (
 	"github.com/hootrhino/rhilex/utils"
 )
 
-type ATK01LoraConfig struct {
+type CvtdLoraConfig struct {
 	ComConfig transceivercom.TransceiverConfig
 }
-type ATK01Lora struct {
+type CvtdLora struct {
 	R          typex.Rhilex
 	locker     sync.Mutex
-	mainConfig ATK01LoraConfig
+	mainConfig CvtdLoraConfig
 	serialPort serial.Port
 	DataBuffer chan []byte
 }
 
-func NewATK01Lora(R typex.Rhilex) transceivercom.TransceiverCommunicator {
-	return &ATK01Lora{
+func NewCvtdLora(R typex.Rhilex) transceivercom.TransceiverCommunicator {
+	return &CvtdLora{
 		R:          R,
 		locker:     sync.Mutex{},
 		DataBuffer: make(chan []byte, 102400),
-		mainConfig: ATK01LoraConfig{
+		mainConfig: CvtdLoraConfig{
 			ComConfig: transceivercom.TransceiverConfig{
 				Address:   "COM1",
 				BaudRate:  9600,
@@ -66,15 +66,15 @@ func NewATK01Lora(R typex.Rhilex) transceivercom.TransceiverCommunicator {
 * Start
 *
  */
-func (tc *ATK01Lora) Start(Config transceivercom.TransceiverConfig) error {
+func (tc *CvtdLora) Start(Config transceivercom.TransceiverConfig) error {
 	env := os.Getenv("LORASUPPORT")
-	if env != "ATK01" {
-		return nil
+	if env != "CVTDLORA" {
+		// return nil
 	}
-	tc.mainConfig = ATK01LoraConfig{
+	tc.mainConfig = CvtdLoraConfig{
 		ComConfig: Config,
 	}
-	glogger.GLogger.Info("ATK01-LORA-01 Init")
+	glogger.GLogger.Info("Cvtd-LORA-01 Init")
 	serialPort, err := tc.startSerialPort()
 	if err != nil {
 		return err
@@ -82,7 +82,7 @@ func (tc *ATK01Lora) Start(Config transceivercom.TransceiverConfig) error {
 	tc.serialPort = serialPort
 	go tc.startLoopReceive(serialPort)
 	go tc.startPushPacket(tc.DataBuffer)
-	glogger.GLogger.Info("ATK01-LORA-01 Started")
+	glogger.GLogger.Info("Cvtd-LORA-01 Started")
 	return nil
 }
 
@@ -91,7 +91,7 @@ func (tc *ATK01Lora) Start(Config transceivercom.TransceiverConfig) error {
 * 打开串口
 *
  */
-func (tc *ATK01Lora) startSerialPort() (serial.Port, error) {
+func (tc *CvtdLora) startSerialPort() (serial.Port, error) {
 	config := serial.Config{
 		Address:  tc.mainConfig.ComConfig.Address,
 		BaudRate: tc.mainConfig.ComConfig.BaudRate,
@@ -113,7 +113,7 @@ func (tc *ATK01Lora) startSerialPort() (serial.Port, error) {
 * 向RHILEX推数据
 *
  */
-func (tc *ATK01Lora) startPushPacket(Chan chan []byte) {
+func (tc *CvtdLora) startPushPacket(Chan chan []byte) {
 	for {
 		select {
 		case <-typex.GCTX.Done():
@@ -121,7 +121,7 @@ func (tc *ATK01Lora) startPushPacket(Chan chan []byte) {
 		case buffer := <-Chan:
 			Len := len(buffer)
 			if Len > 2 {
-				glogger.GLogger.Debug("ATK01Lora Received Data:", buffer)
+				glogger.GLogger.Debug("CvtdLora Received Data:", buffer)
 				crcByte := [2]byte{buffer[Len-2], buffer[Len-1]}
 				crcCheckedValue := uint16(crcByte[0])<<8 | uint16(crcByte[1])
 				crcCalculatedValue := utils.CRC16(buffer[:Len-2])
@@ -132,7 +132,7 @@ func (tc *ATK01Lora) startPushPacket(Chan chan []byte) {
 				}
 				internotify.Push(internotify.BaseEvent{
 					Type:    "transceiver.up.data",
-					Event:   "transceiver.up.data.atk01",
+					Event:   "transceiver.up.data.cvtd",
 					Ts:      uint64(time.Now().UnixMilli()),
 					Summary: "transceiver.up.data",
 					Info:    buffer,
@@ -141,7 +141,7 @@ func (tc *ATK01Lora) startPushPacket(Chan chan []byte) {
 		}
 	}
 }
-func (tc *ATK01Lora) startLoopReceive(io io.ReadWriteCloser) {
+func (tc *CvtdLora) startLoopReceive(io io.ReadWriteCloser) {
 	MAX_BUFFER_SIZE := 1024 * 10 * 10
 	buffer := make([]byte, MAX_BUFFER_SIZE)
 	byteACC := 0                      // 计数器而不是下标
@@ -237,8 +237,8 @@ func (tc *ATK01Lora) startLoopReceive(io io.ReadWriteCloser) {
 		}
 	}
 }
-func (tc *ATK01Lora) Ctrl(topic, args []byte, timeout time.Duration) ([]byte, error) {
-	if string(topic) == "lora.atk01.cmd.send" {
+func (tc *CvtdLora) Ctrl(topic, args []byte, timeout time.Duration) ([]byte, error) {
+	if string(topic) == "lora.cvtd.cmd.send" {
 		if tc.serialPort != nil {
 			tc.serialPort.Write(args)
 		}
@@ -246,17 +246,17 @@ func (tc *ATK01Lora) Ctrl(topic, args []byte, timeout time.Duration) ([]byte, er
 	}
 	return []byte("OK"), nil
 }
-func (tc *ATK01Lora) Info() transceivercom.CommunicatorInfo {
+func (tc *CvtdLora) Info() transceivercom.CommunicatorInfo {
 	return transceivercom.CommunicatorInfo{
-		Name:     "atk01",
-		Model:    "ATK01-LORA-01",
+		Name:     "cvtd",
+		Model:    "CVTD-LORA-01",
 		Type:     transceivercom.LORA,
-		Vendor:   "GUANGZHOU-ZHENGDIAN-YUANZI technology",
+		Vendor:   "Beijing ChangWeiTongDa technology",
 		Mac:      "00:00:00:00:00:00:00:00",
 		Firmware: "0.0.0",
 	}
 }
-func (tc *ATK01Lora) Status() transceivercom.TransceiverStatus {
+func (tc *CvtdLora) Status() transceivercom.TransceiverStatus {
 	if tc.serialPort == nil {
 		return transceivercom.TransceiverStatus{
 			Code:  transceivercom.TC_ERROR,
@@ -270,9 +270,9 @@ func (tc *ATK01Lora) Status() transceivercom.TransceiverStatus {
 	}
 
 }
-func (tc *ATK01Lora) Stop() {
+func (tc *CvtdLora) Stop() {
 	if tc.serialPort != nil {
 		tc.serialPort.Close()
 	}
-	glogger.GLogger.Info("ATK01-LORA Stopped")
+	glogger.GLogger.Info("Cvtd-LORA Stopped")
 }
