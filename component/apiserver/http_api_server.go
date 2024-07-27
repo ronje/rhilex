@@ -347,12 +347,7 @@ func (hs *ApiServerPlugin) LoadRoute() {
 	}
 	modbusApi := server.RouteGroup(server.ContextUrl("/modbus_slaver_sheet"))
 	{
-		modbusApi.POST(("/sheetImport"), server.AddRoute(apis.ModbusSlaverSheetImport))
-		modbusApi.GET(("/sheetExport"), server.AddRoute(apis.ModbusSlaverPointsExport))
 		modbusApi.GET(("/list"), server.AddRoute(apis.ModbusSlaverSheetPageList))
-		modbusApi.POST(("/update"), server.AddRoute(apis.ModbusSlaverSheetUpdate))
-		modbusApi.DELETE(("/delIds"), server.AddRoute(apis.ModbusSlaverSheetDelete))
-		modbusApi.DELETE(("/delAll"), server.AddRoute(apis.ModbusSlaverSheetDeleteAll))
 	}
 	// S1200 点位表
 	SIEMENS_PLC := server.RouteGroup(server.ContextUrl("/s1200_data_sheet"))

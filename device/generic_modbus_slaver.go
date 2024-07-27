@@ -16,6 +16,7 @@
 package device
 
 import (
+	"encoding/binary"
 	"fmt"
 	"time"
 
@@ -24,15 +25,14 @@ import (
 	"github.com/hootrhino/rhilex/common"
 	"github.com/hootrhino/rhilex/component/hwportmanager"
 	"github.com/hootrhino/rhilex/component/intercache"
-	"github.com/hootrhino/rhilex/component/interdb"
-	modbus_device "github.com/hootrhino/rhilex/device/modbus"
 	"github.com/hootrhino/rhilex/glogger"
 	"github.com/hootrhino/rhilex/typex"
 	"github.com/hootrhino/rhilex/utils"
 )
 
 type ModbusSlaverCommonConfig struct {
-	Mode string `json:"mode" validate:"required"` // UART | TCP
+	Mode         string `json:"mode" validate:"required"` // UART | TCP
+	MaxRegisters int    `json:"maxRegisters" validate:"required"`
 }
 type ModbusSlaverConfig struct {
 	CommonConfig ModbusSlaverCommonConfig `json:"commonConfig" validate:"required"`
@@ -42,21 +42,26 @@ type ModbusSlaverConfig struct {
 
 type ModbusSlaver struct {
 	typex.XStatus
-	status       typex.DeviceState
-	mainConfig   ModbusSlaverConfig
-	hwPortConfig hwportmanager.UartConfig
-	registers    map[string]*common.RegisterRW
-	server       *mbserver.Server
+	status           typex.DeviceState
+	mainConfig       ModbusSlaverConfig
+	hwPortConfig     hwportmanager.UartConfig
+	registers        map[string]*common.RegisterRW
+	server           *mbserver.Server
+	HoldingRegisters []uint16 // [5] = WriteSingleCoil
+	InputRegisters   []uint16 // [6] = WriteHoldingRegister
+	DiscreteInputs   []byte   // [15] = WriteMultipleCoils
+	Coils            []byte   // [16] = WriteHoldingRegisters
 }
 
 func NewGenericModbusSlaver(e typex.Rhilex) typex.XDevice {
 	mdev := new(ModbusSlaver)
 	mdev.RuleEngine = e
 	mdev.mainConfig = ModbusSlaverConfig{
-		CommonConfig: ModbusSlaverCommonConfig{Mode: "TCP"},
+		CommonConfig: ModbusSlaverCommonConfig{Mode: "TCP", MaxRegisters: 64},
 		PortUuid:     "/dev/ttyS0",
 		HostConfig:   common.HostConfig{Host: "0.0.0.0", Port: 1502, Timeout: 3000},
 	}
+
 	mdev.registers = map[string]*common.RegisterRW{}
 	mdev.status = typex.DEV_DOWN
 
@@ -73,33 +78,39 @@ func (mdev *ModbusSlaver) Init(devId string, configMap map[string]interface{}) e
 	if !utils.SContains([]string{"UART", "TCP"}, mdev.mainConfig.CommonConfig.Mode) {
 		return fmt.Errorf("unsupported mode, only can be one of 'TCP' or 'UART'")
 	}
-	// 合并数据库里面的点位表
-	var ModbusPointList []modbus_device.ModbusPoint
-	modbusPointLoadErr := interdb.DB().Table("m_modbus_data_points").
-		Where("device_uuid=?", devId).Find(&ModbusPointList).Error
-	if modbusPointLoadErr != nil {
-		return modbusPointLoadErr
-	}
-	for _, ModbusPoint := range ModbusPointList {
-		mdev.registers[ModbusPoint.UUID] = &common.RegisterRW{
-			UUID:      ModbusPoint.UUID,
-			Tag:       ModbusPoint.Tag,
-			Alias:     ModbusPoint.Alias,
-			Function:  ModbusPoint.Function,
-			SlaverId:  ModbusPoint.SlaverId,
-			Address:   ModbusPoint.Address,
-			Quantity:  ModbusPoint.Quantity,
-			Frequency: ModbusPoint.Frequency,
-			DataType:  ModbusPoint.DataType,
-			DataOrder: ModbusPoint.DataOrder,
-			Weight:    ModbusPoint.Weight,
-		}
+	mdev.HoldingRegisters = make([]uint16, mdev.mainConfig.CommonConfig.MaxRegisters)
+	mdev.InputRegisters = make([]uint16, mdev.mainConfig.CommonConfig.MaxRegisters)
+	mdev.DiscreteInputs = make([]byte, mdev.mainConfig.CommonConfig.MaxRegisters)
+	mdev.Coils = make([]byte, mdev.mainConfig.CommonConfig.MaxRegisters)
+	for i := 0; i < mdev.mainConfig.CommonConfig.MaxRegisters; i++ {
+		HoldingRegisterUUID := fmt.Sprintf("%s_HoldingRegisters:%d", mdev.PointId, i)
+		InputRegisterUUID := fmt.Sprintf("%s_InputRegisters:%d", mdev.PointId, i)
+		DiscreteInputUUID := fmt.Sprintf("%s_DiscreteInputs:%d", mdev.PointId, i)
+		CoilUUID := fmt.Sprintf("%s_Coils:%d", mdev.PointId, i)
+		//
 		LastFetchTime := uint64(time.Now().UnixMilli())
-		intercache.SetValue(mdev.PointId, ModbusPoint.UUID, intercache.CacheValue{
-			UUID:          ModbusPoint.UUID,
+		intercache.SetValue(mdev.PointId, HoldingRegisterUUID, intercache.CacheValue{
+			UUID:          HoldingRegisterUUID,
 			LastFetchTime: LastFetchTime,
+			Value:         "0",
+		})
+		intercache.SetValue(mdev.PointId, InputRegisterUUID, intercache.CacheValue{
+			UUID:          InputRegisterUUID,
+			LastFetchTime: LastFetchTime,
+			Value:         "0",
+		})
+		intercache.SetValue(mdev.PointId, DiscreteInputUUID, intercache.CacheValue{
+			UUID:          DiscreteInputUUID,
+			LastFetchTime: LastFetchTime,
+			Value:         "0",
+		})
+		intercache.SetValue(mdev.PointId, CoilUUID, intercache.CacheValue{
+			UUID:          CoilUUID,
+			LastFetchTime: LastFetchTime,
+			Value:         "0",
 		})
 	}
+
 	if mdev.mainConfig.CommonConfig.Mode == "UART" {
 		hwPort, err := hwportmanager.GetHwPort(mdev.mainConfig.PortUuid)
 		if err != nil {
@@ -124,24 +135,34 @@ func (mdev *ModbusSlaver) Start(cctx typex.CCTX) error {
 	mdev.server = mbserver.NewServerWithContext(mdev.Ctx)
 	mdev.server.SetLogger(glogger.Logrus)
 	// 点位, 需要和数据库关联起来
-	mdev.server.HoldingRegisters = []uint16{
-		0x01, 0x02, 0x03, 0x04, 0x05,
-		0x21, 0x22, 0x23, 0x24, 0x25,
-	}
-	mdev.server.InputRegisters = []uint16{
-		0x01, 0x01, 0x01, 0x01, 0x01,
-		0x01, 0x01, 0x01, 0x01, 0x01,
-	}
-	mdev.server.DiscreteInputs = []byte{
-		0x01, 0x02, 0x03, 0x04, 0x05,
-		0x21, 0x22, 0x23, 0x24, 0x25,
-	}
-	mdev.server.Coils = []byte{
-		0x01, 0x01, 0x01, 0x01, 0x01,
-		0x01, 0x01, 0x01, 0x01, 0x01,
-	}
+	mdev.server.InputRegisters = mdev.InputRegisters
+	mdev.server.DiscreteInputs = mdev.DiscreteInputs
+	mdev.server.Coils = mdev.Coils
+	mdev.server.HoldingRegisters = mdev.HoldingRegisters
+	// [5] = WriteSingleCoil
+	// [6] = WriteHoldingRegister
+	// [15] = WriteMultipleCoils
+	// [16] = WriteHoldingRegisters
 	mdev.server.SetOnRequest(func(s *mbserver.Server, frame mbserver.Framer) {
-		glogger.GLogger.Debug("Received Modbus Request:", frame.GetFunction(), frame.GetData())
+		FunCode := frame.GetFunction()
+		Data := frame.GetData()
+		register, numRegs, endRegister := getRegisterAddressAndNumber(frame)
+		if endRegister > mdev.mainConfig.CommonConfig.MaxRegisters {
+			glogger.GLogger.Error("exceed MaxRegisters:", register, numRegs, endRegister)
+			return
+		}
+		if FunCode == 5 { // 更新线圈
+			LastFetchTime := uint64(time.Now().UnixMilli())
+			LastValue := mdev.Coils[register]
+			CoilUUID := fmt.Sprintf("%s_Coils:%d", mdev.PointId, register)
+			intercache.SetValue(mdev.PointId, CoilUUID, intercache.CacheValue{
+				UUID:          CoilUUID,
+				LastFetchTime: LastFetchTime,
+				Value:         fmt.Sprintf("%x", LastValue), // 更新后的值
+			})
+		}
+		glogger.GLogger.Debug("Received Modbus Request:", FunCode, Data, register, numRegs, endRegister)
+
 	})
 	if mdev.mainConfig.CommonConfig.Mode == "UART" {
 		hwPort, err := hwportmanager.GetHwPort(mdev.mainConfig.PortUuid)
@@ -177,6 +198,31 @@ func (mdev *ModbusSlaver) Start(cctx typex.CCTX) error {
 
 func (mdev *ModbusSlaver) Status() typex.DeviceState {
 	return typex.DEV_UP
+}
+
+/*
+*
+* 提取Modbus报文数据
+*
+ */
+func getRegisterAddressAndNumber(frame mbserver.Framer) (int, int, int) {
+	data := frame.GetData()
+	register := int(binary.BigEndian.Uint16(data[0:2]))
+	numRegs := int(binary.BigEndian.Uint16(data[2:4]))
+	endRegister := register + numRegs
+	return register, numRegs, endRegister
+}
+
+/*
+*
+* 提取Modbus报文数据
+*
+ */
+func getRegisterAddressAndValue(frame mbserver.Framer) (int, uint16) {
+	data := frame.GetData()
+	register := int(binary.BigEndian.Uint16(data[0:2]))
+	value := binary.BigEndian.Uint16(data[2:4])
+	return register, value
 }
 
 func (mdev *ModbusSlaver) Stop() {

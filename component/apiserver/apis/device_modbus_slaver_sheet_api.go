@@ -16,106 +16,31 @@
 package apis
 
 import (
-	"encoding/json"
-	"errors"
 	"fmt"
-	"io"
-	"strconv"
-	"time"
-
-	"github.com/hootrhino/rhilex/glogger"
 
 	"github.com/gin-gonic/gin"
 	common "github.com/hootrhino/rhilex/component/apiserver/common"
-	"github.com/hootrhino/rhilex/component/apiserver/model"
 	"github.com/hootrhino/rhilex/component/apiserver/service"
 	"github.com/hootrhino/rhilex/component/intercache"
-	"github.com/hootrhino/rhilex/component/interdb"
 	"github.com/hootrhino/rhilex/typex"
-	"github.com/hootrhino/rhilex/utils"
-	"github.com/xuri/excelize/v2"
 )
 
-type ModbusSlaverPointVo struct {
-	UUID          string   `json:"uuid,omitempty"`
-	DeviceUUID    string   `json:"device_uuid"`
-	Tag           string   `json:"tag"`
-	Alias         string   `json:"alias"`
-	Function      *int     `json:"function"`
-	SlaverId      *byte    `json:"slaverId"`
-	Address       *uint16  `json:"address"`
-	Frequency     *int64   `json:"frequency"`
-	Quantity      *uint16  `json:"quantity"`
-	DataType      string   `json:"dataType"`      // 数据类型
-	DataOrder     string   `json:"dataOrder"`     // 字节序
-	Weight        *float64 `json:"weight"`        // 权重
-	Status        int      `json:"status"`        // 运行时数据
-	LastFetchTime uint64   `json:"lastFetchTime"` // 运行时数据
-	Value         string   `json:"value"`         // 运行时数据
-	ErrMsg        string   `json:"errMsg"`        // 运行时数据
-
+type ModbusSlaverRegister struct {
+	UUID string `json:"uuid"`
+	// 1: 离散输出Coils      Discrete Outputs
+	// 2: 离散输入Coils      Discrete Inputs
+	// 3: 保持寄存器         Holding Registers
+	// 4: 输入寄存器         Input Registers
+	Type    int         `json:"type"`
+	Address int         `json:"address"`
+	Value   interface{} `json:"value"`
+}
+type ModbusSlaverRegisterVo struct {
+	Coils            []ModbusSlaverRegister `json:"coils"`
+	HoldingRegisters []ModbusSlaverRegister `json:"holdingRegisters"`
+	InputRegisters   []ModbusSlaverRegister `json:"inputRegisters"`
 }
 
-/*
-*
-* 特殊设备需要和外界交互，这里主要就是一些设备的点位表导入导出等支持
-*  http://127.0.0.1:2580/api/v1/modbus_data_sheet/export
- */
-
-// ModbusSlaverPoints 获取modbus_excel类型的点位数据
-func ModbusSlaverPointsExport(c *gin.Context, ruleEngine typex.Rhilex) {
-	deviceUuid, _ := c.GetQuery("device_uuid")
-
-	var records []model.MModbusDataPoint
-	result := interdb.DB().Table("m_modbus_data_points").
-		Where("device_uuid=?", deviceUuid).Find(&records)
-	if result.Error != nil {
-		c.JSON(common.HTTP_OK, common.Error400(result.Error))
-		return
-	}
-	Headers := []string{
-		"tag", "alias",
-		"function", "frequency",
-		"slaverId", "address",
-		"quality", "type",
-		"order", "weight",
-	}
-
-	xlsx := excelize.NewFile()
-	defer func() {
-		if err := xlsx.Close(); err != nil {
-			glogger.GLogger.Errorf("close excel file, err=%v", err)
-		}
-	}()
-	cell, _ := excelize.CoordinatesToCellName(1, 1)
-	xlsx.SetSheetRow("Sheet1", cell, &Headers)
-	for idx, record := range records[0:] {
-		Row := []string{
-			record.Tag,
-			record.Alias,
-			fmt.Sprintf("%d", *record.Function),
-			fmt.Sprintf("%d", *record.Frequency),
-			fmt.Sprintf("%d", *record.SlaverId),
-			fmt.Sprintf("%d", *record.Address),
-			fmt.Sprintf("%d", *record.Quantity),
-			record.DataType,
-			record.DataOrder,
-			fmt.Sprintf("%f", *record.Weight),
-		}
-		cell, _ = excelize.CoordinatesToCellName(1, idx+2)
-		xlsx.SetSheetRow("Sheet1", cell, &Row)
-	}
-	c.Header("Content-Type", "application/octet-stream")
-	c.Header("Content-Disposition", fmt.Sprintf("attachment;filename=%v.xlsx",
-		time.Now().UnixMilli()))
-	xlsx.WriteTo(c.Writer)
-}
-
-// 分页获取
-// SELECT * FROM `m_modbus_data_points` WHERE
-// `m_modbus_data_points`.`device_uuid` = "DEVICEDQNLO8"
-// ORDER BY
-// created_at DESC LIMIT 2 OFFSET 10
 func ModbusSlaverSheetPageList(c *gin.Context, ruleEngine typex.Rhilex) {
 	pager, err := service.ReadPageRequest(c)
 	if err != nil {
@@ -123,427 +48,64 @@ func ModbusSlaverSheetPageList(c *gin.Context, ruleEngine typex.Rhilex) {
 		return
 	}
 	deviceUuid, _ := c.GetQuery("device_uuid")
-	db := interdb.DB()
-	tx := db.Scopes(service.Paginate(*pager))
-	var count int64
-	err1 := interdb.DB().Model(&model.MModbusDataPoint{}).
-		Where("device_uuid=?", deviceUuid).Count(&count).Error
-	if err1 != nil {
-		c.JSON(common.HTTP_OK, common.Error400(err1))
+	Slot := intercache.GetSlot(deviceUuid)
+	if Slot == nil {
+		c.JSON(common.HTTP_OK, common.Error("Cache Slot Not Exists"))
 		return
 	}
-	var records []model.MModbusDataPoint
-	result := tx.Order("created_at DESC").Find(&records,
-		&model.MModbusDataPoint{DeviceUuid: deviceUuid})
-	if result.Error != nil {
-		c.JSON(common.HTTP_OK, common.Error400(result.Error))
-		return
-	}
-	recordsVo := []ModbusSlaverPointVo{}
-
-	for _, record := range records {
-		Slot := intercache.GetSlot(deviceUuid)
-		Value, ok := Slot[record.UUID]
-		Vo := ModbusSlaverPointVo{
-			UUID:          record.UUID,
-			DeviceUUID:    record.DeviceUuid,
-			Tag:           record.Tag,
-			Alias:         record.Alias,
-			Function:      record.Function,
-			SlaverId:      record.SlaverId,
-			Address:       record.Address,
-			Frequency:     record.Frequency,
-			Quantity:      record.Quantity,
-			DataType:      record.DataType,
-			DataOrder:     record.DataOrder,
-			Weight:        record.Weight,
-			LastFetchTime: Value.LastFetchTime, // 运行时
-			Value:         Value.Value,         // 运行时
-			ErrMsg:        Value.ErrMsg,        // 运行时
+	// 1: 线圈寄存器      Coils Registers
+	// 2: 离散寄存器      Discrete Registers
+	// 3: 保持寄存器      Holding Registers
+	// 4: 输入寄存器      Input Registers
+	Coils := []ModbusSlaverRegister{}
+	HoldingRegisters := []ModbusSlaverRegister{}
+	InputRegisters := []ModbusSlaverRegister{}
+	for i := 0; i < 64; i++ {
+		UUID := fmt.Sprintf("%s_Coils:%d", deviceUuid, i)
+		Register := ModbusSlaverRegister{
+			UUID:    UUID,
+			Type:    1,
+			Address: i,
+			Value:   0,
 		}
+		Value, ok := Slot[UUID]
 		if ok {
-			Vo.Status = func() int {
-				if Value.Value == "" {
-					return 0
-				}
-				return 1
-			}() // 运行时
-			Vo.LastFetchTime = Value.LastFetchTime // 运行时
-			Vo.Value = Value.Value                 // 运行时
-			recordsVo = append(recordsVo, Vo)
-		} else {
-			recordsVo = append(recordsVo, Vo)
+			Register.Value = Value.Value
 		}
+		Coils = append(Coils, Register)
 	}
-	Result := service.WrapPageResult(*pager, recordsVo, count)
+	for i := 0; i < 64; i++ {
+		UUID := fmt.Sprintf("%s_HoldingRegisters:%d", deviceUuid, i)
+		Register := ModbusSlaverRegister{
+			UUID:    UUID,
+			Type:    1,
+			Address: i,
+			Value:   0,
+		}
+		Value, ok := Slot[UUID]
+		if ok {
+			Register.Value = Value.Value
+		}
+		HoldingRegisters = append(Coils, Register)
+	}
+	for i := 0; i < 64; i++ {
+		UUID := fmt.Sprintf("%s_InputRegisters:%d", deviceUuid, i)
+		Register := ModbusSlaverRegister{
+			UUID:    UUID,
+			Type:    1,
+			Address: i,
+			Value:   0,
+		}
+		Value, ok := Slot[UUID]
+		if ok {
+			Register.Value = Value.Value
+		}
+		InputRegisters = append(Coils, Register)
+	}
+	Result := service.WrapPageResult(*pager, ModbusSlaverRegisterVo{
+		Coils:            Coils,
+		HoldingRegisters: HoldingRegisters,
+		InputRegisters:   InputRegisters,
+	}, 64)
 	c.JSON(common.HTTP_OK, common.OkWithData(Result))
-}
-
-/*
-*
-* 删除单行
-*
- */
-func ModbusSlaverSheetDeleteAll(c *gin.Context, ruleEngine typex.Rhilex) {
-	type Form struct {
-		UUIDs      []string `json:"uuids"`
-		DeviceUUID string   `json:"device_uuid"`
-	}
-	form := Form{}
-	if Error := c.ShouldBindJSON(&form); Error != nil {
-		c.JSON(common.HTTP_OK, common.Error400(Error))
-		return
-	}
-	err := service.DeleteAllModbusPointByDevice(form.DeviceUUID)
-	if err != nil {
-		c.JSON(common.HTTP_OK, common.Error400(err))
-		return
-	}
-	ruleEngine.RestartDevice(form.DeviceUUID)
-	c.JSON(common.HTTP_OK, common.Ok())
-
-}
-
-/*
-*
-*删除
-*
- */
-func ModbusSlaverSheetDelete(c *gin.Context, ruleEngine typex.Rhilex) {
-	type Form struct {
-		UUIDs      []string `json:"uuids"`
-		DeviceUUID string   `json:"device_uuid"`
-	}
-	form := Form{}
-	if Error := c.ShouldBindJSON(&form); Error != nil {
-		c.JSON(common.HTTP_OK, common.Error400(Error))
-		return
-	}
-	err := service.DeleteModbusPointByDevice(form.UUIDs, form.DeviceUUID)
-	if err != nil {
-		c.JSON(common.HTTP_OK, common.Error400(err))
-		return
-	}
-	ruleEngine.RestartDevice(form.DeviceUUID)
-	c.JSON(common.HTTP_OK, common.Ok())
-
-}
-
-/*
-*
-* 检查点位合法性
-*
- */
-func checkModbusSlaverDataPoints(M ModbusSlaverPointVo) error {
-	if M.Tag == "" {
-		return fmt.Errorf("'Missing required param 'tag'")
-	}
-	if len(M.Tag) > 256 {
-		return fmt.Errorf("'Tag length must range of 1-256")
-	}
-	if M.Alias == "" {
-		return fmt.Errorf("'Missing required param 'alias'")
-	}
-	if len(M.Alias) > 256 {
-		return fmt.Errorf("'Alias length must range of 1-256")
-	}
-	if M.Address == nil {
-		return fmt.Errorf("'Missing required param 'address'")
-	}
-	if *M.Address > 65535 {
-		return fmt.Errorf("'Address length must range of 0-65535")
-	}
-	if M.Function == nil {
-		return fmt.Errorf("'Missing required param 'function'")
-	}
-	if *M.Function > 4 {
-		return fmt.Errorf("'Function only support value of 1,2,3,4")
-	}
-	if M.SlaverId == nil {
-		return fmt.Errorf("'Missing required param 'slaverId'")
-	}
-	if (*M.SlaverId) > 255 {
-		return fmt.Errorf("'Alias' length must range of 1-256")
-	}
-	if M.Frequency == nil {
-		return fmt.Errorf("'Missing required param 'frequency'")
-	}
-	if *M.Frequency < 50 {
-		return fmt.Errorf("'Frequency' must greater than 50ms")
-	}
-	if *M.Frequency > 100000 {
-		return fmt.Errorf("'Frequency' must little than 100s")
-	}
-	if M.Quantity == nil {
-		return fmt.Errorf("'Missing required param 'quantity'")
-	}
-	switch M.DataType {
-	case "UTF8":
-		if (*M.Quantity * uint16(2)) > 255 {
-			return fmt.Errorf("'Invalid 'UTF8' Length '%d'", (*M.Quantity * uint16(2)))
-		}
-		if !utils.SContains([]string{"BIG_ENDIAN", "LITTLE_ENDIAN"}, M.DataOrder) {
-			return fmt.Errorf("'Invalid '%s' order '%s'", M.DataType, M.DataOrder)
-		}
-	case "I", "Q", "BYTE":
-		if M.DataOrder != "A" {
-			return fmt.Errorf("'Invalid '%s' order '%s'", M.DataType, M.DataOrder)
-		}
-	case "SHORT", "USHORT", "INT16", "UINT16":
-		if !utils.SContains([]string{"AB", "BA"}, M.DataOrder) {
-			return fmt.Errorf("'Invalid '%s' order '%s'", M.DataType, M.DataOrder)
-		}
-	case "RAW", "INT", "INT32", "UINT", "UINT32", "FLOAT", "UFLOAT":
-		if !utils.SContains([]string{"ABCD", "DCBA", "CDAB"}, M.DataOrder) {
-			return fmt.Errorf("'Invalid '%s' order '%s'", M.DataType, M.DataOrder)
-		}
-	default:
-		return fmt.Errorf("'Invalid '%s' order '%s'", M.DataType, M.DataOrder)
-	}
-	if M.Weight == nil {
-		return fmt.Errorf("'Invalid Weight value:%d", M.Weight)
-	}
-	if !utils.IsValidColumnName(M.Tag) {
-		return fmt.Errorf("'Invalid Tag Name:%s", M.Tag)
-	}
-	return nil
-}
-
-/*
-*
-* 更新点位表
-*
- */
-func ModbusSlaverSheetUpdate(c *gin.Context, ruleEngine typex.Rhilex) {
-	type Form struct {
-		DeviceUUID       string                `json:"device_uuid"`
-		ModbusDataPoints []ModbusSlaverPointVo `json:"modbus_data_points"`
-	}
-	// ModbusSlaverDataPoints := []ModbusPointVo{}
-	form := Form{}
-	err := c.ShouldBindJSON(&form)
-	if err != nil {
-		c.JSON(common.HTTP_OK, common.Error400(err))
-		return
-	}
-	for _, ModbusSlaverDataPoint := range form.ModbusDataPoints {
-		if err := checkModbusSlaverDataPoints(ModbusSlaverDataPoint); err != nil {
-			c.JSON(common.HTTP_OK, common.Error400(err))
-			return
-		}
-		if ModbusSlaverDataPoint.UUID == "" ||
-			ModbusSlaverDataPoint.UUID == "new" ||
-			ModbusSlaverDataPoint.UUID == "copy" {
-			NewRow := model.MModbusDataPoint{
-				UUID:       utils.ModbusPointUUID(),
-				DeviceUuid: ModbusSlaverDataPoint.DeviceUUID,
-				Tag:        ModbusSlaverDataPoint.Tag,
-				Alias:      ModbusSlaverDataPoint.Alias,
-				Function:   ModbusSlaverDataPoint.Function,
-				SlaverId:   ModbusSlaverDataPoint.SlaverId,
-				Address:    ModbusSlaverDataPoint.Address,
-				Frequency:  ModbusSlaverDataPoint.Frequency,
-				Quantity:   ModbusSlaverDataPoint.Quantity,
-				DataType:   ModbusSlaverDataPoint.DataType,
-				DataOrder:  ModbusSlaverDataPoint.DataOrder,
-				Weight:     utils.HandleZeroValue(ModbusSlaverDataPoint.Weight),
-			}
-			err0 := service.InsertModbusPointPosition(NewRow)
-			if err0 != nil {
-				c.JSON(common.HTTP_OK, common.Error400(err0))
-				return
-			}
-		} else {
-			OldRow := model.MModbusDataPoint{
-				UUID:       ModbusSlaverDataPoint.UUID,
-				DeviceUuid: ModbusSlaverDataPoint.DeviceUUID,
-				Tag:        ModbusSlaverDataPoint.Tag,
-				Alias:      ModbusSlaverDataPoint.Alias,
-				Function:   ModbusSlaverDataPoint.Function,
-				SlaverId:   ModbusSlaverDataPoint.SlaverId,
-				Address:    ModbusSlaverDataPoint.Address,
-				Frequency:  ModbusSlaverDataPoint.Frequency,
-				Quantity:   ModbusSlaverDataPoint.Quantity,
-				DataType:   ModbusSlaverDataPoint.DataType,
-				DataOrder:  ModbusSlaverDataPoint.DataOrder,
-				Weight:     utils.HandleZeroValue(ModbusSlaverDataPoint.Weight),
-			}
-			err0 := service.UpdateModbusPoint(OldRow)
-			if err0 != nil {
-				c.JSON(common.HTTP_OK, common.Error400(err0))
-				return
-			}
-		}
-	}
-	ruleEngine.RestartDevice(form.DeviceUUID)
-	c.JSON(common.HTTP_OK, common.Ok())
-
-}
-
-type SlaverDeviceDto struct {
-	UUID   string
-	Name   string
-	Type   string
-	Config string
-}
-
-func (md SlaverDeviceDto) GetConfig() map[string]interface{} {
-	result := make(map[string]interface{})
-	err := json.Unmarshal([]byte(md.Config), &result)
-	if err != nil {
-		return map[string]interface{}{}
-	}
-	return result
-}
-
-// ModbusSlaverSheetImport 上传Excel文件
-func ModbusSlaverSheetImport(c *gin.Context, ruleEngine typex.Rhilex) {
-	// 解析 multipart/form-data 类型的请求体
-	err := c.Request.ParseMultipartForm(1024 * 1024 * 10)
-	if err != nil {
-		c.JSON(common.HTTP_OK, common.Error400(err))
-		return
-	}
-
-	// 获取上传的文件
-	file, header, err := c.Request.FormFile("file")
-	if err != nil {
-		c.JSON(common.HTTP_OK, common.Error400(err))
-		return
-	}
-	defer file.Close()
-	deviceUuid := c.Request.Form.Get("device_uuid")
-
-	Device := DeviceDto{}
-	errDb := interdb.DB().Table("m_devices").
-		Where("uuid=?", deviceUuid).Find(&Device).Error
-	if errDb != nil {
-		c.JSON(common.HTTP_OK, common.Error400(errDb))
-		return
-	}
-	if Device.Type != typex.GENERIC_MODBUS_SLAVER.String() {
-		c.JSON(common.HTTP_OK,
-			common.Error("Invalid Device Type, Only Support Import ModbusSlaver Device"))
-		return
-	}
-
-	contentType := header.Header.Get("Content-Type")
-	if contentType != "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" &&
-		contentType != "application/vnd.ms-excel" {
-		c.JSON(common.HTTP_OK, common.Error("File Must be Excel Sheet"))
-		return
-	}
-	// 判断文件大小是否符合要求（10MB）
-	if header.Size > 1024*1024*10 {
-		c.JSON(common.HTTP_OK, common.Error("Excel file size cannot be greater than 10MB"))
-		return
-	}
-	// 只取第一张表，而且名字必须是Sheet1
-	list, err := parseModbusSlaverPointExcel(file, "Sheet1", deviceUuid)
-	if err != nil {
-		c.JSON(common.HTTP_OK, common.Error400(err))
-		return
-	}
-	if err = service.InsertModbusPointPositions(list); err != nil {
-		c.JSON(common.HTTP_OK, common.Error400(err))
-		return
-	}
-	ruleEngine.RestartDevice(deviceUuid)
-	c.JSON(common.HTTP_OK, common.Ok())
-}
-
-/*
-*
-* 解析表格
-*
- */
-
-func parseModbusSlaverPointExcel(r io.Reader, sheetName string,
-	deviceUuid string) (list []model.MModbusDataPoint, err error) {
-	excelFile, err := excelize.OpenReader(r)
-	if err != nil {
-		return nil, err
-	}
-	defer excelFile.Close()
-	// 读取表格
-	rows, err := excelFile.GetRows(sheetName)
-	if err != nil {
-		return nil, err
-	}
-	// 判断首行标头
-	// tag, alias, function, frequency, slaverId, address, quality
-	err1 := errors.New(" Invalid Sheet Header")
-	if len(rows[0]) < 10 {
-		return nil, err1
-	}
-
-	// 严格检查表结构
-	if rows[0][0] != "tag" ||
-		rows[0][1] != "alias" ||
-		rows[0][2] != "function" ||
-		rows[0][3] != "frequency" ||
-		rows[0][4] != "slaverId" ||
-		rows[0][5] != "address" ||
-		rows[0][6] != "quality" ||
-		rows[0][7] != "type" ||
-		rows[0][8] != "order" ||
-		rows[0][9] != "weight" {
-		return nil, err1
-	}
-
-	list = make([]model.MModbusDataPoint, 0)
-	// tag, alias, function, frequency, slaverId, address, quality
-	for i := 1; i < len(rows); i++ {
-		row := rows[i]
-		tag := row[0]
-		alias := row[1]
-		function, _ := strconv.ParseUint(row[2], 10, 8)
-		frequency, _ := strconv.ParseUint(row[3], 10, 64)
-		slaverId, _ := strconv.ParseUint(row[4], 10, 8)
-		address, _ := strconv.ParseUint(row[5], 10, 16)
-		quantity, _ := strconv.ParseUint(row[6], 10, 16)
-		Type := row[7]
-		Order := row[8]
-		Weight, _ := strconv.ParseFloat(row[9], 32)
-		if Weight == 0 {
-			Weight = 1 // 防止解析异常的时候系数0
-		}
-		Function := int(function)
-		SlaverId := byte(slaverId)
-		Address := uint16(address)
-		Frequency := int64(frequency)
-		Quantity := uint16(quantity)
-
-		if err := checkModbusSlaverDataPoints(ModbusSlaverPointVo{
-			Tag:       tag,
-			Alias:     alias,
-			Function:  &Function,
-			SlaverId:  &SlaverId,
-			Address:   &Address,
-			Frequency: &Frequency, //ms
-			Quantity:  &Quantity,
-			DataType:  Type,
-			DataOrder: utils.GetDefaultDataOrder(Type, Order),
-			Weight:    &Weight,
-		}); err != nil {
-			return nil, err
-		}
-		//
-		model := model.MModbusDataPoint{
-			UUID:       utils.ModbusPointUUID(),
-			DeviceUuid: deviceUuid,
-			Tag:        tag,
-			Alias:      alias,
-			Function:   &Function,
-			SlaverId:   &SlaverId,
-			Address:    &Address,
-			Frequency:  &Frequency, //ms
-			Quantity:   &Quantity,
-			DataType:   Type,
-			DataOrder:  utils.GetDefaultDataOrder(Type, Order),
-			Weight:     &Weight,
-		}
-		list = append(list, model)
-	}
-	return list, nil
 }
