@@ -17,6 +17,7 @@ package engine
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"sync"
 	"time"
@@ -135,6 +136,14 @@ func (e *RuleEngine) loadDevices(xDevice typex.XDevice, deviceInstance *typex.De
 			LastFetchTime: uint64(time.Now().UnixMilli()),
 			Value:         "",
 		})
+		configBytes, _ := json.Marshal(config)
+		intercache.SetValue(fmt.Sprintf("__DeviceConfigMap:%s", deviceInstance.UUID), deviceInstance.UUID, intercache.CacheValue{
+			UUID:          deviceInstance.UUID,
+			Status:        1,
+			ErrMsg:        err.Error(),
+			LastFetchTime: uint64(time.Now().UnixMilli()),
+			Value:         string(configBytes),
+		})
 		return err
 	}
 	err2 := startDevice(xDevice, e, ctx, cancelCTX)
@@ -148,7 +157,9 @@ func (e *RuleEngine) loadDevices(xDevice typex.XDevice, deviceInstance *typex.De
 			Value:         "",
 		})
 	} else {
-		intercache.DeleteValue("__DefaultRuleEngine", deviceInstance.UUID)
+		intercache.DeleteValue("__DefaultRuleEngine", deviceInstance.UUID) // 删除设备缓存
+		intercache.DeleteValue(fmt.Sprintf("__DeviceConfigMap:%s",
+			deviceInstance.UUID), deviceInstance.UUID) // 删除配置缓存
 	}
 	glogger.GLogger.Infof("Device [%v, %v] load successfully", deviceInstance.Name, deviceInstance.UUID)
 	return nil
