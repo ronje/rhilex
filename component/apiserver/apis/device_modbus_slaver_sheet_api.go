@@ -54,8 +54,6 @@ func ModbusSlaverSheetPageList(c *gin.Context, ruleEngine typex.Rhilex) {
 		c.JSON(common.HTTP_OK, common.Error("Cache Slot Not Exists"))
 		return
 	}
-	Type, _ := c.GetQuery("registerType")
-
 	// 1: 线圈寄存器      Coils Registers
 	// 2: 离散寄存器      Discrete Registers
 	// 3: 保持寄存器      Holding Registers
@@ -64,7 +62,8 @@ func ModbusSlaverSheetPageList(c *gin.Context, ruleEngine typex.Rhilex) {
 	HoldingRegisters := []ModbusSlaverRegister{}
 	InputRegisters := []ModbusSlaverRegister{}
 	DiscreteRegisters := []ModbusSlaverRegister{}
-	if Type == "Coils" {
+	AllList := []ModbusSlaverRegister{}
+	{
 		for i := 0; i < 64; i++ {
 			UUID := fmt.Sprintf("%s_Coils:%d", deviceUuid, i)
 			Register := ModbusSlaverRegister{
@@ -79,11 +78,8 @@ func ModbusSlaverSheetPageList(c *gin.Context, ruleEngine typex.Rhilex) {
 			}
 			Coils = append(Coils, Register)
 		}
-		Result := service.WrapPageResult(*pager, Coils, 64)
-		c.JSON(common.HTTP_OK, common.OkWithData(Result))
-		return
 	}
-	if Type == "Discrete" {
+	{
 		for i := 0; i < 64; i++ {
 			UUID := fmt.Sprintf("%s_DiscreteRegisters:%d", deviceUuid, i)
 			Register := ModbusSlaverRegister{
@@ -98,11 +94,8 @@ func ModbusSlaverSheetPageList(c *gin.Context, ruleEngine typex.Rhilex) {
 			}
 			DiscreteRegisters = append(DiscreteRegisters, Register)
 		}
-		Result := service.WrapPageResult(*pager, DiscreteRegisters, 64)
-		c.JSON(common.HTTP_OK, common.OkWithData(Result))
-		return
 	}
-	if Type == "Holding" {
+	{
 		for i := 0; i < 64; i++ {
 			UUID := fmt.Sprintf("%s_HoldingRegisters:%d", deviceUuid, i)
 			Register := ModbusSlaverRegister{
@@ -117,11 +110,8 @@ func ModbusSlaverSheetPageList(c *gin.Context, ruleEngine typex.Rhilex) {
 			}
 			HoldingRegisters = append(HoldingRegisters, Register)
 		}
-		Result := service.WrapPageResult(*pager, HoldingRegisters, 64)
-		c.JSON(common.HTTP_OK, common.OkWithData(Result))
-		return
 	}
-	if Type == "Input" {
+	{
 		for i := 0; i < 64; i++ {
 			UUID := fmt.Sprintf("%s_InputRegisters:%d", deviceUuid, i)
 			Register := ModbusSlaverRegister{
@@ -136,9 +126,11 @@ func ModbusSlaverSheetPageList(c *gin.Context, ruleEngine typex.Rhilex) {
 			}
 			InputRegisters = append(InputRegisters, Register)
 		}
-		Result := service.WrapPageResult(*pager, InputRegisters, 64)
-		c.JSON(common.HTTP_OK, common.OkWithData(Result))
-		return
+		AllList = append(AllList, Coils...)
+		AllList = append(AllList, InputRegisters...)
+		AllList = append(AllList, DiscreteRegisters...)
+		AllList = append(AllList, HoldingRegisters...)
 	}
-	c.JSON(common.HTTP_OK, common.Error("unsupported register type"))
+	Result := service.WrapPageResult(*pager, AllList, 64)
+	c.JSON(common.HTTP_OK, common.OkWithData(Result))
 }
