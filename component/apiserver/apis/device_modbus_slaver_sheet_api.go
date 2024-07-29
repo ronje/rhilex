@@ -41,6 +41,17 @@ type ModbusSlaverRegisterVo struct {
 	HoldingRegisters  []ModbusSlaverRegister `json:"holdingRegisters"`
 	InputRegisters    []ModbusSlaverRegister `json:"inputRegisters"`
 }
+type RegisterEntityVo struct {
+	UUID            string `json:"uuid"`
+	AddressCoils    int    `json:"addressCoils"`
+	ValueCoils      string `json:"valueCoils"`
+	AddressDiscrete int    `json:"addressDiscrete"`
+	ValueDiscrete   string `json:"valueDiscrete"`
+	AddressHolding  int    `json:"addressHolding"`
+	ValueHolding    string `json:"valueHolding"`
+	AddressInput    int    `json:"addressInput"`
+	ValueInput      string `json:"valueInput"`
+}
 
 func ModbusSlaverSheetPageList(c *gin.Context, ruleEngine typex.Rhilex) {
 	pager, err := service.ReadPageRequest(c)
@@ -62,7 +73,7 @@ func ModbusSlaverSheetPageList(c *gin.Context, ruleEngine typex.Rhilex) {
 	HoldingRegisters := []ModbusSlaverRegister{}
 	InputRegisters := []ModbusSlaverRegister{}
 	DiscreteRegisters := []ModbusSlaverRegister{}
-	AllList := []ModbusSlaverRegister{}
+	AllList := []RegisterEntityVo{}
 	{
 		for i := 0; i < 64; i++ {
 			UUID := fmt.Sprintf("%s_Coils:%d", deviceUuid, i)
@@ -126,11 +137,35 @@ func ModbusSlaverSheetPageList(c *gin.Context, ruleEngine typex.Rhilex) {
 			}
 			InputRegisters = append(InputRegisters, Register)
 		}
-		AllList = append(AllList, Coils...)
-		AllList = append(AllList, InputRegisters...)
-		AllList = append(AllList, DiscreteRegisters...)
-		AllList = append(AllList, HoldingRegisters...)
+		for i := 0; i < 64; i++ {
+			RegisterEntityVo := RegisterEntityVo{
+				UUID:            fmt.Sprintf("uuid:%d", i),
+				AddressCoils:    i,
+				ValueCoils:      transValue(Coils[i].Value),
+				AddressInput:    i,
+				ValueInput:      transValue(InputRegisters[i].Value),
+				AddressDiscrete: i,
+				ValueDiscrete:   transValue(DiscreteRegisters[i].Value),
+				AddressHolding:  i,
+				ValueHolding:    transValue(HoldingRegisters[i].Value),
+			}
+
+			AllList = append(AllList, RegisterEntityVo)
+		}
 	}
 	Result := service.WrapPageResult(*pager, AllList, 64)
 	c.JSON(common.HTTP_OK, common.OkWithData(Result))
+}
+func transValue(V interface{}) string {
+	switch T := V.(type) {
+	case string:
+		return T
+	case int:
+		return fmt.Sprintf("%d", T)
+	case int64:
+		return fmt.Sprintf("%d", T)
+	case uint64:
+		return fmt.Sprintf("%d", T)
+	}
+	return "0"
 }

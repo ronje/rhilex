@@ -83,10 +83,10 @@ func (mdev *ModbusSlaver) Init(devId string, configMap map[string]interface{}) e
 	mdev.DiscreteInputs = make([]byte, mdev.mainConfig.CommonConfig.MaxRegisters)
 	mdev.Coils = make([]byte, mdev.mainConfig.CommonConfig.MaxRegisters)
 	for i := 0; i < mdev.mainConfig.CommonConfig.MaxRegisters; i++ {
+		CoilUUID := fmt.Sprintf("%s_Coils:%d", mdev.PointId, i)
 		HoldingRegisterUUID := fmt.Sprintf("%s_HoldingRegisters:%d", mdev.PointId, i)
 		InputRegisterUUID := fmt.Sprintf("%s_InputRegisters:%d", mdev.PointId, i)
 		DiscreteInputUUID := fmt.Sprintf("%s_DiscreteInputs:%d", mdev.PointId, i)
-		CoilUUID := fmt.Sprintf("%s_Coils:%d", mdev.PointId, i)
 		//
 		LastFetchTime := uint64(time.Now().UnixMilli())
 		intercache.SetValue(mdev.PointId, HoldingRegisterUUID, intercache.CacheValue{
@@ -158,7 +158,7 @@ func (mdev *ModbusSlaver) Start(cctx typex.CCTX) error {
 			intercache.SetValue(mdev.PointId, CoilUUID, intercache.CacheValue{
 				UUID:          CoilUUID,
 				LastFetchTime: LastFetchTime,
-				Value:         fmt.Sprintf("%x", LastValue), // 更新后的值
+				Value:         fmt.Sprintf("%d", LastValue), // 更新后的值
 			})
 		}
 		glogger.GLogger.Debug("Received Modbus Request:", FunCode, Data, register, numRegs, endRegister)

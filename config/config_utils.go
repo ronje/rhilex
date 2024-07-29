@@ -17,7 +17,6 @@ package core
 
 import (
 	"encoding/json"
-	"fmt"
 
 	"github.com/hootrhino/rhilex/component/intercache"
 )
