@@ -137,7 +137,9 @@ func (e *RuleEngine) loadDevices(xDevice typex.XDevice, deviceInstance *typex.De
 			Value:         "",
 		})
 		configBytes, _ := json.Marshal(config)
-		intercache.SetValue(fmt.Sprintf("__DeviceConfigMap:%s", deviceInstance.UUID), deviceInstance.UUID, intercache.CacheValue{
+		// 注册一个缓存器
+		intercache.SetValue(fmt.Sprintf("__DeviceConfigMap",
+			deviceInstance.UUID), deviceInstance.UUID, intercache.CacheValue{
 			UUID:          deviceInstance.UUID,
 			Status:        1,
 			ErrMsg:        err.Error(),
@@ -158,8 +160,7 @@ func (e *RuleEngine) loadDevices(xDevice typex.XDevice, deviceInstance *typex.De
 		})
 	} else {
 		intercache.DeleteValue("__DefaultRuleEngine", deviceInstance.UUID) // 删除设备缓存
-		intercache.DeleteValue(fmt.Sprintf("__DeviceConfigMap:%s",
-			deviceInstance.UUID), deviceInstance.UUID) // 删除配置缓存
+		intercache.DeleteValue("__DeviceConfigMap", deviceInstance.UUID)   // 删除配置缓存
 	}
 	glogger.GLogger.Infof("Device [%v, %v] load successfully", deviceInstance.Name, deviceInstance.UUID)
 	return nil

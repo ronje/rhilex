@@ -206,8 +206,10 @@ func (e *RuleEngine) Stop() {
 	// AI Runtime
 	glogger.GLogger.Info("Stop AI Runtime")
 	aibase.Stop()
-	// UnRegisterSlot
+	// UnRegister __DefaultRuleEngine
 	intercache.UnRegisterSlot("__DefaultRuleEngine")
+	// UnRegister __DeviceConfigMap
+	intercache.UnRegisterSlot("__DeviceConfigMap")
 	//
 	glogger.GLogger.Info("Stop transceiver")
 	transceiver.Stop()

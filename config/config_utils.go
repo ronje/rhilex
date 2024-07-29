@@ -28,7 +28,7 @@ import (
 *
  */
 func GetDeviceConfigMap(deviceUuid string) map[string]interface{} {
-	Slot := intercache.GetSlot(fmt.Sprintf("__DeviceConfigMap:%s", deviceUuid))
+	Slot := intercache.GetSlot("__DeviceConfigMap")
 	Value, ok := Slot[deviceUuid]
 	if !ok {
 		return nil
