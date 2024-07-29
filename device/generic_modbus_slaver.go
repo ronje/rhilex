@@ -145,24 +145,36 @@ func (mdev *ModbusSlaver) Start(cctx typex.CCTX) error {
 	// [16] = WriteHoldingRegisters
 	mdev.server.SetOnRequest(func(s *mbserver.Server, frame mbserver.Framer) {
 		FunCode := frame.GetFunction()
-		Data := frame.GetData()
 		register, numRegs, endRegister := getRegisterAddressAndNumber(frame)
-		if endRegister > mdev.mainConfig.CommonConfig.MaxRegisters {
+		if register > mdev.mainConfig.CommonConfig.MaxRegisters {
 			glogger.GLogger.Error("exceed MaxRegisters:", register, numRegs, endRegister)
 			return
 		}
 		if FunCode == 5 { // 更新线圈
 			LastFetchTime := uint64(time.Now().UnixMilli())
 			LastValue := mdev.Coils[register]
-			CoilUUID := fmt.Sprintf("%s_Coils:%d", mdev.PointId, register)
-			intercache.SetValue(mdev.PointId, CoilUUID, intercache.CacheValue{
-				UUID:          CoilUUID,
+			UUID := fmt.Sprintf("%s_Coils:%d", mdev.PointId, register)
+			CacheValue := intercache.CacheValue{
+				UUID:          UUID,
 				LastFetchTime: LastFetchTime,
-				Value:         fmt.Sprintf("%d", LastValue), // 更新后的值
+				Value:         "0", // 更新后的值
+			}
+			if LastValue == 0xFF {
+				CacheValue.Value = "1"
+			}
+			intercache.SetValue(mdev.PointId, UUID, CacheValue)
+		}
+		if FunCode == 6 { // 更新HoldingRegisters
+			LastFetchTime := uint64(time.Now().UnixMilli())
+			LastValue := mdev.HoldingRegisters[register]
+			UUID := fmt.Sprintf("%s_HoldingRegisters:%d", mdev.PointId, register)
+			intercache.SetValue(mdev.PointId, UUID, intercache.CacheValue{
+				UUID:          UUID,
+				LastFetchTime: LastFetchTime,
+				Value:         fmt.Sprintf("0x%04X", LastValue), // 更新后的值
 			})
 		}
-		glogger.GLogger.Debug("Received Modbus Request:", FunCode, Data, register, numRegs, endRegister)
-
+		// 15 16暂时不支持
 	})
 	if mdev.mainConfig.CommonConfig.Mode == "UART" {
 		hwPort, err := hwportmanager.GetHwPort(mdev.mainConfig.PortUuid)
