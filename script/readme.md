@@ -14,8 +14,7 @@
  You should have received a copy of the GNU Affero General Public License
  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 -->
-根据上述优化建议，优化后的RHILEX Linux系统操作脚本文档如下：
-# Linux daemon script for RHILEX
+# Linux daemon
 该脚本是RHILEX的通用Linux系统操作脚本，用于处理RHILEX的安装、启动、停止、卸载等操作。
 ## 环境准备
 在执行脚本前，请确保已正确设置环境变量ARCHSUPPORT，例如：
@@ -70,6 +69,3 @@ tail -f /var/log/rhilex.log
 - 确保脚本具有执行权限。
 - 脚本仅适用于Linux操作系统。
 - 升级时请确保脚本版本号一致。
-## 版本管理
-当前脚本版本为v1.0。
-通过以上优化，脚本文档更加完整和易用。
