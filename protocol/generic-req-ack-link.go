@@ -17,103 +17,119 @@ package protocol
 
 import (
 	"context"
-	"fmt"
 	"io"
 )
 
-const MaxBufferSize = 1024
+const MAX_BUFFER_SIZE = 1024 * 10 * 10
 
-// Send sends the data to the specified channel.
-func Send(channel chan<- []byte, data []byte) {
-	channel <- data
-}
-
-// ReadFromIO reads from the io.ReadWriteCloser and sends complete messages to the channel.
-// Messages are considered complete when they match the pattern: EE EF [DATA] \r \n
-// ______--______--______--
-func ReadFromIO(ctx context.Context, ioRw io.ReadWriteCloser, channel chan<- []byte) error {
-	buffer := make([]byte, MaxBufferSize)
-	var acc int
-	edgeSignal1 := false
-	edgeSignal2 := false
-
-	current := [1]byte{}
+/*
+*
+* EE EF .... \r \n
+*
+ */
+func StartDelimiterReceive(Ctx context.Context, OutChannel chan []byte, InputIO io.ReadWriteCloser) error {
+	buffer := make([]byte, MAX_BUFFER_SIZE)
+	byteACC := 0                      // 计数器而不是下标
+	edgeSignal1 := false              // 两个边沿
+	edgeSignal2 := false              // 两个边沿
+	expectPacket := make([]byte, 256) // 默认最大包长256字节
 	for {
 		select {
-		case <-ctx.Done():
-			return fmt.Errorf("context canceled")
+		case <-Ctx.Done():
+			return nil
 		default:
 		}
-		_, errRead := ioRw.Read(current[:])
-		if errRead != nil {
-			if errRead == io.EOF {
-				continue
-			}
-			return errRead
+		N, errR := InputIO.Read(buffer[byteACC:])
+		// 读取异常，重启
+		if errR != nil {
+			return errR
 		}
-		if acc > 0 {
-			if current[0] == '\xEF' && buffer[acc-1] == '\xEE' {
-				edgeSignal1 = true
-			}
-			if current[0] == '\n' && buffer[acc-1] == '\r' {
-				edgeSignal2 = true
-			}
+		if N == 0 {
+			continue
 		}
-
-		if edgeSignal1 && edgeSignal2 {
-			Send(channel, buffer[:acc])
-			acc = 0
-			edgeSignal1 = false
-			edgeSignal2 = false
-		} else {
-			buffer[acc] = current[0]
-			acc++
-			if acc >= MaxBufferSize {
-				acc = 0
+		byteACC += N
+		if byteACC > 256 { // 单个包最大256字节
+			if !edgeSignal1 || !edgeSignal2 {
+				for i := 0; i < byteACC; i++ {
+					buffer[i] = '\x00'
+				}
+				byteACC = 0
 				edgeSignal1 = false
 				edgeSignal2 = false
 			}
+			continue
+		}
+		expectPacketACC := 0
+		expectPacketLength := 0
+		for i, currentByte := range buffer[:byteACC] {
+			expectPacketACC++
+			if !edgeSignal1 {
+				if expectPacketACC >= 2 {
+					if currentByte == 0xEF && buffer[i-1] == 0xEE {
+						edgeSignal1 = true
+					}
+				}
+			}
+			if !edgeSignal1 || expectPacketACC < 4 {
+				continue
+			}
+			if edgeSignal1 {
+				if currentByte == 0x0A && buffer[expectPacketACC-2] == 0x0D {
+					expectPacketLength = copy(expectPacket, buffer[:expectPacketACC-1])
+					edgeSignal2 = true
+				}
+			}
+			if !edgeSignal1 || !edgeSignal2 {
+				continue
+			}
+			if edgeSignal1 && edgeSignal2 {
+				OutChannel <- expectPacket[2 : expectPacketLength-1]
+			}
+			if expectPacketACC < byteACC {
+				if !edgeSignal1 || !edgeSignal2 {
+					copy(buffer[0:], buffer[expectPacketACC-1:byteACC])
+					byteACC = byteACC - expectPacketACC
+				}
+			} else {
+				byteACC = 0
+			}
+			expectPacketLength = 0
+			expectPacketACC = 0
+			edgeSignal1 = false
+			edgeSignal2 = false
 		}
 	}
 }
 
-// ReadFromChannel reads data from an input channel and processes it according to specific rules,
-// then sends the processed data to an output channel until the context is canceled.
-// It checks for specific sequences in the input data and sends the accumulated buffer to the output
-// channel when a sequence is detected.
-func ReadFromChannel(ctx context.Context, inChannel chan []byte) ([]byte, error) {
-	buffer := make([]byte, MaxBufferSize)
-	var acc int
-	edgeSignal1 := false
-	edgeSignal2 := false
-	for {
-		select {
-		case <-ctx.Done():
-			return nil, fmt.Errorf("context canceled")
-		case BinData := <-inChannel:
-			for _, currentByte := range BinData {
-				buffer[acc] = currentByte
-				if acc > 0 {
-					if currentByte == '\xEF' && buffer[acc-1] == '\xEE' {
-						edgeSignal1 = true
-					}
-					if currentByte == '\n' && buffer[acc-1] == '\r' {
-						edgeSignal2 = true
-					}
-				}
-				if edgeSignal1 && edgeSignal2 {
-					acc = 0
-					edgeSignal1 = false
-					edgeSignal2 = false
-					return buffer[:acc], nil
-				}
-				acc++
-				if acc >= MaxBufferSize {
-					acc = 0
-					edgeSignal1 = false
-					edgeSignal2 = false
-				}
-			}
-		}
-	}
+/*
+*
+* 固定包格式
+*
+ */
+type BinaryPacket struct {
+	_type  uint8     // 数据包类型
+	length uint32    // 数据包长度
+	data   [256]byte // 数据体
+}
+
+func NewBinaryPacket(data []byte) BinaryPacket {
+	B := BinaryPacket{}
+	copy(B.data[:], data)
+	return B
+}
+func (B BinaryPacket) Type() {
+
+}
+func (B BinaryPacket) Length() {
+
+}
+
+func (B BinaryPacket) Encode() {
+
+}
+func (B BinaryPacket) Decode() {
+
+}
+func StartFixPacketReceive(Ctx context.Context, OutChannel chan BinaryPacket, InputIO io.ReadWriteCloser) error {
+	return nil
 }
