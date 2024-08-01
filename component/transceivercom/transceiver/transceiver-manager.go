@@ -23,7 +23,6 @@ import (
 
 	"github.com/hootrhino/rhilex/component/transceivercom"
 	atk01lora "github.com/hootrhino/rhilex/component/transceivercom/atk01-lora"
-	cvtdlora "github.com/hootrhino/rhilex/component/transceivercom/cvtd-lora"
 	ec200a4g "github.com/hootrhino/rhilex/component/transceivercom/ec200a-4g"
 	mx01ble "github.com/hootrhino/rhilex/component/transceivercom/mx01-ble"
 	core "github.com/hootrhino/rhilex/config"
@@ -121,7 +120,8 @@ func (TM *TransceiverCommunicatorManager) Status(name string) (transceivercom.Tr
 *
  */
 func initDefaultRFModule() {
-	{
+	env1 := os.Getenv("BLESUPPORT")
+	if env1 == "MX01" {
 		Config := transceivercom.TransceiverConfig{}
 		err1 := utils.INIToStruct(core.GlobalConfig.IniPath, "transceiver.mx01", &Config)
 		if err1 != nil {
@@ -135,7 +135,8 @@ func initDefaultRFModule() {
 			os.Exit(1)
 		}
 	}
-	{
+	env2 := os.Getenv("4GSUPPORT")
+	if env2 == "EC200A" {
 		Config := transceivercom.TransceiverConfig{}
 		err1 := utils.INIToStruct(core.GlobalConfig.IniPath, "transceiver.ec200a", &Config)
 		if err1 != nil {
@@ -149,7 +150,8 @@ func initDefaultRFModule() {
 			os.Exit(1)
 		}
 	}
-	{
+	env3 := os.Getenv("LORASUPPORT")
+	if env3 == "ATK01" {
 		Config := transceivercom.TransceiverConfig{}
 		err1 := utils.INIToStruct(core.GlobalConfig.IniPath, "transceiver.atk01", &Config)
 		if err1 != nil {
@@ -158,20 +160,6 @@ func initDefaultRFModule() {
 		}
 		ATK01 := atk01lora.NewATK01Lora(DefaultTransceiverCommunicatorManager.R)
 		err := DefaultTransceiverCommunicatorManager.Load(ATK01.Info().Name, Config, ATK01)
-		if err != nil {
-			glogger.GLogger.Fatal(err1)
-			os.Exit(1)
-		}
-	}
-	{
-		Config := transceivercom.TransceiverConfig{}
-		err1 := utils.INIToStruct(core.GlobalConfig.IniPath, "transceiver.cvtd01", &Config)
-		if err1 != nil {
-			glogger.GLogger.Fatal(err1)
-			os.Exit(1)
-		}
-		Cvtd01 := cvtdlora.NewCvtdLora(DefaultTransceiverCommunicatorManager.R)
-		err := DefaultTransceiverCommunicatorManager.Load(Cvtd01.Info().Name, Config, Cvtd01)
 		if err != nil {
 			glogger.GLogger.Fatal(err1)
 			os.Exit(1)

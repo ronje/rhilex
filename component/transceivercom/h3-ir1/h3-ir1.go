@@ -125,7 +125,7 @@ func (ird *H3IR1) Info() transceivercom.CommunicatorInfo {
 		Name:     "ir1",
 		Model:    "ir1-nec",
 		Type:     transceivercom.IR,
-		Vendor:   "NEC-IR",
+		Vendor:   "RHILEX-TECH",
 		Mac:      "00:00:00:00:00:00:00:00",
 		Firmware: "0.0.0",
 	}
@@ -133,7 +133,7 @@ func (ird *H3IR1) Info() transceivercom.CommunicatorInfo {
 func (ird *H3IR1) Status() transceivercom.TransceiverStatus {
 	return transceivercom.TransceiverStatus{
 		Code:  transceivercom.TC_ERROR,
-		Error: fmt.Errorf("NOT SUPPORT"),
+		Error: fmt.Errorf("Invalid Device"),
 	}
 }
 func (ird *H3IR1) Stop() {

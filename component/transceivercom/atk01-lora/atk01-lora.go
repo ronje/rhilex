@@ -18,7 +18,6 @@ package atk01lora
 import (
 	"fmt"
 	"io"
-	"os"
 	"strings"
 	"sync"
 	"time"
@@ -67,10 +66,6 @@ func NewATK01Lora(R typex.Rhilex) transceivercom.TransceiverCommunicator {
 *
  */
 func (tc *ATK01Lora) Start(Config transceivercom.TransceiverConfig) error {
-	env := os.Getenv("LORASUPPORT")
-	if env != "ATK01" {
-		return nil
-	}
 	tc.mainConfig = ATK01LoraConfig{
 		ComConfig: Config,
 	}
@@ -251,8 +246,8 @@ func (tc *ATK01Lora) Info() transceivercom.CommunicatorInfo {
 		Name:     "atk01",
 		Model:    "ATK01-LORA-01",
 		Type:     transceivercom.LORA,
-		Vendor:   "GUANGZHOU-ZHENGDIAN-YUANZI technology",
-		Mac:      "00:00:00:00:00:00:00:00",
+		Vendor:   "RHILEX-TECH",
+		Mac:      "00:00:00:00:00:00",
 		Firmware: "0.0.0",
 	}
 }
@@ -260,7 +255,7 @@ func (tc *ATK01Lora) Status() transceivercom.TransceiverStatus {
 	if tc.serialPort == nil {
 		return transceivercom.TransceiverStatus{
 			Code:  transceivercom.TC_ERROR,
-			Error: fmt.Errorf("NOT SUPPORT"),
+			Error: fmt.Errorf("Invalid Device"),
 		}
 	} else {
 		return transceivercom.TransceiverStatus{
