@@ -17,6 +17,7 @@ package protocol
 
 import (
 	"context"
+	"encoding/binary"
 	"io"
 )
 
@@ -27,7 +28,9 @@ const MAX_BUFFER_SIZE = 1024 * 10 * 10
 * EE EF .... \r \n
 *
  */
-func StartDelimiterReceive(Ctx context.Context, OutChannel chan []byte, InputIO io.ReadWriteCloser) error {
+func StartDelimiterReceive(Ctx context.Context,
+	OutChannel chan []byte,
+	InputIO io.ReadWriteCloser) error {
 	buffer := make([]byte, MAX_BUFFER_SIZE)
 	byteACC := 0                      // 计数器而不是下标
 	edgeSignal1 := false              // 两个边沿
@@ -120,16 +123,66 @@ func NewBinaryPacket(data []byte) BinaryPacket {
 func (B BinaryPacket) Type() {
 
 }
-func (B BinaryPacket) Length() {
-
+func (B BinaryPacket) Length() uint32 {
+	return binary.BigEndian.Uint32(B.data[:4])
 }
 
-func (B BinaryPacket) Encode() {
-
-}
-func (B BinaryPacket) Decode() {
-
-}
-func StartFixPacketReceive(Ctx context.Context, OutChannel chan BinaryPacket, InputIO io.ReadWriteCloser) error {
-	return nil
+func StartFixPacketReceive(Ctx context.Context,
+	OutChannel chan []byte,
+	InputIO io.ReadWriteCloser) error {
+	receiveBuffer := make([]byte, 256)
+	OneFrame := make([]byte, 256)
+	bytesCursor := uint32(0)
+	packetHeaderLength := uint32(4)
+	segmentData := false
+	for {
+		select {
+		case <-Ctx.Done():
+			return nil
+		default:
+		}
+		N, errR := InputIO.Read(receiveBuffer[bytesCursor:])
+		if errR != nil {
+			continue
+		}
+		bytesCursor += uint32(N)
+		if bytesCursor < 4 {
+			continue
+		}
+		if bytesCursor >= 256 {
+			for i := 0; i < 256; i++ {
+				receiveBuffer[i] = 0
+			}
+			bytesCursor = 0
+			packetHeaderLength = 0
+			segmentData = false
+			continue
+		}
+	PARSE_PACKET:
+		BinaryLength := binary.BigEndian.Uint32(receiveBuffer[:4])
+		if BinaryLength > bytesCursor {
+			// 解决死循环
+			if segmentData {
+				goto SEGMENT
+			} else {
+				continue
+			}
+		}
+	SEGMENT:
+		onePacketBytesCount := packetHeaderLength + BinaryLength
+		if onePacketBytesCount > bytesCursor {
+			continue
+		}
+		copiedBytesCount := copy(OneFrame, receiveBuffer[:onePacketBytesCount])
+		OutChannel <- OneFrame[:copiedBytesCount]
+		leastMoreBytesCount := copy(receiveBuffer[0:], receiveBuffer[onePacketBytesCount:bytesCursor])
+		bytesCursor -= onePacketBytesCount
+		if leastMoreBytesCount > 4 {
+			segmentData = true
+			goto PARSE_PACKET
+		} else {
+			segmentData = false
+			goto PARSE_PACKET
+		}
+	}
 }
