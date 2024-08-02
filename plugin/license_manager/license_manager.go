@@ -58,29 +58,34 @@ func NewLicenseManager(r typex.Rhilex) *LicenseManager {
 	return &LicenseManager{}
 }
 func validateLicense(key_path, license_path string) error {
-	errMsg := "License loading failed. Your License may not be compliant."
+	errMsg := "License loading failed."
 	licBytesB64, err := os.ReadFile(license_path)
 	if err != nil {
+		fmt.Println(errMsg)
 		glogger.GLogger.Fatal(errMsg)
 		os.Exit(0)
 	}
 	keyBytes, err := os.ReadFile(key_path)
 	if err != nil {
+		fmt.Println(errMsg)
 		glogger.GLogger.Fatal(errMsg)
 		os.Exit(0)
 	}
 	licBytes, err := base64.StdEncoding.DecodeString(string(licBytesB64))
 	if err != nil {
+		fmt.Println(errMsg)
 		glogger.GLogger.Fatal(errMsg)
 		os.Exit(0)
 	}
 	adminSalt, err := RSADecrypt(licBytes, keyBytes)
 	if err != nil {
+		fmt.Println(errMsg)
 		glogger.GLogger.Fatal(errMsg)
 		os.Exit(0)
 	}
 	LocalLicense, err := ParseAuthInfo(string(adminSalt))
 	if err != nil {
+		fmt.Println(errMsg)
 		glogger.GLogger.Fatal(errMsg)
 		os.Exit(0)
 	}
@@ -91,6 +96,7 @@ func validateLicense(key_path, license_path string) error {
 	T2s := T2.Format("2006-01-02 15:04:05")
 	//
 	if !LocalLicense.ValidateTime() {
+		fmt.Printf("License has expired, Valid from %s to %s\n", T1s, T2s)
 		glogger.GLogger.Fatalf("License has expired, Valid from %s to %s", T1s, T2s)
 		os.Exit(0)
 	}
@@ -104,10 +110,13 @@ func validateLicense(key_path, license_path string) error {
 		localMac, err3 = ossupport.GetLinuxMacAddr(LocalLicense.Iface)
 	}
 	if err3 != nil {
+		fmt.Println(errMsg)
+		fmt.Println(err3)
 		glogger.GLogger.Fatal(err3)
 		os.Exit(0)
 	}
 	if localMac != LocalLicense.MAC {
+		fmt.Println(errMsg)
 		glogger.GLogger.Debugf("Local Mac:%s; certificate Mac:%s", localMac, LocalLicense.MAC)
 		glogger.GLogger.Fatal("Local certificate and hardware information do not match.")
 		os.Exit(0)
@@ -123,14 +132,16 @@ func validateLicense(key_path, license_path string) error {
 	return nil
 }
 func (dm *LicenseManager) Init(section *ini.Section) error {
-	errMsg := "License loading failed. Your License may not be compliant."
+	errMsg := "License loading failed."
 	license_path, err1 := section.GetKey("license_path")
 	if err1 != nil {
+		fmt.Println(errMsg)
 		glogger.GLogger.Fatal(errMsg)
 		os.Exit(0)
 	}
 	key_path, err2 := section.GetKey("key_path")
 	if err2 != nil {
+		fmt.Println(errMsg)
 		glogger.GLogger.Fatal(errMsg)
 		os.Exit(0)
 	}
