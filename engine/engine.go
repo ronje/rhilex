@@ -758,12 +758,6 @@ func (e *RuleEngine) InitTargetTypeManager() error {
 			NewTarget: target.NewUdpTarget,
 		},
 	)
-	e.TargetTypeManager.Register(typex.SQLITE_TARGET,
-		&typex.XConfig{
-			Engine:    e,
-			NewTarget: target.NewSqliteTarget,
-		},
-	)
 	e.TargetTypeManager.Register(typex.TCP_TRANSPORT,
 		&typex.XConfig{
 			Engine:    e,
