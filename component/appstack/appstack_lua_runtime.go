@@ -109,16 +109,18 @@ func LoadAppLibGroup(app *Application, e typex.Rhilex) {
 	}
 	{
 		Funcs := map[string]func(l *lua.LState) int{
-			"HToN":       rhilexlib.HToN(e, app.UUID),
-			"HsubToN":    rhilexlib.HsubToN(e, app.UUID),
-			"MatchHex":   rhilexlib.MatchHex(e, app.UUID),
-			"MatchUInt":  rhilexlib.MatchUInt(e, app.UUID),
-			"Bytes2Hexs": rhilexlib.Bytes2Hexs(e, app.UUID),
-			"Hexs2Bytes": rhilexlib.Hexs2Bytes(e, app.UUID),
-			"ABCD":       rhilexlib.ABCD(e, app.UUID),
-			"DCBA":       rhilexlib.DCBA(e, app.UUID),
-			"BADC":       rhilexlib.BADC(e, app.UUID),
-			"CDAB":       rhilexlib.CDAB(e, app.UUID),
+			"HToN":         rhilexlib.HToN(e, app.UUID),
+			"HsubToN":      rhilexlib.HsubToN(e, app.UUID),
+			"MatchHex":     rhilexlib.MatchHex(e, app.UUID),
+			"MatchUInt":    rhilexlib.MatchUInt(e, app.UUID),
+			"Bytes2Hexs":   rhilexlib.Bytes2Hexs(e, app.UUID),
+			"Hexs2Bytes":   rhilexlib.Hexs2Bytes(e, app.UUID),
+			"ABCD":         rhilexlib.ABCD(e, app.UUID),
+			"DCBA":         rhilexlib.DCBA(e, app.UUID),
+			"BADC":         rhilexlib.BADC(e, app.UUID),
+			"CDAB":         rhilexlib.CDAB(e, app.UUID),
+			"TwoBytesHOrL": rhilexlib.TwoBytesHOrL(e, app.UUID),
+			"Int16HOrL":    rhilexlib.Int16HOrL(e, app.UUID),
 		}
 		AddAppLibToGroup(app, e, "hex", Funcs)
 	}

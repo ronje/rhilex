@@ -211,16 +211,42 @@ func extHex(hexStr string, start, end int) string {
 	return hexStr[start*2 : (end+1)*2]
 }
 
-// func extHex(hexStr string, start, end int) string {
-// 	// 检查输入边界的有效性
-// 	if start < 0 || end < 0 || start > end || end*2 >= len(hexStr) {
-// 		return ""
-// 	}
+/*
+*
+* 两个字节求或
+*
+ */
+func TwoBytesHOrL(rx typex.Rhilex, uuid string) func(L *lua.LState) int {
+	return func(l *lua.LState) int {
+		hexs := l.ToString(2)
+		l.Push(lua.LNumber(_TwoBytesHOrL(hexs)))
+		return 1
+	}
+}
+func _TwoBytesHOrL(s string) int16 {
+	if len(s) < 2 {
+		return 0
+	}
+	V, err := hex.DecodeString(s)
+	if err != nil {
+		return 0
+	}
+	return int16(V[0])<<8 | int16(V[1])
+}
 
-// 	// 计算起始和结束索引
-// 	startIdx := start * 2
-// 	endIdx := (end + 1) * 2
-
-// 	// 切片并返回结果
-// 	return hexStr[startIdx:endIdx]
-// }
+/*
+*
+* 两个字节求或
+*
+ */
+func Int16HOrL(rx typex.Rhilex, uuid string) func(L *lua.LState) int {
+	return func(l *lua.LState) int {
+		H := l.ToInt(2)
+		L := l.ToInt(3)
+		l.Push(lua.LNumber(_Int16HOrL(byte(H), byte(L))))
+		return 1
+	}
+}
+func _Int16HOrL(H, L byte) int16 {
+	return int16(H)<<8 | int16(L)
+}
