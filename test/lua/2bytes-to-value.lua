@@ -22,9 +22,7 @@ Actions = {
             return false, args
         end
         local params = {}
-        for _, value in pairs(dataT) do
-            params[value['tag']] = hex:TwoBytesHOrL(value.value)
-        end
+        params[dataT['tag']] = math:TFloat(hex:TwoBytesHOrL(dataT['value'].value['value']), 3)
         local jsonString = json:T2J({
             id = time:TimeMs(),
             method = "thing.event.property.post",
