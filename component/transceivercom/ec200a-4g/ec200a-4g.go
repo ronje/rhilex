@@ -75,7 +75,7 @@ func (tc *EC200ADtu) Info() transceivercom.CommunicatorInfo {
 		Type:     transceivercom.MN4G,
 		Vendor:   "RHILEX-TECH",
 		Mac:      "00:00:00:00:00:00:00:00",
-		Firmware: "0.0.0",
+		Firmware: "v0.0.0",
 	}
 }
 func (tc *EC200ADtu) Status() transceivercom.TransceiverStatus {

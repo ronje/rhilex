@@ -86,7 +86,9 @@ func StartDelimiterReceive(Ctx context.Context,
 				continue
 			}
 			if edgeSignal1 && edgeSignal2 {
-				OutChannel <- expectPacket[2 : expectPacketLength-1]
+				DataPacket := [256]byte{}
+				DataPacketN := copy(DataPacket[0:], expectPacket[2:expectPacketLength-1])
+				OutChannel <- DataPacket[:DataPacketN]
 			}
 			if expectPacketACC < byteACC {
 				if !edgeSignal1 || !edgeSignal2 {
@@ -127,7 +129,12 @@ func (B BinaryPacket) Length() uint32 {
 	return binary.BigEndian.Uint32(B.data[:4])
 }
 
-func StartFixPacketReceive(Ctx context.Context,
+/*
+*
+* Header[4]| Data[N]
+*
+ */
+func StartFixLengthReceive(Ctx context.Context,
 	OutChannel chan []byte,
 	InputIO io.ReadWriteCloser) error {
 	receiveBuffer := make([]byte, 256)
@@ -174,7 +181,9 @@ func StartFixPacketReceive(Ctx context.Context,
 			continue
 		}
 		copiedBytesCount := copy(OneFrame, receiveBuffer[:onePacketBytesCount])
-		OutChannel <- OneFrame[:copiedBytesCount]
+		DataPacket := [256]byte{}
+		DataPacketN := copy(DataPacket[:0], OneFrame[:copiedBytesCount])
+		OutChannel <- DataPacket[:DataPacketN]
 		leastMoreBytesCount := copy(receiveBuffer[0:], receiveBuffer[onePacketBytesCount:bytesCursor])
 		bytesCursor -= onePacketBytesCount
 		if leastMoreBytesCount > 4 {
@@ -183,6 +192,157 @@ func StartFixPacketReceive(Ctx context.Context,
 		} else {
 			segmentData = false
 			goto PARSE_PACKET
+		}
+	}
+}
+
+/*
+*
+* EE EF ········ \r \n
+*
+ */
+func StartEdgeSymReceive(Ctx context.Context,
+	OutChannel chan []byte,
+	InputIO io.ReadWriteCloser) error {
+	edge1Sym := byte(0xEE)
+	edge2Sym := byte(0xEF)
+	edge3Sym := byte(0x0D)
+	edge4Sym := byte(0x0A)
+	MAX_BUFFER_SIZE := 1024 * 10 * 10
+	buffer := make([]byte, MAX_BUFFER_SIZE)
+	byteACC := 0
+	edgeSignal1 := false
+	edgeSignal2 := false
+	expectPacket := make([]byte, MAX_BUFFER_SIZE)
+	for {
+		select {
+		case <-Ctx.Done():
+			return nil
+		default:
+		}
+		N, errR := InputIO.Read(buffer[byteACC:])
+		// 读取异常，重启
+		if errR != nil {
+			continue
+		}
+		byteACC += N
+		if byteACC < 4 {
+			continue
+		}
+		if byteACC > 256 {
+			for i := 0; i < byteACC; i++ {
+				buffer[i] = '\x00'
+			}
+			byteACC = 0
+			edgeSignal1 = false
+			edgeSignal2 = false
+			continue
+		}
+	PARSE:
+		expectPacketACC := 0
+		expectPacketLength := 0
+		for i, currentByte := range buffer[:byteACC] {
+			expectPacketACC++
+			if !edgeSignal1 {
+				if expectPacketACC == 2 {
+					if currentByte == edge2Sym && buffer[i-1] == edge1Sym {
+						edgeSignal1 = true
+					}
+				}
+			}
+			if !edgeSignal1 || expectPacketACC < 4 {
+				continue
+			}
+			if edgeSignal1 {
+				if currentByte == edge4Sym && buffer[expectPacketACC-2] == edge3Sym {
+					expectPacketLength = copy(expectPacket, buffer[2:expectPacketACC-2])
+					edgeSignal2 = true
+				}
+			}
+			if edgeSignal1 && edgeSignal2 {
+				DataPacket := [256]byte{}
+				DataPacketN := copy(DataPacket[0:], expectPacket[:expectPacketLength])
+				OutChannel <- DataPacket[:DataPacketN]
+				edgeSignal1 = false
+				edgeSignal2 = false
+				lessMoreBytesCount := byteACC - expectPacketACC
+				if lessMoreBytesCount < byteACC {
+					copiedCount := copy(buffer[0:], buffer[expectPacketACC:byteACC])
+					byteACC = copiedCount
+					if lessMoreBytesCount > 4 {
+						goto PARSE
+					}
+				} else {
+					byteACC = 0
+					expectPacketACC = 0
+					expectPacketLength = 0
+				}
+			}
+		}
+	}
+}
+
+/*
+*
+* ········\r\n
+*
+ */
+func StartNewLineLoopReceive(Ctx context.Context,
+	OutChannel chan []byte,
+	InputIO io.ReadWriteCloser) error {
+	edge0D := byte(0x0D)
+	edge0A := byte(0x0A)
+	MAX_BUFFER_SIZE := 1024 * 10 * 10
+	buffer := make([]byte, MAX_BUFFER_SIZE)
+	byteACC := 0                      // 计数器而不是下标
+	expectPacket := make([]byte, 256) // 默认最大包长256字节
+	for {
+		select {
+		case <-Ctx.Done():
+			return nil
+		default:
+		}
+		N, errR := InputIO.Read(buffer[byteACC:])
+		if errR != nil {
+			continue
+		}
+		if N == 0 {
+			continue
+		}
+		byteACC += N
+		if byteACC > 256 {
+			for i := 0; i < byteACC; i++ {
+				buffer[i] = '\x00'
+			}
+			byteACC = 0
+			continue
+		}
+	PARSE:
+		expectPacketACC := 0
+		expectPacketLength := 0
+		for _, currentByte := range buffer[:byteACC] {
+			expectPacketACC++
+			if expectPacketACC < 4 {
+				continue
+			}
+			if currentByte == edge0A && buffer[expectPacketACC-2] == edge0D {
+				expectPacketLength = copy(expectPacket, buffer[:expectPacketACC-2])
+				DataPacket := [256]byte{}
+				DataPacketN := copy(DataPacket[0:], expectPacket[:expectPacketLength])
+				OutChannel <- DataPacket[:DataPacketN]
+				lessMoreBytesCount := byteACC - expectPacketACC
+				if lessMoreBytesCount < byteACC {
+					copiedCount := copy(buffer[0:], buffer[expectPacketACC:byteACC])
+					byteACC = copiedCount
+					if lessMoreBytesCount > 4 {
+						goto PARSE
+					}
+				} else {
+					byteACC = 0
+					expectPacketACC = 0
+					expectPacketLength = 0
+				}
+			}
 		}
 	}
 }

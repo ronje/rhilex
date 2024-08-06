@@ -93,7 +93,7 @@ func (tc *Mx01BLE) Info() transceivercom.CommunicatorInfo {
 		Type:     transceivercom.BLE,
 		Vendor:   "RHILEX-TECH",
 		Mac:      "00:00:00:00:00:00:00:00",
-		Firmware: "0.0.0",
+		Firmware: "v0.0.0",
 	}
 }
 func (tc *Mx01BLE) Status() transceivercom.TransceiverStatus {

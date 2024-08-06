@@ -17,8 +17,6 @@ package atk01lora
 
 import (
 	"fmt"
-	"io"
-	"strings"
 	"sync"
 	"time"
 
@@ -27,6 +25,7 @@ import (
 	"github.com/hootrhino/rhilex/component/internotify"
 	"github.com/hootrhino/rhilex/component/transceivercom"
 	"github.com/hootrhino/rhilex/glogger"
+	"github.com/hootrhino/rhilex/protocol"
 	"github.com/hootrhino/rhilex/typex"
 	"github.com/hootrhino/rhilex/utils"
 )
@@ -75,8 +74,8 @@ func (tc *ATK01Lora) Start(Config transceivercom.TransceiverConfig) error {
 		return err
 	}
 	tc.serialPort = serialPort
-	go tc.startLoopReceive(serialPort)
-	go tc.startPushPacket(tc.DataBuffer)
+	go protocol.StartEdgeSymReceive(typex.GCTX, tc.DataBuffer, tc.serialPort)
+	go tc.startProcessPacket(tc.DataBuffer)
 	glogger.GLogger.Info("ATK01-LORA-01 Started")
 	return nil
 }
@@ -108,7 +107,7 @@ func (tc *ATK01Lora) startSerialPort() (serial.Port, error) {
 * 向RHILEX推数据
 *
  */
-func (tc *ATK01Lora) startPushPacket(Chan chan []byte) {
+func (tc *ATK01Lora) startProcessPacket(Chan chan []byte) {
 	for {
 		select {
 		case <-typex.GCTX.Done():
@@ -136,102 +135,7 @@ func (tc *ATK01Lora) startPushPacket(Chan chan []byte) {
 		}
 	}
 }
-func (tc *ATK01Lora) startLoopReceive(io io.ReadWriteCloser) {
-	MAX_BUFFER_SIZE := 1024 * 10 * 10
-	buffer := make([]byte, MAX_BUFFER_SIZE)
-	byteACC := 0                      // 计数器而不是下标
-	edgeSignal1 := false              // 两个边沿
-	edgeSignal2 := false              // 两个边沿
-	expectPacket := make([]byte, 256) // 默认最大包长256字节
 
-	for {
-		select {
-		case <-typex.GCTX.Done():
-			return
-		default:
-		}
-		N, errR := io.Read(buffer[byteACC:])
-		// 读取异常，重启
-		if errR != nil {
-			if !strings.Contains(errR.Error(), "timeout") {
-				glogger.GLogger.Error(errR)
-			START:
-				select {
-				case <-typex.GCTX.Done():
-					return
-				default:
-				}
-				time.Sleep(5 * time.Second)
-				serialPort, err1 := tc.startSerialPort()
-				if err1 != nil {
-					glogger.GLogger.Error("start Serial Port failed, try to restart,", err1)
-					goto START
-				} else {
-					glogger.GLogger.Info("try to restart Serial port")
-					tc.serialPort = serialPort
-					go tc.startLoopReceive(tc.serialPort)
-				}
-
-				return
-			}
-		}
-		if N == 0 {
-			continue
-		}
-		byteACC += N
-		if byteACC > 256 { // 单个包最大256字节
-			if !edgeSignal1 || !edgeSignal2 {
-				glogger.GLogger.Error("maximum data packet length(256) exceeded!")
-				for i := 0; i < byteACC; i++ {
-					buffer[i] = '\x00'
-				}
-				byteACC = 0
-				edgeSignal1 = false
-				edgeSignal2 = false
-			}
-			continue
-		}
-		expectPacketACC := 0
-		expectPacketLength := 0
-		for i, currentByte := range buffer[:byteACC] {
-			expectPacketACC++
-			if !edgeSignal1 {
-				if expectPacketACC >= 2 {
-					if currentByte == 0xEF && buffer[i-1] == 0xEE {
-						edgeSignal1 = true
-					}
-				}
-			}
-			if !edgeSignal1 || expectPacketACC < 4 {
-				continue
-			}
-			if edgeSignal1 {
-				if currentByte == 0x0A && buffer[expectPacketACC-2] == 0x0D {
-					expectPacketLength = copy(expectPacket, buffer[:expectPacketACC-1])
-					edgeSignal2 = true
-				}
-			}
-			if !edgeSignal1 || !edgeSignal2 {
-				continue
-			}
-			if edgeSignal1 && edgeSignal2 {
-				tc.DataBuffer <- expectPacket[2 : expectPacketLength-1]
-			}
-			if expectPacketACC < byteACC {
-				if !edgeSignal1 || !edgeSignal2 {
-					copy(buffer[0:], buffer[expectPacketACC-1:byteACC])
-					byteACC = byteACC - expectPacketACC
-				}
-			} else {
-				byteACC = 0
-			}
-			expectPacketLength = 0
-			expectPacketACC = 0
-			edgeSignal1 = false
-			edgeSignal2 = false
-		}
-	}
-}
 func (tc *ATK01Lora) Ctrl(topic, args []byte, timeout time.Duration) ([]byte, error) {
 	if string(topic) == "lora.atk01.cmd.send" {
 		if tc.serialPort != nil {
@@ -248,7 +152,7 @@ func (tc *ATK01Lora) Info() transceivercom.CommunicatorInfo {
 		Type:     transceivercom.LORA,
 		Vendor:   "RHILEX-TECH",
 		Mac:      "00:00:00:00:00:00",
-		Firmware: "0.0.0",
+		Firmware: "v0.0.0",
 	}
 }
 func (tc *ATK01Lora) Status() transceivercom.TransceiverStatus {
