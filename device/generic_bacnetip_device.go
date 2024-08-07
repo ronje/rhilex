@@ -250,6 +250,13 @@ func (dev *GenericBacnetIpDevice) Start(cctx typex.CCTX) error {
 						dev.RuleEngine.WorkDevice(dev.Details(), string(bytes))
 					}
 				}
+			} else {
+				if bytes, err := json.Marshal(ReadBacnetValues); err != nil {
+					glogger.GLogger.Error(err)
+				} else {
+					glogger.GLogger.Debug(string(bytes))
+					dev.RuleEngine.WorkDevice(dev.Details(), string(bytes))
+				}
 			}
 
 			<-ticker.C

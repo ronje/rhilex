@@ -196,6 +196,12 @@ func (s1200 *SIEMENS_PLC) Start(cctx typex.CCTX) error {
 						s1200.RuleEngine.WorkDevice(s1200.Details(), string(bytes))
 					}
 				}
+			} else {
+				if bytes, err := json.Marshal(ReadPLCRegisterValues); err != nil {
+					glogger.GLogger.Error(err)
+				} else {
+					s1200.RuleEngine.WorkDevice(s1200.Details(), string(bytes))
+				}
 			}
 		}
 	}(cctx.Ctx)

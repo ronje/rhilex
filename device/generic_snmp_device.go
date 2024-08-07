@@ -135,17 +135,14 @@ func (sd *genericSnmpDevice) Init(devId string, configMap map[string]interface{}
 			return dataSchemaLoadError
 		}
 		LastFetchTime := uint64(time.Now().UnixMilli())
-		if !*sd.mainConfig.CommonConfig.BatchRequest {
-			for _, MSnmpSchemaProperty := range SchemaProperties {
-				intercache.SetValue(sd.PointId, MSnmpSchemaProperty.Name,
-					intercache.CacheValue{
-						UUID:          MSnmpSchemaProperty.UUID,
-						LastFetchTime: LastFetchTime,
-						Value:         "-",
-					})
-			}
+		for _, MSnmpSchemaProperty := range SchemaProperties {
+			intercache.SetValue(sd.PointId, MSnmpSchemaProperty.Name,
+				intercache.CacheValue{
+					UUID:          MSnmpSchemaProperty.UUID,
+					LastFetchTime: LastFetchTime,
+					Value:         "-",
+				})
 		}
-
 	}
 	return nil
 }
@@ -203,8 +200,17 @@ func (sd *genericSnmpDevice) Start(cctx typex.CCTX) error {
 			if len(snmpOids) < 1 {
 				goto END
 			}
-			for _, snmpOid := range snmpOids {
-				if bytes, err := json.Marshal(snmpOid); err != nil {
+			if !*sd.mainConfig.CommonConfig.BatchRequest {
+				for _, snmpOid := range snmpOids {
+					if bytes, err := json.Marshal(snmpOid); err != nil {
+						glogger.GLogger.Error(err)
+					} else {
+						glogger.GLogger.Debug(string(bytes))
+						sd.RuleEngine.WorkDevice(sd.Details(), string(bytes))
+					}
+				}
+			} else {
+				if bytes, err := json.Marshal(snmpOids); err != nil {
 					glogger.GLogger.Error(err)
 				} else {
 					glogger.GLogger.Debug(string(bytes))

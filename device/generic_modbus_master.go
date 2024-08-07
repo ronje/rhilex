@@ -364,6 +364,13 @@ func (mdev *GenericModbusMaster) Start(cctx typex.CCTX) error {
 							mdev.RuleEngine.WorkDevice(mdev.Details(), string(bytes))
 						}
 					}
+				} else {
+					if bytes, errMarshal := json.Marshal(ReadRegisterValues); errMarshal != nil {
+						mdev.retryTimes++
+						glogger.GLogger.Error(errMarshal)
+					} else {
+						mdev.RuleEngine.WorkDevice(mdev.Details(), string(bytes))
+					}
 				}
 
 			}
