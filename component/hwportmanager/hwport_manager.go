@@ -92,6 +92,10 @@ func SetHwPort(Port SystemHwPort) {
 	__HwPortsManager.Interfaces.Store(Port.Name, Port)
 	refreshHwPort(Port.Name)
 }
+func RemovePort(PortName string) {
+	__HwPortsManager.Interfaces.Delete(PortName)
+	refreshHwPort(PortName)
+}
 func RefreshPort(Port SystemHwPort) {
 	__HwPortsManager.Interfaces.Store(Port.Name, Port)
 	refreshHwPort(Port.Name)

@@ -161,7 +161,7 @@ func loadAllPortConfig() {
 		}
 		// 未知接口参数为空，以后扩展，比如FD
 		if MHwPort.Type != "UART" {
-			Port.Config = nil
+			Port.Config = "NULL"
 			hwportmanager.SetHwPort(Port)
 		}
 	}

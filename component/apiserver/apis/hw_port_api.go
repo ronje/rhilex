@@ -66,7 +66,7 @@ func (u UartConfigVo) JsonString() string {
 *
  */
 func RefreshPortList(c *gin.Context, ruleEngine typex.Rhilex) {
-	if err := service.ResetHwPortConfig(); err != nil {
+	if err := service.ReScanHwPortConfig(); err != nil {
 		c.JSON(common.HTTP_OK, common.Error400(err))
 		return
 	}
