@@ -1,8 +1,8 @@
 package service
 
 import (
-	"github.com/hootrhino/rhilex/component/interdb"
 	"github.com/hootrhino/rhilex/component/apiserver/model"
+	"github.com/hootrhino/rhilex/component/interdb"
 )
 
 // -----------------------------------------------------------------------------------
@@ -133,9 +133,10 @@ func InitMUser(o *model.MUser) error {
 	return interdb.DB().Table("m_users").FirstOrCreate(o).Error
 }
 
-func UpdateMUser(o *model.MUser) error {
-	interdb.DB().Model(o).Where("username=?", o.Username).Updates(*o)
-	return nil
+func UpdateMUser(oldName string, o *model.MUser) error {
+	return interdb.DB().Table("m_users").
+		Where("username=?", oldName).
+		Updates(*o).Error
 
 }
 

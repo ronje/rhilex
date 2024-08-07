@@ -25,10 +25,11 @@ type snmpOid struct {
 	Frequency *int   `json:"-"`     // 请求频率
 }
 type _SNMPCommonConfig struct {
-	AutoRequest *bool `json:"autoRequest" validate:"required"` // 自动请求
-	EnableGroup *bool `json:"enableGroup" validate:"required"` // 并发请求, 注意: 这个开关可能会把目标设备搞挂了, 根据设备性能量力而行
-	Timeout     *int  `json:"timeout" validate:"required"`     // 请求超时
-	Frequency   *int  `json:"frequency"`                       // 请求频率
+	AutoRequest  *bool `json:"autoRequest" validate:"required"`  // 自动请求
+	BatchRequest *bool `json:"batchRequest" validate:"required"` // 批量采集
+	EnableGroup  *bool `json:"enableGroup" validate:"required"`  // 并发请求, 注意: 这个开关可能会把目标设备搞挂了, 根据设备性能量力而行
+	Timeout      *int  `json:"timeout" validate:"required"`      // 请求超时
+	Frequency    *int  `json:"frequency" validate:"required"`    // 请求频率
 }
 
 type _GSNMPConfig struct {
@@ -75,6 +76,10 @@ func NewGenericSnmpDevice(e typex.Rhilex) typex.XDevice {
 				a := 5000
 				return &a
 			}(), // ms
+			BatchRequest: func() *bool {
+				b := false
+				return &b
+			}(),
 		},
 	}
 	sd.snmpOids = map[string]snmpOid{}
@@ -130,14 +135,17 @@ func (sd *genericSnmpDevice) Init(devId string, configMap map[string]interface{}
 			return dataSchemaLoadError
 		}
 		LastFetchTime := uint64(time.Now().UnixMilli())
-		for _, MSnmpSchemaProperty := range SchemaProperties {
-			intercache.SetValue(sd.PointId, MSnmpSchemaProperty.Name,
-				intercache.CacheValue{
-					UUID:          MSnmpSchemaProperty.UUID,
-					LastFetchTime: LastFetchTime,
-					Value:         "-",
-				})
+		if !*sd.mainConfig.CommonConfig.BatchRequest {
+			for _, MSnmpSchemaProperty := range SchemaProperties {
+				intercache.SetValue(sd.PointId, MSnmpSchemaProperty.Name,
+					intercache.CacheValue{
+						UUID:          MSnmpSchemaProperty.UUID,
+						LastFetchTime: LastFetchTime,
+						Value:         "-",
+					})
+			}
 		}
+
 	}
 	return nil
 }

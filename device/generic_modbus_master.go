@@ -66,6 +66,7 @@ import (
 type ModbusMasterCommonConfig struct {
 	Mode           string `json:"mode" validate:"required"`
 	AutoRequest    *bool  `json:"autoRequest" validate:"required"`
+	BatchRequest   *bool  `json:"batchRequest" validate:"required"` // 批量采集
 	EnableOptimize *bool  `json:"enableOptimize" validate:"required"`
 	MaxRegNum      uint16 `json:"maxRegNum" validate:"required"`
 }
@@ -125,6 +126,10 @@ func NewGenericModbusMaster(e typex.Rhilex) typex.XDevice {
 				return &b
 			}(),
 			AutoRequest: func() *bool {
+				b := false
+				return &b
+			}(),
+			BatchRequest: func() *bool {
 				b := false
 				return &b
 			}(),
@@ -350,15 +355,17 @@ func (mdev *GenericModbusMaster) Start(cctx typex.CCTX) error {
 				if mdev.mainConfig.CommonConfig.Mode == "TCP" {
 					ReadRegisterValues = mdev.TCPRead()
 				}
-
-				for _, ReadRegisterValue := range ReadRegisterValues {
-					if bytes, errMarshal := json.Marshal(ReadRegisterValue); errMarshal != nil {
-						mdev.retryTimes++
-						glogger.GLogger.Error(errMarshal)
-					} else {
-						mdev.RuleEngine.WorkDevice(mdev.Details(), string(bytes))
+				if !*mdev.mainConfig.CommonConfig.BatchRequest {
+					for _, ReadRegisterValue := range ReadRegisterValues {
+						if bytes, errMarshal := json.Marshal(ReadRegisterValue); errMarshal != nil {
+							mdev.retryTimes++
+							glogger.GLogger.Error(errMarshal)
+						} else {
+							mdev.RuleEngine.WorkDevice(mdev.Details(), string(bytes))
+						}
 					}
 				}
+
 			}
 
 		}(mdev.Ctx)

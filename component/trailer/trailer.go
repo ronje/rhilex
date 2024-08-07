@@ -433,7 +433,7 @@ func AllGoods() *sync.Map {
 *
  */
 func loadRpc(goodsProcess *GoodsProcess) bool {
-	grpcConnection, err := grpc.Dial(goodsProcess.Info.NetAddr,
+	grpcConnection, err := grpc.NewClient(goodsProcess.Info.NetAddr,
 		grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		glogger.GLogger.Error(err)

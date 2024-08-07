@@ -22,10 +22,11 @@ import (
 )
 
 type bacnetCommonConfig struct {
-	Frequency int `json:"frequency" title:"采集间隔，单位毫秒"`
+	BatchRequest *bool `json:"batchRequest"` // 批量采集
+	Frequency    int   `json:"frequency"`
 }
 type bacnetConfig struct {
-	Mode        string `json:"mode" title:"bacnet运行模式"` // IP/MSTP
+	Mode        string `json:"mode" validate:"required"` // IP/MSTP
 	LocalPort   int    `json:"localPort" validate:"required"`
 	NetworkCidr string `json:"networkCidr" validate:"required"`
 	DeviceId    uint32 `json:"deviceId" validate:"required"`
@@ -62,7 +63,13 @@ func NewGenericBacnetIpDevice(e typex.Rhilex) typex.XDevice {
 	g := new(GenericBacnetIpDevice)
 	g.RuleEngine = e
 	g.mainConfig = BacnetMainConfig{
-		CommonConfig: bacnetCommonConfig{Frequency: 1000},
+		CommonConfig: bacnetCommonConfig{
+			Frequency: 1000,
+			BatchRequest: func() *bool {
+				b := false
+				return &b
+			}(),
+		},
 		BacnetConfig: bacnetConfig{
 			Mode:      "BROADCAST",
 			LocalPort: 47808,
@@ -234,14 +241,17 @@ func (dev *GenericBacnetIpDevice) Start(cctx typex.CCTX) error {
 			}
 
 			ReadBacnetValues := dev.ReadProperty()
-			for _, ReadBacnetValue := range ReadBacnetValues {
-				if bytes, err := json.Marshal(ReadBacnetValue); err != nil {
-					glogger.GLogger.Error(err)
-				} else {
-					glogger.GLogger.Debug(string(bytes))
-					dev.RuleEngine.WorkDevice(dev.Details(), string(bytes))
+			if !*dev.mainConfig.CommonConfig.BatchRequest {
+				for _, ReadBacnetValue := range ReadBacnetValues {
+					if bytes, err := json.Marshal(ReadBacnetValue); err != nil {
+						glogger.GLogger.Error(err)
+					} else {
+						glogger.GLogger.Debug(string(bytes))
+						dev.RuleEngine.WorkDevice(dev.Details(), string(bytes))
+					}
 				}
 			}
+
 			<-ticker.C
 		}
 	}(dev.Ctx)
