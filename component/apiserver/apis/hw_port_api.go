@@ -105,8 +105,9 @@ func AllHwPorts(c *gin.Context, ruleEngine typex.Rhilex) {
  */
 func UpdateHwPortConfig(c *gin.Context, ruleEngine typex.Rhilex) {
 	type Form struct {
-		UUID   string       `json:"uuid"`
-		Config UartConfigVo `json:"config"` // 配置, 串口配置、或者网卡、USB等
+		UUID        string       `json:"uuid"`
+		Config      UartConfigVo `json:"config"` // 配置, 串口配置、或者网卡、USB等
+		Description string       `json:"description"`
 	}
 	form := Form{}
 	if err := c.ShouldBindJSON(&form); err != nil {
@@ -114,8 +115,9 @@ func UpdateHwPortConfig(c *gin.Context, ruleEngine typex.Rhilex) {
 		return
 	}
 	if err := service.UpdateHwPortConfig(model.MHwPort{
-		UUID:   form.UUID,
-		Config: form.Config.JsonString(),
+		UUID:        form.UUID,
+		Config:      form.Config.JsonString(),
+		Description: form.Description,
 	}); err != nil {
 		c.JSON(common.HTTP_OK, common.Error400(err))
 		return
