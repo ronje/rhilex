@@ -274,9 +274,7 @@ func (hs *ApiServerPlugin) LoadRoute() {
 		rulesApi.GET(("/list"), server.AddRoute(apis.Rules))
 		rulesApi.GET(("/detail"), server.AddRoute(apis.RuleDetail))
 		//
-		rulesApi.POST(("/testIn"), server.AddRoute(apis.TestSourceCallback))
-		rulesApi.POST(("/testOut"), server.AddRoute(apis.TestOutEndCallback))
-		rulesApi.POST(("/testDevice"), server.AddRoute(apis.TestDeviceCallback))
+		rulesApi.POST(("/test"), server.AddRoute(apis.TestRulesCallback))
 		rulesApi.GET(("/byInend"), server.AddRoute(apis.ListByInend))
 		rulesApi.GET(("/byDevice"), server.AddRoute(apis.ListByDevice))
 		//

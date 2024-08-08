@@ -114,7 +114,7 @@ func (tc *ATK01Lora) startProcessPacket(Chan chan []byte) {
 			return
 		case buffer := <-Chan:
 			Len := len(buffer)
-			if Len > 2 {
+			if Len > 4 {
 				glogger.GLogger.Debug("ATK01Lora Received Data:", buffer)
 				crcByte := [2]byte{buffer[Len-2], buffer[Len-1]}
 				crcCheckedValue := uint16(crcByte[0])<<8 | uint16(crcByte[1])
@@ -129,8 +129,10 @@ func (tc *ATK01Lora) startProcessPacket(Chan chan []byte) {
 					Event:   "transceiver.up.data.atk01",
 					Ts:      uint64(time.Now().UnixMilli()),
 					Summary: "transceiver.up.data",
-					Info:    buffer,
+					Info:    buffer[2 : Len-2],
 				})
+			} else {
+				glogger.GLogger.Warn("'transceiver.up.data.atk01' Received Data Maybe invalid:", buffer)
 			}
 		}
 	}

@@ -102,7 +102,7 @@ func UpdateUser(c *gin.Context, ruleEngine typex.Rhilex) {
 		c.JSON(common.HTTP_OK, common.Error("Password Length must Between 8 ~ 16"))
 		return
 	}
-	token := c.GetHeader("token")
+	token := c.GetHeader("Authorization")
 	claims, err := parseToken(token)
 	if err != nil {
 		c.JSON(common.HTTP_OK, common.Error400(err))
@@ -196,7 +196,7 @@ func Login(c *gin.Context, ruleEngine typex.Rhilex) {
 *
  */
 func LogOut(c *gin.Context, ruleEngine typex.Rhilex) {
-	token := c.GetHeader("token")
+	token := c.GetHeader("Authorization")
 	claims, err := parseToken(token)
 	if err != nil {
 		c.JSON(common.HTTP_OK, common.Error400(err))
@@ -220,7 +220,7 @@ func LogOut(c *gin.Context, ruleEngine typex.Rhilex) {
 *
  */
 func Info(c *gin.Context, ruleEngine typex.Rhilex) {
-	token := c.GetHeader("token")
+	token := c.GetHeader("Authorization")
 	if claims, err := parseToken(token); err != nil {
 		c.JSON(common.HTTP_OK, common.Error400(err))
 		return

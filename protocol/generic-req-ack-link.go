@@ -204,10 +204,10 @@ func StartFixLengthReceive(Ctx context.Context,
 func StartEdgeSymReceive(Ctx context.Context,
 	OutChannel chan []byte,
 	InputIO io.ReadWriteCloser) error {
-	edge1Sym := byte(0xEE)
-	edge2Sym := byte(0xEF)
-	edge3Sym := byte(0x0D)
-	edge4Sym := byte(0x0A)
+	// edge1Sym := byte(0xEE)
+	// edge2Sym := byte(0xEF)
+	// edge3Sym := byte(0x0D)
+	// edge4Sym := byte(0x0A)
 	MAX_BUFFER_SIZE := 1024 * 10 * 10
 	buffer := make([]byte, MAX_BUFFER_SIZE)
 	byteACC := 0
@@ -245,7 +245,7 @@ func StartEdgeSymReceive(Ctx context.Context,
 			expectPacketACC++
 			if !edgeSignal1 {
 				if expectPacketACC == 2 {
-					if currentByte == edge2Sym && buffer[i-1] == edge1Sym {
+					if currentByte == 0xEF && buffer[i-1] == 0xEE {
 						edgeSignal1 = true
 					}
 				}
@@ -254,30 +254,29 @@ func StartEdgeSymReceive(Ctx context.Context,
 				continue
 			}
 			if edgeSignal1 {
-				if currentByte == edge4Sym && buffer[expectPacketACC-2] == edge3Sym {
-					expectPacketLength = copy(expectPacket, buffer[2:expectPacketACC-2])
+				if currentByte == 0x0A && buffer[expectPacketACC-2] == 0x0D {
+					expectPacketLength = copy(expectPacket, buffer[:expectPacketACC])
 					edgeSignal2 = true
 				}
 			}
+			if !edgeSignal1 || !edgeSignal2 {
+				continue
+			}
 			if edgeSignal1 && edgeSignal2 {
-				DataPacket := [256]byte{}
-				DataPacketN := copy(DataPacket[0:], expectPacket[:expectPacketLength])
-				OutChannel <- DataPacket[:DataPacketN]
+				Packet := expectPacket[:expectPacketLength]
+				// fmt.Println("收到的原始包:", Packet)
+				OutChannel <- Packet
 				edgeSignal1 = false
 				edgeSignal2 = false
-				lessMoreBytesCount := byteACC - expectPacketACC
-				if lessMoreBytesCount < byteACC {
-					copiedCount := copy(buffer[0:], buffer[expectPacketACC:byteACC])
-					byteACC = copiedCount
-					if lessMoreBytesCount > 4 {
-						goto PARSE
-					}
-				} else {
-					byteACC = 0
-					expectPacketACC = 0
-					expectPacketLength = 0
-				}
 			}
+			if expectPacketACC < byteACC {
+				byteACC = copy(buffer[0:], buffer[expectPacketACC:byteACC])
+				goto PARSE
+			} else {
+				byteACC = 0
+			}
+			expectPacketLength = 0
+			expectPacketACC = 0
 		}
 	}
 }
