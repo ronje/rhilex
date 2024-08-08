@@ -244,8 +244,8 @@ func (I *IoTProperty) HoldValidator() error {
 
 	case "STRING":
 		Rule := StringRule{
-			MaxLength: I.Rule.Min,
-			MinLength: I.Rule.Max,
+			MinLength: I.Rule.Min,
+			MaxLength: I.Rule.Max,
 		}
 		switch T := I.Rule.DefaultValue.(type) {
 		case string:
