@@ -80,6 +80,10 @@ type IoTPropertyRuleVo struct {
 	Round        *int        `json:"round"`        // 小数点位
 }
 
+func (O IoTPropertyRuleVo) Check() error {
+	return nil
+}
+
 /*
 *
 * 属性
@@ -361,6 +365,10 @@ func CreateIotSchemaProperty(c *gin.Context, ruleEngine typex.Rhilex) {
 		c.JSON(common.HTTP_OK, common.Error("Already Exists Property:"+IotPropertyVo.Name))
 		return
 	}
+	if errCheckRule := checkPropertyRule(IotPropertyVo); errCheckRule != nil {
+		c.JSON(common.HTTP_OK, common.Error(errCheckRule.Error()))
+		return
+	}
 	err2 := service.InsertIotSchemaProperty(model.MIotProperty{
 		SchemaId:    IotPropertyVo.SchemaId,
 		UUID:        utils.MakeUUID("PROPER"),
@@ -377,6 +385,17 @@ func CreateIotSchemaProperty(c *gin.Context, ruleEngine typex.Rhilex) {
 		return
 	}
 	c.JSON(common.HTTP_OK, common.Ok())
+
+}
+
+/*
+*
+* 检查属性是否合规
+*
+ */
+func checkPropertyRule(IotPropertyVo IotPropertyVo) error {
+
+	return nil
 
 }
 

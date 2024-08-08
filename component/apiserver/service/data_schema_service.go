@@ -38,7 +38,21 @@ func GetDataSchemaWithUUID(uuid string) (model.MIotSchema, error) {
 
 // 删除DataSchema
 func DeleteDataSchemaAndProperty(schemaUuid string) error {
-	// 清空RHILEX数据库
+	MIotSchema := model.MIotSchema{}
+	if err := interdb.DB().Where("uuid=?", schemaUuid).
+		First(&MIotSchema).Error; err != nil {
+		return err
+	}
+	// 未发布的情况
+	if !MIotSchema.Published {
+		// Only Delete Schema
+		err2 := interdb.DB().Where("uuid=?", schemaUuid).Delete(&model.MIotSchema{}).Error
+		if err2 != nil {
+			return err2
+		}
+		return nil
+	}
+	// 已经发布了，清空RHILEX数据库
 	return interdb.DB().Transaction(func(tx *gorm.DB) error {
 		// Delete Schema
 		err2 := tx.Where("uuid=?", schemaUuid).Delete(&model.MIotSchema{}).Error
