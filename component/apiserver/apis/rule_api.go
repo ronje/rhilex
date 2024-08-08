@@ -586,6 +586,7 @@ func TestRulesCallback(c *gin.Context, ruleEngine typex.Rhilex) {
 			return
 		}
 		c.JSON(common.HTTP_OK, common.Ok())
+		return
 	}
 	if form.Type == "INEND" {
 		inend := ruleEngine.GetInEnd(form.UUID)
@@ -599,6 +600,7 @@ func TestRulesCallback(c *gin.Context, ruleEngine typex.Rhilex) {
 			return
 		}
 		c.JSON(common.HTTP_OK, common.Ok())
+		return
 	}
 	c.JSON(common.HTTP_OK, common.Error("Unsupported Test Type:"+form.Type))
 }

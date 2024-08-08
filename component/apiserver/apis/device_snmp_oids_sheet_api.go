@@ -136,35 +136,32 @@ func SnmpSheetPageList(c *gin.Context, ruleEngine typex.Rhilex) {
 		return
 	}
 	recordsVo := []SnmpOidVo{}
-	Slot := intercache.GetSlot(deviceUuid)
-	if Slot != nil {
-		for _, record := range records {
-			Value, ok := Slot[record.UUID]
-			Vo := SnmpOidVo{
-				UUID:       record.UUID,
-				Oid:        record.Oid,
-				DeviceUUID: record.DeviceUuid,
-				Tag:        record.Tag,
-				Alias:      record.Alias,
-				Frequency:  &record.Frequency,
-				ErrMsg:     Value.ErrMsg,
-			}
-			if ok {
-				Vo.Status = func() int {
-					if Value.Value == "" {
-						return 0
-					}
-					return 1
-				}() // 运行时
-				Vo.LastFetchTime = Value.LastFetchTime // 运行时
-				Vo.Value = Value.Value                 // 运行时
-				recordsVo = append(recordsVo, Vo)
-			} else {
-				recordsVo = append(recordsVo, Vo)
-			}
+	for _, record := range records {
+		Slot := intercache.GetSlot(deviceUuid)
+		Value, ok := Slot[record.UUID]
+		Vo := SnmpOidVo{
+			UUID:       record.UUID,
+			Oid:        record.Oid,
+			DeviceUUID: record.DeviceUuid,
+			Tag:        record.Tag,
+			Alias:      record.Alias,
+			Frequency:  &record.Frequency,
+			ErrMsg:     Value.ErrMsg,
+		}
+		if ok {
+			Vo.Status = func() int {
+				if Value.Value == "" {
+					return 0
+				}
+				return 1
+			}() // 运行时
+			Vo.LastFetchTime = Value.LastFetchTime // 运行时
+			Vo.Value = Value.Value                 // 运行时
+			recordsVo = append(recordsVo, Vo)
+		} else {
+			recordsVo = append(recordsVo, Vo)
 		}
 	}
-
 	Result := service.WrapPageResult(*pager, recordsVo, count)
 	c.JSON(common.HTTP_OK, common.OkWithData(Result))
 }
@@ -261,12 +258,16 @@ func SnmpSheetUpdate(c *gin.Context, ruleEngine typex.Rhilex) {
 			c.JSON(common.HTTP_OK, common.Error400(err))
 			return
 		}
-		if SnmpDataPoint.UUID == "" {
+		if SnmpDataPoint.UUID == "" ||
+			SnmpDataPoint.UUID == "new" ||
+			SnmpDataPoint.UUID == "copy" {
 			NewRow := model.MSnmpOid{
-				UUID:      utils.SnmpOidUUID(),
-				Tag:       SnmpDataPoint.Tag,
-				Alias:     SnmpDataPoint.Alias,
-				Frequency: *SnmpDataPoint.Frequency,
+				UUID:       utils.SnmpOidUUID(),
+				Tag:        SnmpDataPoint.Tag,
+				Alias:      SnmpDataPoint.Alias,
+				DeviceUuid: form.DeviceUUID,
+				Oid:        SnmpDataPoint.Oid,
+				Frequency:  *SnmpDataPoint.Frequency,
 			}
 			err0 := service.InsertSnmpOid(NewRow)
 			if err0 != nil {
@@ -276,9 +277,10 @@ func SnmpSheetUpdate(c *gin.Context, ruleEngine typex.Rhilex) {
 		} else {
 			OldRow := model.MSnmpOid{
 				UUID:       SnmpDataPoint.UUID,
-				DeviceUuid: SnmpDataPoint.DeviceUUID,
 				Tag:        SnmpDataPoint.Tag,
 				Alias:      SnmpDataPoint.Alias,
+				DeviceUuid: SnmpDataPoint.DeviceUUID,
+				Oid:        SnmpDataPoint.Oid,
 				Frequency:  *SnmpDataPoint.Frequency,
 			}
 			err0 := service.UpdateSnmpOid(OldRow)
