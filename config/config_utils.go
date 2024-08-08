@@ -33,9 +33,12 @@ func GetDeviceConfigMap(deviceUuid string) map[string]interface{} {
 		return nil
 	}
 	configMap := map[string]interface{}{}
-	err := json.Unmarshal([]byte(Value.Value), &configMap)
-	if err != nil {
-		return nil
+	switch T := Value.Value.(type) {
+	case []byte:
+		err := json.Unmarshal(T, &configMap)
+		if err != nil {
+			return nil
+		}
 	}
 	return configMap
 }

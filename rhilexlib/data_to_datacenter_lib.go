@@ -21,6 +21,7 @@ import (
 	"time"
 
 	"github.com/hootrhino/rhilex/component/datacenter"
+	"github.com/hootrhino/rhilex/component/dataschema"
 	"github.com/hootrhino/rhilex/glogger"
 	"github.com/hootrhino/rhilex/typex"
 
@@ -28,14 +29,14 @@ import (
 )
 
 // GenInsertSql 生成 INSERT SQL 语句
-func GenInsertSql(tableName string, rowList [][2]interface{}) (string, error) {
+func GenInsertSql(tableName string, rowList []kvp) (string, error) {
 	if len(rowList) == 0 {
 		return "", fmt.Errorf("no rows to insert")
 	}
 	columnStr := strings.Join(buildColumns(rowList), ", ")
 	values := make([]string, len(rowList))
-	for i, row := range rowList {
-		value := row[1]
+	for i, Row := range rowList {
+		value := Row.V
 		valueStr, err := formatValue(value)
 		if err != nil {
 			return "", err
@@ -47,10 +48,10 @@ func GenInsertSql(tableName string, rowList [][2]interface{}) (string, error) {
 }
 
 // buildColumns 构建一个包含列名的字符串列表
-func buildColumns(rowList [][2]interface{}) []string {
+func buildColumns(rowList []kvp) []string {
 	var columnList []string
-	for _, row := range rowList {
-		column := row[0]
+	for _, Row := range rowList {
+		column := Row.K
 		columnList = append(columnList, fmt.Sprintf("`%s`", column))
 	}
 	return columnList
@@ -80,7 +81,12 @@ func formatValue(val interface{}) (string, error) {
 
 /*
 *
+* 数据写入Sqlite，需要验证规则,验证规则的方式:
+* 1 从全局缓存里面拿出来属性和验证器
+* 2 在这里执行Validator
+* 问题： 如何避免性能问题？
  */
+
 func InsertToDataCenterTable(rx typex.Rhilex, uuid string) func(L *lua.LState) int {
 	return func(l *lua.LState) int {
 		schema_uuid := l.ToString(2)
@@ -89,41 +95,47 @@ func InsertToDataCenterTable(rx typex.Rhilex, uuid string) func(L *lua.LState) i
 			l.Push(lua.LString("missing table fields"))
 			return 1
 		}
-		RowList := [][2]interface{}{}
+		RowList := []kvp{}
 		// create_at
-		RowList = append(RowList, [2]interface{}{
+		RowList = append(RowList, kvp{
 			"create_at", time.Now(),
 		})
 		kvs.ForEach(func(k, v lua.LValue) {
-			Row := [2]interface{}{}
+			Row := kvp{}
 			// K 只能String
 			if k.Type() == lua.LTString {
-				// create_at 不允许用户填写
-				if Row[0] != "create_at" && Row[0] != "id" {
+				// create_at id : 不允许用户填写
+				if Row.K != "create_at" && Row.K != "id" {
 					switch v.Type() {
 					case lua.LTString:
-						Row[0] = lua.LVAsString(k)
-						Row[1] = lua.LVAsString(v)
+						Row.K = lua.LVAsString(k)
+						Row.V = lua.LVAsString(v)
 					case lua.LTNumber:
-						Row[0] = lua.LVAsString(k)
-						Row[1] = float64(lua.LVAsNumber(v))
+						Row.K = lua.LVAsString(k)
+						Row.V = float64(lua.LVAsNumber(v))
 					case lua.LTBool:
-						Row[0] = lua.LVAsString(k)
-						Row[1] = bool(lua.LVAsBool(v))
+						Row.K = lua.LVAsString(k)
+						Row.V = bool(lua.LVAsBool(v))
 					case lua.LTNil:
-						Row[0] = lua.LVAsString(k)
-						Row[1] = ""
+						Row.K = lua.LVAsString(k)
+						Row.V = ""
 					default:
-						Row[0] = lua.LVAsString(k)
-						Row[1] = "" // 不支持其他类型
+						Row.K = lua.LVAsString(k)
+						Row.V = "" // 不支持其他类型
 					}
 					RowList = append(RowList, Row)
 				}
 			}
 		})
-
-		if err := saveToDataCenter(fmt.Sprintf("data_center_%s", schema_uuid), RowList); err != nil {
-			l.Push(lua.LString(err.Error()))
+		// TODO: checkRule
+		if errCheckRule := checkRule(RowList); errCheckRule != nil {
+			glogger.GLogger.Error("checkRule error:", errCheckRule)
+			l.Push(lua.LString(errCheckRule.Error()))
+			return 1
+		}
+		TableName := fmt.Sprintf("data_center_%s", schema_uuid)
+		if errSave := saveToDataCenter(TableName, RowList); errSave != nil {
+			l.Push(lua.LString(errSave.Error()))
 		} else {
 			l.Push(lua.LNil)
 		}
@@ -131,8 +143,40 @@ func InsertToDataCenterTable(rx typex.Rhilex, uuid string) func(L *lua.LState) i
 	}
 }
 
+/*
+*
+* 键值对
+*
+ */
+type kvp struct {
+	K string
+	V interface{}
+}
+
+/*
+*
+* 检查规则
+*
+ */
+func checkRule(RowList []kvp) error {
+	for _, Row := range RowList {
+		if Row.K == "create_at" || Row.K == "id" {
+			continue
+		}
+		IoTProperty, ok := dataschema.GetDataSchemaCache(Row.K)
+		if ok {
+			IoTProperty.Value = Row.V
+			err := IoTProperty.ValidateRule()
+			if err != nil {
+				return fmt.Errorf("filed '%s' invalid, %s", Row.K, err.Error())
+			}
+		}
+	}
+	return nil
+}
+
 // Save to local DataCenter
-func saveToDataCenter(schema_uuid string, RowList [][2]interface{}) error {
+func saveToDataCenter(schema_uuid string, RowList []kvp) error {
 	Sql, err0 := GenInsertSql(schema_uuid, RowList)
 	glogger.GLogger.Debug(Sql)
 	if err0 != nil {
@@ -211,29 +255,29 @@ func UpdateDataCenterLast(rx typex.Rhilex, uuid string) func(l *lua.LState) int 
 			l.Push(lua.LString("missing table fields"))
 			return 1
 		}
-		RowList := [][2]interface{}{}
+		RowList := []kvp{}
 		kvs.ForEach(func(k, v lua.LValue) {
-			Row := [2]interface{}{}
+			Row := kvp{}
 			// K 只能String
 			if k.Type() == lua.LTString {
 				// create_at 不允许用户填写
-				if Row[0] != "create_at" && Row[0] != "id" {
+				if Row.K != "create_at" && Row.K != "id" {
 					switch v.Type() {
 					case lua.LTString:
-						Row[0] = lua.LVAsString(k)
-						Row[1] = lua.LVAsString(v)
+						Row.K = lua.LVAsString(k)
+						Row.V = lua.LVAsString(v)
 					case lua.LTNumber:
-						Row[0] = lua.LVAsString(k)
-						Row[1] = float64(lua.LVAsNumber(v))
+						Row.K = lua.LVAsString(k)
+						Row.V = float64(lua.LVAsNumber(v))
 					case lua.LTBool:
-						Row[0] = lua.LVAsString(k)
-						Row[1] = bool(lua.LVAsBool(v))
+						Row.K = lua.LVAsString(k)
+						Row.V = bool(lua.LVAsBool(v))
 					case lua.LTNil:
-						Row[0] = lua.LVAsString(k)
-						Row[1] = ""
+						Row.K = lua.LVAsString(k)
+						Row.V = ""
 					default:
-						Row[0] = lua.LVAsString(k)
-						Row[1] = "" // 不支持其他类型
+						Row.K = lua.LVAsString(k)
+						Row.V = "" // 不支持其他类型
 					}
 					RowList = append(RowList, Row)
 				}
@@ -276,20 +320,20 @@ func UpdateDataCenterLast(rx typex.Rhilex, uuid string) func(l *lua.LState) int 
 //            K3 = 'new_value3'
 //        WHERE condition;
 
-func GenUpdateSql(tableName string, rowList [][2]interface{}) (string, error) {
+func GenUpdateSql(tableName string, rowList []kvp) (string, error) {
 	if len(rowList) == 0 {
 		return "", fmt.Errorf("no rows to update")
 	}
 	fieldValuePairs := []string{}
-	for _, row := range rowList {
-		fieldValuePairs = append(fieldValuePairs, fmt.Sprintf("%v=%v", row[0], row[1]))
+	for _, Row := range rowList {
+		fieldValuePairs = append(fieldValuePairs, fmt.Sprintf("%v=%v", Row.K, Row.V))
 	}
 	sql := fmt.Sprintf("UPDATE %s SET %s WHERE id=%v;", tableName, strings.Join(fieldValuePairs, ","), 1)
 	return sql, nil
 }
 
 // Save to local DataCenter
-func updateLast(schema_uuid string, RowList [][2]interface{}) error {
+func updateLast(schema_uuid string, RowList []kvp) error {
 	Sql, err0 := GenUpdateSql(schema_uuid, RowList)
 	glogger.GLogger.Debug(Sql)
 	if err0 != nil {

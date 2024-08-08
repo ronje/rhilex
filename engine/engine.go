@@ -37,6 +37,7 @@ import (
 	supervisor "github.com/hootrhino/rhilex/component/supervisor"
 
 	datacenter "github.com/hootrhino/rhilex/component/datacenter"
+	dataschema "github.com/hootrhino/rhilex/component/dataschema"
 	"github.com/hootrhino/rhilex/component/interdb"
 	"github.com/hootrhino/rhilex/component/intermetric"
 	"github.com/hootrhino/rhilex/component/internotify"
@@ -115,7 +116,9 @@ func InitRuleEngine(config typex.RhilexConfig) typex.Rhilex {
 	interqueue.InitDataCacheQueue(__DefaultRuleEngine, core.GlobalConfig.MaxQueueSize)
 	// Data center: future version maybe support
 	datacenter.InitDataCenter(__DefaultRuleEngine)
-	// 内部队列
+	// Init DataSchema Cache
+	dataschema.InitDataSchemaCache(__DefaultRuleEngine)
+	// Internal BUS
 	interqueue.StartDataCacheQueue()
 	// Init Transceiver Communicator Manager
 	transceiver.InitTransceiverCommunicatorManager(__DefaultRuleEngine)
@@ -210,9 +213,14 @@ func (e *RuleEngine) Stop() {
 	intercache.UnRegisterSlot("__DefaultRuleEngine")
 	// UnRegister __DeviceConfigMap
 	intercache.UnRegisterSlot("__DeviceConfigMap")
-	//
+	// Stop transceiver
 	glogger.GLogger.Info("Stop transceiver")
 	transceiver.Stop()
+	// Flush SchemaCache
+	dataschema.FlushDataSchemaCache()
+	glogger.GLogger.Info("Flush DataSchema Cache")
+
+	// END
 	glogger.GLogger.Info("[√] Stop rhilex successfully")
 	if err := glogger.Close(); err != nil {
 		fmt.Println("Close logger error: ", err)

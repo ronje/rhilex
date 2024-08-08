@@ -26,7 +26,7 @@ type CacheValue struct {
 	Status        int // 0 正常；1 错误，填充 ErrMsg
 	ErrMsg        string
 	LastFetchTime uint64
-	Value         string
+	Value         interface{}
 }
 
 /*

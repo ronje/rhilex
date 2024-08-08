@@ -37,22 +37,22 @@ import (
 )
 
 type ModbusMasterPointVo struct {
-	UUID          string   `json:"uuid,omitempty"`
-	DeviceUUID    string   `json:"device_uuid"`
-	Tag           string   `json:"tag"`
-	Alias         string   `json:"alias"`
-	Function      *int     `json:"function"`
-	SlaverId      *byte    `json:"slaverId"`
-	Address       *uint16  `json:"address"`
-	Frequency     *int64   `json:"frequency"`
-	Quantity      *uint16  `json:"quantity"`
-	DataType      string   `json:"dataType"`      // 数据类型
-	DataOrder     string   `json:"dataOrder"`     // 字节序
-	Weight        *float64 `json:"weight"`        // 权重
-	Status        int      `json:"status"`        // 运行时数据
-	LastFetchTime uint64   `json:"lastFetchTime"` // 运行时数据
-	Value         string   `json:"value"`         // 运行时数据
-	ErrMsg        string   `json:"errMsg"`        // 运行时数据
+	UUID          string      `json:"uuid,omitempty"`
+	DeviceUUID    string      `json:"device_uuid"`
+	Tag           string      `json:"tag"`
+	Alias         string      `json:"alias"`
+	Function      *int        `json:"function"`
+	SlaverId      *byte       `json:"slaverId"`
+	Address       *uint16     `json:"address"`
+	Frequency     *int64      `json:"frequency"`
+	Quantity      *uint16     `json:"quantity"`
+	DataType      string      `json:"dataType"`      // 数据类型
+	DataOrder     string      `json:"dataOrder"`     // 字节序
+	Weight        *float64    `json:"weight"`        // 权重
+	Status        int         `json:"status"`        // 运行时数据
+	LastFetchTime uint64      `json:"lastFetchTime"` // 运行时数据
+	Value         interface{} `json:"value"`         // 运行时数据
+	ErrMsg        string      `json:"errMsg"`        // 运行时数据
 
 }
 

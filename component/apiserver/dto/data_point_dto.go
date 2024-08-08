@@ -10,7 +10,7 @@ type DataPointVO struct {
 	ErrMsg        string                 `json:"errMsg"`        // 运行时数据
 	Status        uint32                 `json:"status"`        // 运行时数据
 	LastFetchTime uint64                 `json:"lastFetchTime"` // 运行时数据
-	Value         string                 `json:"value"`         // 运行时数据
+	Value         interface{}            `json:"value"`         // 运行时数据
 }
 
 type DataPointCreateOrUpdateDTO struct {

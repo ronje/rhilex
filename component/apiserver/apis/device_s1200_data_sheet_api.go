@@ -39,19 +39,19 @@ import (
 )
 
 type SiemensPointVo struct {
-	UUID           string   `json:"uuid"`
-	DeviceUUID     string   `json:"device_uuid"`
-	SiemensAddress string   `json:"siemensAddress"` // 西门子的地址字符串
-	Tag            string   `json:"tag"`
-	Alias          string   `json:"alias"`
-	DataOrder      string   `json:"dataOrder"` // 字节序
-	DataType       string   `json:"dataType"`
-	Frequency      *int64   `json:"frequency"`
-	Weight         *float64 `json:"weight"`        // 权重
-	Status         int      `json:"status"`        // 运行时数据
-	LastFetchTime  uint64   `json:"lastFetchTime"` // 运行时数据
-	Value          string   `json:"value"`         // 运行时数据
-	ErrMsg         string   `json:"errMsg"`        // 运行时数据
+	UUID           string      `json:"uuid"`
+	DeviceUUID     string      `json:"device_uuid"`
+	SiemensAddress string      `json:"siemensAddress"` // 西门子的地址字符串
+	Tag            string      `json:"tag"`
+	Alias          string      `json:"alias"`
+	DataOrder      string      `json:"dataOrder"` // 字节序
+	DataType       string      `json:"dataType"`
+	Frequency      *int64      `json:"frequency"`
+	Weight         *float64    `json:"weight"`        // 权重
+	Status         int         `json:"status"`        // 运行时数据
+	LastFetchTime  uint64      `json:"lastFetchTime"` // 运行时数据
+	Value          interface{} `json:"value"`         // 运行时数据
+	ErrMsg         string      `json:"errMsg"`        // 运行时数据
 
 }
 

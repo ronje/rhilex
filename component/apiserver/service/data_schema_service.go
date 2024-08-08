@@ -50,6 +50,9 @@ func DeleteDataSchemaAndProperty(schemaUuid string) error {
 		if err2 != nil {
 			return err2
 		}
+		if CountIotSchemaProperty(MIotSchema.Name, MIotSchema.UUID) > 0 {
+			return fmt.Errorf("Schema Have Already Binding Properties")
+		}
 		return nil
 	}
 	// 已经发布了，清空RHILEX数据库
