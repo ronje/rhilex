@@ -115,13 +115,10 @@ func (tc *ATK01Lora) startProcessPacket(Chan chan []byte) {
 		case buffer := <-Chan:
 			Len := len(buffer)
 			if Len > 4 {
-				glogger.GLogger.Debug("ATK01Lora Received Data:", buffer)
-				crcByte := [2]byte{buffer[Len-2], buffer[Len-1]}
-				crcCheckedValue := uint16(crcByte[0])<<8 | uint16(crcByte[1])
-				crcCalculatedValue := utils.CRC16(buffer[:Len-2])
-				if crcCalculatedValue != crcCheckedValue {
-					glogger.GLogger.Errorf("CRC Check Error: (Checked=%d,Calculated=%d), data=%v",
-						crcCheckedValue, crcCalculatedValue, buffer)
+				glogger.GLogger.Debug("transceiver.up.data.atk01 received: ", utils.BeautifulHex(buffer))
+				Packet, err := protocol.CheckDataCrc16(buffer)
+				if err != nil {
+					glogger.GLogger.Error(err)
 					continue
 				}
 				internotify.Push(internotify.BaseEvent{
@@ -129,10 +126,10 @@ func (tc *ATK01Lora) startProcessPacket(Chan chan []byte) {
 					Event:   "transceiver.up.data.atk01",
 					Ts:      uint64(time.Now().UnixMilli()),
 					Summary: "transceiver.up.data",
-					Info:    buffer[2 : Len-2],
+					Info:    Packet,
 				})
 			} else {
-				glogger.GLogger.Warn("'transceiver.up.data.atk01' Received Data Maybe invalid:", buffer)
+				glogger.GLogger.Warn("'transceiver.up.data.atk01' Data Maybe Invalid:", buffer)
 			}
 		}
 	}

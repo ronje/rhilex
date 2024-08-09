@@ -160,3 +160,20 @@ func ReadInLeastTimeout(ctx context.Context,
 		}
 	}
 }
+
+/*
+*
+* 十六进制打印字节
+*
+ */
+
+func BeautifulHex(b []byte) string {
+	var sb strings.Builder
+	for i, byteValue := range b {
+		if i > 0 {
+			sb.WriteString(" ")
+		}
+		sb.WriteString(fmt.Sprintf("%02X", byteValue))
+	}
+	return sb.String()
+}

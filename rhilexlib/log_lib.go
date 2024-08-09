@@ -60,7 +60,7 @@ func DebugRule(rx typex.Rhilex, uuid string) func(L *lua.LState) int {
 			if content[len(TestPrefix):] == "" {
 				glogger.GLogger.WithFields(logrus.Fields{
 					"topic": "rule/log/test/" + uuid,
-				}).Info("<Empty Output>")
+				}).Info("<Empty>")
 			} else {
 				glogger.GLogger.WithFields(logrus.Fields{
 					"topic": "rule/log/test/" + uuid,
