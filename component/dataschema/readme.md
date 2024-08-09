@@ -27,6 +27,16 @@ if SchemaId!=""->
     for each(ModbusSchemaCacheValues) ->
         dataschema.SetValue(mdev.PointId, K, V)
 ```
+## 类型
+目前边缘侧暂时只支持常见类型
+```go
+IoTPropertyTypeString  IoTPropertyType = "STRING"
+IoTPropertyTypeInteger IoTPropertyType = "INTEGER"
+IoTPropertyTypeFloat   IoTPropertyType = "FLOAT"
+IoTPropertyTypeBool    IoTPropertyType = "BOOL"
+IoTPropertyTypeGeo     IoTPropertyType = "GEO"
+
+```
 ## 数据
 请求地址：`http://127.0.0.1:2580/api/v1/devices/properties?current=1&size=10&uuid=DEVICENKRZFRYW`
 Lua:

@@ -16,6 +16,7 @@
 package apis
 
 import (
+	"encoding/json"
 	"fmt"
 	"time"
 
@@ -33,7 +34,21 @@ import (
 	"gorm.io/gorm"
 )
 
-type SchemaDDLVo struct {
+type ddl_rule_vo struct {
+	DefaultValue any    `json:"defaultValue"` // 默认值: 0 false ''
+	Max          int    `json:"max"`          // int|float|string: 最大值
+	Min          int    `json:"min"`          // int|float|string: 最小值
+	TrueLabel    string `json:"trueLabel"`    // bool: 真值label
+	FalseLabel   string `json:"falseLabel"`   // bool: 假值label
+	Round        int    `json:"round"`        // float: 小数点位
+}
+type ddl_define_vo struct {
+	Id   int         `json:"id"`
+	Name string      `json:"name"`
+	Type string      `json:"type"`
+	Uuid string      `json:"uuid"`
+	Unit string      `json:"unit"`
+	Rule ddl_rule_vo `json:"rule"`
 }
 
 func InitDataCenterApi() {
@@ -69,7 +84,7 @@ func ListSchemaDDL(c *gin.Context, ruleEngine typex.Rhilex) {
 
 /*
 *
-* 详情
+* 模型表结构定义，用户数据中心展示和表格二次信息加工
 *
  */
 func SchemaDDLDetail(c *gin.Context, ruleEngine typex.Rhilex) {
@@ -95,14 +110,27 @@ func SchemaDDLDetail(c *gin.Context, ruleEngine typex.Rhilex) {
 	})
 	records := []ddl_define{}
 	tx := interdb.DB()
-	result := tx.Model(&model.MIotProperty{}).Select("id,name,type,uuid,unit").
+	result := tx.Model(&model.MIotProperty{}).Select("id,name,type,uuid,unit,rule").
 		Where("schema_id=?", uuid).Find(&records)
 	if result.Error != nil {
 		c.JSON(common.HTTP_OK, common.Error400(result.Error))
 		return
 	}
 	recordsHead = append(recordsHead, records...)
-	c.JSON(common.HTTP_OK, common.OkWithData(recordsHead))
+	recordsVos := []ddl_define_vo{}
+	for _, record := range recordsHead {
+		rule := ddl_rule_vo{}
+		json.Unmarshal([]byte(record.Rule), &rule)
+		recordsVos = append(recordsVos, ddl_define_vo{
+			Id:   record.Id,
+			Name: record.Name,
+			Type: record.Type,
+			Uuid: record.Uuid,
+			Unit: record.Unit,
+			Rule: rule,
+		})
+	}
+	c.JSON(common.HTTP_OK, common.OkWithData(recordsVos))
 }
 
 /*
@@ -337,12 +365,14 @@ func QueryDDLLastData(c *gin.Context, ruleEngine typex.Rhilex) {
 * 获取定义
 *
  */
+
 type ddl_define struct {
 	Id   int    `json:"id"`
 	Name string `json:"name"`
 	Type string `json:"type"`
 	Uuid string `json:"uuid"`
 	Unit string `json:"unit"`
+	Rule string `json:"rule"`
 }
 
 /*

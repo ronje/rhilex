@@ -128,7 +128,7 @@ func InsertToDataCenterTable(rx typex.Rhilex, uuid string) func(L *lua.LState) i
 			}
 		})
 		// TODO: checkRule
-		if errCheckRule := checkRule(RowList); errCheckRule != nil {
+		if errCheckRule := CheckSchemaConsist(RowList); errCheckRule != nil {
 			glogger.GLogger.Error("checkRule error:", errCheckRule)
 			l.Push(lua.LString(errCheckRule.Error()))
 			return 1
@@ -158,7 +158,7 @@ type kvp struct {
 * 检查规则
 *
  */
-func checkRule(RowList []kvp) error {
+func CheckSchemaConsist(RowList []kvp) error {
 	for _, Row := range RowList {
 		if Row.K == "create_at" || Row.K == "id" {
 			continue
@@ -186,15 +186,6 @@ func saveToDataCenter(schema_uuid string, RowList []kvp) error {
 	if err1 != nil {
 		return err1
 	}
-	return nil
-}
-
-/*
-*
-* 检查属性约束
-*
- */
-func CheckSchemaConsist(schema_uuid string, RowList [][2]interface{}) error {
 	return nil
 }
 
