@@ -198,7 +198,9 @@ func (mdev *GenericUart) Stop() {
 	if mdev.CancelCTX != nil {
 		mdev.CancelCTX()
 	}
-	mdev.serialPort.Close()
+	if mdev.serialPort != nil {
+		mdev.serialPort.Close()
+	}
 }
 func (mdev *GenericUart) Details() *typex.OutEnd {
 	return mdev.RuleEngine.GetOutEnd(mdev.PointId)
