@@ -331,7 +331,7 @@ func ParseModbusValue(DataBlockType string, DataBlockOrder string,
 		}
 	}
 	// 3.14159:DCBA -> 40490FDC
-	if DataBlockType == "FLOAT" || DataBlockType == "FLOAT32" {
+	if DataBlockType == "FLOAT" || DataBlockType == "FLOAT32" || DataBlockType == "UFLOAT32" {
 		// ABCD
 		if DataBlockOrder == "ABCD" {
 			intValue := int32(byteSlice[0])<<24 | int32(byteSlice[1])<<16 |
@@ -351,6 +351,28 @@ func ParseModbusValue(DataBlockType string, DataBlockOrder string,
 			floatValue := float32(math.Float32frombits(uint32(intValue)))
 			return fmt.Sprintf("%.4f", floatValue)
 
+		}
+	}
+	// -3.14159:DCBA -> +40490FDC
+	if DataBlockType == "UFLOAT32" {
+		// ABCD
+		if DataBlockOrder == "ABCD" {
+			intValue := int32(byteSlice[0])<<24 | int32(byteSlice[1])<<16 |
+				int32(byteSlice[2])<<8 | int32(byteSlice[3])
+			floatValue := float32(math.Float32frombits(uint32(intValue)))
+			return fmt.Sprintf("%.4f", floatValue)
+		}
+		if DataBlockOrder == "CDAB" {
+			intValue := int32(byteSlice[0])<<8 | int32(byteSlice[1]) |
+				int32(byteSlice[2])<<24 | int32(byteSlice[3])<<16
+			floatValue := float32(math.Float32frombits(uint32(intValue)))
+			return fmt.Sprintf("%.4f", floatValue)
+		}
+		if DataBlockOrder == "DCBA" {
+			intValue := int32(byteSlice[0]) | int32(byteSlice[1])<<8 |
+				int32(byteSlice[2])<<16 | int32(byteSlice[3])<<24
+			floatValue := float32(math.Float32frombits(uint32(intValue)))
+			return fmt.Sprintf("%.4f", floatValue)
 		}
 	}
 	return "0"

@@ -293,7 +293,7 @@ func checkModbusMasterDataPoints(M ModbusMasterPointVo) error {
 		if !utils.SContains([]string{"AB", "BA"}, M.DataOrder) {
 			return fmt.Errorf("'Invalid '%s' order '%s'", M.DataType, M.DataOrder)
 		}
-	case "RAW", "INT", "INT32", "UINT", "UINT32", "FLOAT", "FLOAT32":
+	case "RAW", "INT", "INT32", "UINT", "UINT32", "FLOAT", "FLOAT32", "UFLOAT32":
 		if !utils.SContains([]string{"ABCD", "DCBA", "CDAB"}, M.DataOrder) {
 			return fmt.Errorf("'Invalid '%s' order '%s'", M.DataType, M.DataOrder)
 		}
