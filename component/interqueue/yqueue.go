@@ -67,14 +67,12 @@ func StartYQueue() {
 			}
 			queue.inLocker.Lock()
 			for listE := queue.InQueue.Back(); listE != nil; listE = queue.Queue.Back() {
-				if listE != nil {
-					switch QueueData := listE.Value.(type) {
-					case QueueData:
-						if QueueData.I != nil {
-							QueueData.E.RunSourceCallbacks(QueueData.I, QueueData.Data)
-						}
-						queue.InQueue.Remove(listE)
+				switch T := listE.Value.(type) {
+				case QueueData:
+					if T.I != nil {
+						T.E.RunSourceCallbacks(T.I, T.Data)
 					}
+					queue.InQueue.Remove(listE)
 				}
 			}
 			queue.inLocker.Unlock()
@@ -90,15 +88,13 @@ func StartYQueue() {
 			default:
 			}
 			queue.deviceLocker.Lock()
-			for listE := queue.InQueue.Back(); listE != nil; listE = queue.Queue.Back() {
-				if listE != nil {
-					switch T := listE.Value.(type) {
-					case QueueData:
-						if T.D != nil {
-							T.E.RunDeviceCallbacks(T.D, T.Data)
-						}
-						queue.DeviceQueue.Remove(listE)
+			for listE := queue.DeviceQueue.Back(); listE != nil; listE = queue.Queue.Back() {
+				switch T := listE.Value.(type) {
+				case QueueData:
+					if T.D != nil {
+						T.E.RunDeviceCallbacks(T.D, T.Data)
 					}
+					queue.DeviceQueue.Remove(listE)
 				}
 			}
 			queue.deviceLocker.Unlock()
@@ -114,15 +110,13 @@ func StartYQueue() {
 			default:
 			}
 			queue.outLocker.Lock()
-			for listE := queue.InQueue.Back(); listE != nil; listE = queue.Queue.Back() {
-				if listE != nil {
-					switch QueueData := listE.Value.(type) {
-					case QueueData:
-						if QueueData.O != nil {
-							ProcessOutQueueData(QueueData, QueueData.E)
-						}
-						queue.OutQueue.Remove(listE)
+			for listE := queue.OutQueue.Back(); listE != nil; listE = queue.Queue.Back() {
+				switch QueueData := listE.Value.(type) {
+				case QueueData:
+					if QueueData.O != nil {
+						ProcessOutQueueData(QueueData, QueueData.E)
 					}
+					queue.OutQueue.Remove(listE)
 				}
 			}
 			queue.outLocker.Unlock()
