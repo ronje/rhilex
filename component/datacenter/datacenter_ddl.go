@@ -45,8 +45,10 @@ func GenerateSQLiteCreateTableDDL(schemaDDL SchemaDDL) (string, error) {
 
 	var columns []string
 	for i, col := range schemaDDL.DDLColumns {
-		columnDefine := fmt.Sprintf("%s %s", col.Name, SqliteTypeMappingSchemaType(col.Type))
+		columnDefine := fmt.Sprintf("`%s` %s", col.Name, SqliteTypeMappingSchemaType(col.Type))
 		switch col.Type {
+		case "GEO":
+			columnDefine += " NOT NULL DEFAULT '0,0'"
 		case "STRING":
 			columnDefine += " NOT NULL DEFAULT ''"
 		case "INTEGER":
