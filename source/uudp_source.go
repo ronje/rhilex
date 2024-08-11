@@ -2,7 +2,11 @@ package source
 
 import (
 	"context"
+	"encoding/hex"
+	"encoding/json"
 	"net"
+	"time"
+	"unicode/utf8"
 
 	"github.com/hootrhino/rhilex/glogger"
 	"github.com/hootrhino/rhilex/typex"
@@ -16,7 +20,7 @@ type RHILEXUdpConfig struct {
 }
 type udpSource struct {
 	typex.XStatus
-	uDPConn    *net.UDPConn
+	UdpConn    *net.UDPConn
 	mainConfig RHILEXUdpConfig
 	status     typex.SourceState
 }
@@ -38,41 +42,68 @@ func (udps *udpSource) Start(cctx typex.CCTX) error {
 
 	addr := &net.UDPAddr{IP: net.ParseIP(udps.mainConfig.Host), Port: udps.mainConfig.Port}
 	var err error
-	if udps.uDPConn, err = net.ListenUDP("udp", addr); err != nil {
+	if udps.UdpConn, err = net.ListenUDP("udp", addr); err != nil {
 		glogger.GLogger.Error(err)
 		return err
 	}
-	udps.status = typex.SOURCE_UP
 	go func(ctx context.Context, u1 *udpSource) {
-		data := make([]byte, udps.mainConfig.MaxDataLength)
+		buffer := make([]byte, udps.mainConfig.MaxDataLength)
 		for {
 			select {
 			case <-ctx.Done():
 				return
 			default:
 			}
-			n, remoteAddr, err := u1.uDPConn.ReadFromUDP(data)
+			u1.UdpConn.SetReadDeadline(time.Now().Add(5 * time.Second))
+			n, remoteAddr, err := u1.UdpConn.ReadFromUDP(buffer)
 			if err != nil {
 				glogger.GLogger.Error(err.Error())
 				continue
 			}
-			glogger.GLogger.Debug("UDP Server Received:", data[:n])
-			work, err := udps.RuleEngine.WorkInEnd(udps.RuleEngine.GetInEnd(udps.PointId), string(data[:n]))
-			if !work {
-				glogger.GLogger.Error(err)
-				continue
-			}
-			// return ok
-			_, err = u1.uDPConn.WriteToUDP([]byte("ok"), remoteAddr)
-			if err != nil {
-				glogger.GLogger.Error(err)
-			}
+			glogger.GLogger.Debug("UDP Server Received:", buffer[:n])
+			go udps.handleClient(buffer[:n], remoteAddr)
 		}
 	}(udps.Ctx, udps)
 	udps.status = typex.SOURCE_UP
 	glogger.GLogger.Infof("UDP source started on [%v]:%v", udps.mainConfig.Host, udps.mainConfig.Port)
 	return nil
 
+}
+
+/*
+*
+* 处理UDP客户端
+*
+ */
+func (udps *udpSource) handleClient(data []byte, remoteAddr *net.UDPAddr) {
+	ClientData := udp_client_data{
+		ClientAddr: remoteAddr.String(),
+	}
+	if utf8.Valid(data) {
+		ClientData.Data = string(data)
+	} else {
+		ClientData.Data = hex.EncodeToString(data)
+	}
+	ClientDataBytes, _ := json.Marshal(ClientData)
+	work, err := udps.RuleEngine.WorkInEnd(udps.RuleEngine.GetInEnd(udps.PointId), string(ClientDataBytes))
+	if !work {
+		glogger.GLogger.Error(err)
+	}
+	// return ok
+	_, err = udps.UdpConn.WriteToUDP([]byte("ok"), remoteAddr)
+	if err != nil {
+		glogger.GLogger.Error(err)
+	}
+}
+
+/*
+*
+* 对外输出的数据格式
+*
+ */
+type udp_client_data struct {
+	ClientAddr string      `json:"clientAddr"`
+	Data       interface{} `json:"data"`
 }
 
 func (udps *udpSource) Details() *typex.InEnd {
@@ -100,8 +131,8 @@ func (udps *udpSource) Stop() {
 	if udps.CancelCTX != nil {
 		udps.CancelCTX()
 	}
-	if udps.uDPConn != nil {
-		err := udps.uDPConn.Close()
+	if udps.UdpConn != nil {
+		err := udps.UdpConn.Close()
 		if err != nil {
 			glogger.GLogger.Error(err)
 		}
