@@ -25,6 +25,7 @@ import (
 	modbusscrc "github.com/hootrhino/rhilex/plugin/modbus_crc_tools"
 	modbusscanner "github.com/hootrhino/rhilex/plugin/modbus_scanner"
 	ngrokc "github.com/hootrhino/rhilex/plugin/ngrokc"
+	telemetry "github.com/hootrhino/rhilex/plugin/telemetry"
 	ttyterminal "github.com/hootrhino/rhilex/plugin/ttyd_terminal"
 	usbmonitor "github.com/hootrhino/rhilex/plugin/usb_monitor"
 	ini "gopkg.in/ini.v1"
@@ -69,7 +70,7 @@ func RunRhilex(iniPath string) {
 		return
 	}
 	// Load Plugin
-	loadPlugin(engine)
+	loadOtherPlugin(engine)
 	s := <-c
 	glogger.GLogger.Warn("RHILEX Receive Stop Signal: ", s)
 	typex.GCancel()
@@ -78,7 +79,7 @@ func RunRhilex(iniPath string) {
 }
 
 // loadPlugin 根据Ini配置信息，加载插件
-func loadPlugin(engine typex.Rhilex) {
+func loadOtherPlugin(engine typex.Rhilex) {
 	cfg, _ := ini.ShadowLoad(core.GlobalConfig.IniPath)
 	sections := cfg.ChildSections("plugin")
 	for _, section := range sections {
@@ -112,6 +113,9 @@ func loadPlugin(engine typex.Rhilex) {
 		}
 		if name == "ngrokc" {
 			plugin = ngrokc.NewNgrokClient()
+		}
+		if name == "telemetry" {
+			plugin = telemetry.NewTelemetry()
 		}
 		if plugin != nil {
 			if err := engine.LoadPlugin(section.Name(), plugin); err != nil {

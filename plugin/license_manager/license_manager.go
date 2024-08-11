@@ -17,12 +17,13 @@ import (
 	"github.com/hootrhino/rhilex/glogger"
 	"github.com/hootrhino/rhilex/ossupport"
 	"github.com/hootrhino/rhilex/typex"
+	"github.com/hootrhino/rhilex/utils"
 	"gopkg.in/ini.v1"
 )
 
 // 00001 & rhino & hoot & eth0 & FF:FF:FF:FF:FF:FF & 0 & 0
-func ParseAuthInfo(info string) (typex.LocalLicense, error) {
-	LocalLicense := typex.LocalLicense{}
+func ParseAuthInfo(info string) (utils.LocalLicense, error) {
+	LocalLicense := utils.LocalLicense{}
 	ss := strings.Split(info, "&")
 	if len(ss) == 7 {
 		BeginAuthorize, err1 := strconv.ParseInt(ss[5], 10, 64)

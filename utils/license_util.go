@@ -75,14 +75,14 @@ func SumMd5(inputString string) string {
 }
 
 type LocalLicense struct {
-	DeviceID          string `json:"device_id"`          // 设备生产序列号
-	AuthorizeAdmin    string `json:"authorize_admin"`    // 证书签发人
-	AuthorizePassword string `json:"authorize_password"` // 证书签发人密钥
-	BeginAuthorize    int64  `json:"begin_authorize"`    // 证书授权开始时间
-	EndAuthorize      int64  `json:"end_authorize"`      // 证书授权结束时间
-	Iface             string `json:"iface"`              // 设备硬件MAC地址，一般取以太网卡
-	MAC               string `json:"mac"`                // 设备硬件MAC地址，一般取以太网卡
-	License           string `json:"license"`            // 公钥, 发给用户设备
+	DeviceID          string `json:"device_id"`
+	AuthorizeAdmin    string `json:"authorize_admin"`
+	AuthorizePassword string `json:"authorize_password"`
+	BeginAuthorize    int64  `json:"begin_authorize"`
+	EndAuthorize      int64  `json:"end_authorize"`
+	Iface             string `json:"iface"`
+	MAC               string `json:"mac"`
+	License           string `json:"license"`
 }
 
 func (ll *LocalLicense) ToString() string {
