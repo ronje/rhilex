@@ -11,37 +11,7 @@ import (
 	"github.com/hootrhino/rhilex/typex"
 )
 
-var DefaultDataCacheQueue XQueue
-
-/*
-*
-* XQueue
-*
- */
-type XQueue interface {
-	GetQueue() chan QueueData
-	GetInQueue() chan QueueData
-	GetOutQueue() chan QueueData
-	GetDeviceQueue() chan QueueData
-	GetSize() int
-	Push(QueueData) error
-	PushInQueue(in *typex.InEnd, data string) error
-	PushOutQueue(in *typex.OutEnd, data string) error
-	PushDeviceQueue(in *typex.Device, data string) error
-}
-
-type QueueData struct {
-	Debug bool // 是否是Debug消息
-	I     *typex.InEnd
-	O     *typex.OutEnd
-	D     *typex.Device
-	E     typex.Rhilex
-	Data  string
-}
-
-func (qd QueueData) String() string {
-	return "QueueData@In:" + qd.I.UUID + ", Data:" + qd.Data
-}
+var DefaultXQueue Queue
 
 /*
 *
@@ -51,10 +21,10 @@ func (qd QueueData) String() string {
 
 /*
 *
-* DataCacheQueue
+* XQueue
 *
  */
-type DataCacheQueue struct {
+type XQueue struct {
 	Queue       chan QueueData
 	OutQueue    chan QueueData
 	InQueue     chan QueueData
@@ -62,17 +32,17 @@ type DataCacheQueue struct {
 	rhilex      typex.Rhilex
 }
 
-func InitDataCacheQueue(rhilex typex.Rhilex, maxQueueSize int) XQueue {
-	DefaultDataCacheQueue = &DataCacheQueue{
+func InitXQueue(rhilex typex.Rhilex, maxQueueSize int) Queue {
+	DefaultXQueue = &XQueue{
 		Queue:       make(chan QueueData, maxQueueSize),
 		OutQueue:    make(chan QueueData, maxQueueSize),
 		InQueue:     make(chan QueueData, maxQueueSize),
 		DeviceQueue: make(chan QueueData, maxQueueSize),
 		rhilex:      rhilex,
 	}
-	return DefaultDataCacheQueue
+	return DefaultXQueue
 }
-func (q *DataCacheQueue) GetSize() int {
+func (q *XQueue) GetSize() int {
 	return cap(q.Queue)
 }
 
@@ -81,13 +51,12 @@ func (q *DataCacheQueue) GetSize() int {
 * Push
 *
  */
-func (q *DataCacheQueue) Push(d QueueData) error {
+func (q *XQueue) Push(d QueueData) error {
 	// 动态扩容
 	// if len(q.Queue)+1 > q.GetSize() {
 	// }
 	if len(q.Queue)+1 > q.GetSize() {
-		msg := fmt.Sprintf("attached max queue size, max size is:%v, current size is: %v",
-			q.GetSize(), len(q.Queue)+1)
+		msg := fmt.Sprintf("exceed max queue size:%v", q.GetSize())
 		glogger.GLogger.Error(msg)
 		return errors.New(msg)
 	} else {
@@ -96,30 +65,12 @@ func (q *DataCacheQueue) Push(d QueueData) error {
 	}
 }
 
-func processOutQueueData(qd QueueData, e typex.Rhilex) {
-	if qd.O != nil {
-		v, ok := e.AllOutEnds().Load(qd.O.UUID)
-		if ok {
-			target := v.(*typex.OutEnd).Target
-			if target == nil {
-				return
-			}
-			if _, err := target.To(qd.Data); err != nil {
-				glogger.GLogger.Error(err)
-				intermetric.IncOutFailed()
-			} else {
-				intermetric.IncOut()
-			}
-		}
-	}
-}
-
 /*
 *
 * GetQueue
 *
  */
-func (q *DataCacheQueue) GetQueue() chan QueueData {
+func (q *XQueue) GetQueue() chan QueueData {
 	return q.Queue
 }
 
@@ -128,7 +79,7 @@ func (q *DataCacheQueue) GetQueue() chan QueueData {
 * GetQueue
 *
  */
-func (q *DataCacheQueue) GetInQueue() chan QueueData {
+func (q *XQueue) GetInQueue() chan QueueData {
 	return q.InQueue
 }
 
@@ -137,7 +88,7 @@ func (q *DataCacheQueue) GetInQueue() chan QueueData {
 * GetQueue
 *
  */
-func (q *DataCacheQueue) GetOutQueue() chan QueueData {
+func (q *XQueue) GetOutQueue() chan QueueData {
 	return q.OutQueue
 }
 
@@ -146,15 +97,14 @@ func (q *DataCacheQueue) GetOutQueue() chan QueueData {
 *GetDeviceQueue
 *
  */
-func (q *DataCacheQueue) GetDeviceQueue() chan QueueData {
+func (q *XQueue) GetDeviceQueue() chan QueueData {
 	return q.DeviceQueue
 }
 
 // TODO: 下个版本更换为可扩容的Chan
-func StartDataCacheQueue() {
+func StartXQueue() {
 	ctx := typex.GCTX
-	xQueue := DefaultDataCacheQueue
-	go func(ctx context.Context, xQueue XQueue) {
+	go func(ctx context.Context, queue Queue) {
 		ticker := time.NewTicker(100 * time.Millisecond)
 		defer ticker.Stop()
 		for {
@@ -162,21 +112,21 @@ func StartDataCacheQueue() {
 			case <-ctx.Done():
 				// 优雅地处理上下文取消
 				return
-			case qd := <-xQueue.GetInQueue():
+			case qd := <-queue.GetInQueue():
 				if qd.I != nil {
 					qd.E.RunSourceCallbacks(qd.I, qd.Data)
 				}
-			case qd := <-xQueue.GetDeviceQueue():
+			case qd := <-queue.GetDeviceQueue():
 				if qd.D != nil {
 					qd.E.RunDeviceCallbacks(qd.D, qd.Data)
 				}
-			case qd := <-xQueue.GetOutQueue():
-				processOutQueueData(qd, qd.E)
+			case qd := <-queue.GetOutQueue():
+				ProcessOutQueueData(qd, qd.E)
 			case <-ticker.C:
 				continue
 			}
 		}
-	}(ctx, xQueue)
+	}(ctx, DefaultXQueue)
 }
 
 /*
@@ -184,7 +134,7 @@ func StartDataCacheQueue() {
 *PushInQueue
 *
  */
-func (q *DataCacheQueue) PushInQueue(in *typex.InEnd, data string) error {
+func (q *XQueue) PushInQueue(in *typex.InEnd, data string) error {
 	qd := QueueData{
 		E:    q.rhilex,
 		I:    in,
@@ -206,7 +156,7 @@ func (q *DataCacheQueue) PushInQueue(in *typex.InEnd, data string) error {
 * PushDeviceQueue
 *
  */
-func (q *DataCacheQueue) PushDeviceQueue(Device *typex.Device, data string) error {
+func (q *XQueue) PushDeviceQueue(Device *typex.Device, data string) error {
 	qd := QueueData{
 		D:    Device,
 		E:    q.rhilex,
@@ -229,7 +179,7 @@ func (q *DataCacheQueue) PushDeviceQueue(Device *typex.Device, data string) erro
 * PushOutQueue
 *
  */
-func (q *DataCacheQueue) PushOutQueue(out *typex.OutEnd, data string) error {
+func (q *XQueue) PushOutQueue(out *typex.OutEnd, data string) error {
 	qd := QueueData{
 		E:    q.rhilex,
 		D:    nil,
@@ -252,7 +202,7 @@ func (q *DataCacheQueue) PushOutQueue(out *typex.OutEnd, data string) error {
 * Push
 *
  */
-func (q *DataCacheQueue) pushIn(d QueueData) error {
+func (q *XQueue) pushIn(d QueueData) error {
 	// 动态扩容
 	// if len(q.Queue)+1 > q.GetSize() {
 	// }
@@ -272,7 +222,7 @@ func (q *DataCacheQueue) pushIn(d QueueData) error {
 * Push
 *
  */
-func (q *DataCacheQueue) pushOut(d QueueData) error {
+func (q *XQueue) pushOut(d QueueData) error {
 	// 动态扩容
 	// if len(q.Queue)+1 > q.GetSize() {
 	// }
@@ -292,7 +242,7 @@ func (q *DataCacheQueue) pushOut(d QueueData) error {
 * Push
 *
  */
-func (q *DataCacheQueue) pushDevice(d QueueData) error {
+func (q *XQueue) pushDevice(d QueueData) error {
 	// 动态扩容
 	// if len(q.Queue)+1 > q.GetSize() {
 	// }

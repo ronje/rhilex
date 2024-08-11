@@ -11,7 +11,7 @@ import (
 func handleDataFormat(e typex.Rhilex, uuid string, incoming string) error {
 	outEnd := e.GetOutEnd(uuid)
 	if outEnd != nil {
-		return interqueue.DefaultDataCacheQueue.PushOutQueue(outEnd, incoming)
+		return interqueue.DefaultYQueue.PushOutQueue(outEnd, incoming)
 	}
 	msg := "target not found:" + uuid
 	glogger.GLogger.Error(msg)

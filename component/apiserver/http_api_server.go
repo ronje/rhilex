@@ -6,6 +6,7 @@ import (
 	"time"
 
 	cron_task "github.com/hootrhino/rhilex/component/crontask"
+	dataschema "github.com/hootrhino/rhilex/component/dataschema"
 	"github.com/hootrhino/rhilex/component/hwportmanager"
 	"github.com/hootrhino/rhilex/component/internotify"
 	"github.com/shirou/gopsutil/cpu"
@@ -209,6 +210,7 @@ func (hs *ApiServerPlugin) Init(config *ini.Section) error {
 	server.DefaultApiServer.InitializeWindowsData()
 	server.DefaultApiServer.InitializeUnixData()
 	server.DefaultApiServer.InitializeConfigCtl()
+	dataschema.InitDataSchemaCache(hs.ruleEngine)
 	initRhilex(hs.ruleEngine)
 	return nil
 }
@@ -502,6 +504,7 @@ func (hs *ApiServerPlugin) Start(r typex.Rhilex) error {
 }
 
 func (hs *ApiServerPlugin) Stop() error {
+	dataschema.FlushDataSchemaCache()
 	return nil
 }
 

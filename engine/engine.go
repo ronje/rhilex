@@ -37,7 +37,6 @@ import (
 	supervisor "github.com/hootrhino/rhilex/component/supervisor"
 
 	datacenter "github.com/hootrhino/rhilex/component/datacenter"
-	dataschema "github.com/hootrhino/rhilex/component/dataschema"
 	"github.com/hootrhino/rhilex/component/interdb"
 	"github.com/hootrhino/rhilex/component/intermetric"
 	"github.com/hootrhino/rhilex/component/internotify"
@@ -112,14 +111,12 @@ func InitRuleEngine(config typex.RhilexConfig) typex.Rhilex {
 	appstack.InitAppStack(__DefaultRuleEngine)
 	// current only support Internal ai
 	aibase.InitAlgorithmRuntime(__DefaultRuleEngine)
-	// Internal Queue
-	interqueue.InitDataCacheQueue(__DefaultRuleEngine, core.GlobalConfig.MaxQueueSize)
 	// Data center: future version maybe support
 	datacenter.InitDataCenter(__DefaultRuleEngine)
-	// Init DataSchema Cache
-	dataschema.InitDataSchemaCache(__DefaultRuleEngine)
+	// Internal Queue
+	interqueue.InitYQueue(__DefaultRuleEngine, core.GlobalConfig.MaxQueueSize)
 	// Internal BUS
-	interqueue.StartDataCacheQueue()
+	interqueue.StartYQueue()
 	// Init Transceiver Communicator Manager
 	transceiver.InitTransceiverCommunicatorManager(__DefaultRuleEngine)
 	return __DefaultRuleEngine
@@ -209,17 +206,13 @@ func (e *RuleEngine) Stop() {
 	// AI Runtime
 	glogger.GLogger.Info("Stop AI Runtime")
 	aibase.Stop()
+	// Stop transceiver
+	glogger.GLogger.Info("Stop transceiver")
+	transceiver.Stop()
 	// UnRegister __DefaultRuleEngine
 	intercache.UnRegisterSlot("__DefaultRuleEngine")
 	// UnRegister __DeviceConfigMap
 	intercache.UnRegisterSlot("__DeviceConfigMap")
-	// Stop transceiver
-	glogger.GLogger.Info("Stop transceiver")
-	transceiver.Stop()
-	// Flush SchemaCache
-	dataschema.FlushDataSchemaCache()
-	glogger.GLogger.Info("Flush DataSchema Cache")
-
 	// END
 	glogger.GLogger.Info("[√] Stop rhilex successfully")
 	if err := glogger.Close(); err != nil {
@@ -229,7 +222,7 @@ func (e *RuleEngine) Stop() {
 
 // 核心功能: Work, 主要就是推流进队列
 func (e *RuleEngine) WorkInEnd(in *typex.InEnd, data string) (bool, error) {
-	if err := interqueue.DefaultDataCacheQueue.PushInQueue(in, data); err != nil {
+	if err := interqueue.DefaultYQueue.PushInQueue(in, data); err != nil {
 		return false, err
 	}
 	return true, nil
@@ -237,7 +230,7 @@ func (e *RuleEngine) WorkInEnd(in *typex.InEnd, data string) (bool, error) {
 
 // 核心功能: Work, 主要就是推流进队列
 func (e *RuleEngine) WorkDevice(Device *typex.Device, data string) (bool, error) {
-	if err := interqueue.DefaultDataCacheQueue.PushDeviceQueue(Device, data); err != nil {
+	if err := interqueue.DefaultYQueue.PushDeviceQueue(Device, data); err != nil {
 		return false, err
 	}
 	return true, nil
