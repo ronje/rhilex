@@ -196,21 +196,6 @@ func Login(c *gin.Context, ruleEngine typex.Rhilex) {
 *
  */
 func LogOut(c *gin.Context, ruleEngine typex.Rhilex) {
-	token := c.GetHeader("Authorization")
-	claims, err := parseToken(token)
-	if err != nil {
-		c.JSON(common.HTTP_OK, common.Error400(err))
-		return
-	}
-	clientIP := c.ClientIP()
-	internotify.Push(internotify.BaseEvent{
-		Type:    `INFO`, // INFO | ERROR | WARNING
-		Event:   `event.system.user.logout.success`,
-		Ts:      uint64(time.Now().UnixMilli()),
-		Summary: "User Logout Success",
-		Info: fmt.Sprintf(`User Logout Success, Username: %s, RemoteAddr: %s`,
-			claims.Username, clientIP),
-	})
 	c.JSON(common.HTTP_OK, common.Ok())
 }
 

@@ -24,9 +24,10 @@ import (
 )
 
 type DDLColumn struct {
-	Name        string
-	Type        string
-	Description string
+	Name         string
+	Type         string
+	Description  string
+	DefaultValue string
 }
 type SchemaDDL struct {
 	SchemaUUID string      // 数据模型的UUID，用来生成数据仓库的表
@@ -38,32 +39,54 @@ type SchemaDDL struct {
 * 生成建仓语句
 *
  */
+
 func GenerateSQLiteCreateTableDDL(schemaDDL SchemaDDL) (string, error) {
 	if schemaDDL.SchemaUUID == "" {
 		return "", fmt.Errorf("SchemaUUID cannot be empty")
 	}
 
 	var columns []string
-	for i, col := range schemaDDL.DDLColumns {
-		columnDefine := fmt.Sprintf("`%s` %s", col.Name, SqliteTypeMappingSchemaType(col.Type))
-		switch col.Type {
+	for i, column := range schemaDDL.DDLColumns {
+		columnDefine := fmt.Sprintf("`%s` %s", column.Name, SqliteTypeMappingSchemaType(column.Type))
+		switch column.Type {
 		case "GEO":
-			columnDefine += " NOT NULL DEFAULT '0,0'"
+			if column.DefaultValue != "" {
+				columnDefine += " NOT NULL DEFAULT " + fmt.Sprintf("'%s'", column.DefaultValue)
+			} else {
+				columnDefine += " NOT NULL DEFAULT '0,0'"
+			}
 		case "STRING":
-			columnDefine += " NOT NULL DEFAULT ''"
+			if column.DefaultValue != "" {
+				columnDefine += " NOT NULL DEFAULT " + fmt.Sprintf("'%s'", column.DefaultValue)
+			} else {
+				columnDefine += " NOT NULL DEFAULT ''"
+			}
 		case "INTEGER":
-			if col.Name == "id" {
+			if column.Name == "id" {
 				columnDefine += " NOT NULL PRIMARY KEY AUTOINCREMENT"
+			} else {
+				if column.DefaultValue != "" {
+					columnDefine += " NOT NULL DEFAULT " + fmt.Sprintf("'%s'", column.DefaultValue)
+				} else {
+					columnDefine += " NOT NULL DEFAULT 0"
+				}
+			}
+		case "FLOAT":
+			if column.DefaultValue != "" {
+				columnDefine += " NOT NULL DEFAULT " + fmt.Sprintf("'%s'", column.DefaultValue)
 			} else {
 				columnDefine += " NOT NULL DEFAULT 0"
 			}
-		case "FLOAT":
-			columnDefine += " NOT NULL DEFAULT 0"
 		case "BOOL":
-			columnDefine += " NOT NULL DEFAULT 0"
+			if column.DefaultValue != "" {
+				columnDefine += " NOT NULL DEFAULT " + fmt.Sprintf("'%s'", column.DefaultValue)
+			} else {
+				columnDefine += " NOT NULL DEFAULT 0"
+			}
 		case "DATETIME":
 			columnDefine += " NOT NULL DEFAULT CURRENT_TIMESTAMP"
 		}
+
 		if i != len(schemaDDL.DDLColumns)-1 {
 			columnDefine += ","
 		}

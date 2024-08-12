@@ -83,6 +83,23 @@ type IoTPropertyRuleVo struct {
 func (O IoTPropertyRuleVo) Check() error {
 	return nil
 }
+func (O IoTPropertyRuleVo) GetDefaultValue() string {
+	switch T := O.DefaultValue.(type) {
+	case string:
+		return T
+	case int32:
+		return fmt.Sprintf("%d", T)
+	case int64:
+		return fmt.Sprintf("%d", T)
+	case bool:
+		if T {
+			return "1"
+		}
+		return "0"
+	default:
+		return "0"
+	}
+}
 
 /*
 *
@@ -245,13 +262,19 @@ func PublishSchema(c *gin.Context, ruleEngine typex.Rhilex) {
 		Name: "id", Type: "INTEGER", Description: "PRIMARY KEY",
 	})
 	DDLColumns = append(DDLColumns, datacenter.DDLColumn{
-		Name: "create_at", Type: "DATETIME", Description: "DATETIME",
+		Name: "create_at", Type: "DATETIME", Description: "DATETIME", DefaultValue: "CURRENT_TIMESTAMP",
 	})
+	ioTPropertyRuleVo := IoTPropertyRuleVo{}
 	for _, record := range records {
+		if err0 := ioTPropertyRuleVo.ParseRuleFromModel(record.Rule); err0 != nil {
+			c.JSON(common.HTTP_OK, common.Error400(err0))
+			return
+		}
 		DDLColumns = append(DDLColumns, datacenter.DDLColumn{
-			Name:        record.Name,
-			Type:        record.Type,
-			Description: record.Description,
+			Name:         record.Name,
+			Type:         record.Type,
+			Description:  record.Description,
+			DefaultValue: ioTPropertyRuleVo.GetDefaultValue(),
 		})
 	}
 	txErr := interdb.DB().Transaction(func(tx *gorm.DB) error {
@@ -365,10 +388,7 @@ func CreateIotSchemaProperty(c *gin.Context, ruleEngine typex.Rhilex) {
 		c.JSON(common.HTTP_OK, common.Error("Already Exists Property:"+IotPropertyVo.Name))
 		return
 	}
-	if errCheckRule := checkPropertyRule(IotPropertyVo); errCheckRule != nil {
-		c.JSON(common.HTTP_OK, common.Error(errCheckRule.Error()))
-		return
-	}
+
 	err2 := service.InsertIotSchemaProperty(model.MIotProperty{
 		SchemaId:    IotPropertyVo.SchemaId,
 		UUID:        utils.MakeUUID("PROPER"),
@@ -385,17 +405,6 @@ func CreateIotSchemaProperty(c *gin.Context, ruleEngine typex.Rhilex) {
 		return
 	}
 	c.JSON(common.HTTP_OK, common.Ok())
-
-}
-
-/*
-*
-* 检查属性是否合规
-*
- */
-func checkPropertyRule(IotPropertyVo IotPropertyVo) error {
-
-	return nil
 
 }
 
