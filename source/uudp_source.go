@@ -5,7 +5,6 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"net"
-	"time"
 	"unicode/utf8"
 
 	"github.com/hootrhino/rhilex/glogger"
@@ -54,7 +53,6 @@ func (udps *udpSource) Start(cctx typex.CCTX) error {
 				return
 			default:
 			}
-			u1.UdpConn.SetReadDeadline(time.Now().Add(5 * time.Second))
 			n, remoteAddr, err := u1.UdpConn.ReadFromUDP(buffer)
 			if err != nil {
 				glogger.GLogger.Error(err.Error())
@@ -106,6 +104,13 @@ type udp_client_data struct {
 	Data       interface{} `json:"data"`
 }
 
+func (O udp_client_data) String() string {
+	if bytes, err := json.Marshal(O); err != nil {
+		return ""
+	} else {
+		return string(bytes)
+	}
+}
 func (udps *udpSource) Details() *typex.InEnd {
 	return udps.RuleEngine.GetInEnd(udps.PointId)
 }
