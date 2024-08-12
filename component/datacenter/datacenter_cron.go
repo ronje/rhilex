@@ -69,5 +69,5 @@ func execDataCenterCron(period string) {
 		}
 		glogger.GLogger.Debug("ExecDataCenterCron:", deleteSql)
 	}
-	DB().Exec("VACUUM;")
+	// DB().Exec("VACUUM;")
 }
