@@ -241,6 +241,8 @@ func FixSchema(c *gin.Context, ruleEngine typex.Rhilex) {
 		c.JSON(common.HTTP_OK, common.Error400(err))
 		return
 	}
+	c.JSON(common.HTTP_OK, common.Ok())
+
 }
 
 /*

@@ -27,13 +27,13 @@ import (
 // 获取DataSchema列表
 func AllDataSchema() []model.MIotSchema {
 	m := []model.MIotSchema{}
-	interdb.DB().Find(&m)
+	interdb.DB().Model(model.MIotSchema{}).Find(&m)
 	return m
 
 }
 func GetDataSchemaWithUUID(uuid string) (model.MIotSchema, error) {
 	m := model.MIotSchema{}
-	return m, interdb.DB().Where("uuid=?", uuid).First(&m).Error
+	return m, interdb.DB().Model(model.MIotSchema{}).Where("uuid=?", uuid).First(&m).Error
 }
 
 /*
@@ -42,31 +42,31 @@ func GetDataSchemaWithUUID(uuid string) (model.MIotSchema, error) {
 *
  */
 func ResetSchema(schemaUuid string) error {
-	return interdb.DB().Transaction(func(tx *gorm.DB) error {
+	return interdb.DB().Model(model.MIotSchema{}).Transaction(func(tx *gorm.DB) error {
 		MIotSchema := model.MIotSchema{}
 		if err := tx.Where("uuid=?", schemaUuid).
 			First(&MIotSchema).Error; err != nil {
 			return err
 		}
 		if err := tx.Where("uuid=?", schemaUuid).
-			Update("published", false).Error; err != nil {
+			Update("published", new(bool)).Error; err != nil {
 			return err
 		}
-		return datacenter.DB().Exec(fmt.Sprintf("DROP TABLE data_center_%s;", schemaUuid)).Error
+		return datacenter.DB().Exec(fmt.Sprintf("DROP TABLE IF EXISTS data_center_%s;", schemaUuid)).Error
 	})
 }
 
 // 删除DataSchema
 func DeleteDataSchemaAndProperty(schemaUuid string) error {
 	MIotSchema := model.MIotSchema{}
-	if err := interdb.DB().Where("uuid=?", schemaUuid).
+	if err := interdb.DB().Model(model.MIotSchema{}).Where("uuid=?", schemaUuid).
 		First(&MIotSchema).Error; err != nil {
 		return err
 	}
 	// 未发布的情况
 	if !MIotSchema.Published {
 		// Only Delete Schema
-		err2 := interdb.DB().Where("uuid=?", schemaUuid).Delete(&model.MIotSchema{}).Error
+		err2 := interdb.DB().Model(model.MIotSchema{}).Where("uuid=?", schemaUuid).Delete(&model.MIotSchema{}).Error
 		if err2 != nil {
 			return err2
 		}
@@ -76,7 +76,7 @@ func DeleteDataSchemaAndProperty(schemaUuid string) error {
 		return nil
 	}
 	// 已经发布了，清空RHILEX数据库
-	return interdb.DB().Transaction(func(tx *gorm.DB) error {
+	return interdb.DB().Model(model.MIotSchema{}).Transaction(func(tx *gorm.DB) error {
 		// Delete Schema
 		err2 := tx.Where("uuid=?", schemaUuid).Delete(&model.MIotSchema{}).Error
 		if err2 != nil {
@@ -88,7 +88,7 @@ func DeleteDataSchemaAndProperty(schemaUuid string) error {
 			return err1
 		}
 		// 清空数据中心的表
-		err1Exec := datacenter.DB().Exec(fmt.Sprintf("DROP TABLE data_center_%s;", schemaUuid)).Error
+		err1Exec := datacenter.DB().Exec(fmt.Sprintf("DROP TABLE IF EXISTS data_center_%s;", schemaUuid)).Error
 		if err1Exec != nil {
 			return err1Exec
 		}
@@ -98,7 +98,7 @@ func DeleteDataSchemaAndProperty(schemaUuid string) error {
 
 // 创建DataSchema
 func InsertDataSchema(DataSchema model.MIotSchema) error {
-	return interdb.DB().Create(&DataSchema).Error
+	return interdb.DB().Model(model.MIotSchema{}).Create(&DataSchema).Error
 }
 
 // 更新DataSchema
@@ -120,7 +120,10 @@ func UpdateIotSchemaProperty(MIotProperty model.MIotProperty) error {
 // 查找DataSchema
 func FindIotSchemaProperty(uuid string) (model.MIotProperty, error) {
 	MIotProperty := model.MIotProperty{}
-	return MIotProperty, interdb.DB().Where("uuid=?", uuid).Find(&MIotProperty).Error
+	return MIotProperty,
+		interdb.DB().
+			Model(model.MIotProperty{}).
+			Where("uuid=?", uuid).Find(&MIotProperty).Error
 }
 
 // 统计DataSchema
@@ -133,10 +136,12 @@ func CountIotSchemaProperty(name, schema_id string) int64 {
 
 // 创建DataSchema
 func InsertIotSchemaProperty(MIotProperty model.MIotProperty) error {
-	return interdb.DB().Create(&MIotProperty).Error
+	return interdb.DB().
+		Model(model.MIotProperty{}).Create(&MIotProperty).Error
 }
 
 // 删除
 func DeleteIotSchemaProperty(uuid string) error {
-	return interdb.DB().Where("uuid=?", uuid).Delete(model.MIotProperty{}).Error
+	return interdb.DB().
+		Model(model.MIotProperty{}).Where("uuid=?", uuid).Delete(model.MIotProperty{}).Error
 }
