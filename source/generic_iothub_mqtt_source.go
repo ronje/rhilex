@@ -296,6 +296,7 @@ func (*iothub) UpStream([]byte) (int, error) {
 
 func (tc *iothub) subscribe(topic string) error {
 	token := tc.client.Subscribe(topic, 1, func(c mqtt.Client, msg mqtt.Message) {
+		glogger.GLogger.Debug("Subscribe:", topic, string(msg.Payload()))
 		// 所有的消息都给丢进规则引擎里面, 交给用户的lua脚本来处理
 		work, err := tc.RuleEngine.WorkInEnd(tc.RuleEngine.GetInEnd(tc.PointId), string(msg.Payload()))
 		if !work {
