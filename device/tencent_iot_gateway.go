@@ -71,6 +71,8 @@ type TencentIoTGateway struct {
 	actionDownTopic   string
 	topologyTopicUp   string
 	topologyTopicDown string
+	//
+	TencentIotSubDevices []TencentIotSubDevice
 }
 
 func NewTencentIoTGateway(e typex.Rhilex) typex.XDevice {
@@ -85,6 +87,7 @@ func NewTencentIoTGateway(e typex.Rhilex) typex.XDevice {
 			ClientId:   "",
 		},
 	}
+	hd.TencentIotSubDevices = make([]TencentIotSubDevice, 0)
 	return hd
 }
 
@@ -129,19 +132,31 @@ func (hd *TencentIoTGateway) Start(cctx typex.CCTX) error {
 	var connectHandler mqtt.OnConnectHandler = func(client mqtt.Client) {
 		glogger.GLogger.Infof("IOTHUB Connected Success")
 		// 属性下发
-		if err := hd.subscribe(hd.propertyDownTopic); err != nil {
+		if err := hd.client.Subscribe(hd.propertyDownTopic, 1, func(c mqtt.Client, msg mqtt.Message) {
+			hd.RuleEngine.WorkDevice(hd.Details(), string(msg.Payload()))
+		}); err != nil {
 			glogger.GLogger.Error(err)
 		}
 		// 动作下发
-		if err := hd.subscribe(hd.actionDownTopic); err != nil {
+		if err := hd.client.Subscribe(hd.actionDownTopic, 1, func(c mqtt.Client, msg mqtt.Message) {
+			hd.RuleEngine.WorkDevice(hd.Details(), string(msg.Payload()))
+		}); err != nil {
 			glogger.GLogger.Error(err)
 		}
 		// 网关模式
 		//    数据上行 Topic（用于发布）：$gateway/operation/${productid}/${devicename}
 		//    数据下行 Topic（用于订阅）：$gateway/operation/result/${productid}/${devicename}
 		if hd.mainConfig.CommonConfig.Mode == "GATEWAY" {
-			if err := hd.subscribe(hd.topologyTopicDown); err != nil {
-				glogger.GLogger.Error(err)
+			token := hd.client.Subscribe(hd.topologyTopicDown, 1, func(c mqtt.Client, msg mqtt.Message) {
+				glogger.GLogger.Debug("TencentIoTGateway topologyTopicDown: ", hd.topologyTopicDown, msg)
+				SubDeviceMessage := TencentIotSubDeviceMessage{}
+				if err := json.Unmarshal(msg.Payload(), &SubDeviceMessage); err != nil {
+					return
+				}
+				hd.TencentIotSubDevices = append(hd.TencentIotSubDevices, SubDeviceMessage.Payload.Devices...)
+			})
+			if token.Error() != nil {
+				glogger.GLogger.Error(token.Error())
 			} else {
 				// Get Topology: {"type": "describe_sub_devices"}
 				glogger.GLogger.Info("Connect iothub with Gateway Mode")
@@ -230,7 +245,8 @@ func (hd *TencentIoTGateway) OnWrite(cmd []byte, b []byte) (int, error) {
 
 func (hd *TencentIoTGateway) subscribe(topic string) error {
 	token := hd.client.Subscribe(topic, 1, func(c mqtt.Client, msg mqtt.Message) {
-		glogger.GLogger.Debug(topic, msg)
+		glogger.GLogger.Debug("TencentIoTGateway: ", topic, msg)
+		hd.RuleEngine.WorkDevice(hd.Details(), string(msg.Payload()))
 	})
 	if token.Error() != nil {
 		return token.Error()
@@ -283,4 +299,49 @@ func randConnID(n int) string {
 		s[i] = letters[rand.Intn(len(letters))]
 	}
 	return string(s)
+}
+
+/*
+*
+* 子设备
+
+	{
+	  "method": "bind",
+	  "payload": {
+	    "devices": [
+	      {
+	        "productID": "CFC******AG7",
+	        "deviceName": "subdeviceaaaa",
+	        "signature": "signature",
+	        "random": 121213,
+	        "timestamp": 1589786839,
+	        "signMethod": "hmacsha256"
+	      }
+	    ]
+	  }
+	}
+*/
+type Method string
+
+const (
+	ONLINE   Method = "online"
+	OFFLINE  Method = "offline"
+	TOPOLOGY Method = "describeSubDevices"
+)
+
+type TencentIotSubDeviceMessage struct {
+	Method  Method                            `json:"method"`
+	Payload TencentIotSubDeviceMessagePayload `json:"payload"`
+}
+type TencentIotSubDeviceMessagePayload struct {
+	Devices []TencentIotSubDevice `json:"devices"`
+}
+type TencentIotSubDevice struct {
+	ProductID    string `json:"productID"`
+	DeviceName   string `json:"deviceName"`
+	Signature    string `json:"signature"`
+	Random       string `json:"random"`
+	Timestamp    string `json:"timestamp"`
+	SignMethod   string `json:"signMethod"`
+	DeviceSecret string `json:"deviceSecret"`
 }
