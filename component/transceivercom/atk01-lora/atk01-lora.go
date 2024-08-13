@@ -48,13 +48,14 @@ func NewATK01Lora(R typex.Rhilex) transceivercom.TransceiverCommunicator {
 		DataBuffer: make(chan []byte, 102400),
 		mainConfig: ATK01LoraConfig{
 			ComConfig: transceivercom.TransceiverConfig{
-				Address:   "COM1",
-				BaudRate:  9600,
-				DataBits:  8,
-				Parity:    "N",
-				StopBits:  1,
-				IOTimeout: 50,  // IOTimeout * time.Millisecond
-				ATTimeout: 200, // ATRwTimeout * time.Millisecond
+				Address:           "COM1",
+				BaudRate:          9600,
+				DataBits:          8,
+				Parity:            "N",
+				StopBits:          1,
+				IOTimeout:         50,  // IOTimeout * time.Millisecond
+				ATTimeout:         200, // ATRwTimeout * time.Millisecond
+				TransportProtocol: 1,
 			},
 		}}
 }
@@ -74,7 +75,15 @@ func (tc *ATK01Lora) Start(Config transceivercom.TransceiverConfig) error {
 		return err
 	}
 	tc.serialPort = serialPort
-	go protocol.StartEdgeSymReceive(typex.GCTX, tc.DataBuffer, tc.serialPort)
+	if tc.mainConfig.ComConfig.TransportProtocol == 1 {
+		go protocol.StartEdgeSymReceive(typex.GCTX, tc.DataBuffer, tc.serialPort)
+	} else if tc.mainConfig.ComConfig.TransportProtocol == 2 {
+		go protocol.StartNewLineLoopReceive(typex.GCTX, tc.DataBuffer, tc.serialPort)
+	} else if tc.mainConfig.ComConfig.TransportProtocol == 3 {
+		go protocol.StartFixLengthReceive(typex.GCTX, tc.DataBuffer, tc.serialPort)
+	} else {
+		go protocol.StartEdgeSymReceive(typex.GCTX, tc.DataBuffer, tc.serialPort)
+	}
 	go tc.startProcessPacket(tc.DataBuffer)
 	glogger.GLogger.Info("ATK01-LORA-01 Started")
 	return nil

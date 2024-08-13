@@ -21,13 +21,14 @@ import (
 )
 
 type TransceiverConfig struct {
-	Address   string `ini:"address" json:"uart" validate:"required"`
-	IOTimeout int64  `ini:"io_timeout" json:"ioTimeout" validate:"required"`
-	ATTimeout int64  `ini:"at_timeout" json:"atRwTimeout" validate:"required"`
-	BaudRate  int    `ini:"baudrate" json:"baudRate" validate:"required"`
-	DataBits  int    `ini:"databits" json:"dataBits" validate:"required"`
-	Parity    string `ini:"parity" json:"parity" validate:"required"`
-	StopBits  int    `ini:"stop_bits" json:"stopBits" validate:"required"`
+	Address           string `ini:"address" json:"uart" validate:"required"`
+	IOTimeout         int64  `ini:"io_timeout" json:"ioTimeout" validate:"required"`
+	ATTimeout         int64  `ini:"at_timeout" json:"atRwTimeout" validate:"required"`
+	BaudRate          int    `ini:"baudrate" json:"baudRate" validate:"required"`
+	DataBits          int    `ini:"databits" json:"dataBits" validate:"required"`
+	Parity            string `ini:"parity" json:"parity" validate:"required"`
+	StopBits          int    `ini:"stop_bits" json:"stopBits" validate:"required"`
+	TransportProtocol int    `ini:"transport_protocol" json:"transportProtocol" validate:"required"`
 }
 
 func (O TransceiverConfig) String() string {

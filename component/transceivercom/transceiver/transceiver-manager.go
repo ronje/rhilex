@@ -24,7 +24,6 @@ import (
 	"github.com/hootrhino/rhilex/component/transceivercom"
 	atk01lora "github.com/hootrhino/rhilex/component/transceivercom/atk01-lora"
 	ec200a4g "github.com/hootrhino/rhilex/component/transceivercom/ec200a-4g"
-	mx01ble "github.com/hootrhino/rhilex/component/transceivercom/mx01-ble"
 	core "github.com/hootrhino/rhilex/config"
 	"github.com/hootrhino/rhilex/utils"
 
@@ -50,7 +49,8 @@ func InitTransceiverCommunicatorManager(R typex.Rhilex) {
 
 func (TM *TransceiverCommunicatorManager) Load(name string, config transceivercom.TransceiverConfig,
 	tc transceivercom.TransceiverCommunicator) error {
-	glogger.GLogger.Debugf("transceiver Load:(%s, %v, %s)", name, config, tc.Info().String())
+	glogger.GLogger.Debugf("Transceiver Communicator Load:(%s, %v, %s)",
+		name, config, tc.Info().String())
 	if _, ok := TM.Transceivers.Load(name); !ok {
 		if err := tc.Start(config); err != nil {
 			glogger.GLogger.Error(err)
@@ -120,25 +120,10 @@ func (TM *TransceiverCommunicatorManager) Status(name string) (transceivercom.Tr
 *
  */
 func initDefaultRFModule() {
-	env1 := os.Getenv("BLESUPPORT")
-	if env1 == "MX01" {
-		Config := transceivercom.TransceiverConfig{}
-		err1 := utils.INIToStruct(core.GlobalConfig.IniPath, "transceiver.mx01", &Config)
-		if err1 != nil {
-			glogger.GLogger.Fatal(err1)
-			os.Exit(1)
-		}
-		Mx01 := mx01ble.NewMx01BLE(DefaultTransceiverCommunicatorManager.R)
-		err := DefaultTransceiverCommunicatorManager.Load(Mx01.Info().Name, Config, Mx01)
-		if err != nil {
-			glogger.GLogger.Fatal(err1)
-			os.Exit(1)
-		}
-	}
 	env2 := os.Getenv("4GSUPPORT")
-	if env2 == "EC200A" {
+	if env2 == "ec200a" {
 		Config := transceivercom.TransceiverConfig{}
-		err1 := utils.INIToStruct(core.GlobalConfig.IniPath, "transceiver.ec200a", &Config)
+		err1 := utils.INIToStruct(core.GlobalConfig.IniPath, fmt.Sprintf("transceiver.%s", env2), &Config)
 		if err1 != nil {
 			glogger.GLogger.Fatal(err1)
 			os.Exit(1)
@@ -151,9 +136,9 @@ func initDefaultRFModule() {
 		}
 	}
 	env3 := os.Getenv("LORASUPPORT")
-	if env3 == "ATK01" {
+	if env3 == "atk01" {
 		Config := transceivercom.TransceiverConfig{}
-		err1 := utils.INIToStruct(core.GlobalConfig.IniPath, "transceiver.atk01", &Config)
+		err1 := utils.INIToStruct(core.GlobalConfig.IniPath, fmt.Sprintf("transceiver.%s", env3), &Config)
 		if err1 != nil {
 			glogger.GLogger.Fatal(err1)
 			os.Exit(1)
