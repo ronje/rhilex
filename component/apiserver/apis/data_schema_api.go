@@ -33,6 +33,7 @@ func InitDataSchemaApi() {
 		schemaApi.GET("/list", server.AddRoute(ListDataSchema))
 		schemaApi.GET(("/detail"), server.AddRoute(DataSchemaDetail))
 		schemaApi.POST(("/publish"), server.AddRoute(PublishSchema))
+		schemaApi.POST(("/fix"), server.AddRoute(FixSchema))
 		// 属性
 		schemaApi.POST(("/properties/create"), server.AddRoute(CreateIotSchemaProperty))
 		schemaApi.PUT(("/properties/update"), server.AddRoute(UpdateIotSchemaProperty))
@@ -227,6 +228,19 @@ func DeleteDataSchema(c *gin.Context, ruleEngine typex.Rhilex) {
 	}
 	c.JSON(common.HTTP_OK, common.Ok())
 
+}
+
+/*
+*
+* 修复数据仓库，本质上是删除可能存在的垃圾数据表，然后重新建表
+*
+ */
+func FixSchema(c *gin.Context, ruleEngine typex.Rhilex) {
+	uuid, _ := c.GetQuery("uuid")
+	if err := service.ResetSchema(uuid); err != nil {
+		c.JSON(common.HTTP_OK, common.Error400(err))
+		return
+	}
 }
 
 /*

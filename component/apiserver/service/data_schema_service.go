@@ -36,6 +36,26 @@ func GetDataSchemaWithUUID(uuid string) (model.MIotSchema, error) {
 	return m, interdb.DB().Where("uuid=?", uuid).First(&m).Error
 }
 
+/*
+*
+* 重置数据中心
+*
+ */
+func ResetSchema(schemaUuid string) error {
+	return interdb.DB().Transaction(func(tx *gorm.DB) error {
+		MIotSchema := model.MIotSchema{}
+		if err := tx.Where("uuid=?", schemaUuid).
+			First(&MIotSchema).Error; err != nil {
+			return err
+		}
+		if err := tx.Where("uuid=?", schemaUuid).
+			Update("published", false).Error; err != nil {
+			return err
+		}
+		return datacenter.DB().Exec(fmt.Sprintf("DROP TABLE data_center_%s;", schemaUuid)).Error
+	})
+}
+
 // 删除DataSchema
 func DeleteDataSchemaAndProperty(schemaUuid string) error {
 	MIotSchema := model.MIotSchema{}
