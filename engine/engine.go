@@ -59,8 +59,6 @@ import (
  */
 var __DefaultRuleEngine *RuleEngine
 
-const __DEFAULT_DB_PATH string = "./rhilex.db"
-
 // 规则引擎
 type RuleEngine struct {
 	locker            sync.Mutex
@@ -75,6 +73,12 @@ type RuleEngine struct {
 	TargetTypeManager *rhilexmanager.TargetTypeManager `json:"-"` // 待迁移组件: component/rhilexmanager
 }
 
+func MainRuleEngine() *RuleEngine {
+	if __DefaultRuleEngine == nil {
+		glogger.GLogger.Fatal("RuleEngine Not Initialize")
+	}
+	return __DefaultRuleEngine
+}
 func InitRuleEngine(config typex.RhilexConfig) typex.Rhilex {
 	__DefaultRuleEngine = &RuleEngine{
 		locker:            sync.Mutex{},
@@ -90,7 +94,7 @@ func InitRuleEngine(config typex.RhilexConfig) typex.Rhilex {
 	}
 
 	// Internal DB
-	interdb.Init(__DefaultRuleEngine, __DEFAULT_DB_PATH)
+	interdb.Init(__DefaultRuleEngine)
 	// Internal kv Store
 	interkv.InitInterKVStore(core.GlobalConfig.MaxKvStoreSize)
 	// Shelly Device Registry
