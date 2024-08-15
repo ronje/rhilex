@@ -14,7 +14,7 @@ var unitTestDB *gorm.DB
 
 func LoadUnitTestDB() {
 	var err error
-	unitTestDB, err = gorm.Open(sqlite.Open("unitest.db"), &gorm.Config{})
+	unitTestDB, err = gorm.Open(sqlite.Open("unitest.db?cache=shared&mode=rwc"), &gorm.Config{})
 	if err != nil {
 		panic("failed to load unitest database")
 	}
