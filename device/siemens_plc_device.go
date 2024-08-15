@@ -185,11 +185,12 @@ func (s1200 *SIEMENS_PLC) Start(cctx typex.CCTX) error {
 			s1200.locker.Lock()
 			ReadPLCRegisterValues := s1200.Read()
 			s1200.locker.Unlock()
+			if len(ReadPLCRegisterValues) < 1 {
+				time.Sleep(50 * time.Second)
+				continue
+			}
 			if !*s1200.mainConfig.CommonConfig.BatchRequest {
-				if len(ReadPLCRegisterValues) < 1 {
-					time.Sleep(50 * time.Second)
-					continue
-				}
+
 				for _, v := range ReadPLCRegisterValues {
 					if bytes, err := json.Marshal(v); err != nil {
 						glogger.GLogger.Error(err)

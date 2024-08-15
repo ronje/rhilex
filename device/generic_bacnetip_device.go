@@ -240,13 +240,13 @@ func (dev *GenericBacnetIpDevice) Start(cctx typex.CCTX) error {
 			case <-time.After(4 * time.Millisecond):
 				// Continue loop
 			}
-
 			ReadBacnetValues := dev.ReadProperty()
+			if len(ReadBacnetValues) < 1 {
+				time.Sleep(50 * time.Second)
+				continue
+			}
 			if !*dev.mainConfig.CommonConfig.BatchRequest {
-				if len(ReadBacnetValues) < 1 {
-					time.Sleep(50 * time.Second)
-					continue
-				}
+
 				for _, ReadBacnetValue := range ReadBacnetValues {
 					if bytes, err := json.Marshal(ReadBacnetValue); err != nil {
 						glogger.GLogger.Error(err)

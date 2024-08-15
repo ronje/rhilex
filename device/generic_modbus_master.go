@@ -352,11 +352,12 @@ func (mdev *GenericModbusMaster) Start(cctx typex.CCTX) error {
 				if mdev.mainConfig.CommonConfig.Mode == "TCP" {
 					ReadRegisterValues = mdev.TCPRead()
 				}
+				if len(ReadRegisterValues) < 1 {
+					time.Sleep(50 * time.Second)
+					continue
+				}
 				if !*mdev.mainConfig.CommonConfig.BatchRequest {
-					if len(ReadRegisterValues) < 1 {
-						time.Sleep(50 * time.Second)
-						continue
-					}
+
 					for _, ReadRegisterValue := range ReadRegisterValues {
 						if bytes, errMarshal := json.Marshal(ReadRegisterValue); errMarshal != nil {
 							mdev.retryTimes++

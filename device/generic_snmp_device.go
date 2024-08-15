@@ -196,11 +196,11 @@ func (sd *genericSnmpDevice) Start(cctx typex.CCTX) error {
 			if len(snmpOids) < 1 {
 				goto END
 			}
+			if len(snmpOids) < 1 {
+				time.Sleep(50 * time.Second)
+				continue
+			}
 			if !*sd.mainConfig.CommonConfig.BatchRequest {
-				if len(snmpOids) < 1 {
-					time.Sleep(50 * time.Second)
-					continue
-				}
 				for _, snmpOid := range snmpOids {
 					if bytes, err := json.Marshal(snmpOid); err != nil {
 						glogger.GLogger.Error(err)
