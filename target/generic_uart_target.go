@@ -143,7 +143,7 @@ func (mdev *GenericUart) Status() typex.SourceState {
 	if mdev.serialPort == nil {
 		return typex.SOURCE_DOWN
 	}
-	_, err := mdev.serialPort.Write([]byte(mdev.mainConfig.PingPacket))
+	_, err := mdev.serialPort.Write([]byte{})
 	if err != nil {
 		glogger.GLogger.Error(err)
 		return typex.SOURCE_DOWN

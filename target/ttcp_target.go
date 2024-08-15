@@ -117,7 +117,7 @@ func (ht *TTcpTarget) Status() typex.SourceState {
 	if ht.client == nil {
 		return typex.SOURCE_DOWN
 	}
-	_, err := ht.client.Write([]byte(ht.mainConfig.PingPacket))
+	_, err := ht.client.Write([]byte{})
 	if err != nil {
 		return typex.SOURCE_DOWN
 	}

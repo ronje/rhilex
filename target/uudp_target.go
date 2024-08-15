@@ -164,7 +164,7 @@ func (ut *UUdpTarget) UdpStatus(serverAddr string) error {
 		return fmt.Errorf("UDP connection failed: %v", err)
 	}
 	defer conn.Close()
-	_, err = conn.Write([]byte(ut.mainConfig.PingPacket))
+	_, err = conn.Write([]byte{})
 	if err != nil {
 		return fmt.Errorf("failed to send data over UDP: %v", err)
 	}
