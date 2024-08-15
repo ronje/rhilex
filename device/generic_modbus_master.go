@@ -340,13 +340,10 @@ func (mdev *GenericModbusMaster) Start(cctx typex.CCTX) error {
 		go func(ctx context.Context) {
 			for {
 				select {
+				case <-time.After(4 * time.Millisecond):
+					// Continue loop
 				case <-ctx.Done():
-					{
-						return
-					}
-				default:
-					{
-					}
+					return
 				}
 				ReadRegisterValues := []ReadRegisterValue{}
 				if mdev.mainConfig.CommonConfig.Mode == "UART" {
@@ -356,6 +353,10 @@ func (mdev *GenericModbusMaster) Start(cctx typex.CCTX) error {
 					ReadRegisterValues = mdev.TCPRead()
 				}
 				if !*mdev.mainConfig.CommonConfig.BatchRequest {
+					if len(ReadRegisterValues) < 1 {
+						time.Sleep(50 * time.Second)
+						continue
+					}
 					for _, ReadRegisterValue := range ReadRegisterValues {
 						if bytes, errMarshal := json.Marshal(ReadRegisterValue); errMarshal != nil {
 							mdev.retryTimes++

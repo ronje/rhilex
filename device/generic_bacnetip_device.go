@@ -232,16 +232,21 @@ func (dev *GenericBacnetIpDevice) Start(cctx typex.CCTX) error {
 
 	go func(ctx context.Context) {
 		ticker := time.NewTicker(time.Duration(dev.mainConfig.CommonConfig.Frequency) * time.Millisecond)
+		defer ticker.Stop()
 		for {
 			select {
 			case <-ctx.Done():
-				ticker.Stop()
 				return
-			default:
+			case <-time.After(4 * time.Millisecond):
+				// Continue loop
 			}
 
 			ReadBacnetValues := dev.ReadProperty()
 			if !*dev.mainConfig.CommonConfig.BatchRequest {
+				if len(ReadBacnetValues) < 1 {
+					time.Sleep(50 * time.Second)
+					continue
+				}
 				for _, ReadBacnetValue := range ReadBacnetValues {
 					if bytes, err := json.Marshal(ReadBacnetValue); err != nil {
 						glogger.GLogger.Error(err)

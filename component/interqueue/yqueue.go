@@ -61,9 +61,10 @@ func StartYQueue() {
 	go func(ctx context.Context, queue *YQueue) {
 		for {
 			select {
+			case <-time.After(4 * time.Millisecond):
+				// Continue loop
 			case <-ctx.Done():
 				return
-			default:
 			}
 			queue.inLocker.Lock()
 			for listE := queue.InQueue.Back(); listE != nil; listE = queue.Queue.Back() {
@@ -76,16 +77,17 @@ func StartYQueue() {
 				}
 			}
 			queue.inLocker.Unlock()
-			time.Sleep(8 * time.Millisecond)
+
 		}
 
 	}(ctx, DefaultYQueue)
 	go func(ctx context.Context, queue *YQueue) {
 		for {
 			select {
+			case <-time.After(4 * time.Millisecond):
+				// Continue loop
 			case <-ctx.Done():
 				return
-			default:
 			}
 			queue.deviceLocker.Lock()
 			for listE := queue.DeviceQueue.Back(); listE != nil; listE = queue.Queue.Back() {
@@ -98,16 +100,17 @@ func StartYQueue() {
 				}
 			}
 			queue.deviceLocker.Unlock()
-			time.Sleep(8 * time.Millisecond)
+
 		}
 
 	}(ctx, DefaultYQueue)
 	go func(ctx context.Context, queue *YQueue) {
 		for {
 			select {
+			case <-time.After(4 * time.Millisecond):
+				// Continue loop
 			case <-ctx.Done():
 				return
-			default:
 			}
 			queue.outLocker.Lock()
 			for listE := queue.OutQueue.Back(); listE != nil; listE = queue.Queue.Back() {
@@ -120,7 +123,7 @@ func StartYQueue() {
 				}
 			}
 			queue.outLocker.Unlock()
-			time.Sleep(8 * time.Millisecond)
+
 		}
 
 	}(ctx, DefaultYQueue)

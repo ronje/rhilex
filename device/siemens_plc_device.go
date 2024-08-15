@@ -177,18 +177,19 @@ func (s1200 *SIEMENS_PLC) Start(cctx typex.CCTX) error {
 	go func(ctx context.Context) {
 		for {
 			select {
-			case <-ctx.Done():
-				{
-					return
-				}
-			default:
-				{
-				}
+			case <-s1200.Ctx.Done():
+				return
+			case <-time.After(4 * time.Millisecond):
+				// Continue loop
 			}
 			s1200.locker.Lock()
 			ReadPLCRegisterValues := s1200.Read()
 			s1200.locker.Unlock()
 			if !*s1200.mainConfig.CommonConfig.BatchRequest {
+				if len(ReadPLCRegisterValues) < 1 {
+					time.Sleep(50 * time.Second)
+					continue
+				}
 				for _, v := range ReadPLCRegisterValues {
 					if bytes, err := json.Marshal(v); err != nil {
 						glogger.GLogger.Error(err)

@@ -184,13 +184,9 @@ func (sd *genericSnmpDevice) Start(cctx typex.CCTX) error {
 		for {
 			select {
 			case <-sd.Ctx.Done():
-				{
-					sd.status = typex.DEV_DOWN
-					return
-				}
-			default:
-				{
-				}
+				return
+			case <-time.After(4 * time.Millisecond):
+				// Continue loop
 			}
 			snmpOids, err := sd.readData()
 			if err != nil {
@@ -201,6 +197,10 @@ func (sd *genericSnmpDevice) Start(cctx typex.CCTX) error {
 				goto END
 			}
 			if !*sd.mainConfig.CommonConfig.BatchRequest {
+				if len(snmpOids) < 1 {
+					time.Sleep(50 * time.Second)
+					continue
+				}
 				for _, snmpOid := range snmpOids {
 					if bytes, err := json.Marshal(snmpOid); err != nil {
 						glogger.GLogger.Error(err)
