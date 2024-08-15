@@ -760,7 +760,7 @@ func (e *RuleEngine) InitTargetTypeManager() error {
 	e.TargetTypeManager.Register(typex.UDP_TARGET,
 		&typex.XConfig{
 			Engine:    e,
-			NewTarget: target.NewUdpTarget,
+			NewTarget: target.NewUUdpTarget,
 		},
 	)
 	e.TargetTypeManager.Register(typex.TCP_TRANSPORT,

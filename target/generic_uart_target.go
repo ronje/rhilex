@@ -49,7 +49,6 @@ type GenericUart struct {
 	status       typex.SourceState
 	locker       sync.Mutex
 	serialPort   serial.Port
-	maxError     int
 	mainConfig   GenericUartMainConfig
 }
 
@@ -69,7 +68,6 @@ func NewGenericUart(e typex.Rhilex) typex.XTarget {
 			return &b
 		}(),
 	}
-	mdev.maxError = 5
 	mdev.locker = sync.Mutex{}
 	mdev.status = typex.SOURCE_DOWN
 	return mdev
@@ -77,14 +75,10 @@ func NewGenericUart(e typex.Rhilex) typex.XTarget {
 
 func (mdev *GenericUart) Init(outEndId string, configMap map[string]interface{}) error {
 	mdev.PointId = outEndId
-	mdev.maxError = 0
-
 	if err := utils.BindSourceConfig(configMap, &mdev.mainConfig); err != nil {
 		return err
 	}
-
 	return nil
-
 }
 func (mdev *GenericUart) Start(cctx typex.CCTX) error {
 	mdev.Ctx = cctx.Ctx
@@ -126,9 +120,6 @@ func (mdev *GenericUart) Start(cctx typex.CCTX) error {
 			for {
 				select {
 				case <-mdev.Ctx.Done():
-					if mdev.serialPort != nil {
-						mdev.serialPort.Close()
-					}
 					return
 				default:
 				}
@@ -136,7 +127,6 @@ func (mdev *GenericUart) Start(cctx typex.CCTX) error {
 					_, err := mdev.serialPort.Write([]byte(mdev.mainConfig.PingPacket))
 					if err != nil {
 						glogger.GLogger.Error(err)
-						mdev.maxError++
 					}
 				}
 				<-ticker.C
@@ -150,15 +140,13 @@ func (mdev *GenericUart) Start(cctx typex.CCTX) error {
 }
 
 func (mdev *GenericUart) Status() typex.SourceState {
-	if mdev.maxError >= 5 {
-		mdev.status = typex.SOURCE_DOWN
+	if mdev.serialPort == nil {
+		return typex.SOURCE_DOWN
 	}
-	if mdev.serialPort != nil {
-		_, err := mdev.serialPort.Write([]byte(mdev.mainConfig.PingPacket))
-		if err != nil {
-			glogger.GLogger.Error(err)
-			mdev.maxError++
-		}
+	_, err := mdev.serialPort.Write([]byte(mdev.mainConfig.PingPacket))
+	if err != nil {
+		glogger.GLogger.Error(err)
+		return typex.SOURCE_DOWN
 	}
 	return mdev.status
 }
@@ -170,7 +158,7 @@ func (mdev *GenericUart) Status() typex.SourceState {
  */
 func (mdev *GenericUart) To(data interface{}) (interface{}, error) {
 	if mdev.serialPort == nil {
-		mdev.maxError++
+		mdev.status = typex.SOURCE_DOWN
 		return 0, fmt.Errorf("serial Port invalid")
 	}
 	if mdev.mainConfig.DataMode == "RAW_STRING" {
@@ -189,7 +177,6 @@ func (mdev *GenericUart) To(data interface{}) (interface{}, error) {
 			return mdev.serialPort.Write(Hex)
 		}
 	}
-	mdev.maxError++
 	return 0, fmt.Errorf("Invalid data:%v", data)
 }
 

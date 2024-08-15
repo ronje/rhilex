@@ -16,28 +16,43 @@
 package target
 
 import (
+	"encoding/json"
+	"fmt"
 	"net"
 	"net/http"
 	"net/url"
 	"time"
 
-	"github.com/hootrhino/rhilex/common"
 	"github.com/hootrhino/rhilex/glogger"
 	"github.com/hootrhino/rhilex/typex"
 	"github.com/hootrhino/rhilex/utils"
 )
 
+type HTTPTargetConfig struct {
+	Url        string            `json:"url" validate:"required" title:"URL"`
+	Headers    map[string]string `json:"headers" validate:"required" title:"HTTP Headers"`
+	AllowPing  *bool             `json:"allowPing"`
+	PingPacket string            `json:"pingPacket"`
+	Timeout    int               `json:"timeout"`
+}
 type HTTPTarget struct {
 	typex.XStatus
 	client     http.Client
-	mainConfig common.HTTPConfig
+	mainConfig HTTPTargetConfig
 	status     typex.SourceState
 }
 
 func NewHTTPTarget(e typex.Rhilex) typex.XTarget {
 	ht := new(HTTPTarget)
 	ht.RuleEngine = e
-	ht.mainConfig = common.HTTPConfig{}
+	ht.mainConfig = HTTPTargetConfig{
+		PingPacket: "rhilex",
+		Timeout:    3000,
+		AllowPing: func() *bool {
+			b := true
+			return &b
+		}(),
+	}
 	ht.status = typex.SOURCE_DOWN
 	return ht
 }
@@ -57,6 +72,25 @@ func (ht *HTTPTarget) Start(cctx typex.CCTX) error {
 	ht.CancelCTX = cctx.CancelCTX
 	ht.client = http.Client{}
 	ht.status = typex.SOURCE_UP
+	if *ht.mainConfig.AllowPing {
+		go func(ht *HTTPTarget) {
+			for {
+				select {
+				case <-ht.Ctx.Done():
+					return
+				default:
+				}
+				_, err := utils.Post(ht.client, ht.mainConfig.PingPacket,
+					ht.mainConfig.Url, ht.mainConfig.Headers)
+				if err != nil {
+					glogger.GLogger.Error(err)
+					ht.status = typex.SOURCE_DOWN
+					continue
+				}
+				time.Sleep(time.Duration(ht.mainConfig.Timeout) * time.Millisecond)
+			}
+		}(ht)
+	}
 	glogger.GLogger.Info("HTTP Target started")
 	return nil
 }
@@ -69,9 +103,31 @@ func (ht *HTTPTarget) Status() typex.SourceState {
 	return ht.status
 
 }
+
+type HTTPTargetOutputData struct {
+	Label string `json:"label"`
+	Body  string `json:"body"`
+}
+
+func (O HTTPTargetOutputData) String() string {
+	bytes, _ := json.Marshal(O)
+	return string(bytes)
+}
 func (ht *HTTPTarget) To(data interface{}) (interface{}, error) {
-	r, err := utils.Post(ht.client, data, ht.mainConfig.Url, ht.mainConfig.Headers)
-	return r, err
+	switch T := data.(type) {
+	case string:
+		outputData := HTTPTargetOutputData{
+			Label: ht.mainConfig.PingPacket,
+			Body:  T,
+		}
+		_, err := utils.Post(ht.client, outputData.String(),
+			ht.mainConfig.Url, ht.mainConfig.Headers)
+		if err != nil {
+			glogger.GLogger.Error(err)
+			return nil, err
+		}
+	}
+	return nil, fmt.Errorf("data type must string!")
 }
 
 func (ht *HTTPTarget) Stop() {

@@ -16,6 +16,7 @@
 package target
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"time"
@@ -120,12 +121,25 @@ func (mq *mqttOutEndTarget) Details() *typex.OutEnd {
 	return mq.RuleEngine.GetOutEnd(mq.PointId)
 }
 
+type MqttOutEndTargetOutputData struct {
+	Label string `json:"label"`
+	Body  string `json:"body"`
+}
+
+func (O MqttOutEndTargetOutputData) String() string {
+	bytes, _ := json.Marshal(O)
+	return string(bytes)
+}
 func (mq *mqttOutEndTarget) To(data interface{}) (interface{}, error) {
 	if mq.client != nil {
 		switch s := data.(type) {
 		case string:
-			glogger.GLogger.Debug("Target publish:", mq.mainConfig.PubTopic, 1, false, data)
-			token := mq.client.Publish(mq.mainConfig.PubTopic, 1, false, s)
+			glogger.GLogger.Debug("MQTT Target publish:", mq.mainConfig.PubTopic, 1, false, data)
+			outputData := MqttOutEndTargetOutputData{
+				Label: mq.mainConfig.ClientId,
+				Body:  s,
+			}
+			token := mq.client.Publish(mq.mainConfig.PubTopic, 1, false, outputData.String())
 			return nil, token.Error()
 		default:
 			return nil, errors.New("Invalid mqtt data type")

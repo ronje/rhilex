@@ -16,7 +16,7 @@
 package target
 
 import (
-	"encoding/hex"
+	"encoding/json"
 	"fmt"
 	"net"
 	"time"
@@ -50,6 +50,8 @@ func NewTTcpTarget(e typex.Rhilex) typex.XTarget {
 	ht := new(TTcpTarget)
 	ht.RuleEngine = e
 	ht.mainConfig = _TcpMainConfig{
+		PingPacket: "rhilex",
+		Timeout:    3000,
 		AllowPing: func() *bool {
 			b := true
 			return &b
@@ -64,7 +66,6 @@ func (ht *TTcpTarget) Init(outEndId string, configMap map[string]interface{}) er
 	if err := utils.BindSourceConfig(configMap, &ht.mainConfig); err != nil {
 		return err
 	}
-	ht.mainConfig.PingPacket += "\r\n"
 	return nil
 
 }
@@ -89,19 +90,15 @@ func (ht *TTcpTarget) Start(cctx typex.CCTX) error {
 			for {
 				select {
 				case <-ht.Ctx.Done():
-					{
-						return
-					}
+					return
 				default:
-					{
-					}
 				}
-				ht.client.SetReadDeadline(
+				ht.client.SetWriteDeadline(
 					time.Now().Add((time.Duration(ht.mainConfig.Timeout) *
 						time.Millisecond)),
 				)
 				_, err1 := ht.client.Write([]byte(ht.mainConfig.PingPacket))
-				ht.client.SetReadDeadline(time.Time{})
+				ht.client.SetWriteDeadline(time.Time{})
 				if err1 != nil {
 					glogger.GLogger.Error("TTcpTarget Ping Error:", err1)
 					ht.status = typex.SOURCE_DOWN
@@ -127,6 +124,16 @@ func (ht *TTcpTarget) Status() typex.SourceState {
 	return ht.status
 }
 
+type TcpOutEndTargetOutputData struct {
+	Label string `json:"label"`
+	Body  string `json:"body"`
+}
+
+func (O TcpOutEndTargetOutputData) String() string {
+	bytes, _ := json.Marshal(O)
+	return string(bytes)
+}
+
 /*
 *
 * 透传模式：字符串和十六进制
@@ -136,32 +143,18 @@ func (ht *TTcpTarget) To(data interface{}) (interface{}, error) {
 	if ht.client != nil {
 		switch s := data.(type) {
 		case string:
-			if ht.mainConfig.DataMode == "RAW_STRING" {
-				ht.client.SetReadDeadline(
-					time.Now().Add((time.Duration(ht.mainConfig.Timeout) *
-						time.Millisecond)),
-				)
-				_, err0 := ht.client.Write([]byte(s + "\r\n"))
-				ht.client.SetReadDeadline(time.Time{})
-				if err0 != nil {
-					return 0, err0
-				}
+			ht.client.SetReadDeadline(
+				time.Now().Add((time.Duration(ht.mainConfig.Timeout) *
+					time.Millisecond)),
+			)
+			outputData := TcpOutEndTargetOutputData{
+				Label: ht.mainConfig.PingPacket,
+				Body:  s,
 			}
-			if ht.mainConfig.DataMode == "HEX_STRING" {
-				dByte, err1 := hex.DecodeString(s)
-				if err1 != nil {
-					return 0, err1
-				}
-				ht.client.SetReadDeadline(
-					time.Now().Add((time.Duration(ht.mainConfig.Timeout) *
-						time.Millisecond)),
-				)
-				dByte = append(dByte, []byte{'\r', '\n'}...)
-				_, err0 := ht.client.Write(dByte)
-				ht.client.SetReadDeadline(time.Time{})
-				if err0 != nil {
-					return 0, err0
-				}
+			_, err0 := ht.client.Write([]byte(outputData.String() + "\r\n"))
+			ht.client.SetReadDeadline(time.Time{})
+			if err0 != nil {
+				return 0, err0
 			}
 			return len(s), nil
 		default:
@@ -174,7 +167,9 @@ func (ht *TTcpTarget) To(data interface{}) (interface{}, error) {
 
 func (ht *TTcpTarget) Stop() {
 	ht.status = typex.SOURCE_DOWN
-	ht.CancelCTX()
+	if ht.CancelCTX != nil {
+		ht.CancelCTX()
+	}
 	if ht.client != nil {
 		ht.client.Close()
 	}
