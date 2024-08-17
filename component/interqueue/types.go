@@ -22,12 +22,6 @@ import (
 )
 
 type Queue interface {
-	GetQueue() chan QueueData
-	GetInQueue() chan QueueData
-	GetOutQueue() chan QueueData
-	GetDeviceQueue() chan QueueData
-	GetSize() int
-	Push(QueueData) error
 	PushInQueue(in *typex.InEnd, data string) error
 	PushOutQueue(in *typex.OutEnd, data string) error
 	PushDeviceQueue(in *typex.Device, data string) error

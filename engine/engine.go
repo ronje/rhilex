@@ -118,9 +118,7 @@ func InitRuleEngine(config typex.RhilexConfig) typex.Rhilex {
 	// Data center: future version maybe support
 	datacenter.InitDataCenter(__DefaultRuleEngine)
 	// Internal Queue
-	interqueue.InitYQueue(__DefaultRuleEngine, core.GlobalConfig.MaxQueueSize)
-	// Internal BUS
-	interqueue.StartYQueue()
+	interqueue.InitXQueue(__DefaultRuleEngine, core.GlobalConfig.MaxQueueSize)
 	// Init Transceiver Communicator Manager
 	transceiver.InitTransceiverCommunicatorManager(__DefaultRuleEngine)
 	return __DefaultRuleEngine
@@ -137,6 +135,8 @@ func (e *RuleEngine) Start() *typex.RhilexConfig {
 	e.InitSourceTypeManager()
 	e.InitTargetTypeManager()
 	intercache.RegisterSlot("__DefaultRuleEngine")
+	// Internal BUS
+	interqueue.StartXQueue()
 	return e.Config
 }
 
@@ -226,7 +226,7 @@ func (e *RuleEngine) Stop() {
 
 // 核心功能: Work, 主要就是推流进队列
 func (e *RuleEngine) WorkInEnd(in *typex.InEnd, data string) (bool, error) {
-	if err := interqueue.DefaultYQueue.PushInQueue(in, data); err != nil {
+	if err := interqueue.DefaultXQueue.PushInQueue(in, data); err != nil {
 		return false, err
 	}
 	return true, nil
@@ -234,7 +234,7 @@ func (e *RuleEngine) WorkInEnd(in *typex.InEnd, data string) (bool, error) {
 
 // 核心功能: Work, 主要就是推流进队列
 func (e *RuleEngine) WorkDevice(Device *typex.Device, data string) (bool, error) {
-	if err := interqueue.DefaultYQueue.PushDeviceQueue(Device, data); err != nil {
+	if err := interqueue.DefaultXQueue.PushDeviceQueue(Device, data); err != nil {
 		return false, err
 	}
 	return true, nil

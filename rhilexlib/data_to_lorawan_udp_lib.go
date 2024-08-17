@@ -31,7 +31,7 @@ func DataToSemtechUdp(rx typex.Rhilex, uuid string) func(L *lua.LState) int {
 func handleLoraWanUDPFormat(e typex.Rhilex, uuid string, incoming string) error {
 	outEnd := e.GetOutEnd(uuid)
 	if outEnd != nil {
-		return interqueue.DefaultYQueue.PushOutQueue(outEnd, incoming)
+		return interqueue.DefaultXQueue.PushOutQueue(outEnd, incoming)
 	}
 	msg := "target not found:" + uuid
 	glogger.GLogger.Error(msg)

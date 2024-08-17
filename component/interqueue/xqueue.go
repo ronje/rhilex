@@ -2,16 +2,15 @@ package interqueue
 
 import (
 	"context"
-	"errors"
 	"fmt"
+	"sync"
 	"time"
 
-	"github.com/hootrhino/rhilex/component/intermetric"
 	"github.com/hootrhino/rhilex/glogger"
 	"github.com/hootrhino/rhilex/typex"
 )
 
-var DefaultXQueue Queue
+var DefaultXQueue *XQueue
 
 /*
 *
@@ -25,108 +24,89 @@ var DefaultXQueue Queue
 *
  */
 type XQueue struct {
-	Queue       chan QueueData
-	OutQueue    chan QueueData
-	InQueue     chan QueueData
-	DeviceQueue chan QueueData
-	rhilex      typex.Rhilex
+	Queue        []chan QueueData
+	OutQueue     []chan QueueData
+	InQueue      []chan QueueData
+	DeviceQueue  []chan QueueData
+	rhilex       typex.Rhilex
+	locker       sync.Mutex
+	maxQueueSize int
 }
 
-func InitXQueue(rhilex typex.Rhilex, maxQueueSize int) Queue {
+func InitXQueue(rhilex typex.Rhilex, maxQueueSize int) *XQueue {
+	InQueue := make([]chan QueueData, 10)
+	OutQueue := make([]chan QueueData, 10)
+	DeviceQueue := make([]chan QueueData, 10)
+	for i := 0; i < 10; i++ {
+		InQueue[i] = make(chan QueueData, maxQueueSize)
+		OutQueue[i] = make(chan QueueData, maxQueueSize)
+		DeviceQueue[i] = make(chan QueueData, maxQueueSize)
+	}
 	DefaultXQueue = &XQueue{
-		Queue:       make(chan QueueData, maxQueueSize),
-		OutQueue:    make(chan QueueData, maxQueueSize),
-		InQueue:     make(chan QueueData, maxQueueSize),
-		DeviceQueue: make(chan QueueData, maxQueueSize),
-		rhilex:      rhilex,
+		InQueue:      InQueue,
+		OutQueue:     OutQueue,
+		DeviceQueue:  DeviceQueue,
+		rhilex:       rhilex,
+		locker:       sync.Mutex{},
+		maxQueueSize: maxQueueSize,
 	}
 	return DefaultXQueue
 }
-func (q *XQueue) GetSize() int {
-	return cap(q.Queue)
-}
 
 /*
 *
-* Push
+* 内部队列
 *
  */
-func (q *XQueue) Push(d QueueData) error {
-	// 动态扩容
-	// if len(q.Queue)+1 > q.GetSize() {
-	// }
-	if len(q.Queue)+1 > q.GetSize() {
-		msg := fmt.Sprintf("exceed max queue size:%v", q.GetSize())
-		glogger.GLogger.Error(msg)
-		return errors.New(msg)
-	} else {
-		q.Queue <- d
-		return nil
-	}
-}
-
-/*
-*
-* GetQueue
-*
- */
-func (q *XQueue) GetQueue() chan QueueData {
-	return q.Queue
-}
-
-/*
-*
-* GetQueue
-*
- */
-func (q *XQueue) GetInQueue() chan QueueData {
-	return q.InQueue
-}
-
-/*
-*
-* GetQueue
-*
- */
-func (q *XQueue) GetOutQueue() chan QueueData {
-	return q.OutQueue
-}
-
-/*
-*
-*GetDeviceQueue
-*
- */
-func (q *XQueue) GetDeviceQueue() chan QueueData {
-	return q.DeviceQueue
-}
-
-// TODO: 下个版本更换为可扩容的Chan
 func StartXQueue() {
-	ctx := typex.GCTX
-	go func(ctx context.Context, queue Queue) {
-		ticker := time.NewTicker(100 * time.Millisecond)
-		defer ticker.Stop()
+	// InQueue
+	go func(ctx context.Context, DefaultXQueue *XQueue) {
+		glogger.GLogger.Info("Start XQueue->InQueue")
 		for {
-			select {
-			case <-ctx.Done():
-				// 优雅地处理上下文取消
-				return
-			case qd := <-queue.GetInQueue():
-				if qd.I != nil {
-					qd.E.RunSourceCallbacks(qd.I, qd.Data)
+			for _, Queue := range DefaultXQueue.InQueue {
+				select {
+				case <-ctx.Done():
+					return
+				case Data := <-Queue:
+					Data.E.RunDeviceCallbacks(Data.D, Data.Data)
+				case <-time.After(4 * time.Millisecond):
+					continue
 				}
-			case qd := <-queue.GetDeviceQueue():
-				if qd.D != nil {
-					qd.E.RunDeviceCallbacks(qd.D, qd.Data)
-				}
-			case qd := <-queue.GetOutQueue():
-				ProcessOutQueueData(qd, qd.E)
-			case <-ticker.C:
-				continue
 			}
 		}
-	}(ctx, DefaultXQueue)
+	}(typex.GCTX, DefaultXQueue)
+	// DeviceQueue
+	go func(ctx context.Context, DefaultXQueue *XQueue) {
+		glogger.GLogger.Info("Start XQueue->DeviceQueue")
+		for {
+			for _, Queue := range DefaultXQueue.DeviceQueue {
+				select {
+				case <-ctx.Done():
+					return
+				case Data := <-Queue:
+					Data.E.RunDeviceCallbacks(Data.D, Data.Data)
+				case <-time.After(4 * time.Millisecond):
+					continue
+				}
+			}
+		}
+	}(typex.GCTX, DefaultXQueue)
+	// OutQueue
+	go func(ctx context.Context, DefaultXQueue *XQueue) {
+		glogger.GLogger.Info("Start XQueue->OutQueue")
+		for {
+			for _, Queue := range DefaultXQueue.OutQueue {
+				select {
+				case <-ctx.Done():
+					return
+				case Data := <-Queue:
+					ProcessOutQueueData(Data, Data.E)
+				case <-time.After(4 * time.Millisecond):
+					continue
+				}
+			}
+		}
+	}(typex.GCTX, DefaultXQueue)
 }
 
 /*
@@ -141,14 +121,7 @@ func (q *XQueue) PushInQueue(in *typex.InEnd, data string) error {
 		O:    nil,
 		Data: data,
 	}
-	err := q.pushIn(qd)
-	if err != nil {
-		glogger.GLogger.Error("Push InQueue error:", err)
-		intermetric.IncInFailed()
-	} else {
-		intermetric.IncIn()
-	}
-	return err
+	return q.pushIn(qd)
 }
 
 /*
@@ -164,14 +137,7 @@ func (q *XQueue) PushDeviceQueue(Device *typex.Device, data string) error {
 		O:    nil,
 		Data: data,
 	}
-	err := q.pushDevice(qd)
-	if err != nil {
-		glogger.GLogger.Error("Push Device Queue error:", err)
-		intermetric.IncInFailed()
-	} else {
-		intermetric.IncIn()
-	}
-	return err
+	return q.pushDevice(qd)
 }
 
 /*
@@ -187,14 +153,7 @@ func (q *XQueue) PushOutQueue(out *typex.OutEnd, data string) error {
 		O:    out,
 		Data: data,
 	}
-	err := q.pushOut(qd)
-	if err != nil {
-		glogger.GLogger.Error("Push OutQueue error:", err)
-		intermetric.IncInFailed()
-	} else {
-		intermetric.IncIn()
-	}
-	return err
+	return q.pushOut(qd)
 }
 
 /*
@@ -203,18 +162,7 @@ func (q *XQueue) PushOutQueue(out *typex.OutEnd, data string) error {
 *
  */
 func (q *XQueue) pushIn(d QueueData) error {
-	// 动态扩容
-	// if len(q.Queue)+1 > q.GetSize() {
-	// }
-	if len(q.InQueue)+1 > q.GetSize() {
-		msg := fmt.Sprintf("attached max queue size, max size is:%v, current size is: %v",
-			q.GetSize(), len(q.InQueue)+1)
-		glogger.GLogger.Error(msg)
-		return errors.New(msg)
-	} else {
-		q.InQueue <- d
-		return nil
-	}
+	return q.handleQueue(d, q.InQueue)
 }
 
 /*
@@ -223,18 +171,7 @@ func (q *XQueue) pushIn(d QueueData) error {
 *
  */
 func (q *XQueue) pushOut(d QueueData) error {
-	// 动态扩容
-	// if len(q.Queue)+1 > q.GetSize() {
-	// }
-	if len(q.OutQueue)+1 > q.GetSize() {
-		msg := fmt.Sprintf("attached max queue size, max size is:%v, current size is: %v",
-			q.GetSize(), len(q.OutQueue)+1)
-		glogger.GLogger.Error(msg)
-		return errors.New(msg)
-	} else {
-		q.OutQueue <- d
-		return nil
-	}
+	return q.handleQueue(d, q.OutQueue)
 }
 
 /*
@@ -243,16 +180,26 @@ func (q *XQueue) pushOut(d QueueData) error {
 *
  */
 func (q *XQueue) pushDevice(d QueueData) error {
-	// 动态扩容
-	// if len(q.Queue)+1 > q.GetSize() {
-	// }
-	if len(q.DeviceQueue)+1 > q.GetSize() {
-		msg := fmt.Sprintf("attached max queue size, max size is:%v, current size is: %v",
-			q.GetSize(), len(q.DeviceQueue)+1)
-		glogger.GLogger.Error(msg)
-		return errors.New(msg)
-	} else {
-		q.DeviceQueue <- d
+	return q.handleQueue(d, q.DeviceQueue)
+}
+
+/*
+*
+* handle
+*
+ */
+func (q *XQueue) handleQueue(qData QueueData, Queue []chan QueueData) error {
+	send := false
+	for i := 0; i < 10; i++ {
+		if len((Queue[i]))+1 > q.maxQueueSize {
+			continue
+		}
+		Queue[i] <- qData
+		send = true
+		break
+	}
+	if send {
 		return nil
 	}
+	return fmt.Errorf("Queue Send Failed")
 }
