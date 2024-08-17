@@ -15,10 +15,6 @@
  along with this program.  If not, see <https://www.gnu.org/licenses/>.
 -->
 
-优化后的文档如下：
-
----
-
 # 外部通信模块管理器
 
 本项目旨在设计RHILEX平台的外设接入框架，以解决标准及非标准硬件（如网卡、蓝牙、WIFI、Lora、Zigbee、433M、2.4G等）在RHILEX内部集成的问题。该框架专注于克服标准软件与各类硬件之间交互的难题。框架内的外设多数为板载固定配置，不支持动态扩展。
