@@ -84,27 +84,22 @@ func Apps(c *gin.Context, ruleEngine typex.Rhilex) {
 	c.JSON(common.HTTP_OK, common.OkWithData(result))
 }
 
-/*
-*
-* 直接新建一个文件，文件名为 UUID.lua
-*
- */
 const luaTemplate = `
 --
--- Go to https://luaguide.hootrhino.com for more tutorials
--- APPID: %s
+-- Go https://www.hootrhino.com for more tutorials
 --
-AppNAME = "%s"
-AppVERSION = "%s"
-AppDESCRIPTION = "%s"
+-- APP ID: %s
+-- App NAME = "%s"
+-- App VERSION = "%s"
+-- App DESCRIPTION = "%s"
 --
--- Main
+-- Rhilex Main
 --
 %s
 `
 const defaultLuaMain = `
 function Main(arg)
-	Debug("Hello World:" .. time:Time())
+	Debug("[Hello Rhilex]:" .. time:Time())
 	return 0
 end
 `
