@@ -20,4 +20,8 @@ import "github.com/hootrhino/rhilex/component/apiserver/server"
 func LoadSystemSettingsAPI() {
 	settingsFirmware := server.RouteGroup(server.ContextUrl("/firmware"))
 	settingsFirmware.GET("/vendorKey", server.AddRoute(GetVendorKey))
+	iFacesApi := server.RouteGroup(server.ContextUrl("/settings"))
+	{
+		iFacesApi.GET(("/ctrlTree"), server.AddRoute(GetDeviceCtrlTree))
+	}
 }
