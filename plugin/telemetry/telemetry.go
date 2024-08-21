@@ -86,9 +86,10 @@ func sendMessage(ServerAddr string) error {
 		_, err = conn.Write(data)
 		if err != nil {
 			glogger.GLogger.Error(err.Error())
+			time.Sleep(300 * time.Millisecond)
 			continue
 		}
-		time.Sleep(300 * time.Millisecond)
+		break
 	}
 	return nil
 }
