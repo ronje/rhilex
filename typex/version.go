@@ -31,5 +31,5 @@ var DefaultVersionInfo = VersionInfo{
 var Banner = `
  **  Welcome to RHILEX framework world <'_'>     -.
 **   Version: v0.7.2-bb0d7b051d3593c             -.
- **  More information: https://hootrhino.github.io  -.
+ **  More information: https://www.hootrhino.com  -.
 `

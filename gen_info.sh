@@ -33,13 +33,13 @@ var License = utils.LocalLicense{
 }
 
 var DefaultVersionInfo = VersionInfo{
-	Product:        "COMMON",
+	Product:     "COMMON",
 	ReleaseTime: "$(echo $(date "+%Y-%m-%d %H:%M:%S"))",
 }
 var Banner = \`
  **  Welcome to RHILEX framework world <'_'>     -.
 **   Version: ${VERSION}-${HASH:0:15}             -.
- **  More information: https://hootrhino.github.io  -.
+ **  More information: https://www.hootrhino.com  -.
 \`
 EOF
 
