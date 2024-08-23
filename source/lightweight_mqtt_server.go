@@ -104,6 +104,7 @@ func (ms *MqttServer) Stop() {
 	}
 	if ms.server != nil {
 		ms.server.Close()
+		ms.server = nil
 	}
 }
 
