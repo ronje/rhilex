@@ -16,8 +16,8 @@
 package service
 
 import (
-	"github.com/hootrhino/rhilex/component/interdb"
 	"github.com/hootrhino/rhilex/component/apiserver/model"
+	"github.com/hootrhino/rhilex/component/interdb"
 )
 
 /*
@@ -29,7 +29,7 @@ func InsertInternalNotify(m model.MInternalNotify) error {
 	var count int64
 	interdb.DB().Model(&m).Count(&count)
 	// 超过100条记录就清空
-	if count > 100 {
+	if count > 1000 {
 		if err := ClearInternalNotifies(); err != nil {
 			return err
 		}
@@ -74,5 +74,6 @@ func ClearInternalNotifies() error {
 *
  */
 func ReadInternalNotifies(uuid string) error {
-	return interdb.DB().Where("uuid=?", uuid).Delete(&model.MInternalNotify{}).Error
+	return interdb.DB().Table("m_internal_notifies").
+		Where("uuid=?", uuid).Delete(&model.MInternalNotify{}).Error
 }

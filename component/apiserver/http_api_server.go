@@ -439,13 +439,7 @@ func (hs *ApiServerPlugin) LoadRoute() {
 		HwIFaceApi.POST("/update", server.AddRoute(apis.UpdateHwPortConfig))
 		HwIFaceApi.GET("/refresh", server.AddRoute(apis.RefreshPortList))
 	}
-	// 站内公告
-	internalNotifyApi := server.DefaultApiServer.GetGroup(server.ContextUrl("/notify"))
-	{
-		internalNotifyApi.PUT("/clear", server.AddRoute(apis.ClearInternalNotifies))
-		internalNotifyApi.PUT("/read", server.AddRoute(apis.ReadInternalNotifies))
-		internalNotifyApi.GET("/pageList", server.AddRoute(apis.PageInternalNotifies))
-	}
+
 	//
 	// 系统设置
 	//
@@ -474,8 +468,9 @@ func (hs *ApiServerPlugin) LoadRoute() {
 	}
 	//
 	//New Api
-	//
-	//Shelly
+	// Init Internal Notify Route
+	apis.InitInternalNotifyRoute()
+	// Shelly
 	shelly.InitShellyRoute()
 	// Snmp Route
 	apis.InitSnmpRoute()
