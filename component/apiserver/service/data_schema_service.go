@@ -76,14 +76,14 @@ func DeleteDataSchemaAndProperty(schemaUuid string) error {
 		return nil
 	}
 	// 已经发布了，清空RHILEX数据库
-	return interdb.DB().Model(model.MIotSchema{}).Transaction(func(tx *gorm.DB) error {
+	return interdb.DB().Transaction(func(tx *gorm.DB) error {
 		// Delete Schema
-		err2 := tx.Where("uuid=?", schemaUuid).Delete(&model.MIotSchema{}).Error
+		err2 := tx.Model(model.MIotSchema{}).Where("uuid=?", schemaUuid).Delete(&model.MIotSchema{}).Error
 		if err2 != nil {
 			return err2
 		}
 		// Delete All IotProperty
-		err1 := tx.Where("schema_id=?", schemaUuid).Delete(model.MIotProperty{}).Error
+		err1 := tx.Model(model.MIotProperty{}).Where("schema_id=?", schemaUuid).Delete(model.MIotProperty{}).Error
 		if err1 != nil {
 			return err1
 		}
