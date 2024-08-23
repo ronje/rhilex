@@ -1,6 +1,7 @@
 package rhilexlib
 
 import (
+	"encoding/binary"
 	"encoding/hex"
 	"encoding/json"
 
@@ -101,7 +102,7 @@ func F5(rx typex.Rhilex, uuid string) func(l *lua.LState) int {
 			return 1
 		}
 
-		if Device.Type != typex.GENERIC_MODBUS {
+		if Device.Type != typex.GENERIC_MODBUS_MASTER {
 			l.Push(lua.LString("Only support GENERIC_MODBUS device"))
 			return 1
 		}
@@ -150,7 +151,7 @@ func F6(rx typex.Rhilex, uuid string) func(l *lua.LState) int {
 			return 1
 		}
 
-		if Device.Type != typex.GENERIC_MODBUS {
+		if Device.Type != typex.GENERIC_MODBUS_MASTER {
 			l.Push(lua.LString("Only support GENERIC_MODBUS device"))
 			return 1
 		}
@@ -200,7 +201,7 @@ func F15(rx typex.Rhilex, uuid string) func(l *lua.LState) int {
 			l.Push(lua.LString("Device is not exists"))
 			return 1
 		}
-		if Device.Type != typex.GENERIC_MODBUS {
+		if Device.Type != typex.GENERIC_MODBUS_MASTER {
 			l.Push(lua.LString("Only support GENERIC_MODBUS device"))
 			return 1
 		}
@@ -248,7 +249,7 @@ func F16(rx typex.Rhilex, uuid string) func(l *lua.LState) int {
 			l.Push(lua.LString("Device is not exists"))
 			return 1
 		}
-		if Device.Type != typex.GENERIC_MODBUS {
+		if Device.Type != typex.GENERIC_MODBUS_MASTER {
 			l.Push(lua.LString("Only support GENERIC_MODBUS device"))
 			return 1
 		}
@@ -272,4 +273,79 @@ func F16(rx typex.Rhilex, uuid string) func(l *lua.LState) int {
 		l.Push(lua.LNil)
 		return 1
 	}
+}
+
+/*
+*
+* 解析Modbus报文
+*
+ */
+func ParseModbusByte(rx typex.Rhilex, uuid string) func(l *lua.LState) int {
+	return func(l *lua.LState) int {
+		hexS := l.ToString(2)
+		b, err0 := hex.DecodeString(hexS)
+		if err0 != nil {
+			l.Push(lua.LNil)
+			l.Push(lua.LString(err0.Error()))
+			return 2
+		}
+		modbus, ok := parseModbusByte(b)
+		if ok {
+			T := lua.LTable{}
+			T.RawSet(lua.LString(modbus.Address), lua.LNumber(modbus.Address))
+			T.RawSet(lua.LString(modbus.Function), lua.LNumber(modbus.Function))
+			Data := lua.LTable{}
+			for _, v := range modbus.Data {
+				Data.Append(lua.LNumber(v))
+			}
+			T.RawSet(lua.LString(modbus.Data), &Data)
+			l.Push(&T)
+			l.Push(lua.LNil)
+			return 2
+		}
+		l.Push(lua.LNil)
+		l.Push(lua.LString("parse modbus error"))
+		return 2
+	}
+}
+
+type ModbusData struct {
+	Address  uint8
+	Function uint8
+	Data     []byte
+}
+
+func parseModbusByte(b []byte) (ModbusData, bool) {
+	if len(b) < 4 {
+		return ModbusData{}, false
+	}
+	address := b[0]
+	function := b[1]
+	data := b[2 : len(b)-2]
+	receivedCRC := binary.BigEndian.Uint16(b[len(b)-2:])
+	calculatedCRC := calculateCRC(b[:len(b)-2])
+	if receivedCRC != calculatedCRC {
+		return ModbusData{}, false
+	}
+	modbusData := ModbusData{
+		Address:  address,
+		Function: function,
+		Data:     data,
+	}
+	return modbusData, true
+}
+func calculateCRC(data []byte) uint16 {
+	var crc uint16 = 0xFFFF
+	for _, b := range data {
+		crc ^= uint16(b)
+		for i := 0; i < 8; i++ {
+			if crc&0x0001 > 0 {
+				crc >>= 1
+				crc ^= 0xA001
+			} else {
+				crc >>= 1
+			}
+		}
+	}
+	return crc
 }

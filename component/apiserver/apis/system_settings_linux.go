@@ -36,7 +36,7 @@ func LoadSystemSettingsAPI() {
 		settingsApi.GET("/volume", server.AddRoute(GetVolume))
 		settingsApi.POST("/volume", server.AddRoute(SetVolume))
 	}
-	// ethnet
+	// ethernet
 	ethApi := server.RouteGroup(server.ContextUrl("/settings"))
 	{
 		ethApi.POST("/eth", server.AddRoute(SetEthNetwork))

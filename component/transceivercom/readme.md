@@ -15,10 +15,6 @@
  along with this program.  If not, see <https://www.gnu.org/licenses/>.
 -->
 
-优化后的文档如下：
-
----
-
 # 外部通信模块管理器
 
 本项目旨在设计RHILEX平台的外设接入框架，以解决标准及非标准硬件（如网卡、蓝牙、WIFI、Lora、Zigbee、433M、2.4G等）在RHILEX内部集成的问题。该框架专注于克服标准软件与各类硬件之间交互的难题。框架内的外设多数为板载固定配置，不支持动态扩展。
@@ -90,3 +86,30 @@
 ```
 
 响应中的`result`字段包含了具体的设备信息，如运营商、信号强度和SIM卡ID。
+
+## 命令行参数
+启动的时候需要带上参数：
+```ini
+KEY=value
+```
+其中KEY是模块的名称，value是ini里面的配置，比如下面这个：
+```ini
+[transceiver.atk01]
+# Address: Device is on COM3 serial port for communication
+address = /dev/ttyUSB0
+# io_timeout: Timeout for I/O ops (30 sec), prevents indefinite waiting
+io_timeout = 30
+# at_timeout: Timeout for AT cmds (200 ms), adjusts responsiveness
+at_timeout = 200
+# BaudRate: Data transfer speed set to standard 9600 baud
+baudrate = 9600
+# DataBits: Each character uses 8 bits for transmission
+data_bits = 8
+# Parity: parity ('N' 'O' 'D') check, if additional bits for error detection
+parity = N
+# Stopbits: Single stop bit (1) marks end of each character transmission
+stop_bits = 1
+# Transport Protocol: 1|2|3, goto homepage for detail
+transport_protocol = 1
+```
+表示启用atk01这个模块，设备位于`/dev/ttyUSB0`下，使用的是固定报文协议格式。更多请参考文档。

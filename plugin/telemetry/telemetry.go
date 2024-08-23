@@ -2,6 +2,7 @@ package telemetry
 
 import (
 	"encoding/json"
+	"fmt"
 	"net"
 	"runtime"
 	"time"
@@ -12,76 +13,95 @@ import (
 	"gopkg.in/ini.v1"
 )
 
-type Telemetry struct {
+func NewTelemetry() *Telemetry {
+	return &Telemetry{
+		MainConfig: TelemetryConfig{
+			Enable:     false,
+			ServerAddr: "127.0.0.1:9990",
+		},
+	}
 }
 
 type TelemetryConfig struct {
-	Enable bool   `ini:"enable"`
-	Addr   string `ini:"addr"`
+	Enable     bool   `ini:"enable"`
+	ServerAddr string `ini:"server_addr"`
 }
 
-// 参数为外部配置
-func (*Telemetry) Init(sec *ini.Section) error {
-	// 加载配置
-	var conf TelemetryConfig
-	if err := utils.InIMapToStruct(sec, &conf); err != nil {
-		return nil
-	}
+type Telemetry struct {
+	MainConfig TelemetryConfig `json:"config"`
+}
 
-	if !conf.Enable || len(conf.Addr) == 0 {
-		return nil
-	}
+func (t *Telemetry) Init(section *ini.Section) error {
 
-	// 发起UDP连接
-	conn, err := net.Dial("udp", conf.Addr)
+	if err := utils.InIMapToStruct(section, &t.MainConfig); err != nil {
+		return err
+	}
+	if !t.MainConfig.Enable || len(t.MainConfig.ServerAddr) == 0 {
+		return fmt.Errorf("Invalid config: %s", t.MainConfig.ServerAddr)
+	}
+	return nil
+}
+func (t *Telemetry) Start(typex.Rhilex) error {
+	return sendMessage(t.MainConfig.ServerAddr)
+}
+
+/*
+*
+* 遥测的时候向服务器发送的数据
+*
+ */
+type TelemetryInfo struct {
+	Arch     string `json:"arch,omitempty"`
+	OS       string `json:"os,omitempty"`
+	StartAt  string `json:"start_at,omitempty"`
+	DeviceId string `json:"deviceId,omitempty"`
+	Mac      string `json:"mac,omitempty"`
+	Admin    string `json:"admin,omitempty"`
+}
+
+/*
+*
+* 发UDP包
+*
+ */
+func sendMessage(ServerAddr string) error {
+	conn, err := net.Dial("udp", ServerAddr)
 	if err != nil {
-		// 日志
-		glogger.GLogger.Error("plugin.telemetry dail", err.Error())
-		// fmt.Println("plugin.telemetry dail", err. common.Error())
-		return nil
+		glogger.GLogger.Error(err)
+		return err
 	}
-
-	// 异步处理，避免阻塞主线程
-	go func(conn net.Conn) {
-		defer conn.Close()
-
-		// 加载硬件信息
-		var info struct {
-			OS   string `json:"os"`
-			Arch string `json:"arch"`
-		}
-		info.OS = runtime.GOOS
-		info.Arch = runtime.GOARCH
-
-		data, _ := json.Marshal(&info)
-
-		//  发出数据，间隔300ms发出，避免网络阻塞
-		for i := 0; i < 5; i++ {
-			_, err = conn.Write(data)
-			if err != nil {
-				glogger.GLogger.Error("plugin.telemetry send", err.Error())
-				// fmt.Println("plugin.telemetry send", err. common.Error())
-				return
-			}
+	defer conn.Close()
+	now := time.Now()
+	formatted := now.Format("2006-01-02 15:04:05")
+	info := TelemetryInfo{
+		Admin:    typex.License.AuthorizeAdmin,
+		OS:       runtime.GOOS,
+		Arch:     runtime.GOARCH,
+		StartAt:  formatted,
+		Mac:      typex.License.MAC,
+		DeviceId: typex.License.DeviceID,
+	}
+	data, _ := json.Marshal(&info)
+	for i := 0; i < 5; i++ {
+		_, err = conn.Write(data)
+		if err != nil {
+			glogger.GLogger.Error(err.Error())
 			time.Sleep(300 * time.Millisecond)
+			continue
 		}
-	}(conn)
-
-	return nil
-}
-func (*Telemetry) Start(typex.Rhilex) error {
+		break
+	}
 	return nil
 }
 
-// 对外提供一些服务
-func (*Telemetry) Service(typex.ServiceArg) typex.ServiceResult {
+func (t *Telemetry) Service(typex.ServiceArg) typex.ServiceResult {
 	return typex.ServiceResult{}
 }
-func (*Telemetry) Stop() error {
+func (t *Telemetry) Stop() error {
 	return nil
 }
 
-func (p *Telemetry) PluginMetaInfo() typex.XPluginMetaInfo {
+func (t *Telemetry) PluginMetaInfo() typex.XPluginMetaInfo {
 	return typex.XPluginMetaInfo{
 		UUID:        "BUSINESS_TELEMETRY",
 		Name:        "Business Telemetry",

@@ -44,13 +44,15 @@ type __SiemensDataPoint struct {
 
 // https://cloudvpn.beijerelectronics.com/hc/en-us/articles/4406049761169-Siemens-S7
 type S1200CommonConfig struct {
-	Host        string `json:"host" validate:"required"`        // 127.0.0.1:502
-	Model       string `json:"model" validate:"required"`       // s7-200 s7-1500
-	Rack        *int   `json:"rack" validate:"required"`        // 0
-	Slot        *int   `json:"slot" validate:"required"`        // 1
-	Timeout     *int   `json:"timeout" validate:"required"`     // 5s
-	IdleTimeout *int   `json:"idleTimeout" validate:"required"` // 5s
-	AutoRequest *bool  `json:"autoRequest" validate:"required"` // false
+	Host         string `json:"host" validate:"required"`         // 127.0.0.1:502
+	Model        string `json:"model" validate:"required"`        // s7-200 s7-1500
+	Rack         *int   `json:"rack" validate:"required"`         // 0
+	Slot         *int   `json:"slot" validate:"required"`         // 1
+	Timeout      *int   `json:"timeout" validate:"required"`      // 5s
+	IdleTimeout  *int   `json:"idleTimeout" validate:"required"`  // 5s
+	AutoRequest  *bool  `json:"autoRequest" validate:"required"`  // false
+	BatchRequest *bool  `json:"batchRequest" validate:"required"` // 批量采集
+
 }
 type S1200Config struct {
 	CommonConfig S1200CommonConfig `json:"commonConfig" validate:"required"` // 通用配置
@@ -82,13 +84,15 @@ func NewSIEMENS_PLC(e typex.Rhilex) typex.XDevice {
 	Timeout := 1000
 	IdleTimeout := 3000
 	AutoRequest := false
+	BatchRequest := false
 	s1200.mainConfig = S1200Config{
 		CommonConfig: S1200CommonConfig{
-			Rack:        &Rack,
-			Slot:        &Slot,
-			Timeout:     &Timeout,
-			IdleTimeout: &IdleTimeout,
-			AutoRequest: &AutoRequest,
+			Rack:         &Rack,
+			Slot:         &Slot,
+			Timeout:      &Timeout,
+			IdleTimeout:  &IdleTimeout,
+			AutoRequest:  &AutoRequest,
+			BatchRequest: &BatchRequest,
 		},
 	}
 	s1200.__SiemensDataPoints = map[string]*__SiemensDataPoint{}
@@ -173,26 +177,35 @@ func (s1200 *SIEMENS_PLC) Start(cctx typex.CCTX) error {
 	go func(ctx context.Context) {
 		for {
 			select {
-			case <-ctx.Done():
-				{
-					return
-				}
-			default:
-				{
-				}
+			case <-s1200.Ctx.Done():
+				return
+			case <-time.After(4 * time.Millisecond):
+				// Continue loop
 			}
 			s1200.locker.Lock()
 			ReadPLCRegisterValues := s1200.Read()
 			s1200.locker.Unlock()
-			for _, v := range ReadPLCRegisterValues {
-				if bytes, err := json.Marshal(v); err != nil {
+			if len(ReadPLCRegisterValues) < 1 {
+				time.Sleep(50 * time.Second)
+				continue
+			}
+			if !*s1200.mainConfig.CommonConfig.BatchRequest {
+
+				for _, v := range ReadPLCRegisterValues {
+					if bytes, err := json.Marshal(v); err != nil {
+						glogger.GLogger.Error(err)
+					} else {
+						s1200.RuleEngine.WorkDevice(s1200.Details(), string(bytes))
+					}
+				}
+			} else {
+				if bytes, err := json.Marshal(ReadPLCRegisterValues); err != nil {
 					glogger.GLogger.Error(err)
 				} else {
 					s1200.RuleEngine.WorkDevice(s1200.Details(), string(bytes))
 				}
 			}
 		}
-
 	}(cctx.Ctx)
 	return nil
 }

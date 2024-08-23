@@ -6,6 +6,7 @@ import (
 	"time"
 
 	cron_task "github.com/hootrhino/rhilex/component/crontask"
+	dataschema "github.com/hootrhino/rhilex/component/dataschema"
 	"github.com/hootrhino/rhilex/component/hwportmanager"
 	"github.com/hootrhino/rhilex/component/internotify"
 	"github.com/shirou/gopsutil/cpu"
@@ -161,7 +162,7 @@ func loadAllPortConfig() {
 		}
 		// 未知接口参数为空，以后扩展，比如FD
 		if MHwPort.Type != "UART" {
-			Port.Config = nil
+			Port.Config = "NULL"
 			hwportmanager.SetHwPort(Port)
 		}
 	}
@@ -209,6 +210,7 @@ func (hs *ApiServerPlugin) Init(config *ini.Section) error {
 	server.DefaultApiServer.InitializeWindowsData()
 	server.DefaultApiServer.InitializeUnixData()
 	server.DefaultApiServer.InitializeConfigCtl()
+	dataschema.InitDataSchemaCache(hs.ruleEngine)
 	initRhilex(hs.ruleEngine)
 	return nil
 }
@@ -274,9 +276,7 @@ func (hs *ApiServerPlugin) LoadRoute() {
 		rulesApi.GET(("/list"), server.AddRoute(apis.Rules))
 		rulesApi.GET(("/detail"), server.AddRoute(apis.RuleDetail))
 		//
-		rulesApi.POST(("/testIn"), server.AddRoute(apis.TestSourceCallback))
-		rulesApi.POST(("/testOut"), server.AddRoute(apis.TestOutEndCallback))
-		rulesApi.POST(("/testDevice"), server.AddRoute(apis.TestDeviceCallback))
+		rulesApi.POST(("/test"), server.AddRoute(apis.TestRulesCallback))
 		rulesApi.GET(("/byInend"), server.AddRoute(apis.ListByInend))
 		rulesApi.GET(("/byDevice"), server.AddRoute(apis.ListByDevice))
 		//
@@ -336,14 +336,18 @@ func (hs *ApiServerPlugin) LoadRoute() {
 		deviceApi.GET("/deviceErrMsg", server.AddRoute(apis.GetDeviceErrorMsg))
 	}
 	// Modbus 点位表
-	modbusApi := server.RouteGroup(server.ContextUrl("/modbus_data_sheet"))
+	modbusMasterApi := server.RouteGroup(server.ContextUrl("/modbus_master_sheet"))
 	{
-		modbusApi.POST(("/sheetImport"), server.AddRoute(apis.ModbusSheetImport))
-		modbusApi.GET(("/sheetExport"), server.AddRoute(apis.ModbusPointsExport))
-		modbusApi.GET(("/list"), server.AddRoute(apis.ModbusSheetPageList))
-		modbusApi.POST(("/update"), server.AddRoute(apis.ModbusSheetUpdate))
-		modbusApi.DELETE(("/delIds"), server.AddRoute(apis.ModbusSheetDelete))
-		modbusApi.DELETE(("/delAll"), server.AddRoute(apis.ModbusSheetDeleteAll))
+		modbusMasterApi.POST(("/sheetImport"), server.AddRoute(apis.ModbusMasterSheetImport))
+		modbusMasterApi.GET(("/sheetExport"), server.AddRoute(apis.ModbusMasterPointsExport))
+		modbusMasterApi.GET(("/list"), server.AddRoute(apis.ModbusMasterSheetPageList))
+		modbusMasterApi.POST(("/update"), server.AddRoute(apis.ModbusMasterSheetUpdate))
+		modbusMasterApi.DELETE(("/delIds"), server.AddRoute(apis.ModbusMasterSheetDelete))
+		modbusMasterApi.DELETE(("/delAll"), server.AddRoute(apis.ModbusMasterSheetDeleteAll))
+	}
+	modbusApi := server.RouteGroup(server.ContextUrl("/modbus_slaver_sheet"))
+	{
+		modbusApi.GET(("/list"), server.AddRoute(apis.ModbusSlaverSheetPageList))
 	}
 	// S1200 点位表
 	SIEMENS_PLC := server.RouteGroup(server.ContextUrl("/s1200_data_sheet"))
@@ -435,13 +439,7 @@ func (hs *ApiServerPlugin) LoadRoute() {
 		HwIFaceApi.POST("/update", server.AddRoute(apis.UpdateHwPortConfig))
 		HwIFaceApi.GET("/refresh", server.AddRoute(apis.RefreshPortList))
 	}
-	// 站内公告
-	internalNotifyApi := server.DefaultApiServer.GetGroup(server.ContextUrl("/notify"))
-	{
-		internalNotifyApi.PUT("/clear", server.AddRoute(apis.ClearInternalNotifies))
-		internalNotifyApi.PUT("/read", server.AddRoute(apis.ReadInternalNotifies))
-		internalNotifyApi.GET("/pageList", server.AddRoute(apis.PageInternalNotifies))
-	}
+
 	//
 	// 系统设置
 	//
@@ -470,8 +468,9 @@ func (hs *ApiServerPlugin) LoadRoute() {
 	}
 	//
 	//New Api
-	//
-	//Shelly
+	// Init Internal Notify Route
+	apis.InitInternalNotifyRoute()
+	// Shelly
 	shelly.InitShellyRoute()
 	// Snmp Route
 	apis.InitSnmpRoute()
@@ -500,6 +499,7 @@ func (hs *ApiServerPlugin) Start(r typex.Rhilex) error {
 }
 
 func (hs *ApiServerPlugin) Stop() error {
+	dataschema.FlushDataSchemaCache()
 	return nil
 }
 

@@ -105,6 +105,8 @@ func StartRhilexApiServer(ruleEngine typex.Rhilex, port int) {
 	server.ginEngine.Use(gin.CustomRecovery(func(c *gin.Context, err any) {
 		if core.GlobalConfig.AppDebugMode {
 			debug.PrintStack()
+			os.Exit(1)
+			panic(err)
 		}
 		c.JSON(500, response.Error500(errors.New("http server crash, try to recovery")))
 	}))

@@ -33,6 +33,7 @@ func InitDataSchemaApi() {
 		schemaApi.GET("/list", server.AddRoute(ListDataSchema))
 		schemaApi.GET(("/detail"), server.AddRoute(DataSchemaDetail))
 		schemaApi.POST(("/publish"), server.AddRoute(PublishSchema))
+		schemaApi.POST(("/fix"), server.AddRoute(FixSchema))
 		// 属性
 		schemaApi.POST(("/properties/create"), server.AddRoute(CreateIotSchemaProperty))
 		schemaApi.PUT(("/properties/update"), server.AddRoute(UpdateIotSchemaProperty))
@@ -78,6 +79,27 @@ type IoTPropertyRuleVo struct {
 	TrueLabel    string      `json:"trueLabel"`    // 真值label
 	FalseLabel   string      `json:"falseLabel"`   // 假值label
 	Round        *int        `json:"round"`        // 小数点位
+}
+
+func (O IoTPropertyRuleVo) Check() error {
+	return nil
+}
+func (O IoTPropertyRuleVo) GetDefaultValue() string {
+	switch T := O.DefaultValue.(type) {
+	case string:
+		return T
+	case int32:
+		return fmt.Sprintf("%d", T)
+	case int64:
+		return fmt.Sprintf("%d", T)
+	case bool:
+		if T {
+			return "1"
+		}
+		return "0"
+	default:
+		return "0"
+	}
 }
 
 /*
@@ -210,6 +232,21 @@ func DeleteDataSchema(c *gin.Context, ruleEngine typex.Rhilex) {
 
 /*
 *
+* 修复数据仓库，本质上是删除可能存在的垃圾数据表，然后重新建表
+*
+ */
+func FixSchema(c *gin.Context, ruleEngine typex.Rhilex) {
+	uuid, _ := c.GetQuery("uuid")
+	if err := service.ResetSchema(uuid); err != nil {
+		c.JSON(common.HTTP_OK, common.Error400(err))
+		return
+	}
+	c.JSON(common.HTTP_OK, common.Ok())
+
+}
+
+/*
+*
 * 发布模型
 *
  */
@@ -241,13 +278,19 @@ func PublishSchema(c *gin.Context, ruleEngine typex.Rhilex) {
 		Name: "id", Type: "INTEGER", Description: "PRIMARY KEY",
 	})
 	DDLColumns = append(DDLColumns, datacenter.DDLColumn{
-		Name: "create_at", Type: "DATETIME", Description: "DATETIME",
+		Name: "create_at", Type: "DATETIME", Description: "DATETIME", DefaultValue: "CURRENT_TIMESTAMP",
 	})
+	ioTPropertyRuleVo := IoTPropertyRuleVo{}
 	for _, record := range records {
+		if err0 := ioTPropertyRuleVo.ParseRuleFromModel(record.Rule); err0 != nil {
+			c.JSON(common.HTTP_OK, common.Error400(err0))
+			return
+		}
 		DDLColumns = append(DDLColumns, datacenter.DDLColumn{
-			Name:        record.Name,
-			Type:        record.Type,
-			Description: record.Description,
+			Name:         record.Name,
+			Type:         record.Type,
+			Description:  record.Description,
+			DefaultValue: ioTPropertyRuleVo.GetDefaultValue(),
 		})
 	}
 	txErr := interdb.DB().Transaction(func(tx *gorm.DB) error {
@@ -361,6 +404,7 @@ func CreateIotSchemaProperty(c *gin.Context, ruleEngine typex.Rhilex) {
 		c.JSON(common.HTTP_OK, common.Error("Already Exists Property:"+IotPropertyVo.Name))
 		return
 	}
+
 	err2 := service.InsertIotSchemaProperty(model.MIotProperty{
 		SchemaId:    IotPropertyVo.SchemaId,
 		UUID:        utils.MakeUUID("PROPER"),

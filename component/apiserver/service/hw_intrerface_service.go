@@ -19,6 +19,7 @@ import (
 	"encoding/json"
 
 	"github.com/hootrhino/rhilex/component/apiserver/model"
+	"github.com/hootrhino/rhilex/component/hwportmanager"
 	"github.com/hootrhino/rhilex/component/interdb"
 	"github.com/hootrhino/rhilex/typex"
 	"github.com/hootrhino/rhilex/utils"
@@ -91,6 +92,99 @@ func GetHwPortConfig(uuid string) (model.MHwPort, error) {
 
 /*
 *
+* 扫描
+*
+ */
+func ReScanHwPortConfig() error {
+	ClearNullPort()
+	for _, portName := range GetOsPort() {
+		count := int64(-1)
+		interdb.DB().Model(model.MHwPort{}).Where("name=?", portName).Count(&count)
+		if count > 0 {
+			continue
+		}
+		NewPort := model.MHwPort{
+			UUID: portName,
+			Name: portName,
+			Type: "UART",
+			Alias: func() string {
+				return portName
+			}(),
+			Description: portName,
+		}
+		uartCfg := UartConfigDto{
+			Timeout:  3000,
+			Uart:     portName,
+			BaudRate: 9600,
+			DataBits: 8,
+			Parity:   "N",
+			StopBits: 1,
+		}
+		NewPort.Config = uartCfg.JsonString()
+		err1 := interdb.DB().Model(NewPort).
+			Where("name", portName).
+			FirstOrCreate(&NewPort).Error
+		if err1 != nil {
+			return err1
+		}
+		hwportmanager.SetHwPort(hwportmanager.SystemHwPort{
+			UUID: portName,
+			Name: portName,
+			Type: "UART",
+			Alias: func() string {
+				return portName
+			}(),
+			Config: hwportmanager.UartConfig{
+				Timeout:  3000,
+				Uart:     portName,
+				BaudRate: 9600,
+				DataBits: 8,
+				Parity:   "N",
+				StopBits: 1,
+			},
+			Description: portName,
+		})
+	}
+	return nil
+}
+
+/*
+*
+* 清除内存里面没用的串口
+*
+ */
+func ClearNullPort() {
+	DbPorts, _ := AllHwPort()
+	OsPorts := GetOsPort()
+	TotalPort := []string{}
+	for _, DbPort := range DbPorts {
+		TotalPort = append(TotalPort, DbPort.Name)
+	}
+	// 清除缓存里面的数据
+	for _, portName := range complement(TotalPort, OsPorts) {
+		hwportmanager.RemovePort(portName)
+		interdb.DB().Model(model.MHwPort{}).Where("name=?", portName).Delete(model.MHwPort{})
+	}
+}
+
+// R = A U B
+// 遍历a，找出不在b中的元素
+func complement(a, b []string) []string {
+	bMap := make(map[interface{}]bool)
+	for _, item := range b {
+		bMap[item] = true
+	}
+	var result []string
+	for _, item := range a {
+		if _, found := bMap[item]; !found {
+			result = append(result, item)
+		}
+	}
+	return result
+}
+
+/*
+*
 * 重置
 *
  */
@@ -117,9 +211,7 @@ func ResetHwPortConfig() error {
 *
  */
 func InitHwPortConfig() error {
-
 	for _, portName := range GetOsPort() {
-
 		Port := model.MHwPort{
 			UUID: portName,
 			Name: portName,
@@ -146,7 +238,6 @@ func InitHwPortConfig() error {
 			return err1
 		}
 	}
-
 	return nil
 }
 

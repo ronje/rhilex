@@ -77,16 +77,15 @@ func (iface *EtcNetworkConfig) GenEtcConfig() string {
 *
  */
 func GetLinuxMacAddr(ifaceName string) (string, error) {
-	// 构建文件路径
 	filePath := filepath.Join("/sys/class/net", ifaceName, "address")
-
-	// 读取文件内容
 	content, err := os.ReadFile(filePath)
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("failed to read MAC address file for %s: %w", ifaceName, err)
 	}
-	if len(content) < 10 {
-		return "", fmt.Errorf("get mac address error:%s", ifaceName)
+	macAddr := strings.TrimSpace(string(content))
+	// A standard MAC address is 17 characters long (6 groups of 2 hexadecimal digits + 5 colons).
+	if len(macAddr) < 17 {
+		return "", fmt.Errorf("invalid MAC address length for %s: %s", ifaceName, macAddr)
 	}
-	return strings.ToUpper(string(content[:len(content)-1])), nil
+	return strings.ToUpper(macAddr), nil
 }

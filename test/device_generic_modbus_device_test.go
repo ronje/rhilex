@@ -5,7 +5,7 @@ import (
 
 	httpserver "github.com/hootrhino/rhilex/component/apiserver"
 	"github.com/hootrhino/rhilex/glogger"
-	mbserver "github.com/tbrandon/mbserver"
+	mbserver "github.com/hootrhino/gomodbus-server"
 
 	"testing"
 	"time"
@@ -26,7 +26,7 @@ func Test_Generic_modbus_device_tcp_mode(t *testing.T) {
 		glogger.GLogger.Fatal("Rule load failed:", err)
 		t.Fatal(err)
 	}
-	GMODBUS := typex.NewDevice(typex.GENERIC_MODBUS,
+	GMODBUS := typex.NewDevice(typex.GENERIC_MODBUS_MASTER,
 		"GENERIC_MODBUS", "GENERIC_MODBUS", map[string]interface{}{
 			"mode": "TCP",
 			// "mode":        "UART",

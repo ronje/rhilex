@@ -19,7 +19,6 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"os"
 	"sync"
 	"time"
 
@@ -56,35 +55,32 @@ func NewMx01BLE(R typex.Rhilex) transceivercom.TransceiverCommunicator {
 	}}
 }
 func (tc *Mx01BLE) Start(Config transceivercom.TransceiverConfig) error {
-	env := os.Getenv("BLESUPPORT")
-	if env == "MX01" {
-		glogger.GLogger.Info("MX01-BLE Init")
-		config := serial.Config{
-			Address:  Config.Address,
-			BaudRate: Config.BaudRate,
-			DataBits: Config.DataBits,
-			Parity:   Config.Parity,
-			StopBits: Config.StopBits,
-			Timeout:  time.Duration(tc.mainConfig.ComConfig.IOTimeout) * time.Millisecond,
-		}
-		serialPort, err := serial.Open(&config)
-		if err != nil {
-			return err
-		}
-		tc.mx01 = mx01.NewMX01("mx01", serialPort)
-		tc.mx01.Flush()
-		go func(io io.ReadWriteCloser) {
-			for {
-				N, Bytes := utils.ReadInLeastTimeout(context.Background(), io,
-					time.Duration(tc.mainConfig.ComConfig.ATTimeout)*time.Millisecond)
-				if N > 0 {
-					glogger.GLogger.Debug("MX01-BLE Read Data: ", Bytes[:N])
-				}
-			}
-
-		}(serialPort)
-		glogger.GLogger.Info("MX01-BLE Started")
+	glogger.GLogger.Info("MX01-BLE Init")
+	config := serial.Config{
+		Address:  Config.Address,
+		BaudRate: Config.BaudRate,
+		DataBits: Config.DataBits,
+		Parity:   Config.Parity,
+		StopBits: Config.StopBits,
+		Timeout:  time.Duration(tc.mainConfig.ComConfig.IOTimeout) * time.Millisecond,
 	}
+	serialPort, err := serial.Open(&config)
+	if err != nil {
+		return err
+	}
+	tc.mx01 = mx01.NewMX01("mx01", serialPort)
+	tc.mx01.Flush()
+	go func(io io.ReadWriteCloser) {
+		for {
+			N, Bytes := utils.ReadInLeastTimeout(context.Background(), io,
+				time.Duration(tc.mainConfig.ComConfig.ATTimeout)*time.Millisecond)
+			if N > 0 {
+				glogger.GLogger.Debug("MX01-BLE Read Data: ", Bytes[:N])
+			}
+		}
+
+	}(serialPort)
+	glogger.GLogger.Info("MX01-BLE Started")
 	return nil
 }
 func (tc *Mx01BLE) Ctrl(topic, args []byte, timeout time.Duration) ([]byte, error) {
@@ -95,15 +91,15 @@ func (tc *Mx01BLE) Info() transceivercom.CommunicatorInfo {
 		Name:     "mx01",
 		Model:    "MX01-BLE",
 		Type:     transceivercom.BLE,
-		Vendor:   "SHENZHEN-MIAOXIANG-technology",
+		Vendor:   "RHILEX-TECH",
 		Mac:      "00:00:00:00:00:00:00:00",
-		Firmware: "0.0.0",
+		Firmware: "v0.0.0",
 	}
 }
 func (tc *Mx01BLE) Status() transceivercom.TransceiverStatus {
 	return transceivercom.TransceiverStatus{
 		Code:  transceivercom.TC_ERROR,
-		Error: fmt.Errorf("NOT SUPPORT"),
+		Error: fmt.Errorf("Invalid Device"),
 	}
 }
 func (tc *Mx01BLE) Stop() {

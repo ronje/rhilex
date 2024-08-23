@@ -15,7 +15,8 @@ const (
 	COAP                  InEndType = "COAP"
 	GRPC                  InEndType = "GRPC"
 	NATS_SERVER           InEndType = "NATS_SERVER"
-	RHILEX_UDP            InEndType = "RHILEX_UDP"
+	UDP_SERVER            InEndType = "UDP_SERVER"
+	TCP_SERVER            InEndType = "TCP_SERVER"
 	GENERIC_IOT_HUB       InEndType = "GENERIC_IOT_HUB"
 	INTERNAL_EVENT        InEndType = "INTERNAL_EVENT"        // 内部消息
 	GENERIC_MQTT          InEndType = "GENERIC_MQTT"          // 通用 MQTT

@@ -19,7 +19,7 @@ import (
 )
 
 const (
-	SECRETKEY = "you-can-not-get-this-secret"
+	__SECRET_KEY = "you-can-not-get-this-secret"
 )
 
 // All Users
@@ -90,8 +90,8 @@ func UpdateUser(c *gin.Context, ruleEngine typex.Rhilex) {
 		Description string `json:"description"`
 	}
 	form := Form{}
-	if err := c.ShouldBindJSON(&form); err != nil {
-		c.JSON(common.HTTP_OK, common.Error400(err))
+	if err1 := c.ShouldBindJSON(&form); err1 != nil {
+		c.JSON(common.HTTP_OK, common.Error400(err1))
 		return
 	}
 	if !isLengthBetween8And16(form.Username) {
@@ -102,13 +102,18 @@ func UpdateUser(c *gin.Context, ruleEngine typex.Rhilex) {
 		c.JSON(common.HTTP_OK, common.Error("Password Length must Between 8 ~ 16"))
 		return
 	}
-
-	if err := service.UpdateMUser(&model.MUser{
+	token := c.GetHeader("Authorization")
+	claims, err := parseToken(token)
+	if err != nil {
+		c.JSON(common.HTTP_OK, common.Error400(err))
+		return
+	}
+	if err2 := service.UpdateMUser(claims.Username, &model.MUser{
 		Username:    form.Username,
 		Password:    md5Hash(form.Password),
 		Description: form.Description,
-	}); err != nil {
-		c.JSON(common.HTTP_OK, common.Error400(err))
+	}); err2 != nil {
+		c.JSON(common.HTTP_OK, common.Error400(err2))
 		return
 	}
 	c.JSON(common.HTTP_OK, common.Ok())
@@ -139,7 +144,8 @@ func Login(c *gin.Context, ruleEngine typex.Rhilex) {
 		return
 	}
 	Ts := uint64(time.Now().UnixMilli())
-	if _, err := service.Login(u.Username, md5Hash(u.Password)); err != nil {
+	MUser, errLogin := service.Login(u.Username, md5Hash(u.Password))
+	if errLogin != nil {
 		glogger.GLogger.Warn("User Login Failed:", clientIP)
 		internotify.Push(internotify.BaseEvent{
 			Type:    `WARNING`,
@@ -149,10 +155,11 @@ func Login(c *gin.Context, ruleEngine typex.Rhilex) {
 			Info: fmt.Sprintf(`User Login Failed, Username: %s, RemoteAddr: %s`,
 				u.Username, clientIP),
 		})
-		c.JSON(common.HTTP_OK, common.Error400(err))
+		c.JSON(common.HTTP_OK, common.Error400(errLogin))
 		return
 	}
-	if token, err := generateToken(u.Username); err != nil {
+	token, err1 := generateToken(u.Username)
+	if err1 != nil {
 		glogger.GLogger.Warn("User Login Failed:", clientIP)
 		internotify.Push(internotify.BaseEvent{
 			Type:    `WARNING`, // INFO | ERROR | WARNING
@@ -162,21 +169,25 @@ func Login(c *gin.Context, ruleEngine typex.Rhilex) {
 			Info: fmt.Sprintf(`User Login Failed, Username: %s, RemoteAddr: %s`,
 				u.Username, clientIP),
 		})
-
-		c.JSON(common.HTTP_OK, common.Error400(err))
+		c.JSON(common.HTTP_OK, common.Error400(err1))
 		return
-	} else {
-		glogger.GLogger.Info("User Login Success:", clientIP)
-		internotify.Push(internotify.BaseEvent{
-			Type:    `INFO`, // INFO | ERROR | WARNING
-			Event:   `event.system.user.login.success`,
-			Ts:      Ts,
-			Summary: "User Login Success",
-			Info: fmt.Sprintf(`User Login Success, Username: %s, RemoteAddr: %s`,
-				u.Username, clientIP),
-		})
-		c.JSON(common.HTTP_OK, common.OkWithData(token))
 	}
+	glogger.GLogger.Info("User Login Success:", clientIP)
+	internotify.Push(internotify.BaseEvent{
+		Type:    `INFO`, // INFO | ERROR | WARNING
+		Event:   `event.system.user.login.success`,
+		Ts:      Ts,
+		Summary: "User Login Success",
+		Info: fmt.Sprintf(`User Login Success, Username: %s, RemoteAddr: %s`,
+			u.Username, clientIP),
+	})
+	c.JSON(common.HTTP_OK, common.OkWithData(map[string]interface{}{
+		"username":    MUser.Username,
+		"role":        MUser.Role,
+		"description": MUser.Description,
+		"token":       token,
+	}))
+
 }
 
 /*
@@ -185,25 +196,6 @@ func Login(c *gin.Context, ruleEngine typex.Rhilex) {
 *
  */
 func LogOut(c *gin.Context, ruleEngine typex.Rhilex) {
-
-	type _user struct {
-		Username string `json:"username" binding:"required"`
-		Password string `json:"password" binding:"required"`
-	}
-	clientIP := c.ClientIP()
-	var u _user
-	if err := c.BindJSON(&u); err != nil {
-		c.JSON(common.HTTP_OK, common.Error400(err))
-		return
-	}
-	internotify.Push(internotify.BaseEvent{
-		Type:    `INFO`, // INFO | ERROR | WARNING
-		Event:   `event.system.user.logout.success`,
-		Ts:      uint64(time.Now().UnixMilli()),
-		Summary: "User Logout Success",
-		Info: fmt.Sprintf(`User Logout Success, Username: %s, RemoteAddr: %s`,
-			u.Username, clientIP),
-	})
 	c.JSON(common.HTTP_OK, common.Ok())
 }
 
@@ -213,7 +205,7 @@ func LogOut(c *gin.Context, ruleEngine typex.Rhilex) {
 *
  */
 func Info(c *gin.Context, ruleEngine typex.Rhilex) {
-	token := c.GetHeader("token")
+	token := c.GetHeader("Authorization")
 	if claims, err := parseToken(token); err != nil {
 		c.JSON(common.HTTP_OK, common.Error400(err))
 		return
@@ -245,7 +237,7 @@ func generateToken(username string) (string, error) {
 			Issuer:    username,
 		},
 	}
-	token, err := jwt.NewWithClaims(jwt.SigningMethodHS256, claims).SignedString([]byte(SECRETKEY))
+	token, err := jwt.NewWithClaims(jwt.SigningMethodHS256, claims).SignedString([]byte(__SECRET_KEY))
 	return token, err
 }
 
@@ -264,7 +256,7 @@ func parseToken(tokenString string) (*JwtClaims, error) {
 			if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 				return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
 			}
-			return []byte(SECRETKEY), nil
+			return []byte(__SECRET_KEY), nil
 		})
 	if claims, ok := token.Claims.(*JwtClaims); ok && token.Valid {
 		return claims, nil

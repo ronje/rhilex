@@ -62,13 +62,13 @@ type IoTSchema struct {
 
 // 规则
 type IoTPropertyRule struct {
-	DefaultValue any       `json:"defaultValue"`         // 默认值: 0 false ''
-	Max          int       `json:"max,omitempty"`        // int|float|string: 最大值
-	Min          int       `json:"min,omitempty"`        // int|float|string: 最小值
-	TrueLabel    string    `json:"trueLabel,omitempty"`  // bool: 真值label
-	FalseLabel   string    `json:"falseLabel,omitempty"` // bool: 假值label
-	Round        int       `json:"round,omitempty"`      // float: 小数点位
-	Validator    Validator `json:"-"`
+	DefaultValue any       `json:"defaultValue"` // 默认值: 0 false ''
+	Max          int       `json:"max"`          // int|float|string: 最大值
+	Min          int       `json:"min"`          // int|float|string: 最小值
+	TrueLabel    string    `json:"trueLabel"`    // bool: 真值label
+	FalseLabel   string    `json:"falseLabel"`   // bool: 假值label
+	Round        int       `json:"round"`        // float: 小数点位
+	validator    Validator `json:"-"`
 }
 
 // 物模型属性
@@ -85,8 +85,8 @@ type IoTProperty struct {
 }
 
 // 验证语法
-func CovertAndValidate(I *IoTProperty) error {
-	// "INTEGER", "BOOL", "FLOAT", "STRING", "GEO"
+// "INTEGER", "BOOL", "FLOAT", "STRING", "GEO"
+func (I *IoTProperty) CovertAndValidate() error {
 	switch I.Type {
 	case "INTEGER":
 		I.StringValue()
@@ -101,7 +101,7 @@ func CovertAndValidate(I *IoTProperty) error {
 	default:
 		return fmt.Errorf("Unsupported type:%v", I.Type)
 	}
-	return I.Rule.Validator.Validate(I.Value)
+	return I.Rule.validator.Validate(I.Value)
 }
 func (I *IoTProperty) StringValue() string {
 	if I == nil {
@@ -110,7 +110,7 @@ func (I *IoTProperty) StringValue() string {
 	switch I.Type {
 	case IoTPropertyTypeString:
 		{
-			I.Rule.Validator = StringRule{
+			I.Rule.validator = StringRule{
 				MinLength:    I.Rule.Min,
 				MaxLength:    I.Rule.Max,
 				DefaultValue: "",
@@ -127,7 +127,7 @@ func (I *IoTProperty) IntValue() int {
 	switch I.Type {
 	case IoTPropertyTypeInteger:
 		{
-			I.Rule.Validator = IntegerRule{
+			I.Rule.validator = IntegerRule{
 				Min:          I.Rule.Min,
 				Max:          I.Rule.Max,
 				DefaultValue: 0,
@@ -144,7 +144,7 @@ func (I *IoTProperty) FloatValue() float64 {
 	switch I.Type {
 	case IoTPropertyTypeFloat:
 		{
-			I.Rule.Validator = FloatRule{
+			I.Rule.validator = FloatRule{
 				Min:          I.Rule.Min,
 				Max:          I.Rule.Max,
 				DefaultValue: 0.00,
@@ -161,7 +161,7 @@ func (I *IoTProperty) BoolValue() bool {
 	switch I.Type {
 	case IoTPropertyTypeBool:
 		{
-			I.Rule.Validator = BoolRule{
+			I.Rule.validator = BoolRule{
 				TrueLabel:    I.Rule.TrueLabel,
 				FalseLabel:   I.Rule.FalseLabel,
 				DefaultValue: false,
@@ -178,7 +178,7 @@ func (I *IoTProperty) GeoValue() IoTPropertyGeo {
 	switch I.Type {
 	case IoTPropertyTypeGeo:
 		{
-			I.Rule.Validator = GeoRule{
+			I.Rule.validator = GeoRule{
 				DefaultValue: "0,0",
 			}
 			return I.Value.(IoTPropertyGeo)
@@ -192,8 +192,85 @@ func (I *IoTProperty) GeoValue() IoTPropertyGeo {
 * 验证物模型本身是否合法, 包含了 IoTPropertyType，Rule 的对应关系
 *
  */
+func (I *IoTProperty) HoldValidator() error {
+	switch I.Type {
+	case "INTEGER":
+		Rule := IntegerRule{
+			Min: I.Rule.Min,
+			Max: I.Rule.Max,
+		}
+		switch T := I.Rule.DefaultValue.(type) {
+		case int:
+			Rule.DefaultValue = T
+		case int32:
+			Rule.DefaultValue = int(T)
+		case int64:
+			Rule.DefaultValue = int(T)
+		default:
+			Rule.DefaultValue = 0
+		}
+		I.Rule.validator = Rule
+		return nil
+	case "BOOL":
+		Rule := BoolRule{
+			TrueLabel:  I.Rule.TrueLabel,
+			FalseLabel: I.Rule.FalseLabel,
+		}
+		switch T := I.Rule.DefaultValue.(type) {
+		case bool:
+			Rule.DefaultValue = T
+		default:
+			Rule.DefaultValue = false
+		}
+		I.Rule.validator = Rule
+		return nil
+
+	case "FLOAT":
+		Rule := FloatRule{
+			Min:   I.Rule.Min,
+			Max:   I.Rule.Max,
+			Round: I.Rule.Round,
+		}
+		switch T := I.Rule.DefaultValue.(type) {
+		case float32:
+			Rule.DefaultValue = float64(T)
+		case float64:
+			Rule.DefaultValue = float64(T)
+		default:
+			Rule.DefaultValue = 0
+		}
+		I.Rule.validator = Rule
+		return nil
+
+	case "STRING":
+		Rule := StringRule{
+			MinLength: I.Rule.Min,
+			MaxLength: I.Rule.Max,
+		}
+		switch T := I.Rule.DefaultValue.(type) {
+		case string:
+			Rule.DefaultValue = T
+		default:
+			Rule.DefaultValue = ""
+		}
+		I.Rule.validator = Rule
+		return nil
+
+	case "GEO":
+		Rule := GeoRule{DefaultValue: "0,0"}
+		I.Rule.validator = Rule
+		return nil
+	}
+	return fmt.Errorf("Unsupported Validator type:%v", I.Type)
+}
+
+/*
+*
+* 验证规则
+*
+ */
 func (I IoTProperty) ValidateRule() error {
-	return I.Rule.Validator.Validate(I.Value)
+	return I.Rule.validator.Validate(I.Value)
 }
 
 /*
@@ -226,7 +303,7 @@ func (S StringRule) Validate(Value interface{}) error {
 			return nil
 		}
 	}
-	return fmt.Errorf("Invalid Value type: %v, Expect UTF8 string", Value)
+	return fmt.Errorf("Invalid String type: %v, Expect UTF8 string", Value)
 }
 
 /*
@@ -251,7 +328,7 @@ func (V IntegerRule) Validate(Value interface{}) error {
 			return nil
 		}
 	}
-	return fmt.Errorf("Invalid Int Value:%v", Value)
+	return fmt.Errorf("Invalid Int type:%v", Value)
 }
 
 /*
@@ -277,7 +354,7 @@ func (V FloatRule) Validate(Value interface{}) error {
 			return nil
 		}
 	}
-	return fmt.Errorf("Invalid Float Value:%v", Value)
+	return fmt.Errorf("Invalid Float type:%v", Value)
 }
 
 /*
@@ -296,7 +373,7 @@ func (V BoolRule) Validate(Value interface{}) error {
 	case bool:
 		return nil
 	}
-	return fmt.Errorf("Invalid Bool Value:%v", Value)
+	return fmt.Errorf("Invalid Bool type:%v", Value)
 }
 
 /*
@@ -315,7 +392,7 @@ func (V GeoRule) Validate(Value interface{}) error {
 			return nil
 		}
 	}
-	return fmt.Errorf("Invalid Coordinate Value:%v", Value)
+	return fmt.Errorf("Invalid Coordinate type:%v", Value)
 }
 
 // isValidGEO 验证字符串是否是有效的地理坐标

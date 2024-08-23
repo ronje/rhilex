@@ -18,7 +18,9 @@ type Validator interface {
 func GetByType(protocol string) (Validator, error) {
 	dt := typex.DeviceType(protocol)
 	switch dt {
-	case typex.GENERIC_MODBUS:
+	case typex.GENERIC_MODBUS_MASTER:
+		return modbus.ModbusValidator{}, nil
+	case typex.GENERIC_MODBUS_SLAVER:
 		return modbus.ModbusValidator{}, nil
 	default:
 		return nil, errors.New("valid protocol data point validator not found")

@@ -125,7 +125,7 @@ func (u *TransceiverForwarder) startInternalEventQueue(ctxU context.Context) {
 				if !strings.Contains(Event.Event, u.mainConfig.ComName) {
 					continue
 				}
-				glogger.GLogger.Debug(ID, " Received Data:", Event.String())
+				// glogger.GLogger.Debug(ID, " Received Data:", Event.String())
 				switch T := Event.Info.(type) {
 				case []byte:
 					comData := RuleData{

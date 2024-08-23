@@ -6,7 +6,7 @@ import (
 )
 
 // GetWindowsMACAddress 获取网卡MAC
-func GetWindowsMACAddress() (string, error) {
+func GetWindowsFirstMacAddress() (string, error) {
 	cmd := exec.Command("powershell.exe", "-Command",
 		`wmic nicconfig where "Index=1" get MACAddress`)
 	output, err := cmd.Output()

@@ -10,7 +10,7 @@ import (
 	"github.com/hootrhino/rhilex/component/apiserver/server"
 	"github.com/hootrhino/rhilex/component/apiserver/service"
 	"github.com/hootrhino/rhilex/component/interqueue"
-	"github.com/hootrhino/rhilex/component/ruleengine"
+	rule_engine "github.com/hootrhino/rhilex/component/ruleengine"
 	transceivercom "github.com/hootrhino/rhilex/component/transceivercom/transceiver"
 	"github.com/hootrhino/rhilex/glogger"
 
@@ -122,7 +122,7 @@ func CreateRule(c *gin.Context, ruleEngine typex.Rhilex) {
 	// tmpRule 是一个一次性的临时rule，用来验证规则，这么做主要是为了防止真实Lua Vm 被污染
 	tmpRule := typex.NewRule(nil, "_", "_", "_", "_", "_",
 		__default_success, form.Actions, __default_failed)
-	if err := ruleengine.VerifyLuaSyntax(tmpRule); err != nil {
+	if err := rule_engine.VerifyLuaSyntax(tmpRule); err != nil {
 		c.JSON(common.HTTP_OK, common.Error400(err))
 		return
 	}
@@ -306,7 +306,7 @@ func UpdateRule(c *gin.Context, ruleEngine typex.Rhilex) {
 	// tmpRule 是一个一次性的临时rule，用来验证规则，这么做主要是为了防止真实Lua Vm 被污染
 	tmpRule := typex.NewRule(nil, "_", "_", "_", "_", "_",
 		__default_success, form.Actions, __default_failed)
-	if err := ruleengine.VerifyLuaSyntax(tmpRule); err != nil {
+	if err := rule_engine.VerifyLuaSyntax(tmpRule); err != nil {
 		c.JSON(common.HTTP_OK, common.Error400(err))
 		return
 	}
@@ -550,7 +550,7 @@ func ValidateLuaSyntax(c *gin.Context, ruleEngine typex.Rhilex) {
 		__default_success,
 		form.Actions,
 		__default_failed)
-	if err := ruleengine.VerifyLuaSyntax(tmpRule); err != nil {
+	if err := rule_engine.VerifyLuaSyntax(tmpRule); err != nil {
 		c.JSON(common.HTTP_OK, common.Error400(err))
 	} else {
 		c.JSON(common.HTTP_OK, common.Ok())
@@ -560,12 +560,13 @@ func ValidateLuaSyntax(c *gin.Context, ruleEngine typex.Rhilex) {
 
 /*
 *
-* 测试脚本执行效果
+* 测试规则脚本
 *
  */
-func TestSourceCallback(c *gin.Context, ruleEngine typex.Rhilex) {
+func TestRulesCallback(c *gin.Context, ruleEngine typex.Rhilex) {
 	type Form struct {
 		UUID     string `json:"uuid"`
+		Type     string `json:"type"`
 		TestData string `json:"testData"`
 	}
 	form := Form{}
@@ -573,75 +574,35 @@ func TestSourceCallback(c *gin.Context, ruleEngine typex.Rhilex) {
 		c.JSON(common.HTTP_OK, common.Error400(err))
 		return
 	}
-
-	inend := ruleEngine.GetInEnd(form.UUID)
-	if inend == nil {
-		c.JSON(common.HTTP_OK, common.Error(fmt.Sprintf("'InEnd' not exists: %v", form.UUID)))
+	if form.Type == "DEVICE" {
+		device := ruleEngine.GetDevice(form.UUID)
+		if device == nil {
+			c.JSON(common.HTTP_OK, common.Error(fmt.Sprintf("'Device' not exists: %v", form.UUID)))
+			return
+		}
+		err1 := interqueue.DefaultXQueue.PushDeviceQueue(device, "::::TEST_RULE::::"+form.TestData)
+		if err1 != nil {
+			c.JSON(common.HTTP_OK, common.Error400(err1))
+			return
+		}
+		c.JSON(common.HTTP_OK, common.Ok())
 		return
 	}
-	err1 := interqueue.DefaultDataCacheQueue.PushInQueue(inend, "::::TEST_RULE::::"+form.TestData)
-	if err1 != nil {
-		c.JSON(common.HTTP_OK, common.Error400(err1))
+	if form.Type == "INEND" {
+		inend := ruleEngine.GetInEnd(form.UUID)
+		if inend == nil {
+			c.JSON(common.HTTP_OK, common.Error(fmt.Sprintf("'InEnd' not exists: %v", form.UUID)))
+			return
+		}
+		err1 := interqueue.DefaultXQueue.PushInQueue(inend, "::::TEST_RULE::::"+form.TestData)
+		if err1 != nil {
+			c.JSON(common.HTTP_OK, common.Error400(err1))
+			return
+		}
+		c.JSON(common.HTTP_OK, common.Ok())
 		return
 	}
-	c.JSON(common.HTTP_OK, common.Ok())
-}
-
-/*
-*
-* 测试 OutEnd 的结果
-*
- */
-func TestOutEndCallback(c *gin.Context, ruleEngine typex.Rhilex) {
-	type Form struct {
-		UUID     string `json:"uuid"`
-		TestData string `json:"testData"`
-	}
-	form := Form{}
-	if err := c.BindJSON(&form); err != nil {
-		c.JSON(common.HTTP_OK, common.Error400(err))
-		return
-	}
-
-	outend := ruleEngine.GetOutEnd(form.UUID)
-	if outend == nil {
-		c.JSON(common.HTTP_OK, common.Error(fmt.Sprintf("'OutEnd' not exists: %v", form.UUID)))
-		return
-	}
-	err1 := interqueue.DefaultDataCacheQueue.PushOutQueue(outend, "::::TEST_RULE::::"+form.TestData)
-	if err1 != nil {
-		c.JSON(common.HTTP_OK, common.Error400(err1))
-		return
-	}
-	c.JSON(common.HTTP_OK, common.Ok())
-}
-
-/*
-*
-* Device
-*
- */
-func TestDeviceCallback(c *gin.Context, ruleEngine typex.Rhilex) {
-	type Form struct {
-		UUID     string `json:"uuid"`
-		TestData string `json:"testData"`
-	}
-	form := Form{}
-	if err := c.BindJSON(&form); err != nil {
-		c.JSON(common.HTTP_OK, common.Error400(err))
-		return
-	}
-	device := ruleEngine.GetDevice(form.UUID)
-	if device == nil {
-		c.JSON(common.HTTP_OK, common.Error(fmt.Sprintf("'Device' not exists: %v", form.UUID)))
-		return
-	}
-	err1 := interqueue.DefaultDataCacheQueue.PushDeviceQueue(device, "::::TEST_RULE::::"+form.TestData)
-	if err1 != nil {
-		c.JSON(common.HTTP_OK, common.Error400(err1))
-		return
-	}
-	c.JSON(common.HTTP_OK, common.Ok())
+	c.JSON(common.HTTP_OK, common.Error("Unsupported Test Type:"+form.Type))
 }
 
 /*

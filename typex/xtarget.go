@@ -13,29 +13,16 @@ func (i TargetType) String() string {
 *
  */
 const (
-	MONGO_SINGLE  TargetType = "MONGO_SINGLE"
-	MONGO_CLUSTER TargetType = "MONGO_CLUSTER"
-	REDIS_SINGLE  TargetType = "REDIS_SINGLE"
-	FLINK_SINGLE  TargetType = "FLINK_SINGLE"
-	MQTT_TARGET   TargetType = "MQTT"
-	MYSQL_TARGET  TargetType = "MYSQL"
-	PGSQL_TARGET  TargetType = "PGSQL"
-	NATS_TARGET   TargetType = "NATS"
-	HTTP_TARGET   TargetType = "HTTP"
-	// TDENGINE
-	TDENGINE_TARGET TargetType = "TDENGINE"
-	// GRPC
-	GRPC_CODEC_TARGET TargetType = "GRPC_CODEC_TARGET"
-	// UDP Server
-	UDP_TARGET TargetType = "UDP_TARGET"
-	// SQLITE
-	SQLITE_TARGET TargetType = "SQLITE_TARGET"
-	// GENERIC_UART_TARGET DTU
-	GENERIC_UART_TARGET TargetType = "GENERIC_UART_TARGET"
-	// TCP Transport
-	TCP_TRANSPORT TargetType = "TCP_TRANSPORT"
-	// Chirp stack UDP
-	SEMTECH_UDP_FORWARDER TargetType = "SEMTECH_UDP_FORWARDER"
+	MONGO_SINGLE          TargetType = "MONGO_SINGLE"          // To MongoDB
+	MQTT_TARGET           TargetType = "MQTT"                  // To Mqtt Server
+	NATS_TARGET           TargetType = "NATS"                  // To Nats.io
+	HTTP_TARGET           TargetType = "HTTP"                  // To Http Target
+	TDENGINE_TARGET       TargetType = "TDENGINE"              // To TDENGINE
+	GRPC_CODEC_TARGET     TargetType = "GRPC_CODEC_TARGET"     // To GRPC Target
+	UDP_TARGET            TargetType = "UDP_TARGET"            // To UDP Server
+	GENERIC_UART_TARGET   TargetType = "GENERIC_UART_TARGET"   // To GENERIC_UART_TARGET DTU
+	TCP_TRANSPORT         TargetType = "TCP_TRANSPORT"         // To TCP Transport
+	SEMTECH_UDP_FORWARDER TargetType = "SEMTECH_UDP_FORWARDER" // To Chirp stack UDP
 )
 
 // Stream from source and to target

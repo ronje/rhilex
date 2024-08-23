@@ -17,26 +17,28 @@ import (
 	"github.com/hootrhino/rhilex/glogger"
 	"github.com/hootrhino/rhilex/ossupport"
 	"github.com/hootrhino/rhilex/typex"
+	"github.com/hootrhino/rhilex/utils"
 	"gopkg.in/ini.v1"
 )
 
-// 00001 & rhino & hoot & FF:FF:FF:FF:FF:FF & 0 & 0
-func ParseAuthInfo(info string) (typex.LocalLicense, error) {
-	LocalLicense := typex.LocalLicense{}
+// 00001 & rhino & hoot & eth0 & FF:FF:FF:FF:FF:FF & 0 & 0
+func ParseAuthInfo(info string) (utils.LocalLicense, error) {
+	LocalLicense := utils.LocalLicense{}
 	ss := strings.Split(info, "&")
-	if len(ss) == 6 {
-		BeginAuthorize, err1 := strconv.ParseInt(ss[4], 10, 64)
+	if len(ss) == 7 {
+		BeginAuthorize, err1 := strconv.ParseInt(ss[5], 10, 64)
 		if err1 != nil {
 			return LocalLicense, err1
 		}
-		EndAuthorize, err2 := strconv.ParseInt(ss[5], 10, 64)
+		EndAuthorize, err2 := strconv.ParseInt(ss[6], 10, 64)
 		if err2 != nil {
 			return LocalLicense, err2
 		}
 		LocalLicense.DeviceID = ss[0]
 		LocalLicense.AuthorizeAdmin = ss[1]
 		LocalLicense.AuthorizePassword = ss[2]
-		LocalLicense.MAC = ss[3]
+		LocalLicense.Iface = ss[3]
+		LocalLicense.MAC = ss[4]
 		LocalLicense.BeginAuthorize = BeginAuthorize
 		LocalLicense.EndAuthorize = EndAuthorize
 		return LocalLicense, nil
@@ -57,29 +59,34 @@ func NewLicenseManager(r typex.Rhilex) *LicenseManager {
 	return &LicenseManager{}
 }
 func validateLicense(key_path, license_path string) error {
-	errMsg := "License loading failed. Your License may not be compliant."
+	errMsg := "License loading failed."
 	licBytesB64, err := os.ReadFile(license_path)
 	if err != nil {
+		fmt.Println(errMsg)
 		glogger.GLogger.Fatal(errMsg)
 		os.Exit(0)
 	}
 	keyBytes, err := os.ReadFile(key_path)
 	if err != nil {
+		fmt.Println(errMsg)
 		glogger.GLogger.Fatal(errMsg)
 		os.Exit(0)
 	}
 	licBytes, err := base64.StdEncoding.DecodeString(string(licBytesB64))
 	if err != nil {
+		fmt.Println(errMsg)
 		glogger.GLogger.Fatal(errMsg)
 		os.Exit(0)
 	}
 	adminSalt, err := RSADecrypt(licBytes, keyBytes)
 	if err != nil {
+		fmt.Println(errMsg)
 		glogger.GLogger.Fatal(errMsg)
 		os.Exit(0)
 	}
 	LocalLicense, err := ParseAuthInfo(string(adminSalt))
 	if err != nil {
+		fmt.Println(errMsg)
 		glogger.GLogger.Fatal(errMsg)
 		os.Exit(0)
 	}
@@ -90,6 +97,7 @@ func validateLicense(key_path, license_path string) error {
 	T2s := T2.Format("2006-01-02 15:04:05")
 	//
 	if !LocalLicense.ValidateTime() {
+		fmt.Printf("License has expired, Valid from %s to %s\n", T1s, T2s)
 		glogger.GLogger.Fatalf("License has expired, Valid from %s to %s", T1s, T2s)
 		os.Exit(0)
 	}
@@ -97,16 +105,19 @@ func validateLicense(key_path, license_path string) error {
 	localMac := ""
 	var err3 error
 	if runtime.GOOS == "windows" {
-		localMac, err3 = ossupport.GetWindowsMACAddress()
+		localMac, err3 = ossupport.GetWindowsFirstMacAddress()
 	}
 	if runtime.GOOS == "linux" {
-		localMac, err3 = ossupport.GetLinuxMacAddr("eth0")
+		localMac, err3 = ossupport.GetLinuxMacAddr(LocalLicense.Iface)
 	}
 	if err3 != nil {
+		fmt.Println(errMsg)
+		fmt.Println(err3)
 		glogger.GLogger.Fatal(err3)
 		os.Exit(0)
 	}
 	if localMac != LocalLicense.MAC {
+		fmt.Println(errMsg)
 		glogger.GLogger.Debugf("Local Mac:%s; certificate Mac:%s", localMac, LocalLicense.MAC)
 		glogger.GLogger.Fatal("Local certificate and hardware information do not match.")
 		os.Exit(0)
@@ -122,14 +133,16 @@ func validateLicense(key_path, license_path string) error {
 	return nil
 }
 func (dm *LicenseManager) Init(section *ini.Section) error {
-	errMsg := "License loading failed. Your License may not be compliant."
+	errMsg := "License loading failed."
 	license_path, err1 := section.GetKey("license_path")
 	if err1 != nil {
+		fmt.Println(errMsg)
 		glogger.GLogger.Fatal(errMsg)
 		os.Exit(0)
 	}
 	key_path, err2 := section.GetKey("key_path")
 	if err2 != nil {
+		fmt.Println(errMsg)
 		glogger.GLogger.Fatal(errMsg)
 		os.Exit(0)
 	}

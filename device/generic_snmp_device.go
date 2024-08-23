@@ -25,10 +25,11 @@ type snmpOid struct {
 	Frequency *int   `json:"-"`     // 请求频率
 }
 type _SNMPCommonConfig struct {
-	AutoRequest *bool `json:"autoRequest" validate:"required"` // 自动请求
-	EnableGroup *bool `json:"enableGroup" validate:"required"` // 并发请求, 注意: 这个开关可能会把目标设备搞挂了, 根据设备性能量力而行
-	Timeout     *int  `json:"timeout" validate:"required"`     // 请求超时
-	Frequency   *int  `json:"frequency"`                       // 请求频率
+	AutoRequest  *bool `json:"autoRequest" validate:"required"`  // 自动请求
+	BatchRequest *bool `json:"batchRequest" validate:"required"` // 批量采集
+	EnableGroup  *bool `json:"enableGroup" validate:"required"`  // 并发请求, 注意: 这个开关可能会把目标设备搞挂了, 根据设备性能量力而行
+	Timeout      *int  `json:"timeout" validate:"required"`      // 请求超时
+	Frequency    *int  `json:"frequency" validate:"required"`    // 请求频率
 }
 
 type _GSNMPConfig struct {
@@ -75,10 +76,24 @@ func NewGenericSnmpDevice(e typex.Rhilex) typex.XDevice {
 				a := 5000
 				return &a
 			}(), // ms
+			BatchRequest: func() *bool {
+				b := false
+				return &b
+			}(),
 		},
 	}
 	sd.snmpOids = map[string]snmpOid{}
 	return sd
+}
+
+// 数据模型
+type SnmpSchemaProperty struct {
+	UUID          string
+	Status        int    // 0 正常；1 错误，填充 ErrMsg
+	ErrMsg        string // 错误信息
+	LastFetchTime uint64 // 最后更新时间
+	Name          string // 变量关联名
+	Value         any    // 运行时值
 }
 
 //  初始化
@@ -113,17 +128,17 @@ func (sd *genericSnmpDevice) Init(devId string, configMap map[string]interface{}
 	}
 	if sd.mainConfig.SchemaId != "" {
 		intercache.RegisterSlot(sd.PointId)
-		var SchemaProperties []SchemaProperty
+		var SchemaProperties []SnmpSchemaProperty
 		dataSchemaLoadError := interdb.DB().Table("m_iot_properties").
 			Where("schema_id=?", sd.mainConfig.SchemaId).Find(&SchemaProperties).Error
 		if dataSchemaLoadError != nil {
 			return dataSchemaLoadError
 		}
 		LastFetchTime := uint64(time.Now().UnixMilli())
-		for _, MSchemaProperty := range SchemaProperties {
-			intercache.SetValue(sd.PointId, MSchemaProperty.Name,
+		for _, MSnmpSchemaProperty := range SchemaProperties {
+			intercache.SetValue(sd.PointId, MSnmpSchemaProperty.Name,
 				intercache.CacheValue{
-					UUID:          MSchemaProperty.UUID,
+					UUID:          MSnmpSchemaProperty.UUID,
 					LastFetchTime: LastFetchTime,
 					Value:         "-",
 				})
@@ -169,13 +184,9 @@ func (sd *genericSnmpDevice) Start(cctx typex.CCTX) error {
 		for {
 			select {
 			case <-sd.Ctx.Done():
-				{
-					sd.status = typex.DEV_DOWN
-					return
-				}
-			default:
-				{
-				}
+				return
+			case <-time.After(4 * time.Millisecond):
+				// Continue loop
 			}
 			snmpOids, err := sd.readData()
 			if err != nil {
@@ -185,8 +196,21 @@ func (sd *genericSnmpDevice) Start(cctx typex.CCTX) error {
 			if len(snmpOids) < 1 {
 				goto END
 			}
-			for _, snmpOid := range snmpOids {
-				if bytes, err := json.Marshal(snmpOid); err != nil {
+			if len(snmpOids) < 1 {
+				time.Sleep(50 * time.Second)
+				continue
+			}
+			if !*sd.mainConfig.CommonConfig.BatchRequest {
+				for _, snmpOid := range snmpOids {
+					if bytes, err := json.Marshal(snmpOid); err != nil {
+						glogger.GLogger.Error(err)
+					} else {
+						glogger.GLogger.Debug(string(bytes))
+						sd.RuleEngine.WorkDevice(sd.Details(), string(bytes))
+					}
+				}
+			} else {
+				if bytes, err := json.Marshal(snmpOids); err != nil {
 					glogger.GLogger.Error(err)
 				} else {
 					glogger.GLogger.Debug(string(bytes))

@@ -34,6 +34,8 @@ import (
 
 	modbus "github.com/hootrhino/gomodbus"
 	core "github.com/hootrhino/rhilex/config"
+	modbus_device "github.com/hootrhino/rhilex/device/modbus"
+
 	"github.com/hootrhino/rhilex/glogger"
 	"github.com/hootrhino/rhilex/typex"
 	"github.com/hootrhino/rhilex/utils"
@@ -61,19 +63,20 @@ import (
 //	        "value":"..."
 //	    }
 //	}
-type _GMODCommonConfig struct {
+type ModbusMasterCommonConfig struct {
 	Mode           string `json:"mode" validate:"required"`
 	AutoRequest    *bool  `json:"autoRequest" validate:"required"`
+	BatchRequest   *bool  `json:"batchRequest" validate:"required"` // 批量采集
 	EnableOptimize *bool  `json:"enableOptimize" validate:"required"`
 	MaxRegNum      uint16 `json:"maxRegNum" validate:"required"`
 }
-type _GMODConfig struct {
-	CommonConfig _GMODCommonConfig `json:"commonConfig" validate:"required"`
-	HostConfig   common.HostConfig `json:"hostConfig"`
-	PortUuid     string            `json:"portUuid"`
+type ModbusMasterConfig struct {
+	CommonConfig ModbusMasterCommonConfig `json:"commonConfig" validate:"required"`
+	HostConfig   common.HostConfig        `json:"hostConfig"`
+	PortUuid     string                   `json:"portUuid"`
 }
 
-type GroupedTags struct {
+type ModbusMasterGroupedTag struct {
 	Function  int    `json:"function"`
 	SlaverId  byte   `json:"slaverId"`
 	Address   uint16 `json:"address"`
@@ -82,7 +85,7 @@ type GroupedTags struct {
 	Registers map[string]*common.RegisterRW
 }
 
-func (g *GroupedTags) String() string {
+func (g *ModbusMasterGroupedTag) String() string {
 	tagIds := make([]string, 0, len(g.Registers))
 	for k := range g.Registers {
 		tagIds = append(tagIds, k)
@@ -92,36 +95,7 @@ func (g *GroupedTags) String() string {
 	return str
 }
 
-// 数据模型
-type SchemaProperty struct {
-	UUID          string
-	Status        int    // 0 正常；1 错误，填充 ErrMsg
-	ErrMsg        string // 错误信息
-	LastFetchTime uint64 // 最后更新时间
-	Name          string // 变量关联名
-	Value         any    // 运行时值
-}
-
-/*
-*
-* 点位表
-*
- */
-type ModbusPoint struct {
-	UUID      string  `json:"uuid,omitempty"` // 当UUID为空时新建
-	Tag       string  `json:"tag"`
-	Alias     string  `json:"alias"`
-	Function  int     `json:"function"`
-	SlaverId  byte    `json:"slaverId"`
-	Address   uint16  `json:"address"`
-	Frequency int64   `json:"frequency"`
-	Quantity  uint16  `json:"quantity"`
-	Value     string  `json:"value,omitempty"` // 运行时数据
-	DataType  string  `json:"dataType"`        // 运行时数据
-	DataOrder string  `json:"dataOrder"`       // 运行时数据
-	Weight    float64 `json:"weight"`          // 权重
-}
-type generic_modbus_device struct {
+type GenericModbusMaster struct {
 	typex.XStatus
 	status     typex.DeviceState
 	RuleEngine typex.Rhilex
@@ -130,11 +104,11 @@ type generic_modbus_device struct {
 	tcpHandler *modbus.TCPClientHandler
 	Client     modbus.Client
 	//
-	mainConfig     _GMODConfig
+	mainConfig     ModbusMasterConfig
 	retryTimes     int
 	hwPortConfig   hwportmanager.UartConfig
 	Registers      map[string]*common.RegisterRW
-	RegisterGroups []*GroupedTags
+	RegisterGroups []*ModbusMasterGroupedTag
 }
 
 /*
@@ -142,16 +116,20 @@ type generic_modbus_device struct {
 * 温湿度传感器
 *
  */
-func NewGenericModbusDevice(e typex.Rhilex) typex.XDevice {
-	mdev := new(generic_modbus_device)
+func NewGenericModbusMaster(e typex.Rhilex) typex.XDevice {
+	mdev := new(GenericModbusMaster)
 	mdev.RuleEngine = e
-	mdev.mainConfig = _GMODConfig{
-		CommonConfig: _GMODCommonConfig{
+	mdev.mainConfig = ModbusMasterConfig{
+		CommonConfig: ModbusMasterCommonConfig{
 			EnableOptimize: func() *bool {
 				b := false
 				return &b
 			}(),
 			AutoRequest: func() *bool {
+				b := false
+				return &b
+			}(),
+			BatchRequest: func() *bool {
 				b := false
 				return &b
 			}(),
@@ -167,7 +145,7 @@ func NewGenericModbusDevice(e typex.Rhilex) typex.XDevice {
 }
 
 //  初始化
-func (mdev *generic_modbus_device) Init(devId string, configMap map[string]interface{}) error {
+func (mdev *GenericModbusMaster) Init(devId string, configMap map[string]interface{}) error {
 	mdev.PointId = devId
 	mdev.retryTimes = 0
 	intercache.RegisterSlot(mdev.PointId)
@@ -178,7 +156,7 @@ func (mdev *generic_modbus_device) Init(devId string, configMap map[string]inter
 		return errors.New("unsupported mode, only can be one of 'TCP' or 'UART'")
 	}
 	// 合并数据库里面的点位表
-	var ModbusPointList []ModbusPoint
+	var ModbusPointList []modbus_device.ModbusPoint
 	modbusPointLoadErr := interdb.DB().Table("m_modbus_data_points").
 		Where("device_uuid=?", devId).Find(&ModbusPointList).Error
 	if modbusPointLoadErr != nil {
@@ -247,7 +225,7 @@ func (mdev *generic_modbus_device) Init(devId string, configMap map[string]inter
 	return nil
 }
 
-func (mdev *generic_modbus_device) groupTags(registers []*common.RegisterRW) []*GroupedTags {
+func (mdev *GenericModbusMaster) groupTags(registers []*common.RegisterRW) []*ModbusMasterGroupedTag {
 	/**
 	0、分组，Frequency采集时间需要相同
 	1、寄存器类型分类
@@ -256,12 +234,12 @@ func (mdev *generic_modbus_device) groupTags(registers []*common.RegisterRW) []*
 	4、tag address必须连续
 	*/
 	sort.Sort(common.RegisterList(registers))
-	result := make([]*GroupedTags, 0)
+	result := make([]*ModbusMasterGroupedTag, 0)
 	for i := 0; i < len(registers); {
 		start := i
 		end := i
 		cursor := i
-		tagGroup := &GroupedTags{
+		tagGroup := &ModbusMasterGroupedTag{
 			Function:  registers[start].Function,
 			SlaverId:  registers[start].SlaverId,
 			Address:   registers[start].Address,
@@ -306,7 +284,7 @@ func (mdev *generic_modbus_device) groupTags(registers []*common.RegisterRW) []*
 }
 
 // 启动
-func (mdev *generic_modbus_device) Start(cctx typex.CCTX) error {
+func (mdev *GenericModbusMaster) Start(cctx typex.CCTX) error {
 	mdev.Ctx = cctx.Ctx
 	mdev.CancelCTX = cctx.CancelCTX
 	mdev.retryTimes = 0
@@ -328,7 +306,7 @@ func (mdev *generic_modbus_device) Start(cctx typex.CCTX) error {
 		mdev.rtuHandler.Timeout = time.Duration(mdev.hwPortConfig.Timeout) * time.Millisecond
 		if core.GlobalConfig.AppDebugMode {
 			mdev.rtuHandler.Logger = golog.New(glogger.GLogger.Writer(),
-				"Modbus RTU Mode: "+mdev.PointId, golog.LstdFlags)
+				"Modbus RTU Mode: "+mdev.PointId+": ", golog.LstdFlags)
 		}
 
 		if err := mdev.rtuHandler.Connect(); err != nil {
@@ -347,7 +325,7 @@ func (mdev *generic_modbus_device) Start(cctx typex.CCTX) error {
 		)
 		if core.GlobalConfig.AppDebugMode {
 			mdev.tcpHandler.Logger = golog.New(glogger.GLogger.Writer(),
-				"Modbus TCP Mode: "+mdev.PointId, golog.LstdFlags)
+				"Modbus TCP Mode: "+mdev.PointId+": ", golog.LstdFlags)
 		}
 		if err := mdev.tcpHandler.Connect(); err != nil {
 			return err
@@ -362,13 +340,10 @@ func (mdev *generic_modbus_device) Start(cctx typex.CCTX) error {
 		go func(ctx context.Context) {
 			for {
 				select {
+				case <-time.After(4 * time.Millisecond):
+					// Continue loop
 				case <-ctx.Done():
-					{
-						return
-					}
-				default:
-					{
-					}
+					return
 				}
 				ReadRegisterValues := []ReadRegisterValue{}
 				if mdev.mainConfig.CommonConfig.Mode == "UART" {
@@ -377,15 +352,29 @@ func (mdev *generic_modbus_device) Start(cctx typex.CCTX) error {
 				if mdev.mainConfig.CommonConfig.Mode == "TCP" {
 					ReadRegisterValues = mdev.TCPRead()
 				}
+				if len(ReadRegisterValues) < 1 {
+					time.Sleep(50 * time.Second)
+					continue
+				}
+				if !*mdev.mainConfig.CommonConfig.BatchRequest {
 
-				for _, ReadRegisterValue := range ReadRegisterValues {
-					if bytes, errMarshal := json.Marshal(ReadRegisterValue); errMarshal != nil {
+					for _, ReadRegisterValue := range ReadRegisterValues {
+						if bytes, errMarshal := json.Marshal(ReadRegisterValue); errMarshal != nil {
+							mdev.retryTimes++
+							glogger.GLogger.Error(errMarshal)
+						} else {
+							mdev.RuleEngine.WorkDevice(mdev.Details(), string(bytes))
+						}
+					}
+				} else {
+					if bytes, errMarshal := json.Marshal(ReadRegisterValues); errMarshal != nil {
 						mdev.retryTimes++
 						glogger.GLogger.Error(errMarshal)
 					} else {
 						mdev.RuleEngine.WorkDevice(mdev.Details(), string(bytes))
 					}
 				}
+
 			}
 
 		}(mdev.Ctx)
@@ -394,20 +383,20 @@ func (mdev *generic_modbus_device) Start(cctx typex.CCTX) error {
 	mdev.status = typex.DEV_UP
 	return nil
 }
-func (mdev *generic_modbus_device) RTURead() []ReadRegisterValue {
+func (mdev *GenericModbusMaster) RTURead() []ReadRegisterValue {
 	return mdev.modbusRead()
 }
-func (mdev *generic_modbus_device) TCPRead() []ReadRegisterValue {
+func (mdev *GenericModbusMaster) TCPRead() []ReadRegisterValue {
 	return mdev.modbusRead()
 }
 
 // 从设备里面读数据出来
-func (mdev *generic_modbus_device) OnRead(cmd []byte, data []byte) (int, error) {
+func (mdev *GenericModbusMaster) OnRead(cmd []byte, data []byte) (int, error) {
 	return 0, nil
 }
 
 // 把数据写入设备
-func (mdev *generic_modbus_device) OnWrite(cmd []byte, data []byte) (int, error) {
+func (mdev *GenericModbusMaster) OnWrite(cmd []byte, data []byte) (int, error) {
 	RegisterW := common.RegisterW{}
 	if err := json.Unmarshal(data, &RegisterW); err != nil {
 		return 0, err
@@ -475,7 +464,7 @@ func maybePrependZero(slice []byte) []byte {
 }
 
 // 设备当前状态
-func (mdev *generic_modbus_device) Status() typex.DeviceState {
+func (mdev *GenericModbusMaster) Status() typex.DeviceState {
 	// 容错5次
 	if mdev.retryTimes > 5 {
 		return typex.DEV_DOWN
@@ -484,7 +473,7 @@ func (mdev *generic_modbus_device) Status() typex.DeviceState {
 }
 
 // 停止设备
-func (mdev *generic_modbus_device) Stop() {
+func (mdev *GenericModbusMaster) Stop() {
 	mdev.status = typex.DEV_DOWN
 	if mdev.CancelCTX != nil {
 		mdev.CancelCTX()
@@ -504,19 +493,19 @@ func (mdev *generic_modbus_device) Stop() {
 }
 
 // 真实设备
-func (mdev *generic_modbus_device) Details() *typex.Device {
+func (mdev *GenericModbusMaster) Details() *typex.Device {
 	return mdev.RuleEngine.GetDevice(mdev.PointId)
 }
 
 // 状态
-func (mdev *generic_modbus_device) SetState(status typex.DeviceState) {
+func (mdev *GenericModbusMaster) SetState(status typex.DeviceState) {
 	mdev.status = status
 }
 
-func (mdev *generic_modbus_device) OnDCACall(UUID string, Command string, Args interface{}) typex.DCAResult {
+func (mdev *GenericModbusMaster) OnDCACall(UUID string, Command string, Args interface{}) typex.DCAResult {
 	return typex.DCAResult{}
 }
-func (mdev *generic_modbus_device) OnCtrl([]byte, []byte) ([]byte, error) {
+func (mdev *GenericModbusMaster) OnCtrl([]byte, []byte) ([]byte, error) {
 	return []byte{}, nil
 }
 
@@ -538,7 +527,7 @@ type ReadRegisterValue struct {
 * 串口模式
 *
  */
-func (mdev *generic_modbus_device) modbusRead() []ReadRegisterValue {
+func (mdev *GenericModbusMaster) modbusRead() []ReadRegisterValue {
 	if *mdev.mainConfig.CommonConfig.EnableOptimize {
 		return mdev.modbusGroupRead()
 	} else {
@@ -546,7 +535,7 @@ func (mdev *generic_modbus_device) modbusRead() []ReadRegisterValue {
 	}
 }
 
-func (mdev *generic_modbus_device) modbusSingleRead() []ReadRegisterValue {
+func (mdev *GenericModbusMaster) modbusSingleRead() []ReadRegisterValue {
 	var err error
 	var results []byte
 	RegisterRWs := []ReadRegisterValue{}
@@ -718,7 +707,7 @@ func (mdev *generic_modbus_device) modbusSingleRead() []ReadRegisterValue {
 	return RegisterRWs
 }
 
-func (mdev *generic_modbus_device) modbusGroupRead() []ReadRegisterValue {
+func (mdev *GenericModbusMaster) modbusGroupRead() []ReadRegisterValue {
 	jsonValueGroups := make([]ReadRegisterValue, 0)
 	var __modbusReadResult = [256]byte{0} // 放在栈上提高效率
 

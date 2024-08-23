@@ -37,16 +37,16 @@ import (
 )
 
 type Hnc8PointVo struct {
-	UUID          string `json:"uuid,omitempty"`
-	DeviceUUID    string `json:"device_uuid"`
-	Name          string `json:"name"`
-	Alias         string `json:"alias"`
-	ApiFunction   string `json:"apiFunction"`
-	Group         *int   `json:"group"`
-	Address       string `json:"address"`
-	Status        int    `json:"status"`        // 运行时数据
-	LastFetchTime uint64 `json:"lastFetchTime"` // 运行时数据
-	Value         string `json:"value"`         // 运行时数据
+	UUID          string      `json:"uuid,omitempty"`
+	DeviceUUID    string      `json:"device_uuid"`
+	Name          string      `json:"name"`
+	Alias         string      `json:"alias"`
+	ApiFunction   string      `json:"apiFunction"`
+	Group         *int        `json:"group"`
+	Address       string      `json:"address"`
+	Status        int         `json:"status"`        // 运行时数据
+	LastFetchTime uint64      `json:"lastFetchTime"` // 运行时数据
+	Value         interface{} `json:"value"`         // 运行时数据
 }
 
 /*

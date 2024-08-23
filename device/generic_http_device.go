@@ -78,14 +78,13 @@ func (hd *GenericHttpDevice) Start(cctx typex.CCTX) error {
 	hd.CancelCTX = cctx.CancelCTX
 
 	if *hd.mainConfig.CommonConfig.AutoRequest {
-		ticker := time.NewTicker(
-			time.Duration(*hd.mainConfig.CommonConfig.Frequency) * time.Millisecond)
 		go func() {
+			ticker := time.NewTicker(time.Duration(*hd.mainConfig.CommonConfig.Frequency) * time.Millisecond)
+			defer ticker.Stop()
 			for {
 				select {
 				case <-hd.Ctx.Done():
 					{
-						ticker.Stop()
 						return
 					}
 				default:

@@ -18,7 +18,6 @@ package ec200a4g
 import (
 	"encoding/json"
 	"fmt"
-	"os"
 	"strings"
 	"time"
 
@@ -41,13 +40,10 @@ func NewEC200ADtu(R typex.Rhilex) transceivercom.TransceiverCommunicator {
 	}}
 }
 func (tc *EC200ADtu) Start(config transceivercom.TransceiverConfig) error {
-	env := os.Getenv("4GSUPPORT")
-	if env == "EC200A" {
-		glogger.GLogger.Info("EC200A Init 4G")
-		InitEC200A4G(config.Address)
-		glogger.GLogger.Info("EC200A Init 4G Ok.")
-	}
-	glogger.GLogger.Info("EC200ADtu Started")
+
+	glogger.GLogger.Info("EC200A Init 4G")
+	InitEC200A4G(config.Address)
+	glogger.GLogger.Info("EC200A Init 4G Ok.")
 	return nil
 }
 
@@ -77,15 +73,15 @@ func (tc *EC200ADtu) Info() transceivercom.CommunicatorInfo {
 		Name:     "ec200a",
 		Model:    "EC200A-4G-DTU-CAT4",
 		Type:     transceivercom.MN4G,
-		Vendor:   "Quectel technology",
+		Vendor:   "RHILEX-TECH",
 		Mac:      "00:00:00:00:00:00:00:00",
-		Firmware: "0.0.0",
+		Firmware: "v0.0.0",
 	}
 }
 func (tc *EC200ADtu) Status() transceivercom.TransceiverStatus {
 	return transceivercom.TransceiverStatus{
 		Code:  transceivercom.TC_ERROR,
-		Error: fmt.Errorf("NOT SUPPORT"),
+		Error: fmt.Errorf("Invalid Device"),
 	}
 }
 func (tc *EC200ADtu) Stop() {

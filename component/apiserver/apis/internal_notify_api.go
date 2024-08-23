@@ -16,14 +16,24 @@
 package apis
 
 import (
-
 	"github.com/gin-gonic/gin"
 	common "github.com/hootrhino/rhilex/component/apiserver/common"
 	"github.com/hootrhino/rhilex/component/apiserver/model"
+	"github.com/hootrhino/rhilex/component/apiserver/server"
 	"github.com/hootrhino/rhilex/component/apiserver/service"
 	"github.com/hootrhino/rhilex/component/interdb"
 	"github.com/hootrhino/rhilex/typex"
 )
+
+func InitInternalNotifyRoute() {
+	// 站内公告
+	internalNotifyApi := server.DefaultApiServer.GetGroup(server.ContextUrl("/notify"))
+	{
+		internalNotifyApi.PUT("/clear", server.AddRoute(ClearInternalNotifies))
+		internalNotifyApi.PUT("/read", server.AddRoute(ReadInternalNotifies))
+		internalNotifyApi.GET("/pageList", server.AddRoute(PageInternalNotifies))
+	}
+}
 
 /*
 *

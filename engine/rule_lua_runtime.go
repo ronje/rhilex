@@ -50,7 +50,8 @@ func LoadRuleLibGroup(r *typex.Rule, e typex.Rhilex) {
 			"ToTcp":        rhilexlib.DataToTcp(e, r.UUID),
 			"ToTdEngine":   rhilexlib.DataToTdEngine(e, r.UUID),
 			"ToMongo":      rhilexlib.DataToMongo(e, r.UUID),
-			"ToSemtechUdp": rhilexlib.DataToLoraWanUDP(e, r.UUID),
+			"ToSemtechUdp": rhilexlib.DataToSemtechUdp(e, r.UUID),
+			"ToUart":       rhilexlib.DataToUart(e, r.UUID),
 		}
 		AddRuleLibToGroup(r, e, "data", Funcs)
 	}
@@ -83,16 +84,18 @@ func LoadRuleLibGroup(r *typex.Rule, e typex.Rhilex) {
 	}
 	{
 		Funcs := map[string]func(l *lua.LState) int{
-			"HToN":       rhilexlib.HToN(e, r.UUID),
-			"HsubToN":    rhilexlib.HsubToN(e, r.UUID),
-			"MatchHex":   rhilexlib.MatchHex(e, r.UUID),
-			"MatchUInt":  rhilexlib.MatchUInt(e, r.UUID),
-			"Bytes2Hexs": rhilexlib.Bytes2Hexs(e, r.UUID),
-			"Hexs2Bytes": rhilexlib.Hexs2Bytes(e, r.UUID),
-			"ABCD":       rhilexlib.ABCD(e, r.UUID),
-			"DCBA":       rhilexlib.DCBA(e, r.UUID),
-			"BADC":       rhilexlib.BADC(e, r.UUID),
-			"CDAB":       rhilexlib.CDAB(e, r.UUID),
+			"HToN":         rhilexlib.HToN(e, r.UUID),
+			"HsubToN":      rhilexlib.HsubToN(e, r.UUID),
+			"MatchHex":     rhilexlib.MatchHex(e, r.UUID),
+			"MatchUInt":    rhilexlib.MatchUInt(e, r.UUID),
+			"Bytes2Hexs":   rhilexlib.Bytes2Hexs(e, r.UUID),
+			"Hexs2Bytes":   rhilexlib.Hexs2Bytes(e, r.UUID),
+			"ABCD":         rhilexlib.ABCD(e, r.UUID),
+			"DCBA":         rhilexlib.DCBA(e, r.UUID),
+			"BADC":         rhilexlib.BADC(e, r.UUID),
+			"CDAB":         rhilexlib.CDAB(e, r.UUID),
+			"TwoBytesHOrL": rhilexlib.TwoBytesHOrL(e, r.UUID),
+			"Int16HOrL":    rhilexlib.Int16HOrL(e, r.UUID),
 		}
 		AddRuleLibToGroup(r, e, "hex", Funcs)
 	}
@@ -140,10 +143,11 @@ func LoadRuleLibGroup(r *typex.Rule, e typex.Rhilex) {
 	}
 	{
 		Funcs := map[string]func(l *lua.LState) int{
-			"F5":  rhilexlib.F5(e, r.UUID),
-			"F6":  rhilexlib.F6(e, r.UUID),
-			"F15": rhilexlib.F15(e, r.UUID),
-			"F16": rhilexlib.F16(e, r.UUID),
+			"F5":        rhilexlib.F5(e, r.UUID),
+			"F6":        rhilexlib.F6(e, r.UUID),
+			"F15":       rhilexlib.F15(e, r.UUID),
+			"F16":       rhilexlib.F16(e, r.UUID),
+			"ParseByte": rhilexlib.ParseModbusByte(e, r.UUID),
 		}
 		AddRuleLibToGroup(r, e, "modbus", Funcs)
 	}

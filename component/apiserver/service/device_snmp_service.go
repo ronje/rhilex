@@ -16,10 +16,8 @@
 package service
 
 import (
-	"fmt"
-
-	"github.com/hootrhino/rhilex/component/interdb"
 	"github.com/hootrhino/rhilex/component/apiserver/model"
+	"github.com/hootrhino/rhilex/component/interdb"
 )
 
 /*
@@ -35,14 +33,6 @@ func InsertSnmpOids(list []model.MSnmpOid) error {
 
 // InsertSnmpOid 插入Snmp点位表
 func InsertSnmpOid(P model.MSnmpOid) error {
-	IgnoreUUID := P.UUID
-	Count := int64(0)
-	P.UUID = ""
-	interdb.DB().Model(P).Where(P).Count(&Count)
-	if Count > 0 {
-		return fmt.Errorf("already exists same record:%s", IgnoreUUID)
-	}
-	P.UUID = IgnoreUUID
 	return interdb.DB().Model(P).Create(&P).Error
 }
 

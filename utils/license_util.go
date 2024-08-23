@@ -75,13 +75,14 @@ func SumMd5(inputString string) string {
 }
 
 type LocalLicense struct {
-	DeviceID          string `json:"device_id"`          // 设备生产序列号
-	AuthorizeAdmin    string `json:"authorize_admin"`    // 证书签发人
-	AuthorizePassword string `json:"authorize_password"` // 证书签发人密钥
-	BeginAuthorize    int64  `json:"begin_authorize"`    // 证书授权开始时间
-	EndAuthorize      int64  `json:"end_authorize"`      // 证书授权结束时间
-	MAC               string `json:"mac"`                // 设备硬件MAC地址，一般取以太网卡
-	License           string `json:"license"`            // 公钥, 发给用户设备
+	DeviceID          string `json:"device_id"`
+	AuthorizeAdmin    string `json:"authorize_admin"`
+	AuthorizePassword string `json:"authorize_password"`
+	BeginAuthorize    int64  `json:"begin_authorize"`
+	EndAuthorize      int64  `json:"end_authorize"`
+	Iface             string `json:"iface"`
+	MAC               string `json:"mac"`
+	License           string `json:"license"`
 }
 
 func (ll *LocalLicense) ToString() string {
@@ -112,19 +113,19 @@ func (ll LocalLicense) ValidateTime() bool {
 	return true
 }
 
-// 00001 & rhino & hoot & FF:FF:FF:FF:FF:FF & 0 & 0
+// 00001 & rhino & hoot & eth0 & FF:FF:FF:FF:FF:FF & 0 & 0
 func ParseAuthInfo(info string) (LocalLicense, error) {
 	var ll LocalLicense
 	ss := strings.Split(info, "&")
-	if len(ss) != 6 {
+	if len(ss) != 7 {
 		return ll, fmt.Errorf("failed to parse: %s", info)
 	}
 
-	beginAuthorize, err1 := strconv.ParseInt(ss[4], 10, 64)
+	beginAuthorize, err1 := strconv.ParseInt(ss[5], 10, 64)
 	if err1 != nil {
 		return ll, fmt.Errorf("failed to parse BeginAuthorize: %w", err1)
 	}
-	endAuthorize, err2 := strconv.ParseInt(ss[5], 10, 64)
+	endAuthorize, err2 := strconv.ParseInt(ss[6], 10, 64)
 	if err2 != nil {
 		return ll, fmt.Errorf("failed to parse EndAuthorize: %w", err2)
 	}
@@ -132,7 +133,8 @@ func ParseAuthInfo(info string) (LocalLicense, error) {
 	ll.DeviceID = ss[0]
 	ll.AuthorizeAdmin = ss[1]
 	ll.AuthorizePassword = ss[2]
-	ll.MAC = ss[3]
+	ll.Iface = ss[3]
+	ll.MAC = ss[4]
 	ll.BeginAuthorize = beginAuthorize
 	ll.EndAuthorize = endAuthorize
 	return ll, nil
@@ -167,10 +169,10 @@ func ValidateLicense(key_path, license_path string) (LocalLicense, error) {
 	localMac := ""
 	var err3 error
 	if runtime.GOOS == "windows" {
-		localMac, err3 = ossupport.GetWindowsMACAddress()
+		localMac, err3 = ossupport.GetWindowsFirstMacAddress()
 	}
 	if runtime.GOOS == "linux" {
-		localMac, err3 = ossupport.GetLinuxMacAddr("eth0")
+		localMac, err3 = ossupport.GetLinuxMacAddr(LocalLicense.Iface)
 	}
 	if err3 != nil {
 		return LocalLicense, err3

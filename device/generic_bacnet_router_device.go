@@ -107,7 +107,7 @@ func (br *BacnetRouter) Init(devId string, configMap map[string]interface{}) err
 		// Cache Value
 		intercache.SetValue(br.PointId, mDataPoint.UUID, intercache.CacheValue{
 			UUID:          mDataPoint.UUID,
-			Status:        1,
+			Status:        0, // 路由模式下点位默认就是正常的
 			LastFetchTime: uint64(time.Now().UnixMilli()),
 			Value:         "0",
 			ErrMsg:        "",

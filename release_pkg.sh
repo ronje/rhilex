@@ -10,21 +10,21 @@ create_pkg() {
     local release_dir="_release"
     local pkg_name="${APP}-$target-$version.zip"
     local common_files="./config/*.ini ./md5.sum"
-    local files_to_include="./${APP} $common_files"
-    local files_to_include_exe="./${APP}.exe $common_files"
+    local files_to_include_all="./${APP} $common_files"
+    local files_to_include_win="./${APP}.exe $common_files"
 
     if [[ "$target" != "windows" ]]; then
-        files_to_include="$files_to_include ./script/*.sh"
+        files_to_include_all="$files_to_include_all ./script/*.sh"
         mv ./${APP}-$target ./${APP}
         chmod +x ./${APP}
         calculate_and_save_md5 ./${APP}
     else
-        files_to_include="$files_to_include_exe ./script/*.bat"
+        files_to_include_all="$files_to_include_win"
         mv ./${APP}-$target.exe ./${APP}.exe
         calculate_and_save_md5 ./${APP}.exe
     fi
     echo "Create package: $pkg_name"
-    zip -j "$release_dir/$pkg_name" $files_to_include
+    zip -j "$release_dir/$pkg_name" $files_to_include_all
 }
 
 make_zip() {

@@ -13,7 +13,7 @@ import (
 	"gorm.io/gorm/logger"
 )
 
-const __DEFAULT_DB_PATH string = "./rhilex.db"
+const __DEFAULT_DB_PATH string = "./rhilex.db?cache=shared&mode=rwc"
 
 var __Sqlite *SqliteDAO
 
@@ -33,7 +33,7 @@ type SqliteDAO struct {
 * 初始化DAO
 *
  */
-func Init(engine typex.Rhilex, dbPath string) error {
+func Init(engine typex.Rhilex) error {
 	__Sqlite = &SqliteDAO{name: "Sqlite3", engine: engine}
 
 	var err error

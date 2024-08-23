@@ -41,8 +41,6 @@ import (
 	"github.com/hootrhino/rhilex/component/intermetric"
 	"github.com/hootrhino/rhilex/component/internotify"
 	"github.com/hootrhino/rhilex/component/interqueue"
-	"github.com/hootrhino/rhilex/component/jpegstream"
-	"github.com/hootrhino/rhilex/component/rtspserver"
 	"github.com/hootrhino/rhilex/component/trailer"
 	"github.com/hootrhino/rhilex/device"
 	"github.com/hootrhino/rhilex/glogger"
@@ -59,9 +57,7 @@ import (
 * 全局默认引擎，未来主要留给外部使用
 *
  */
-var __DefaultRuleEngine typex.Rhilex
-
-const __DEFAULT_DB_PATH string = "./rhilex.db"
+var __DefaultRuleEngine *RuleEngine
 
 // 规则引擎
 type RuleEngine struct {
@@ -77,6 +73,12 @@ type RuleEngine struct {
 	TargetTypeManager *rhilexmanager.TargetTypeManager `json:"-"` // 待迁移组件: component/rhilexmanager
 }
 
+func MainRuleEngine() *RuleEngine {
+	if __DefaultRuleEngine == nil {
+		glogger.GLogger.Fatal("RuleEngine Not Initialize")
+	}
+	return __DefaultRuleEngine
+}
 func InitRuleEngine(config typex.RhilexConfig) typex.Rhilex {
 	__DefaultRuleEngine = &RuleEngine{
 		locker:            sync.Mutex{},
@@ -92,7 +94,7 @@ func InitRuleEngine(config typex.RhilexConfig) typex.Rhilex {
 	}
 
 	// Internal DB
-	interdb.Init(__DefaultRuleEngine, __DEFAULT_DB_PATH)
+	interdb.Init(__DefaultRuleEngine)
 	// Internal kv Store
 	interkv.InitInterKVStore(core.GlobalConfig.MaxKvStoreSize)
 	// Shelly Device Registry
@@ -113,16 +115,10 @@ func InitRuleEngine(config typex.RhilexConfig) typex.Rhilex {
 	appstack.InitAppStack(__DefaultRuleEngine)
 	// current only support Internal ai
 	aibase.InitAlgorithmRuntime(__DefaultRuleEngine)
-	// Internal Queue
-	interqueue.InitDataCacheQueue(__DefaultRuleEngine, core.GlobalConfig.MaxQueueSize)
 	// Data center: future version maybe support
 	datacenter.InitDataCenter(__DefaultRuleEngine)
-	// Rtsp server
-	rtspserver.InitRtspServer(__DefaultRuleEngine)
-	// Jpeg Stream Server
-	jpegstream.InitJpegStreamServer(__DefaultRuleEngine)
-	// 内部队列
-	interqueue.StartDataCacheQueue()
+	// Internal Queue
+	interqueue.InitXQueue(__DefaultRuleEngine, core.GlobalConfig.MaxQueueSize)
 	// Init Transceiver Communicator Manager
 	transceiver.InitTransceiverCommunicatorManager(__DefaultRuleEngine)
 	return __DefaultRuleEngine
@@ -139,6 +135,8 @@ func (e *RuleEngine) Start() *typex.RhilexConfig {
 	e.InitSourceTypeManager()
 	e.InitTargetTypeManager()
 	intercache.RegisterSlot("__DefaultRuleEngine")
+	// Internal BUS
+	interqueue.StartXQueue()
 	return e.Config
 }
 
@@ -212,11 +210,14 @@ func (e *RuleEngine) Stop() {
 	// AI Runtime
 	glogger.GLogger.Info("Stop AI Runtime")
 	aibase.Stop()
-	// UnRegisterSlot
-	intercache.UnRegisterSlot("__DefaultRuleEngine")
-	//
+	// Stop transceiver
 	glogger.GLogger.Info("Stop transceiver")
 	transceiver.Stop()
+	// UnRegister __DefaultRuleEngine
+	intercache.UnRegisterSlot("__DefaultRuleEngine")
+	// UnRegister __DeviceConfigMap
+	intercache.UnRegisterSlot("__DeviceConfigMap")
+	// END
 	glogger.GLogger.Info("[√] Stop rhilex successfully")
 	if err := glogger.Close(); err != nil {
 		fmt.Println("Close logger error: ", err)
@@ -225,7 +226,7 @@ func (e *RuleEngine) Stop() {
 
 // 核心功能: Work, 主要就是推流进队列
 func (e *RuleEngine) WorkInEnd(in *typex.InEnd, data string) (bool, error) {
-	if err := interqueue.DefaultDataCacheQueue.PushInQueue(in, data); err != nil {
+	if err := interqueue.DefaultXQueue.PushInQueue(in, data); err != nil {
 		return false, err
 	}
 	return true, nil
@@ -233,7 +234,7 @@ func (e *RuleEngine) WorkInEnd(in *typex.InEnd, data string) (bool, error) {
 
 // 核心功能: Work, 主要就是推流进队列
 func (e *RuleEngine) WorkDevice(Device *typex.Device, data string) (bool, error) {
-	if err := interqueue.DefaultDataCacheQueue.PushDeviceQueue(Device, data); err != nil {
+	if err := interqueue.DefaultXQueue.PushDeviceQueue(Device, data); err != nil {
 		return false, err
 	}
 	return true, nil
@@ -545,10 +546,16 @@ func (e *RuleEngine) InitDeviceTypeManager() error {
 			NewDevice: device.NewSIEMENS_PLC,
 		},
 	)
-	e.DeviceTypeManager.Register(typex.GENERIC_MODBUS,
+	e.DeviceTypeManager.Register(typex.GENERIC_MODBUS_MASTER,
 		&typex.XConfig{
 			Engine:    e,
-			NewDevice: device.NewGenericModbusDevice,
+			NewDevice: device.NewGenericModbusMaster,
+		},
+	)
+	e.DeviceTypeManager.Register(typex.GENERIC_MODBUS_SLAVER,
+		&typex.XConfig{
+			Engine:    e,
+			NewDevice: device.NewGenericModbusSlaver,
 		},
 	)
 	e.DeviceTypeManager.Register(typex.GENERIC_UART_RW,
@@ -656,10 +663,16 @@ func (e *RuleEngine) InitSourceTypeManager() error {
 			NewSource: source.NewNatsSource,
 		},
 	)
-	e.SourceTypeManager.Register(typex.RHILEX_UDP,
+	e.SourceTypeManager.Register(typex.UDP_SERVER,
 		&typex.XConfig{
 			Engine:    e,
 			NewSource: source.NewUdpInEndSource,
+		},
+	)
+	e.SourceTypeManager.Register(typex.TCP_SERVER,
+		&typex.XConfig{
+			Engine:    e,
+			NewSource: source.NewTcpSource,
 		},
 	)
 	e.SourceTypeManager.Register(typex.GENERIC_IOT_HUB,
@@ -747,13 +760,7 @@ func (e *RuleEngine) InitTargetTypeManager() error {
 	e.TargetTypeManager.Register(typex.UDP_TARGET,
 		&typex.XConfig{
 			Engine:    e,
-			NewTarget: target.NewUdpTarget,
-		},
-	)
-	e.TargetTypeManager.Register(typex.SQLITE_TARGET,
-		&typex.XConfig{
-			Engine:    e,
-			NewTarget: target.NewSqliteTarget,
+			NewTarget: target.NewUUdpTarget,
 		},
 	)
 	e.TargetTypeManager.Register(typex.TCP_TRANSPORT,
@@ -770,18 +777,18 @@ func (e *RuleEngine) InitTargetTypeManager() error {
 * 0.6.8 New Api: 将注册权交给设备
 *-----------------------------------------------------------------
  */
-func (e *RuleEngine) RegisterNewDevice(Type typex.DeviceType, Cfg *typex.XConfig) error {
-	Cfg.Engine = e
-	e.DeviceTypeManager.Register(Type, Cfg)
+func RegisterNewDevice(Type typex.DeviceType, Cfg *typex.XConfig) error {
+	Cfg.Engine = __DefaultRuleEngine
+	__DefaultRuleEngine.DeviceTypeManager.Register(Type, Cfg)
 	return nil
 }
-func (e *RuleEngine) RegisterNewSource(Type typex.InEndType, Cfg *typex.XConfig) error {
-	Cfg.Engine = e
-	e.SourceTypeManager.Register(Type, Cfg)
+func RegisterNewSource(Type typex.InEndType, Cfg *typex.XConfig) error {
+	Cfg.Engine = __DefaultRuleEngine
+	__DefaultRuleEngine.SourceTypeManager.Register(Type, Cfg)
 	return nil
 }
-func (e *RuleEngine) RegisterNewTarget(Type typex.TargetType, Cfg *typex.XConfig) error {
-	Cfg.Engine = e
-	e.TargetTypeManager.Register(Type, Cfg)
+func RegisterNewTarget(Type typex.TargetType, Cfg *typex.XConfig) error {
+	Cfg.Engine = __DefaultRuleEngine
+	__DefaultRuleEngine.TargetTypeManager.Register(Type, Cfg)
 	return nil
 }

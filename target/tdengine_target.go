@@ -155,6 +155,8 @@ func post(client http.Client,
 func execQuery(client http.Client, username string, password string, sql string, url string) error {
 	var r tdHttpResult
 	// {"status":"error","code":534,"desc":"Syntax error in SQL"}
+	glogger.GLogger.Debug("execQuery:", sql)
+
 	body, err1 := post(client, username, password, sql, url)
 	if err1 != nil {
 		return err1

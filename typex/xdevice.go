@@ -16,15 +16,16 @@ func (d DeviceType) String() string {
 // 支持的设备类型
 const (
 	SIEMENS_PLC            DeviceType = "SIEMENS_PLC"            // SIEMENS-S71200
-	GENERIC_MODBUS         DeviceType = "GENERIC_MODBUS"         // 通用Modbus
-	GENERIC_SNMP           DeviceType = "GENERIC_SNMP"           // SNMP 支持
-	GENERIC_UART_RW        DeviceType = "GENERIC_UART_RW"        // 通用串口
-	GENERIC_UART_PROTOCOL  DeviceType = "GENERIC_UART_PROTOCOL"  // 通用自定义协议处理器
-	GENERIC_OPCUA          DeviceType = "GENERIC_OPCUA"          // 通用OPCUA
+	GENERIC_MODBUS_MASTER  DeviceType = "GENERIC_MODBUS_MASTER"  // 通用 GENERIC_MODBUS_MASTER
+	GENERIC_MODBUS_SLAVER  DeviceType = "GENERIC_MODBUS_SLAVER"  // 通用 GENERIC_MODBUS_SLAVER
+	GENERIC_SNMP           DeviceType = "GENERIC_SNMP"           // SNMP 协议支持
+	GENERIC_UART_RW        DeviceType = "GENERIC_UART_RW"        // 通用读写串口
+	GENERIC_UART_PROTOCOL  DeviceType = "GENERIC_UART_PROTOCOL"  // 通用控制串口
+	GENERIC_OPCUA          DeviceType = "GENERIC_OPCUA"          // 通用OPCUA协议
 	GENERIC_CAMERA         DeviceType = "GENERIC_CAMERA"         // 通用摄像头
 	GENERIC_AIS_RECEIVER   DeviceType = "GENERIC_AIS_RECEIVER"   // 通用AIS
-	GENERIC_BACNET_IP      DeviceType = "GENERIC_BACNET_IP"      // 通用BacnetIP
-	BACNET_ROUTER_GW       DeviceType = "BACNET_ROUTER_GW"       // 通用 BACNET ROUTER
+	GENERIC_BACNET_IP      DeviceType = "GENERIC_BACNET_IP"      // 通用Bacnet IP模式
+	BACNET_ROUTER_GW       DeviceType = "BACNET_ROUTER_GW"       // 通用BACNET 路由模式
 	GENERIC_HTTP_DEVICE    DeviceType = "GENERIC_HTTP_DEVICE"    // HTTP采集器
 	HNC8                   DeviceType = "HNC8"                   // 华中数控机床
 	KDN                    DeviceType = "KDN"                    // 凯帝恩控机床

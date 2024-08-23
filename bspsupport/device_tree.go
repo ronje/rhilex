@@ -80,6 +80,20 @@ func GetDeviceCtrlTree() DeviceTree {
 			SoftRouter: []DeviceNode{},
 		}
 	}
+	if env == "RHILEXPRO1" {
+		return DeviceTree{
+			Network: []DeviceNode{
+				{"eth0", "ethernet", 1},
+				{"eth2", "ethernet", 1},
+			},
+			Wlan: []DeviceNode{
+				{"wlan0", "wlan", 1},
+			},
+			MNet4g:     []DeviceNode{},
+			MNet5g:     []DeviceNode{},
+			SoftRouter: []DeviceNode{},
+		}
+	}
 	return DeviceTree{
 		Network: []DeviceNode{
 			{"eth0", "ethernet", 1},
