@@ -37,9 +37,9 @@ var DefaultVersionInfo = VersionInfo{
 	ReleaseTime: "$(echo $(date "+%Y-%m-%d %H:%M:%S"))",
 }
 var Banner = \`
- **  Welcome to RHILEX framework world <'_'>     -.
-**   Version: ${VERSION}-${HASH:0:15}             -.
- **  More information: https://www.hootrhino.com  -.
+  <<  RHILEX System.©                              -·
+<<·   Version: ${VERSION}-${HASH:0:15}             -·
+  <<  More information: https://www.hootrhino.com  -·
 \`
 EOF
 

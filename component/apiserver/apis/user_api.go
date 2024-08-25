@@ -264,3 +264,29 @@ func parseToken(tokenString string) (*JwtClaims, error) {
 		return nil, err
 	}
 }
+
+/*
+*
+* 清理用于信息
+*
+ */
+func ClearAllUser(c *gin.Context, ruleEngine typex.Rhilex) {
+	err1 := service.ClearAllUser()
+	if err1 != nil {
+		c.JSON(common.HTTP_OK, common.Error400(err1))
+		return
+	}
+	err2 := service.InitMUser(
+		&model.MUser{
+			Role:        "Admin",
+			Username:    "rhilex",
+			Password:    "25d55ad283aa400af464c76d713c07ad", // md5(12345678)
+			Description: "Default RHILEX Admin User",
+		},
+	)
+	if err2 != nil {
+		c.JSON(common.HTTP_OK, common.Error400(err2))
+		return
+	}
+	c.JSON(common.HTTP_OK, common.Ok())
+}

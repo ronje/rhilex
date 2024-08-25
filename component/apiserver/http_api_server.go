@@ -245,6 +245,7 @@ func (hs *ApiServerPlugin) LoadRoute() {
 		userApi.PUT(("/update"), server.AddRoute(apis.UpdateUser))
 		userApi.GET(("/detail"), server.AddRoute(apis.UserDetail))
 		userApi.POST(("/logout"), server.AddRoute(apis.LogOut))
+		userApi.DELETE(("/clear"), server.AddRoute(apis.ClearAllUser))
 
 	}
 

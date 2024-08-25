@@ -25,11 +25,11 @@ var License = utils.LocalLicense{
 }
 
 var DefaultVersionInfo = VersionInfo{
-	Product:        "COMMON",
-	ReleaseTime: "2024-08-11 17:43:30",
+	Product:     "COMMON",
+	ReleaseTime: "2024-08-25 14:59:17",
 }
 var Banner = `
- **  Welcome to RHILEX framework world <'_'>     -.
-**   Version: v0.7.2-bb0d7b051d3593c             -.
- **  More information: https://www.hootrhino.com  -.
+  <<  RHILEX System.©                              -.
+<<·   Version: v0.7.3-891c1d356db64dd             -.
+  <<  More information: https://www.hootrhino.com  -.
 `

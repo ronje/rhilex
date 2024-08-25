@@ -219,55 +219,75 @@ func SiemensSheetDelete(c *gin.Context, ruleEngine typex.Rhilex) {
 * 检查点位合法性
 *
  */
-func checkSiemensDataPoints(M SiemensPointVo) error {
-	if M.Tag == "" {
-		return fmt.Errorf("Missing required param 'tag'")
-	}
-	if len(M.Tag) > 256 {
-		return fmt.Errorf("Tag length must range of 1-256")
-	}
-	if M.Alias == "" {
-		return fmt.Errorf("Missing required param 'alias'")
-	}
-	if len(M.Alias) > 256 {
-		return fmt.Errorf("Alias length must range of 1-256")
-	}
-	if M.SiemensAddress == "" {
-		return fmt.Errorf("Missing required param 'address'")
+func CheckSiemensDataPoints(M SiemensPointVo) error {
+	// Helper function to check string length
+	checkStringLength := func(value, paramName string, maxLength int) error {
+		if value == "" {
+			return fmt.Errorf("missing required param '%s'", paramName)
+		}
+		if len(value) > maxLength {
+			return fmt.Errorf("'%s' length must be in the range of 1-%d", paramName, maxLength)
+		}
+		return nil
 	}
 
+	// Check required string fields
+	if err := checkStringLength(M.Tag, "tag", 256); err != nil {
+		return err
+	}
+	if err := checkStringLength(M.Alias, "alias", 256); err != nil {
+		return err
+	}
+	if err := checkStringLength(M.SiemensAddress, "address", 256); err != nil { // Assuming a max length of 256 for SiemensAddress
+		return err
+	}
+
+	// Check Frequency
 	if M.Frequency == nil {
-		return fmt.Errorf("Missing required param 'frequency'")
+		return fmt.Errorf("missing required param 'frequency'")
 	}
 	if *M.Frequency < 50 {
-		return fmt.Errorf("Frequency must greater than 50ms")
+		return fmt.Errorf("'frequency' must be greater than 50ms")
 	}
 	if *M.Frequency > 100000 {
-		return fmt.Errorf("Frequency must little than 100s")
+		return fmt.Errorf("'frequency' must be less than 100s")
 	}
 
-	switch M.DataType {
-	case "I", "Q", "BYTE":
-		if M.DataOrder != "A" {
-			return fmt.Errorf("Invalid '%s' order '%s'", M.DataType, M.DataOrder)
-		}
-	case "SHORT", "USHORT", "INT16", "UINT16":
-		if !utils.SContains([]string{"AB", "BA"}, M.DataOrder) {
-			return fmt.Errorf("'Invalid '%s' order '%s'", M.DataType, M.DataOrder)
-		}
-	case "RAW", "INT", "INT32", "UINT", "UINT32", "FLOAT", "FLOAT32", "UFLOAT32":
-		if !utils.SContains([]string{"ABCD", "DCBA", "CDAB"}, M.DataOrder) {
-			return fmt.Errorf("Invalid '%s' order '%s'", M.DataType, M.DataOrder)
-		}
-	default:
-		return fmt.Errorf("Invalid '%s' order '%s'", M.DataType, M.DataOrder)
+	// Validate DataOrder for different DataTypes
+	dataOrderMap := map[string][]string{
+		"I":        {"A"},
+		"Q":        {"A"},
+		"BYTE":     {"A"},
+		"INT16":    {"AB", "BA"},
+		"UINT16":   {"AB", "BA"},
+		"RAW":      {"ABCD", "DCBA", "CDAB"},
+		"INT":      {"ABCD", "DCBA", "CDAB"},
+		"INT32":    {"ABCD", "DCBA", "CDAB"},
+		"UINT":     {"ABCD", "DCBA", "CDAB"},
+		"UINT32":   {"ABCD", "DCBA", "CDAB"},
+		"FLOAT":    {"ABCD", "DCBA", "CDAB"},
+		"FLOAT32":  {"ABCD", "DCBA", "CDAB"},
+		"UFLOAT32": {"ABCD", "DCBA", "CDAB"},
 	}
+
+	validOrders, exists := dataOrderMap[M.DataType]
+	if !exists {
+		return fmt.Errorf("invalid data type '%s'", M.DataType)
+	}
+	if !utils.SContains(validOrders, M.DataOrder) {
+		return fmt.Errorf("invalid '%s' order '%s'", M.DataType, M.DataOrder)
+	}
+
+	// Check Weight
 	if M.Weight == nil {
-		return fmt.Errorf("Invalid Weight value:%d", M.Weight)
+		return fmt.Errorf("invalid Weight value: %v", M.Weight)
 	}
+
+	// Validate Tag Name
 	if !utils.IsValidColumnName(M.Tag) {
-		return fmt.Errorf("'Invalid Tag Name:%s", M.Tag)
+		return fmt.Errorf("invalid Tag Name: %s", M.Tag)
 	}
+
 	return nil
 }
 
@@ -289,7 +309,7 @@ func SiemensSheetUpdate(c *gin.Context, ruleEngine typex.Rhilex) {
 		return
 	}
 	for _, SiemensDataPoint := range form.SiemensDataPoints {
-		if err := checkSiemensDataPoints(SiemensDataPoint); err != nil {
+		if err := CheckSiemensDataPoints(SiemensDataPoint); err != nil {
 			c.JSON(common.HTTP_OK, common.Error400(err))
 			return
 		}
