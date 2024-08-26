@@ -7,11 +7,10 @@ import (
 	"time"
 
 	archsupport "github.com/hootrhino/rhilex/bspsupport"
-	"github.com/hootrhino/rhilex/component/appstack"
-	"github.com/hootrhino/rhilex/component/intermetric"
 	common "github.com/hootrhino/rhilex/component/apiserver/common"
 	"github.com/hootrhino/rhilex/component/apiserver/service"
-	"github.com/hootrhino/rhilex/component/trailer"
+	"github.com/hootrhino/rhilex/component/appstack"
+	"github.com/hootrhino/rhilex/component/intermetric"
 	"github.com/hootrhino/rhilex/glogger"
 	"github.com/hootrhino/rhilex/ossupport"
 	"github.com/hootrhino/rhilex/utils"
@@ -54,7 +53,6 @@ func source_count(e typex.Rhilex) map[string]int {
 	allRule := e.AllRules()
 	plugins := e.AllPlugins()
 	devices := e.AllDevices()
-	goods := trailer.AllGoods()
 	var c1, c2, c3, c4, c5, c6 int
 	allInEnd.Range(func(key, value interface{}) bool {
 		c1 += 1
@@ -74,10 +72,6 @@ func source_count(e typex.Rhilex) map[string]int {
 	})
 	devices.Range(func(key, value interface{}) bool {
 		c5 += 1
-		return true
-	})
-	goods.Range(func(key, value interface{}) bool {
-		c6 += 1
 		return true
 	})
 	return map[string]int{
@@ -189,7 +183,7 @@ func SourceCount(c *gin.Context, ruleEngine typex.Rhilex) {
 *
  */
 func GetUartList(c *gin.Context, ruleEngine typex.Rhilex) {
-	
+
 	c.JSON(common.HTTP_OK, common.OkWithData(service.GetOsPort()))
 }
 

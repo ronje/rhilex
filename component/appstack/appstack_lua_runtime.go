@@ -272,4 +272,10 @@ func LoadAppLibGroup(app *Application, e typex.Rhilex) {
 		}
 		AddAppLibToGroup(app, e, "rfcom", Funcs)
 	}
+	{
+		Funcs := map[string]func(l *lua.LState) int{
+			"ParseDOxygen": rhilexlib.ApureParseOxygen(e),
+		}
+		AddAppLibToGroup(app, e, "apure", Funcs)
+	}
 }

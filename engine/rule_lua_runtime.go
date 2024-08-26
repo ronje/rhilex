@@ -239,6 +239,12 @@ func LoadRuleLibGroup(r *typex.Rule, e typex.Rhilex) {
 		}
 		AddRuleLibToGroup(r, e, "rfcom", Funcs)
 	}
+	{
+		Funcs := map[string]func(l *lua.LState) int{
+			"ParseDOxygen": rhilexlib.ApureParseOxygen(e),
+		}
+		AddRuleLibToGroup(r, e, "apure", Funcs)
+	}
 }
 
 /*

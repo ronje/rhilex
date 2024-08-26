@@ -41,7 +41,6 @@ import (
 	"github.com/hootrhino/rhilex/component/intermetric"
 	"github.com/hootrhino/rhilex/component/internotify"
 	"github.com/hootrhino/rhilex/component/interqueue"
-	"github.com/hootrhino/rhilex/component/trailer"
 	"github.com/hootrhino/rhilex/device"
 	"github.com/hootrhino/rhilex/glogger"
 	"github.com/hootrhino/rhilex/source"
@@ -109,8 +108,6 @@ func InitRuleEngine(config typex.RhilexConfig) typex.Rhilex {
 	hwportmanager.InitHwPortsManager(__DefaultRuleEngine)
 	// Internal Metric
 	intermetric.InitInternalMetric(__DefaultRuleEngine)
-	// trailer
-	trailer.InitTrailerRuntime(__DefaultRuleEngine)
 	// lua appstack manager
 	appstack.InitAppStack(__DefaultRuleEngine)
 	// current only support Internal ai
@@ -160,8 +157,6 @@ func (e *RuleEngine) Stop() {
 	glogger.GLogger.Info("[*] Ready to stop rhilex")
 	// 所有的APP停了
 	appstack.Stop()
-	// 外挂停了
-	trailer.Stop()
 	// 资源
 	e.InEnds.Range(func(key, value interface{}) bool {
 		inEnd := value.(*typex.InEnd)
