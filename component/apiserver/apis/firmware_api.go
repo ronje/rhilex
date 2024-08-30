@@ -40,6 +40,7 @@ func ReStartRhilex(c *gin.Context, ruleEngine typex.Rhilex) {
 		return
 	}
 	c.JSON(common.HTTP_OK, common.Ok())
+	ruleEngine.Stop()
 	os.Exit(0)
 }
 
@@ -63,7 +64,7 @@ func Reboot(c *gin.Context, ruleEngine typex.Rhilex) {
 
 /*
 *
-* 回复出厂, 直接删除配置即可,但是现阶段暂时不实现
+* 恢复出厂, 直接删除配置即可,但是现阶段暂时不实现
 *
  */
 func RecoverNew(c *gin.Context, ruleEngine typex.Rhilex) {

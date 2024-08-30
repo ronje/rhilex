@@ -17,6 +17,8 @@ package device
 
 import (
 	"encoding/binary"
+	"encoding/hex"
+	"encoding/json"
 	"fmt"
 	"time"
 
@@ -33,6 +35,7 @@ import (
 type ModbusSlaverCommonConfig struct {
 	Mode         string `json:"mode" validate:"required"` // UART | TCP
 	MaxRegisters int    `json:"maxRegisters" validate:"required"`
+	SlaverId     int16  `json:"slaverId" validate:"required"`
 }
 type ModbusSlaverConfig struct {
 	CommonConfig ModbusSlaverCommonConfig `json:"commonConfig" validate:"required"`
@@ -57,7 +60,7 @@ func NewGenericModbusSlaver(e typex.Rhilex) typex.XDevice {
 	mdev := new(ModbusSlaver)
 	mdev.RuleEngine = e
 	mdev.mainConfig = ModbusSlaverConfig{
-		CommonConfig: ModbusSlaverCommonConfig{Mode: "TCP", MaxRegisters: 64},
+		CommonConfig: ModbusSlaverCommonConfig{Mode: "TCP", MaxRegisters: 64, SlaverId: 1},
 		PortUuid:     "/dev/ttyS0",
 		HostConfig:   common.HostConfig{Host: "0.0.0.0", Port: 1502, Timeout: 3000},
 	}
@@ -129,6 +132,20 @@ func (mdev *ModbusSlaver) Init(devId string, configMap map[string]interface{}) e
 	return nil
 }
 
+type modbusSlaverValue struct {
+	Register      int16  `json:"register"`
+	SlaverId      byte   `json:"slaverId"`
+	LastFetchTime uint64 `json:"lastFetchTime"`
+	Value         string `json:"value"`
+}
+
+func (O modbusSlaverValue) String() string {
+	bytes, _ := json.Marshal(O)
+	return string(bytes)
+}
+func uint16ToBytes(value uint16) []byte {
+	return []byte{byte(value >> 8), byte(value)}
+}
 func (mdev *ModbusSlaver) Start(cctx typex.CCTX) error {
 	mdev.Ctx = cctx.Ctx
 	mdev.CancelCTX = cctx.CancelCTX
@@ -146,6 +163,7 @@ func (mdev *ModbusSlaver) Start(cctx typex.CCTX) error {
 	mdev.server.SetOnRequest(func(s *mbserver.Server, frame mbserver.Framer) {
 		FunCode := frame.GetFunction()
 		register, numRegs, endRegister := getRegisterAddressAndNumber(frame)
+		glogger.GLogger.Debug("Modbus OnRequest: ", register, numRegs, endRegister)
 		if register > mdev.mainConfig.CommonConfig.MaxRegisters {
 			glogger.GLogger.Error("exceed MaxRegisters:", register, numRegs, endRegister)
 			return
@@ -163,6 +181,21 @@ func (mdev *ModbusSlaver) Start(cctx typex.CCTX) error {
 				CacheValue.Value = "1"
 			}
 			intercache.SetValue(mdev.PointId, UUID, CacheValue)
+			if bytes, errMarshal := json.Marshal(modbusSlaverValue{
+				Register:      int16(register),
+				SlaverId:      byte(mdev.mainConfig.CommonConfig.SlaverId),
+				LastFetchTime: LastFetchTime,
+				Value: func() string {
+					if CacheValue.Value == "1" {
+						return "1"
+					}
+					return "0"
+				}(),
+			}); errMarshal != nil {
+				glogger.GLogger.Error(errMarshal)
+			} else {
+				mdev.RuleEngine.WorkDevice(mdev.Details(), string(bytes))
+			}
 		}
 		if FunCode == 6 { // 更新HoldingRegisters
 			LastFetchTime := uint64(time.Now().UnixMilli())
@@ -171,8 +204,18 @@ func (mdev *ModbusSlaver) Start(cctx typex.CCTX) error {
 			intercache.SetValue(mdev.PointId, UUID, intercache.CacheValue{
 				UUID:          UUID,
 				LastFetchTime: LastFetchTime,
-				Value:         fmt.Sprintf("0x%04X", LastValue), // 更新后的值
+				Value:         hex.EncodeToString(uint16ToBytes(LastValue)),
 			})
+			if bytes, errMarshal := json.Marshal(modbusSlaverValue{
+				Register:      int16(register),
+				SlaverId:      byte(mdev.mainConfig.CommonConfig.SlaverId),
+				LastFetchTime: LastFetchTime,
+				Value:         hex.EncodeToString(uint16ToBytes(LastValue)),
+			}); errMarshal != nil {
+				glogger.GLogger.Error(errMarshal)
+			} else {
+				mdev.RuleEngine.WorkDevice(mdev.Details(), string(bytes))
+			}
 		}
 		// 15 16暂时不支持
 	})
