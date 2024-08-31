@@ -278,4 +278,11 @@ func LoadAppLibGroup(app *Application, e typex.Rhilex) {
 		}
 		AddAppLibToGroup(app, e, "apure", Funcs)
 	}
+	{
+		Funcs := map[string]func(l *lua.LState) int{
+			"F5": rhilexlib.SlaverF5(e),
+			"F6": rhilexlib.SlaverF6(e),
+		}
+		AddAppLibToGroup(app, e, "modbus_slaver", Funcs)
+	}
 }

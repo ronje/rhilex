@@ -48,6 +48,9 @@ end
 	if err := appstack.LoadApp(app, luaSource); err != nil {
 		glogger.GLogger.Fatal(err)
 	}
+	if err := appstack.StartApp("JustForTest-UUID"); err != nil {
+		glogger.GLogger.Fatal(err)
+	}
 	time.Sleep(3 * time.Second)
 	engine.Stop()
 }

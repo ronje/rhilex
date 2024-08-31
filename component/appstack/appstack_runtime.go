@@ -125,7 +125,7 @@ func StartApp(uuid string) error {
 			app.vm.GetInfo("n", Debugger, lua.LNil)
 			LFunction := LValue.(*lua.LFunction)
 			LastCall := lua.DbgCall{
-				Name: "_main", Pc: 0,
+				Name: "_main",
 			}
 			if len(LFunction.Proto.DbgCalls) > 0 {
 				LastCall = LFunction.Proto.DbgCalls[0]

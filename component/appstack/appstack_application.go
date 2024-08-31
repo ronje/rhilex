@@ -77,7 +77,9 @@ func (app *Application) Stop() {
 		}
 	}()
 	app.AppState = 0
-	app.cancel()
+	if app.cancel != nil {
+		app.cancel()
+	}
 }
 
 /*

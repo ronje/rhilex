@@ -24,27 +24,87 @@ import (
 
 /*
 *
-* 写入单个线圈
-*    modbus_slaver:F5("${UUID}", 1, 0)
+* 写入单个线圈 modbus_slaver:F5("${UUID}", 1, 0)
 *
  */
 func SlaverF5(rx typex.Rhilex) func(*lua.LState) int {
 	return func(l *lua.LState) int {
 		uuid := l.ToString(2)
-		addr := l.ToString(3)
-		value := l.ToString(4)
-		fmt.Println(uuid, addr, value)
+		Device := rx.GetDevice(uuid)
+		if Device == nil {
+			l.Push(lua.LString("Device not exists"))
+			return 1
+		}
+		if Device.Device == nil {
+			l.Push(lua.LString("Device not exists"))
+			return 1
+		}
+		addr := l.ToNumber(3)
+		if addr > 65535 {
+			l.Push(lua.LString("Invalid address"))
+			return 1
+		}
+		value := l.ToNumber(4)
+		if value > 1 {
+			l.Push(lua.LString("Invalid value"))
+			return 1
+		}
+		if value == 0 {
+			_, err := Device.Device.OnCtrl([]byte("CTRL_F5"),
+				[]byte(fmt.Sprintf("%d,%d", addr, 0)))
+			if err != nil {
+				l.Push(lua.LString("Invalid value"))
+				return 1
+			}
+
+		}
+		if value == 1 {
+			_, err := Device.Device.OnCtrl([]byte("CTRL_F5"),
+				[]byte(fmt.Sprintf("%d,%d", addr, 1)))
+			if err != nil {
+				l.Push(lua.LString("Invalid value"))
+				return 1
+			}
+		}
+		l.Push(lua.LNil)
 		return 1
 	}
 }
 
 /*
 *
-* 写入保持寄存器
+* 写入保持寄存器 modbus_slaver:F6("${UUID}", 1, 0xABCD)
 *
  */
 func SlaverF6(rx typex.Rhilex) func(*lua.LState) int {
 	return func(l *lua.LState) int {
+		uuid := l.ToString(2)
+		Device := rx.GetDevice(uuid)
+		if Device == nil {
+			l.Push(lua.LString("Device not exists"))
+			return 1
+		}
+		if Device.Device == nil {
+			l.Push(lua.LString("Device not exists"))
+			return 1
+		}
+		addr := l.ToNumber(3)
+		if addr > 0xFFFF {
+			l.Push(lua.LString("Invalid address"))
+			return 1
+		}
+		value := l.ToNumber(4)
+		if value > 0xFFFF {
+			l.Push(lua.LString("Invalid value"))
+			return 1
+		}
+		_, err := Device.Device.OnCtrl([]byte("CTRL_F6"),
+			[]byte(fmt.Sprintf("%d,%d", addr, value)))
+		if err != nil {
+			l.Push(lua.LString("Invalid value"))
+			return 1
+		}
+		l.Push(lua.LNil)
 		return 1
 	}
 }
