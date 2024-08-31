@@ -1,4 +1,4 @@
-// Copyright (C) 2023 wwhai
+// Copyright (C) 2024 wwhai
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License as
@@ -11,30 +11,40 @@
 // GNU Affero General Public License for more details.
 //
 // You should have received a copy of the GNU Affero General Public License
-// along with this program.  If not, see <http://www.gnu.org/licenses/>.
+// along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
 package rhilexlib
 
 import (
-	"github.com/hootrhino/rhilex/typex"
+	"fmt"
 
 	lua "github.com/hootrhino/gopher-lua"
+	"github.com/hootrhino/rhilex/typex"
 )
 
 /*
 *
-* 数据转发到 UDP：local err: = data:ToTcp(uuid, data)
+* 写入单个线圈
+*    modbus_slaver:F5("${UUID}", 1, 0)
 *
  */
-func DataToTcp(rx typex.Rhilex, uuid string) func(*lua.LState) int {
+func SlaverF5(rx typex.Rhilex) func(*lua.LState) int {
 	return func(l *lua.LState) int {
-		id := l.ToString(2)
-		data := l.ToString(3)
-		err := handleDataFormat(rx, id, data)
-		if err != nil {
-			l.Push(lua.LString(err.Error()))
-			return 1
-		}
-		l.Push(lua.LNil)
+		uuid := l.ToString(2)
+		addr := l.ToString(3)
+		value := l.ToString(4)
+		fmt.Println(uuid, addr, value)
+		return 1
+	}
+}
+
+/*
+*
+* 写入保持寄存器
+*
+ */
+func SlaverF6(rx typex.Rhilex) func(*lua.LState) int {
+	return func(l *lua.LState) int {
 		return 1
 	}
 }

@@ -11,7 +11,7 @@ import (
 * 读GPIO， lua的函数调用应该是这样: rhilexg1:GPIOGet(pin) -> v,error
 *
  */
-func RASPI4_GPIOGet(rx typex.Rhilex, uuid string) func(L *lua.LState) int {
+func RASPI4_GPIOGet(rx typex.Rhilex, uuid string) func(*lua.LState) int {
 	return func(l *lua.LState) int {
 		pin := l.ToNumber(2)
 		v, e := archsupport.RASPI4_GPIOGet(int(pin))
@@ -31,7 +31,7 @@ func RASPI4_GPIOGet(rx typex.Rhilex, uuid string) func(L *lua.LState) int {
 * 写GPIO， lua的函数调用应该是这样: rhilexg1:GPIOSet(pin, v) -> error
 *
  */
-func RASPI4_GPIOSet(rx typex.Rhilex, uuid string) func(L *lua.LState) int {
+func RASPI4_GPIOSet(rx typex.Rhilex, uuid string) func(*lua.LState) int {
 	return func(l *lua.LState) int {
 		pin := l.ToNumber(2)
 		value := l.ToNumber(3)

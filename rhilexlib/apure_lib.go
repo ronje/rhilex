@@ -29,7 +29,7 @@ import (
 * local Value = apure:ParseDOxygen("0001") -> 12.56
 *
  */
-func ApureParseOxygen(rx typex.Rhilex) func(L *lua.LState) int {
+func ApureParseOxygen(rx typex.Rhilex) func(*lua.LState) int {
 	return func(L *lua.LState) int {
 		hexValue := L.ToString(2)
 		Byte, err := hex.DecodeString(hexValue)

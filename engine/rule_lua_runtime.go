@@ -27,7 +27,7 @@ import (
   - 分组加入函数
 */
 func AddRuleLibToGroup(r *typex.Rule, rx typex.Rhilex,
-	ModuleName string, funcs map[string]func(l *lua.LState) int) {
+	ModuleName string, funcs map[string]func(*lua.LState) int) {
 	var table *lua.LTable
 	if ModuleName == "_G" {
 		table = r.LuaVM.G.Global
@@ -244,6 +244,13 @@ func LoadRuleLibGroup(r *typex.Rule, e typex.Rhilex) {
 			"ParseDOxygen": rhilexlib.ApureParseOxygen(e),
 		}
 		AddRuleLibToGroup(r, e, "apure", Funcs)
+	}
+	{
+		Funcs := map[string]func(l *lua.LState) int{
+			"F5": rhilexlib.SlaverF5(e),
+			"F6": rhilexlib.SlaverF6(e),
+		}
+		AddRuleLibToGroup(r, e, "modbus_slaver", Funcs)
 	}
 }
 

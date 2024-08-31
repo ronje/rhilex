@@ -15,12 +15,12 @@
 
 Actions = {
     function(args)
-        modbus_slaver:UpdateF5("${UUID}", 1, 0)
-        modbus_slaver:UpdateF5("${UUID}", 1, 1)
-        modbus_slaver:UpdateF5("${UUID}", 1, "0")
-        modbus_slaver:UpdateF5("${UUID}", 1, "1")
-        modbus_slaver:UpdateF6("${UUID}", 1, 0xABCD)
-        modbus_slaver:UpdateF6("${UUID}", 1, "ABCD")
+        modbus_slaver:F5("${UUID}", 1, 0)
+        modbus_slaver:F5("${UUID}", 1, 1)
+        modbus_slaver:F5("${UUID}", 1, "0")
+        modbus_slaver:F5("${UUID}", 1, "1")
+        modbus_slaver:F6("${UUID}", 1, 0xABCD)
+        modbus_slaver:F6("${UUID}", 1, "ABCD")
         return true, args
     end
 }

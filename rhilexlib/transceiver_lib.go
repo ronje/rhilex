@@ -28,7 +28,7 @@ import (
 * 向系统的通信模组发送数据
 *
  */
-func CtrlComRF(rx typex.Rhilex) func(l *lua.LState) int {
+func CtrlComRF(rx typex.Rhilex) func(*lua.LState) int {
 	return func(l *lua.LState) int {
 		Name := l.ToString(2)
 		Topic := l.ToString(3)

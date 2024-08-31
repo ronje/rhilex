@@ -13,7 +13,7 @@ import (
 * Table 转成 String, {1,2,3,4,5} -> "12345"
 *
  */
-func T2Str(rx typex.Rhilex, uuid string) func(l *lua.LState) int {
+func T2Str(rx typex.Rhilex, uuid string) func(*lua.LState) int {
 	return func(l *lua.LState) int {
 		table := l.ToTable(2)
 		args := []string{}
@@ -27,7 +27,7 @@ func T2Str(rx typex.Rhilex, uuid string) func(l *lua.LState) int {
 }
 
 // {255,255,255} -> "\0xFF\0xFF\0xFF"
-func Bin2Str(rx typex.Rhilex, uuid string) func(l *lua.LState) int {
+func Bin2Str(rx typex.Rhilex, uuid string) func(*lua.LState) int {
 	return func(l *lua.LState) int {
 		table := l.ToTable(2)
 		args := []byte{}

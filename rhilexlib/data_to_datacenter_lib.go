@@ -87,7 +87,7 @@ func formatValue(val interface{}) (string, error) {
 * 问题： 如何避免性能问题？
  */
 
-func InsertToDataCenterTable(rx typex.Rhilex, uuid string) func(L *lua.LState) int {
+func InsertToDataCenterTable(rx typex.Rhilex, uuid string) func(*lua.LState) int {
 	return func(l *lua.LState) int {
 		schema_uuid := l.ToString(2)
 		kvs := l.ToTable(3)
@@ -192,7 +192,7 @@ func saveToDataCenter(schema_uuid string, RowList []kvp) error {
 // Query List
 // GET /api/v1/datacenter/queryDataList?uuid=<uuid>&current=<current>&size=<size>&order=<order>&select=<select> HTTP/1.1
 // Host: 127.0.0.1:2580
-func QueryDataCenterList(rx typex.Rhilex, uuid string) func(L *lua.LState) int {
+func QueryDataCenterList(rx typex.Rhilex, uuid string) func(*lua.LState) int {
 	return func(l *lua.LState) int {
 		schema_uuid := l.ToString(2)
 		page := l.ToNumber(3)
@@ -217,7 +217,7 @@ func queryDataCenterList(schema_uuid string, page, size int, fields string) erro
 * last data
 *
  */
-func QueryDataCenterLast(rx typex.Rhilex, uuid string) func(L *lua.LState) int {
+func QueryDataCenterLast(rx typex.Rhilex, uuid string) func(*lua.LState) int {
 	return func(l *lua.LState) int {
 		schema_uuid := l.ToString(2)
 		fields := l.ToString(3)
@@ -238,7 +238,7 @@ func queryDataCenterLast(schema_uuid string, fields string) error {
 *
 * 更新最后一行，而不是插入
  */
-func UpdateDataCenterLast(rx typex.Rhilex, uuid string) func(l *lua.LState) int {
+func UpdateDataCenterLast(rx typex.Rhilex, uuid string) func(*lua.LState) int {
 	return func(l *lua.LState) int {
 		schema_uuid := l.ToString(2)
 		kvs := l.ToTable(3)
