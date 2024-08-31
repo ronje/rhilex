@@ -24,7 +24,7 @@ import (
 	"runtime"
 	"time"
 
-	archsupport "github.com/hootrhino/rhilex/bspsupport"
+	archsupport "github.com/hootrhino/rhilex/archsupport"
 	"github.com/hootrhino/rhilex/engine"
 	"github.com/hootrhino/rhilex/ossupport"
 	"github.com/hootrhino/rhilex/typex"

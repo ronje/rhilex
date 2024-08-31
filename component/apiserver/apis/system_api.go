@@ -6,7 +6,7 @@ import (
 	"strconv"
 	"time"
 
-	archsupport "github.com/hootrhino/rhilex/bspsupport"
+	archsupport "github.com/hootrhino/rhilex/archsupport"
 	common "github.com/hootrhino/rhilex/component/apiserver/common"
 	"github.com/hootrhino/rhilex/component/apiserver/service"
 	"github.com/hootrhino/rhilex/component/appstack"
