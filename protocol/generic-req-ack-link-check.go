@@ -16,6 +16,12 @@
 package protocol
 
 import (
+	"encoding/binary"
+	"errors"
+	"hash/crc32"
+)
+
+import (
 	"fmt"
 
 	"github.com/hootrhino/rhilex/utils"
@@ -39,4 +45,19 @@ func CheckDataCrc16(buffer []byte) ([]byte, error) {
 			crcCheckedValue, crcCalculatedValue, buffer)
 	}
 	return buffer[2 : Len-4], nil
+}
+
+// CheckDataCrc32 计算输入数据的CRC32校验值，并将其附加到数据末尾。
+// 如果数据已经包含CRC32校验值，它将验证校验值是否正确。
+func CheckDataCrc32(buffer []byte) ([]byte, error) {
+	crc32Size := 4
+	if len(buffer) < crc32Size {
+		return nil, errors.New("data is too short to contain a CRC32 checksum")
+	}
+	crc := crc32.ChecksumIEEE(buffer[:len(buffer)-crc32Size])
+	storedCrc := binary.BigEndian.Uint32(buffer[len(buffer)-crc32Size:])
+	if crc != storedCrc {
+		return nil, errors.New("CRC32 checksum does not match")
+	}
+	return buffer, nil
 }

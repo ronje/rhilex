@@ -76,13 +76,13 @@ func (tc *ATK01Lora) Start(Config transceivercom.TransceiverConfig) error {
 	}
 	tc.serialPort = serialPort
 	if tc.mainConfig.ComConfig.TransportProtocol == 1 {
-		go protocol.StartEdgeSymReceive(typex.GCTX, tc.DataBuffer, tc.serialPort)
+		go protocol.Start_EE_EF_R_N_Receive(typex.GCTX, tc.DataBuffer, tc.serialPort)
 	} else if tc.mainConfig.ComConfig.TransportProtocol == 2 {
-		go protocol.StartNewLineLoopReceive(typex.GCTX, tc.DataBuffer, tc.serialPort)
+		go protocol.StartNewLineReceive(typex.GCTX, tc.DataBuffer, tc.serialPort)
 	} else if tc.mainConfig.ComConfig.TransportProtocol == 3 {
 		go protocol.StartFixLengthReceive(typex.GCTX, tc.DataBuffer, tc.serialPort)
 	} else {
-		go protocol.StartEdgeSymReceive(typex.GCTX, tc.DataBuffer, tc.serialPort)
+		go protocol.Start_EE_EF_R_N_Receive(typex.GCTX, tc.DataBuffer, tc.serialPort)
 	}
 	go tc.startProcessPacket(tc.DataBuffer)
 	glogger.GLogger.Info("ATK01-LORA-01 Started")
