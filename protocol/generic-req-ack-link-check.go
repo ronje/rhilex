@@ -34,7 +34,7 @@ import (
  */
 func CheckDataCrc16(buffer []byte) ([]byte, error) {
 	Len := len(buffer)
-	if Len < 4 {
+	if Len < 6 {
 		return nil, fmt.Errorf("Invalid packet:%v", buffer)
 	}
 	crcByte := [2]byte{buffer[Len-4], buffer[Len-3]}
