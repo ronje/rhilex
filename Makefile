@@ -1,6 +1,9 @@
-APP=rhilex
+#---------------------------------------------------------------------------------------------------
+# BUILD RHILEX
+#---------------------------------------------------------------------------------------------------
 
-# Get system information
+APP=$(shell basename $(PWD))
+
 distro=$(shell grep -oP '(?<=^PRETTY_NAME=")([^"]+)' /etc/os-release)
 kernel=$(shell uname -r)
 host=$(shell hostname)
@@ -8,14 +11,14 @@ ip=$(shell hostname -I | awk '{print $$1}')
 memory=$(shell free -m | awk 'NR==2{printf "%.2fGB\n", $$2/1000}')
 disk=$(shell df -h | awk '$$NF=="/"{printf "%s\n", $$2}')
 arch=$(shell uname -m)
-version=$(shell git describe --tags $(git rev-list --tags --max-count=1))
 
-XVersion=-X 'github.com/hootrhino/rhilex/typex.MainVersion=$(version)'
+VERSION := $(shell git describe --tags --abbrev=0 2> /dev/null || git rev-parse --short HEAD)
+HASH := $(shell git rev-parse --short HEAD)
+
+XVersion=-X 'github.com/hootrhino/rhilex/typex.MainVersion=$(VERSION)-${HASH}'
 FLAGS="$(XVersion) -s -w -linkmode external -extldflags -static"
-TRIM_PATH=-gcflags=-trimpath=$$GOPATH -asmflags=-trimpath=$$GOPATH
 
-# Define common build options
-GO_BUILD_OPTIONS = $(TRIM_PATH) -ldflags $(FLAGS)
+GO_BUILD_OPTIONS = -trimpath -ldflags $(FLAGS)
 
 .PHONY: all
 all: info build

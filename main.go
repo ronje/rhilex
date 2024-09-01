@@ -99,7 +99,8 @@ func main() {
 					},
 				},
 				Action: func(c *cli.Context) error {
-					file, err := os.Create(ossupport.UpgradeLogPath)
+					flag := os.O_APPEND | os.O_CREATE | os.O_WRONLY
+					file, err := os.OpenFile(ossupport.UpgradeLogPath, flag, 0755)
 					if err != nil {
 						utils.CLog(err.Error())
 						return nil
