@@ -2,7 +2,7 @@
 # BUILD RHILEX
 #---------------------------------------------------------------------------------------------------
 
-APP=$(shell basename $(PWD))
+APP=rhilex
 
 distro=$(shell grep -oP '(?<=^PRETTY_NAME=")([^"]+)' /etc/os-release)
 kernel=$(shell uname -r)
