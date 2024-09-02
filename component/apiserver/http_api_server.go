@@ -12,7 +12,6 @@ import (
 	"github.com/shirou/gopsutil/cpu"
 
 	"github.com/hootrhino/rhilex/component/apiserver/apis"
-	"github.com/hootrhino/rhilex/component/apiserver/apis/shelly"
 	"github.com/hootrhino/rhilex/component/apiserver/model"
 	"github.com/hootrhino/rhilex/component/apiserver/server"
 	"github.com/hootrhino/rhilex/component/apiserver/service"
@@ -197,8 +196,6 @@ func (hs *ApiServerPlugin) Init(config *ini.Section) error {
 		&model.MUserLuaTemplate{},
 		&model.MModbusDataPoint{},
 		&model.MSiemensDataPoint{},
-		&model.MHnc8DataPoint{},
-		&model.MKnd8DataPoint{},
 		&model.MSnmpOid{},
 		&model.MBacnetDataPoint{},
 		&model.MBacnetRouterDataPoint{},
@@ -360,17 +357,6 @@ func (hs *ApiServerPlugin) LoadRoute() {
 		SIEMENS_PLC.DELETE(("/delIds"), server.AddRoute(apis.SiemensSheetDelete))
 		SIEMENS_PLC.DELETE(("/delAll"), server.AddRoute(apis.SiemensSheetDeleteAll))
 	}
-	// 华中数控 点位表
-	Hnc8 := server.RouteGroup(server.ContextUrl("/hnc8_data_sheet"))
-	{
-		Hnc8.POST(("/sheetImport"), server.AddRoute(apis.Hnc8SheetImport))
-		Hnc8.GET(("/sheetExport"), server.AddRoute(apis.Hnc8PointsExport))
-		Hnc8.GET(("/list"), server.AddRoute(apis.Hnc8SheetPageList))
-		Hnc8.POST(("/update"), server.AddRoute(apis.Hnc8SheetUpdate))
-		Hnc8.DELETE(("/delIds"), server.AddRoute(apis.Hnc8SheetDelete))
-		Hnc8.DELETE(("/delAll"), server.AddRoute(apis.Hnc8SheetDeleteAll))
-	}
-
 	// ----------------------------------------------------------------------------------------------
 	// APP
 	// ----------------------------------------------------------------------------------------------
@@ -467,12 +453,9 @@ func (hs *ApiServerPlugin) LoadRoute() {
 		jpegStream.GET("/list", server.AddRoute(apis.GetJpegStreamList))
 		jpegStream.GET("/detail", server.AddRoute(apis.GetJpegStreamDetail))
 	}
-	//
-	//New Api
+
 	// Init Internal Notify Route
 	apis.InitInternalNotifyRoute()
-	// Shelly
-	shelly.InitShellyRoute()
 	// Snmp Route
 	apis.InitSnmpRoute()
 	// Bacnet Route

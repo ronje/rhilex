@@ -72,16 +72,6 @@ func BacnetPointUUID() string {
 	return MakeUUID("BACN")
 }
 
-// 凯帝恩
-func KDNPointUUID() string {
-	return MakeUUID("KDNC")
-}
-
-// 华中数控
-func HNC8PointUUID() string {
-	return MakeUUID("HNC8")
-}
-
 // MakeUUID
 func MakeUUID(prefix string) string {
 	return prefix + strings.ToUpper(shortuuid.New()[:8])

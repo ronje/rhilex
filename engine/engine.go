@@ -33,7 +33,6 @@ import (
 
 	intercache "github.com/hootrhino/rhilex/component/intercache"
 
-	"github.com/hootrhino/rhilex/component/shellymanager"
 	supervisor "github.com/hootrhino/rhilex/component/supervisor"
 
 	datacenter "github.com/hootrhino/rhilex/component/datacenter"
@@ -96,8 +95,6 @@ func InitRuleEngine(config typex.RhilexConfig) typex.Rhilex {
 	interdb.Init(__DefaultRuleEngine)
 	// Internal kv Store
 	interkv.InitInterKVStore(core.GlobalConfig.MaxKvStoreSize)
-	// Shelly Device Registry
-	shellymanager.InitShellyDeviceRegistry(__DefaultRuleEngine)
 	// SuperVisor Admin
 	supervisor.InitResourceSuperVisorAdmin(__DefaultRuleEngine)
 	// Init Global Value Registry
@@ -196,9 +193,6 @@ func (e *RuleEngine) Stop() {
 		glogger.GLogger.Infof("Stop Device:(%s) Successfully", Device.Name)
 		return true
 	})
-	// Flush Shelly Device Cache
-	glogger.GLogger.Info("Flush Shelly Device Cache")
-	shellymanager.Flush()
 	// Internal Cache
 	glogger.GLogger.Info("Flush Internal Cache")
 	intercache.Flush()
@@ -517,12 +511,6 @@ func (e *RuleEngine) InitDeviceTypeManager() error {
 			NewDevice: device.NewTencentIoTGateway,
 		},
 	)
-	e.DeviceTypeManager.Register(typex.SMART_HOME_CONTROLLER,
-		&typex.XConfig{
-			Engine:    e,
-			NewDevice: device.NewShellyGen1ProxyGateway,
-		},
-	)
 	e.DeviceTypeManager.Register(typex.GENERIC_HTTP_DEVICE,
 		&typex.XConfig{
 			Engine:    e,
@@ -599,18 +587,6 @@ func (e *RuleEngine) InitDeviceTypeManager() error {
 		&typex.XConfig{
 			Engine:    e,
 			NewDevice: device.NewBacnetRouter,
-		},
-	)
-	e.DeviceTypeManager.Register(typex.HNC8,
-		&typex.XConfig{
-			Engine:    e,
-			NewDevice: device.NewHNC8_CNC,
-		},
-	)
-	e.DeviceTypeManager.Register(typex.KDN,
-		&typex.XConfig{
-			Engine:    e,
-			NewDevice: device.NewKDN_CNC,
 		},
 	)
 	return nil

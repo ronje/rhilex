@@ -189,13 +189,6 @@ func DeleteDevice(c *gin.Context, ruleEngine typex.Rhilex) {
 			return
 		}
 	}
-	// 华中数控需要同步删除点位表记录
-	if Mdev.Type == typex.HNC8.String() {
-		if err := service.DeleteAllHnc8PointByDevice(uuid); err != nil {
-			c.JSON(common.HTTP_OK, common.Error400(err))
-			return
-		}
-	}
 	old := ruleEngine.GetDevice(uuid)
 	if old != nil {
 		if old.Device.Status() == typex.DEV_UP {
