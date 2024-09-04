@@ -19,7 +19,7 @@
 * 警告：此处会随着硬件不同而不兼容，要移植的时候记得统一一下目标硬件的端口
 *
  */
-package hwportmanager
+package uartctrl
 
 import (
 	"encoding/json"

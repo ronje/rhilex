@@ -24,7 +24,7 @@ import (
 	"time"
 
 	"github.com/hootrhino/rhilex/common"
-	"github.com/hootrhino/rhilex/component/hwportmanager"
+	"github.com/hootrhino/rhilex/component/uartctrl"
 
 	serial "github.com/hootrhino/goserial"
 	"github.com/hootrhino/rhilex/glogger"
@@ -57,7 +57,7 @@ type GenericUartProtocolDevice struct {
 	serialPort   serial.Port // 串口
 	mainConfig   _GenericUartProtocolConfig
 	errorCount   int // 记录最大容错数，默认5次，出错超过5此就重启
-	hwPortConfig hwportmanager.UartConfig
+	hwPortConfig uartctrl.UartConfig
 }
 
 func NewGenericUartProtocolDevice(e typex.Rhilex) typex.XDevice {
@@ -83,7 +83,7 @@ func (mdev *GenericUartProtocolDevice) Init(devId string, configMap map[string]i
 		return errors.New("option only 'UART'")
 	}
 	if mdev.mainConfig.CommonConfig.Mode == "UART" {
-		hwPort, err := hwportmanager.GetHwPort(mdev.mainConfig.PortUuid)
+		hwPort, err := uartctrl.GetHwPort(mdev.mainConfig.PortUuid)
 		if err != nil {
 			return err
 		}
@@ -91,7 +91,7 @@ func (mdev *GenericUartProtocolDevice) Init(devId string, configMap map[string]i
 			return fmt.Errorf("UART is busying now, Occupied By:%s", hwPort.OccupyBy)
 		}
 		switch tCfg := hwPort.Config.(type) {
-		case hwportmanager.UartConfig:
+		case uartctrl.UartConfig:
 			{
 				mdev.hwPortConfig = tCfg
 			}
@@ -127,8 +127,8 @@ func (mdev *GenericUartProtocolDevice) Start(cctx typex.CCTX) error {
 			glogger.GLogger.Error("serialPort start failed:", err)
 			return err
 		}
-		hwportmanager.SetInterfaceBusy(mdev.mainConfig.PortUuid,
-			hwportmanager.HwPortOccupy{
+		uartctrl.SetInterfaceBusy(mdev.mainConfig.PortUuid,
+			uartctrl.HwPortOccupy{
 				UUID: mdev.PointId,
 				Type: "DEVICE",
 				Name: mdev.Details().Name,
@@ -190,7 +190,7 @@ func (mdev *GenericUartProtocolDevice) Stop() {
 		if mdev.serialPort != nil {
 			mdev.serialPort.Close()
 		}
-		hwportmanager.FreeInterfaceBusy(mdev.mainConfig.PortUuid)
+		uartctrl.FreeInterfaceBusy(mdev.mainConfig.PortUuid)
 	}
 }
 

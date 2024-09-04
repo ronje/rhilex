@@ -23,7 +23,7 @@ import (
 
 	serial "github.com/hootrhino/goserial"
 
-	"github.com/hootrhino/rhilex/component/hwportmanager"
+	"github.com/hootrhino/rhilex/component/uartctrl"
 	"github.com/hootrhino/rhilex/glogger"
 	"github.com/hootrhino/rhilex/typex"
 	"github.com/hootrhino/rhilex/utils"
@@ -45,7 +45,7 @@ type GenericUartMainConfig struct {
 
 type GenericUart struct {
 	typex.XStatus
-	hwPortConfig hwportmanager.UartConfig
+	hwPortConfig uartctrl.UartConfig
 	status       typex.SourceState
 	locker       sync.Mutex
 	serialPort   serial.Port
@@ -83,7 +83,7 @@ func (mdev *GenericUart) Init(outEndId string, configMap map[string]interface{})
 func (mdev *GenericUart) Start(cctx typex.CCTX) error {
 	mdev.Ctx = cctx.Ctx
 	mdev.CancelCTX = cctx.CancelCTX
-	hwPort, err := hwportmanager.GetHwPort(mdev.mainConfig.PortUuid)
+	hwPort, err := uartctrl.GetHwPort(mdev.mainConfig.PortUuid)
 	if err != nil {
 		return err
 	}
@@ -91,7 +91,7 @@ func (mdev *GenericUart) Start(cctx typex.CCTX) error {
 		return fmt.Errorf("mdev is busying now, Occupied By:%s", hwPort.OccupyBy)
 	}
 	switch tCfg := hwPort.Config.(type) {
-	case hwportmanager.UartConfig:
+	case uartctrl.UartConfig:
 		{
 			mdev.hwPortConfig = tCfg
 		}

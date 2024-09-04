@@ -24,11 +24,11 @@ import (
 	lua "github.com/hootrhino/gopher-lua"
 	"github.com/hootrhino/rhilex/component/aibase"
 	"github.com/hootrhino/rhilex/component/appstack"
-	"github.com/hootrhino/rhilex/component/hwportmanager"
 	"github.com/hootrhino/rhilex/component/interkv"
 	"github.com/hootrhino/rhilex/component/rhilexmanager"
 	"github.com/hootrhino/rhilex/component/ruleengine"
 	transceiver "github.com/hootrhino/rhilex/component/transceivercom/transceiver"
+	"github.com/hootrhino/rhilex/component/uartctrl"
 	core "github.com/hootrhino/rhilex/config"
 
 	intercache "github.com/hootrhino/rhilex/component/intercache"
@@ -102,7 +102,7 @@ func InitRuleEngine(config typex.RhilexConfig) typex.Rhilex {
 	// Internal Bus
 	internotify.InitInternalEventBus(__DefaultRuleEngine, core.GlobalConfig.MaxQueueSize)
 	// Load hardware Port Manager
-	hwportmanager.InitHwPortsManager(__DefaultRuleEngine)
+	uartctrl.InitHwPortsManager(__DefaultRuleEngine)
 	// Internal Metric
 	intermetric.InitInternalMetric(__DefaultRuleEngine)
 	// lua appstack manager

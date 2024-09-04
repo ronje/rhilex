@@ -23,7 +23,7 @@ import (
 	"time"
 
 	serial "github.com/hootrhino/goserial"
-	"github.com/hootrhino/rhilex/component/hwportmanager"
+	"github.com/hootrhino/rhilex/component/uartctrl"
 	"github.com/hootrhino/rhilex/glogger"
 	"github.com/hootrhino/rhilex/typex"
 	"github.com/sirupsen/logrus"
@@ -97,7 +97,7 @@ func (ms *modbusScanner) Service(arg typex.ServiceArg) typex.ServiceResult {
 						{"error": err.Error()},
 					}}
 				}
-				hwPort, err := hwportmanager.GetHwPort(form1.PortUuid)
+				hwPort, err := uartctrl.GetHwPort(form1.PortUuid)
 				if err != nil {
 					ms.cancel()
 					ms.busying = false
@@ -105,9 +105,9 @@ func (ms *modbusScanner) Service(arg typex.ServiceArg) typex.ServiceResult {
 						{"error": "port not exists:" + form1.PortUuid},
 					}}
 				}
-				hwPortConfig := hwportmanager.UartConfig{}
+				hwPortConfig := uartctrl.UartConfig{}
 				switch tcfg := hwPort.Config.(type) {
-				case hwportmanager.UartConfig:
+				case uartctrl.UartConfig:
 					{
 						hwPortConfig = tcfg
 					}

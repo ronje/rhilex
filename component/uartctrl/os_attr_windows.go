@@ -13,7 +13,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-package hwportmanager
+package uartctrl
 
 import (
 	"fmt"
@@ -24,12 +24,12 @@ import (
 
 // 检查串口设备是否被系统进程占用
 func CheckSerialBusy(serialDevice string) error {
-	if runtime.GOOS == "linux" {
-		_, err := syscall.Open(serialDevice, syscall.O_RDWR|syscall.O_NOCTTY|syscall.O_NONBLOCK, 0)
+	if runtime.GOOS == "windows" {
+		_, err := os.Open(`\\.\` + serialDevice)
 		if err != nil {
 			pathErr, ok := err.(*os.PathError)
 			if ok {
-				if pathErr.Err.(syscall.Errno) == syscall.EBUSY {
+				if pathErr.Err.(syscall.Errno) == syscall.ERROR_ACCESS_DENIED {
 					return fmt.Errorf("serial port %s is in use", serialDevice)
 				}
 			}

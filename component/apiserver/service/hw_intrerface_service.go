@@ -19,8 +19,8 @@ import (
 	"encoding/json"
 
 	"github.com/hootrhino/rhilex/component/apiserver/model"
-	"github.com/hootrhino/rhilex/component/hwportmanager"
 	"github.com/hootrhino/rhilex/component/interdb"
+	"github.com/hootrhino/rhilex/component/uartctrl"
 	"github.com/hootrhino/rhilex/typex"
 	"github.com/hootrhino/rhilex/utils"
 	"go.bug.st/serial"
@@ -127,14 +127,14 @@ func ReScanHwPortConfig() error {
 		if err1 != nil {
 			return err1
 		}
-		hwportmanager.SetHwPort(hwportmanager.SystemHwPort{
+		uartctrl.SetHwPort(uartctrl.SystemHwPort{
 			UUID: portName,
 			Name: portName,
 			Type: "UART",
 			Alias: func() string {
 				return portName
 			}(),
-			Config: hwportmanager.UartConfig{
+			Config: uartctrl.UartConfig{
 				Timeout:  3000,
 				Uart:     portName,
 				BaudRate: 9600,
@@ -162,7 +162,7 @@ func ClearNullPort() {
 	}
 	// 清除缓存里面的数据
 	for _, portName := range complement(TotalPort, OsPorts) {
-		hwportmanager.RemovePort(portName)
+		uartctrl.RemovePort(portName)
 		interdb.DB().Model(model.MHwPort{}).Where("name=?", portName).Delete(model.MHwPort{})
 	}
 }

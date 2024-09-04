@@ -7,8 +7,8 @@ import (
 
 	cron_task "github.com/hootrhino/rhilex/component/crontask"
 	dataschema "github.com/hootrhino/rhilex/component/dataschema"
-	"github.com/hootrhino/rhilex/component/hwportmanager"
 	"github.com/hootrhino/rhilex/component/internotify"
+	"github.com/hootrhino/rhilex/component/uartctrl"
 	"github.com/shirou/gopsutil/cpu"
 
 	"github.com/hootrhino/rhilex/component/apiserver/apis"
@@ -142,7 +142,7 @@ func loadAllPortConfig() {
 		return
 	}
 	for _, MHwPort := range MHwPorts {
-		Port := hwportmanager.SystemHwPort{
+		Port := uartctrl.SystemHwPort{
 			UUID:        MHwPort.UUID,
 			Name:        MHwPort.Name,
 			Type:        MHwPort.Type,
@@ -151,18 +151,18 @@ func loadAllPortConfig() {
 		}
 		// 串口
 		if MHwPort.Type == "UART" {
-			config := hwportmanager.UartConfig{}
+			config := uartctrl.UartConfig{}
 			if err := utils.BindSourceConfig(MHwPort.GetConfig(), &config); err != nil {
 				glogger.GLogger.Error(err) // 这里必须不能出错
 				continue
 			}
 			Port.Config = config
-			hwportmanager.SetHwPort(Port)
+			uartctrl.SetHwPort(Port)
 		}
 		// 未知接口参数为空，以后扩展，比如FD
 		if MHwPort.Type != "UART" {
 			Port.Config = "NULL"
-			hwportmanager.SetHwPort(Port)
+			uartctrl.SetHwPort(Port)
 		}
 	}
 }

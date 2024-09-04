@@ -27,8 +27,8 @@ import (
 	mbserver "github.com/hootrhino/gomodbus-server"
 	serial "github.com/hootrhino/goserial"
 	"github.com/hootrhino/rhilex/common"
-	"github.com/hootrhino/rhilex/component/hwportmanager"
 	"github.com/hootrhino/rhilex/component/intercache"
+	"github.com/hootrhino/rhilex/component/uartctrl"
 	"github.com/hootrhino/rhilex/glogger"
 	"github.com/hootrhino/rhilex/typex"
 	"github.com/hootrhino/rhilex/utils"
@@ -49,7 +49,7 @@ type ModbusSlaver struct {
 	typex.XStatus
 	status           typex.DeviceState
 	mainConfig       ModbusSlaverConfig
-	hwPortConfig     hwportmanager.UartConfig
+	hwPortConfig     uartctrl.UartConfig
 	registers        map[string]*common.RegisterRW
 	server           *mbserver.Server
 	HoldingRegisters []uint16 // [5] = WriteSingleCoil
@@ -117,7 +117,7 @@ func (mdev *ModbusSlaver) Init(devId string, configMap map[string]interface{}) e
 	}
 
 	if mdev.mainConfig.CommonConfig.Mode == "UART" {
-		hwPort, err := hwportmanager.GetHwPort(mdev.mainConfig.PortUuid)
+		hwPort, err := uartctrl.GetHwPort(mdev.mainConfig.PortUuid)
 		if err != nil {
 			return err
 		}
@@ -125,7 +125,7 @@ func (mdev *ModbusSlaver) Init(devId string, configMap map[string]interface{}) e
 			return fmt.Errorf("UART is busying now, Occupied By:%s", hwPort.OccupyBy)
 		}
 		switch tCfg := hwPort.Config.(type) {
-		case hwportmanager.UartConfig:
+		case uartctrl.UartConfig:
 			mdev.hwPortConfig = tCfg
 		default:
 			return fmt.Errorf("Invalid config:%s", hwPort.Config)
@@ -222,7 +222,7 @@ func (mdev *ModbusSlaver) Start(cctx typex.CCTX) error {
 		// 15 16暂时不支持
 	})
 	if mdev.mainConfig.CommonConfig.Mode == "UART" {
-		hwPort, err := hwportmanager.GetHwPort(mdev.mainConfig.PortUuid)
+		hwPort, err := uartctrl.GetHwPort(mdev.mainConfig.PortUuid)
 		if err != nil {
 			return err
 		}
@@ -279,7 +279,7 @@ func (mdev *ModbusSlaver) Stop() {
 		mdev.server.Close()
 	}
 	if mdev.mainConfig.CommonConfig.Mode == "UART" {
-		hwportmanager.FreeInterfaceBusy(mdev.mainConfig.PortUuid)
+		uartctrl.FreeInterfaceBusy(mdev.mainConfig.PortUuid)
 	}
 	intercache.UnRegisterSlot(mdev.PointId) // 卸载点位表
 }

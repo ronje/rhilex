@@ -11,9 +11,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/hootrhino/rhilex/component/hwportmanager"
-
 	serial "github.com/hootrhino/goserial"
+	"github.com/hootrhino/rhilex/component/uartctrl"
 	"github.com/hootrhino/rhilex/glogger"
 	"github.com/hootrhino/rhilex/typex"
 	"github.com/hootrhino/rhilex/utils"
@@ -36,7 +35,7 @@ type _UartMainConfig struct {
 type genericUartDevice struct {
 	typex.XStatus
 	serialPort   serial.Port
-	hwPortConfig hwportmanager.UartConfig
+	hwPortConfig uartctrl.UartConfig
 	status       typex.DeviceState
 	RuleEngine   typex.Rhilex
 	mainConfig   _UartMainConfig
@@ -88,7 +87,7 @@ func (uart *genericUartDevice) Init(devId string, configMap map[string]interface
 		glogger.GLogger.Error(errA)
 		return errA
 	}
-	hwPort, errGetHwPort := hwportmanager.GetHwPort(uart.mainConfig.PortUuid)
+	hwPort, errGetHwPort := uartctrl.GetHwPort(uart.mainConfig.PortUuid)
 	if errGetHwPort != nil {
 		return errGetHwPort
 	}
@@ -96,7 +95,7 @@ func (uart *genericUartDevice) Init(devId string, configMap map[string]interface
 		return fmt.Errorf("UART is busying now, Occupied By:%s", hwPort.OccupyBy)
 	}
 	switch tCfg := hwPort.Config.(type) {
-	case hwportmanager.UartConfig:
+	case uartctrl.UartConfig:
 		{
 			uart.hwPortConfig = tCfg
 		}
@@ -128,8 +127,8 @@ func (uart *genericUartDevice) Start(cctx typex.CCTX) error {
 		return err
 	}
 
-	hwportmanager.SetInterfaceBusy(uart.mainConfig.PortUuid,
-		hwportmanager.HwPortOccupy{
+	uartctrl.SetInterfaceBusy(uart.mainConfig.PortUuid,
+		uartctrl.HwPortOccupy{
 			UUID: uart.PointId,
 			Type: "DEVICE",
 			Name: uart.Details().Name,
@@ -243,7 +242,7 @@ func (uart *genericUartDevice) Stop() {
 	}
 	if uart.serialPort != nil {
 		uart.serialPort.Close()
-		hwportmanager.FreeInterfaceBusy(uart.mainConfig.PortUuid)
+		uartctrl.FreeInterfaceBusy(uart.mainConfig.PortUuid)
 	}
 
 }

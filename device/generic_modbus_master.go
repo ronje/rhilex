@@ -28,9 +28,9 @@ import (
 	"time"
 
 	"github.com/hootrhino/rhilex/common"
-	"github.com/hootrhino/rhilex/component/hwportmanager"
 	intercache "github.com/hootrhino/rhilex/component/intercache"
 	"github.com/hootrhino/rhilex/component/interdb"
+	"github.com/hootrhino/rhilex/component/uartctrl"
 
 	modbus "github.com/hootrhino/gomodbus"
 	core "github.com/hootrhino/rhilex/config"
@@ -106,7 +106,7 @@ type GenericModbusMaster struct {
 	//
 	mainConfig     ModbusMasterConfig
 	retryTimes     int
-	hwPortConfig   hwportmanager.UartConfig
+	hwPortConfig   uartctrl.UartConfig
 	Registers      map[string]*common.RegisterRW
 	RegisterGroups []*ModbusMasterGroupedTag
 }
@@ -204,7 +204,7 @@ func (mdev *GenericModbusMaster) Init(devId string, configMap map[string]interfa
 		}
 	}
 	if mdev.mainConfig.CommonConfig.Mode == "UART" {
-		hwPort, err := hwportmanager.GetHwPort(mdev.mainConfig.PortUuid)
+		hwPort, err := uartctrl.GetHwPort(mdev.mainConfig.PortUuid)
 		if err != nil {
 			return err
 		}
@@ -212,7 +212,7 @@ func (mdev *GenericModbusMaster) Init(devId string, configMap map[string]interfa
 			return fmt.Errorf("UART is busying now, Occupied By:%s", hwPort.OccupyBy)
 		}
 		switch tCfg := hwPort.Config.(type) {
-		case hwportmanager.UartConfig:
+		case uartctrl.UartConfig:
 			{
 				mdev.hwPortConfig = tCfg
 			}
@@ -289,7 +289,7 @@ func (mdev *GenericModbusMaster) Start(cctx typex.CCTX) error {
 	mdev.CancelCTX = cctx.CancelCTX
 	mdev.retryTimes = 0
 	if mdev.mainConfig.CommonConfig.Mode == "UART" {
-		hwPort, err := hwportmanager.GetHwPort(mdev.mainConfig.PortUuid)
+		hwPort, err := uartctrl.GetHwPort(mdev.mainConfig.PortUuid)
 		if err != nil {
 			return err
 		}
@@ -312,7 +312,7 @@ func (mdev *GenericModbusMaster) Start(cctx typex.CCTX) error {
 		if err := mdev.rtuHandler.Connect(); err != nil {
 			return err
 		}
-		hwportmanager.SetInterfaceBusy(mdev.mainConfig.PortUuid, hwportmanager.HwPortOccupy{
+		uartctrl.SetInterfaceBusy(mdev.mainConfig.PortUuid, uartctrl.HwPortOccupy{
 			UUID: mdev.PointId,
 			Type: "DEVICE",
 			Name: mdev.Details().Name,
@@ -479,7 +479,7 @@ func (mdev *GenericModbusMaster) Stop() {
 		mdev.CancelCTX()
 	}
 	if mdev.mainConfig.CommonConfig.Mode == "UART" {
-		hwportmanager.FreeInterfaceBusy(mdev.mainConfig.PortUuid)
+		uartctrl.FreeInterfaceBusy(mdev.mainConfig.PortUuid)
 		if mdev.rtuHandler != nil {
 			mdev.rtuHandler.Close()
 		}

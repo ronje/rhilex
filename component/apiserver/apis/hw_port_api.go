@@ -22,7 +22,7 @@ import (
 	common "github.com/hootrhino/rhilex/component/apiserver/common"
 	"github.com/hootrhino/rhilex/component/apiserver/model"
 	"github.com/hootrhino/rhilex/component/apiserver/service"
-	"github.com/hootrhino/rhilex/component/hwportmanager"
+	"github.com/hootrhino/rhilex/component/uartctrl"
 	"github.com/hootrhino/rhilex/typex"
 	"github.com/hootrhino/rhilex/utils"
 )
@@ -80,7 +80,7 @@ func RefreshPortList(c *gin.Context, ruleEngine typex.Rhilex) {
  */
 func AllHwPorts(c *gin.Context, ruleEngine typex.Rhilex) {
 	HwPortVos := []HwPortVo{}
-	for _, port := range hwportmanager.AllHwPort() {
+	for _, port := range uartctrl.AllHwPort() {
 		HwPortVos = append(HwPortVos, HwPortVo{
 			UUID:  port.UUID,
 			Name:  port.Name,
@@ -127,7 +127,7 @@ func UpdateHwPortConfig(c *gin.Context, ruleEngine typex.Rhilex) {
 		c.JSON(common.HTTP_OK, common.Error400(err1))
 		return
 	}
-	HwIPort := hwportmanager.SystemHwPort{
+	HwIPort := uartctrl.SystemHwPort{
 		UUID:        MHwPort.UUID,
 		Name:        MHwPort.Name,
 		Type:        MHwPort.Type,
@@ -136,7 +136,7 @@ func UpdateHwPortConfig(c *gin.Context, ruleEngine typex.Rhilex) {
 	}
 	// 串口类
 	if MHwPort.Type == "UART" {
-		config := hwportmanager.UartConfig{}
+		config := uartctrl.UartConfig{}
 		utils.BindSourceConfig(MHwPort.GetConfig(), &config)
 		HwIPort.Config = config
 	}
@@ -144,7 +144,7 @@ func UpdateHwPortConfig(c *gin.Context, ruleEngine typex.Rhilex) {
 		HwIPort.Config = nil
 	}
 	// 刷新接口参数
-	hwportmanager.RefreshPort(HwIPort)
+	uartctrl.RefreshPort(HwIPort)
 	c.JSON(common.HTTP_OK, common.Ok())
 
 }
@@ -156,7 +156,7 @@ func UpdateHwPortConfig(c *gin.Context, ruleEngine typex.Rhilex) {
  */
 func GetHwPortDetail(c *gin.Context, ruleEngine typex.Rhilex) {
 	uuid, _ := c.GetQuery("uuid")
-	Port, err1 := hwportmanager.GetHwPort(uuid)
+	Port, err1 := uartctrl.GetHwPort(uuid)
 	if err1 != nil {
 		c.JSON(common.HTTP_OK, common.Error400(err1))
 		return

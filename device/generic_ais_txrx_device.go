@@ -14,7 +14,7 @@ import (
 	"github.com/adrianmo/go-nmea"
 	aislib "github.com/hootrhino/go-ais"
 	"github.com/hootrhino/rhilex/common"
-	"github.com/hootrhino/rhilex/component/hwportmanager"
+	"github.com/hootrhino/rhilex/component/uartctrl"
 
 	serial "github.com/hootrhino/goserial"
 	"github.com/hootrhino/rhilex/glogger"
@@ -44,7 +44,7 @@ type AISDeviceMaster struct {
 	RuleEngine   typex.Rhilex
 	tcpListener  net.Listener // TCP 接收端
 	serialPort   serial.Port
-	hwPortConfig hwportmanager.UartConfig
+	hwPortConfig uartctrl.UartConfig
 
 	// session
 	DevicesSessionMap map[string]*__AISDeviceSession
@@ -85,7 +85,7 @@ func (aism *AISDeviceMaster) Init(devId string, configMap map[string]interface{}
 	}
 
 	if aism.mainConfig.CommonConfig.Mode == "UART" {
-		hwPort, err := hwportmanager.GetHwPort(aism.mainConfig.PortUuid)
+		hwPort, err := uartctrl.GetHwPort(aism.mainConfig.PortUuid)
 		if err != nil {
 			return err
 		}
@@ -93,7 +93,7 @@ func (aism *AISDeviceMaster) Init(devId string, configMap map[string]interface{}
 			return fmt.Errorf("UART is busying now, Occupied By:%s", hwPort.OccupyBy)
 		}
 		switch tCfg := hwPort.Config.(type) {
-		case hwportmanager.UartConfig:
+		case uartctrl.UartConfig:
 			{
 				aism.hwPortConfig = tCfg
 			}
@@ -264,7 +264,7 @@ func (aism *AISDeviceMaster) Start(cctx typex.CCTX) error {
 				}
 			}
 		}()
-		hwportmanager.SetInterfaceBusy(aism.mainConfig.PortUuid, hwportmanager.HwPortOccupy{
+		uartctrl.SetInterfaceBusy(aism.mainConfig.PortUuid, uartctrl.HwPortOccupy{
 			UUID: aism.PointId,
 			Type: "DEVICE",
 			Name: aism.Details().Name,
@@ -305,7 +305,7 @@ func (aism *AISDeviceMaster) Stop() {
 		if aism.serialPort != nil {
 			aism.serialPort.Close()
 		}
-		hwportmanager.FreeInterfaceBusy(aism.mainConfig.PortUuid)
+		uartctrl.FreeInterfaceBusy(aism.mainConfig.PortUuid)
 	}
 }
 
