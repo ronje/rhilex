@@ -37,7 +37,6 @@ import (
 	"time"
 	"unsafe"
 
-	"github.com/hootrhino/rhilex/component/transceivercom"
 	"github.com/hootrhino/rhilex/glogger"
 	"github.com/hootrhino/rhilex/typex"
 )
@@ -69,7 +68,7 @@ type H3IR1 struct {
 	irFd       *os.File
 }
 
-func NewH3IR1(R typex.Rhilex) transceivercom.TransceiverCommunicator {
+func NewH3IR1(R typex.Rhilex) transceivercom.transceivercommunicator {
 	return &H3IR1{R: R, mainConfig: H3IR1Config{
 		InputHandle: __IR_DEV,
 	}}

@@ -18,10 +18,11 @@ package ec200a4g
 import (
 	"encoding/json"
 	"fmt"
+	transceivercom "github.com/hootrhino/rhilex/component/transceiver"
+
 	"strings"
 	"time"
 
-	"github.com/hootrhino/rhilex/component/transceivercom"
 	"github.com/hootrhino/rhilex/glogger"
 	"github.com/hootrhino/rhilex/typex"
 )

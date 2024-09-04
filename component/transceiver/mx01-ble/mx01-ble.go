@@ -25,7 +25,6 @@ import (
 	serial "github.com/hootrhino/goserial"
 	mx01 "github.com/hootrhino/rhilex-goat/bsp/mx01"
 	"github.com/hootrhino/rhilex-goat/device"
-	"github.com/hootrhino/rhilex/component/transceivercom"
 	"github.com/hootrhino/rhilex/glogger"
 	"github.com/hootrhino/rhilex/typex"
 	"github.com/hootrhino/rhilex/utils"
@@ -41,7 +40,7 @@ type Mx01BLE struct {
 	locker     sync.Mutex
 }
 
-func NewMx01BLE(R typex.Rhilex) transceivercom.TransceiverCommunicator {
+func NewMx01BLE(R typex.Rhilex) transceivercom.transceivercommunicator {
 	return &Mx01BLE{R: R, locker: sync.Mutex{}, mainConfig: Mx01BLEConfig{
 		ComConfig: transceivercom.TransceiverConfig{
 			Address:   "COM1",

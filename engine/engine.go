@@ -27,7 +27,8 @@ import (
 	"github.com/hootrhino/rhilex/component/interkv"
 	"github.com/hootrhino/rhilex/component/rhilexmanager"
 	"github.com/hootrhino/rhilex/component/ruleengine"
-	transceiver "github.com/hootrhino/rhilex/component/transceivercom/transceiver"
+	transceiver "github.com/hootrhino/rhilex/component/transceiver/manager"
+
 	"github.com/hootrhino/rhilex/component/uartctrl"
 	core "github.com/hootrhino/rhilex/config"
 

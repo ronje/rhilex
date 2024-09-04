@@ -21,7 +21,8 @@ import (
 	"github.com/gin-gonic/gin"
 	common "github.com/hootrhino/rhilex/component/apiserver/common"
 	"github.com/hootrhino/rhilex/component/apiserver/server"
-	transceiver "github.com/hootrhino/rhilex/component/transceivercom/transceiver"
+	transceiver "github.com/hootrhino/rhilex/component/transceiver/manager"
+
 	"github.com/hootrhino/rhilex/typex"
 )
 
@@ -64,9 +65,9 @@ func TransceiverList(c *gin.Context, ruleEngine typex.Rhilex) {
 			Mac:      Info.Mac,
 			Firmware: Info.Firmware,
 		}
-		TransceiverCommunicator := transceiver.GetCommunicator(Info.Name)
-		if TransceiverCommunicator != nil {
-			Status := TransceiverCommunicator.Status()
+		transceivercommunicator := transceiver.GetCommunicator(Info.Name)
+		if transceivercommunicator != nil {
+			Status := transceivercommunicator.Status()
 			TransceiverIn.Status = int(Status.Code)
 			if Status.Error != nil {
 				TransceiverIn.ErrMsg = Status.Error.Error()
@@ -115,9 +116,9 @@ func TransceiverCtrl(c *gin.Context, ruleEngine typex.Rhilex) {
  */
 func TransceiverDetail(c *gin.Context, ruleEngine typex.Rhilex) {
 	Name, _ := c.GetQuery("name")
-	TransceiverCommunicator := transceiver.GetCommunicator(Name)
-	if TransceiverCommunicator != nil {
-		Info := TransceiverCommunicator.Info()
+	transceivercommunicator := transceiver.GetCommunicator(Name)
+	if transceivercommunicator != nil {
+		Info := transceivercommunicator.Info()
 		TransceiverIn := TransceiverInfoVo{
 			Name:     Info.Name,
 			Model:    Info.Model,
@@ -126,7 +127,7 @@ func TransceiverDetail(c *gin.Context, ruleEngine typex.Rhilex) {
 			Mac:      Info.Mac,
 			Firmware: Info.Firmware,
 		}
-		Status := TransceiverCommunicator.Status()
+		Status := transceivercommunicator.Status()
 		TransceiverIn.Status = int(Status.Code)
 		if Status.Error != nil {
 			TransceiverIn.ErrMsg = Status.Error.Error()

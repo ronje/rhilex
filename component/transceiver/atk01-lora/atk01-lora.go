@@ -21,9 +21,9 @@ import (
 	"time"
 
 	serial "github.com/hootrhino/goserial"
+	transceivercom "github.com/hootrhino/rhilex/component/transceiver"
 
 	"github.com/hootrhino/rhilex/component/internotify"
-	"github.com/hootrhino/rhilex/component/transceivercom"
 	"github.com/hootrhino/rhilex/glogger"
 	"github.com/hootrhino/rhilex/protocol"
 	"github.com/hootrhino/rhilex/typex"

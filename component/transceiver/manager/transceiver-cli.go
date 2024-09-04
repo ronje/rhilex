@@ -13,12 +13,12 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-package transceivercom
+package manager
 
 import (
 	"time"
 
-	"github.com/hootrhino/rhilex/component/transceivercom"
+	transceivercom "github.com/hootrhino/rhilex/component/transceiver"
 	"github.com/hootrhino/rhilex/glogger"
 )
 

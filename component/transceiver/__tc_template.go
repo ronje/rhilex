@@ -18,7 +18,6 @@ package TemplateCom
 import (
 	"time"
 
-	"github.com/hootrhino/rhilex/component/transceivercom"
 	"github.com/hootrhino/rhilex/typex"
 )
 
@@ -29,7 +28,7 @@ type Mx01BLE struct {
 	mainConfig TemplateComConfig
 }
 
-func NewMx01BLE(R typex.Rhilex) transceivercom.TransceiverCommunicator {
+func NewMx01BLE(R typex.Rhilex) transceivercom.transceivercommunicator {
 	return &Mx01BLE{R: R, mainConfig: TemplateComConfig{}}
 }
 func (tc *TemplateCom) Start(map[string]any) error {

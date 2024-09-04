@@ -11,7 +11,7 @@ import (
 	"github.com/hootrhino/rhilex/component/apiserver/service"
 	"github.com/hootrhino/rhilex/component/interqueue"
 	rule_engine "github.com/hootrhino/rhilex/component/ruleengine"
-	transceivercom "github.com/hootrhino/rhilex/component/transceivercom/transceiver"
+	transceivercom "github.com/hootrhino/rhilex/component/transceiver/manager"
 	"github.com/hootrhino/rhilex/glogger"
 
 	"github.com/hootrhino/rhilex/typex"

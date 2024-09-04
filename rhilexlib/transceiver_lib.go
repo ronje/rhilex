@@ -16,8 +16,9 @@
 package rhilexlib
 
 import (
-	transceiver "github.com/hootrhino/rhilex/component/transceivercom/transceiver"
 	"time"
+
+	transceiver "github.com/hootrhino/rhilex/component/transceiver/manager"
 
 	lua "github.com/hootrhino/gopher-lua"
 	"github.com/hootrhino/rhilex/typex"

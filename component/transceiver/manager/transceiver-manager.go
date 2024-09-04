@@ -13,7 +13,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-package transceivercom
+package manager
 
 import (
 	"fmt"
@@ -21,9 +21,9 @@ import (
 	"sync"
 	"time"
 
-	"github.com/hootrhino/rhilex/component/transceivercom"
-	atk01lora "github.com/hootrhino/rhilex/component/transceivercom/atk01-lora"
-	ec200a4g "github.com/hootrhino/rhilex/component/transceivercom/ec200a-4g"
+	transceivercom "github.com/hootrhino/rhilex/component/transceiver"
+	atk01lora "github.com/hootrhino/rhilex/component/transceiver/atk01-lora"
+	ec200a4g "github.com/hootrhino/rhilex/component/transceiver/ec200a-4g"
 	core "github.com/hootrhino/rhilex/config"
 	"github.com/hootrhino/rhilex/utils"
 
