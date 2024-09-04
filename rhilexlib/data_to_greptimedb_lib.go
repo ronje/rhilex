@@ -13,25 +13,24 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-package test
+package rhilexlib
 
 import (
-	"testing"
-	"time"
-
-	"github.com/hootrhino/rhilex/component/shellymanager"
+	lua "github.com/hootrhino/gopher-lua"
+	"github.com/hootrhino/rhilex/typex"
 )
 
-// go test -timeout 30s -run ^Test_scan_cidr github.com/hootrhino/rhilex/test -v -count=1
-func Test_scan_cidr(t *testing.T) {
-	cidr := "192.168.1.0/24"
-	timeout := 5 * time.Second
-	devices, err := shellymanager.ScanCIDR(cidr, timeout)
-	if err != nil {
-		t.Log("Error:", err)
-		return
-	}
-	for _, device := range devices {
-		t.Log("Devices found:", device)
+// / 数据推到 GreptimeDb local err: = data:ToGreptimeDb(uuid, data)
+func DataToGreptimeDb(rx typex.Rhilex) func(*lua.LState) int {
+	return func(l *lua.LState) int {
+		id := l.ToString(2)
+		data := l.ToString(3)
+		err := handleDataFormat(rx, id, data)
+		if err != nil {
+			l.Push(lua.LString(err.Error()))
+			return 1
+		}
+		l.Push(lua.LNil)
+		return 1
 	}
 }

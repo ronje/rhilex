@@ -23,6 +23,7 @@ const (
 	GENERIC_UART_TARGET   TargetType = "GENERIC_UART_TARGET"   // To GENERIC_UART_TARGET DTU
 	TCP_TRANSPORT         TargetType = "TCP_TRANSPORT"         // To TCP Transport
 	SEMTECH_UDP_FORWARDER TargetType = "SEMTECH_UDP_FORWARDER" // To Chirp stack UDP
+	GREPTIME_DATABASE     TargetType = "GREPTIME_DATABASE"     // To GREPTIME DATABASE
 )
 
 // Stream from source and to target

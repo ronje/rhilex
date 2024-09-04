@@ -52,6 +52,7 @@ func LoadRuleLibGroup(r *typex.Rule, e typex.Rhilex) {
 			"ToMongo":      rhilexlib.DataToMongo(e, r.UUID),
 			"ToSemtechUdp": rhilexlib.DataToSemtechUdp(e, r.UUID),
 			"ToUart":       rhilexlib.DataToUart(e, r.UUID),
+			"ToGrepTimeDb": rhilexlib.DataToGreptimeDb(e),
 		}
 		AddRuleLibToGroup(r, e, "data", Funcs)
 	}

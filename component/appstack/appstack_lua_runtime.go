@@ -78,6 +78,7 @@ func LoadAppLibGroup(app *Application, e typex.Rhilex) {
 			"ToMongo":      rhilexlib.DataToMongo(e, app.UUID),
 			"ToSemtechUdp": rhilexlib.DataToSemtechUdp(e, app.UUID),
 			"ToUart":       rhilexlib.DataToUart(e, app.UUID),
+			"ToGrepTimeDb": rhilexlib.DataToGreptimeDb(e),
 		}
 		AddAppLibToGroup(app, e, "data", Funcs)
 	}

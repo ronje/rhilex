@@ -3,6 +3,7 @@ module github.com/hootrhino/rhilex
 go 1.22
 
 require (
+	github.com/GreptimeTeam/greptimedb-ingester-go v0.5.1
 	github.com/adrianmo/go-nmea v1.8.0
 	github.com/brocaar/lorawan v0.0.0-20240507141140-a18a1037da07
 	github.com/chirpstack/chirpstack/api/go/v4 v4.8.1
@@ -67,8 +68,10 @@ require (
 )
 
 require (
+	github.com/GreptimeTeam/greptime-proto v0.7.0 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
+	github.com/stoewer/go-strcase v1.3.0 // indirect
 )
 
 require (

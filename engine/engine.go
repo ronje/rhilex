@@ -741,6 +741,12 @@ func (e *RuleEngine) InitTargetTypeManager() error {
 			NewTarget: target.NewTTcpTarget,
 		},
 	)
+	e.TargetTypeManager.Register(typex.GREPTIME_DATABASE,
+		&typex.XConfig{
+			Engine:    e,
+			NewTarget: target.NewGrepTimeDbTarget,
+		},
+	)
 	return nil
 }
 
