@@ -45,11 +45,11 @@ type GenericUartMainConfig struct {
 
 type GenericUart struct {
 	typex.XStatus
-	hwPortConfig uartctrl.UartConfig
-	status       typex.SourceState
-	locker       sync.Mutex
-	serialPort   serial.Port
-	mainConfig   GenericUartMainConfig
+	uartConfig uartctrl.UartConfig
+	status     typex.SourceState
+	locker     sync.Mutex
+	serialPort serial.Port
+	mainConfig GenericUartMainConfig
 }
 
 func NewGenericUart(e typex.Rhilex) typex.XTarget {
@@ -83,30 +83,30 @@ func (mdev *GenericUart) Init(outEndId string, configMap map[string]interface{})
 func (mdev *GenericUart) Start(cctx typex.CCTX) error {
 	mdev.Ctx = cctx.Ctx
 	mdev.CancelCTX = cctx.CancelCTX
-	hwPort, err := uartctrl.GetHwPort(mdev.mainConfig.PortUuid)
+	uartPort, err := uartctrl.GetUart(mdev.mainConfig.PortUuid)
 	if err != nil {
 		return err
 	}
-	if hwPort.Busy {
-		return fmt.Errorf("mdev is busying now, Occupied By:%s", hwPort.OccupyBy)
+	if uartPort.Busy {
+		return fmt.Errorf("mdev is busying now, Occupied By:%s", uartPort.OccupyBy)
 	}
-	switch tCfg := hwPort.Config.(type) {
+	switch tCfg := uartPort.Config.(type) {
 	case uartctrl.UartConfig:
 		{
-			mdev.hwPortConfig = tCfg
+			mdev.uartConfig = tCfg
 		}
 	default:
 		{
-			return fmt.Errorf("Invalid config:%s", hwPort.Config)
+			return fmt.Errorf("Invalid config:%s", uartPort.Config)
 		}
 	}
 	config := serial.Config{
-		Address:  mdev.hwPortConfig.Uart,
-		BaudRate: mdev.hwPortConfig.BaudRate,
-		DataBits: mdev.hwPortConfig.DataBits,
-		Parity:   mdev.hwPortConfig.Parity,
-		StopBits: mdev.hwPortConfig.StopBits,
-		Timeout:  time.Duration(mdev.hwPortConfig.Timeout) * time.Millisecond,
+		Address:  mdev.uartConfig.Uart,
+		BaudRate: mdev.uartConfig.BaudRate,
+		DataBits: mdev.uartConfig.DataBits,
+		Parity:   mdev.uartConfig.Parity,
+		StopBits: mdev.uartConfig.StopBits,
+		Timeout:  time.Duration(mdev.uartConfig.Timeout) * time.Millisecond,
 	}
 	serialPort, err := serial.Open(&config)
 	if err != nil {
@@ -135,7 +135,7 @@ func (mdev *GenericUart) Start(cctx typex.CCTX) error {
 	}
 	mdev.serialPort = serialPort
 	mdev.status = typex.SOURCE_UP
-	glogger.GLogger.Info("GenericUart started:", mdev.hwPortConfig.Uart)
+	glogger.GLogger.Info("GenericUart started:", mdev.uartConfig.Uart)
 	return nil
 }
 

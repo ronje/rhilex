@@ -136,33 +136,33 @@ func initRhilex(engine typex.Rhilex) {
 *
  */
 func loadAllPortConfig() {
-	MHwPorts, err := service.AllHwPort()
+	MUarts, err := service.AllUart()
 	if err != nil {
 		glogger.GLogger.Fatal(err)
 		return
 	}
-	for _, MHwPort := range MHwPorts {
-		Port := uartctrl.SystemHwPort{
-			UUID:        MHwPort.UUID,
-			Name:        MHwPort.Name,
-			Type:        MHwPort.Type,
-			Alias:       MHwPort.Alias,
-			Description: MHwPort.Description,
+	for _, MUart := range MUarts {
+		Port := uartctrl.SystemUart{
+			UUID:        MUart.UUID,
+			Name:        MUart.Name,
+			Type:        MUart.Type,
+			Alias:       MUart.Alias,
+			Description: MUart.Description,
 		}
 		// 串口
-		if MHwPort.Type == "UART" {
+		if MUart.Type == "UART" {
 			config := uartctrl.UartConfig{}
-			if err := utils.BindSourceConfig(MHwPort.GetConfig(), &config); err != nil {
+			if err := utils.BindSourceConfig(MUart.GetConfig(), &config); err != nil {
 				glogger.GLogger.Error(err) // 这里必须不能出错
 				continue
 			}
 			Port.Config = config
-			uartctrl.SetHwPort(Port)
+			uartctrl.SetUart(Port)
 		}
 		// 未知接口参数为空，以后扩展，比如FD
-		if MHwPort.Type != "UART" {
+		if MUart.Type != "UART" {
 			Port.Config = "NULL"
-			uartctrl.SetHwPort(Port)
+			uartctrl.SetUart(Port)
 		}
 	}
 }
@@ -191,7 +191,7 @@ func (hs *ApiServerPlugin) Init(config *ini.Section) error {
 		&model.MIpRoute{},
 		&model.MCronTask{},
 		&model.MCronResult{},
-		&model.MHwPort{},
+		&model.MUart{},
 		&model.MInternalNotify{},
 		&model.MUserLuaTemplate{},
 		&model.MModbusDataPoint{},
@@ -421,9 +421,9 @@ func (hs *ApiServerPlugin) LoadRoute() {
 	// 硬件接口API
 	HwIFaceApi := server.DefaultApiServer.GetGroup(server.ContextUrl("/hwiface"))
 	{
-		HwIFaceApi.GET("/detail", server.AddRoute(apis.GetHwPortDetail))
-		HwIFaceApi.GET("/list", server.AddRoute(apis.AllHwPorts))
-		HwIFaceApi.POST("/update", server.AddRoute(apis.UpdateHwPortConfig))
+		HwIFaceApi.GET("/detail", server.AddRoute(apis.GetUartDetail))
+		HwIFaceApi.GET("/list", server.AddRoute(apis.AllUarts))
+		HwIFaceApi.POST("/update", server.AddRoute(apis.UpdateUartConfig))
 		HwIFaceApi.GET("/refresh", server.AddRoute(apis.RefreshPortList))
 	}
 

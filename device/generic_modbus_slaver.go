@@ -49,7 +49,7 @@ type ModbusSlaver struct {
 	typex.XStatus
 	status           typex.DeviceState
 	mainConfig       ModbusSlaverConfig
-	hwPortConfig     uartctrl.UartConfig
+	uartConfig       uartctrl.UartConfig
 	registers        map[string]*common.RegisterRW
 	server           *mbserver.Server
 	HoldingRegisters []uint16 // [5] = WriteSingleCoil
@@ -117,18 +117,18 @@ func (mdev *ModbusSlaver) Init(devId string, configMap map[string]interface{}) e
 	}
 
 	if mdev.mainConfig.CommonConfig.Mode == "UART" {
-		hwPort, err := uartctrl.GetHwPort(mdev.mainConfig.PortUuid)
+		uartPort, err := uartctrl.GetUart(mdev.mainConfig.PortUuid)
 		if err != nil {
 			return err
 		}
-		if hwPort.Busy {
-			return fmt.Errorf("UART is busying now, Occupied By:%s", hwPort.OccupyBy)
+		if uartPort.Busy {
+			return fmt.Errorf("UART is busying now, Occupied By:%s", uartPort.OccupyBy)
 		}
-		switch tCfg := hwPort.Config.(type) {
+		switch tCfg := uartPort.Config.(type) {
 		case uartctrl.UartConfig:
-			mdev.hwPortConfig = tCfg
+			mdev.uartConfig = tCfg
 		default:
-			return fmt.Errorf("Invalid config:%s", hwPort.Config)
+			return fmt.Errorf("Invalid config:%s", uartPort.Config)
 		}
 	}
 	return nil
@@ -222,20 +222,20 @@ func (mdev *ModbusSlaver) Start(cctx typex.CCTX) error {
 		// 15 16暂时不支持
 	})
 	if mdev.mainConfig.CommonConfig.Mode == "UART" {
-		hwPort, err := uartctrl.GetHwPort(mdev.mainConfig.PortUuid)
+		uartPort, err := uartctrl.GetUart(mdev.mainConfig.PortUuid)
 		if err != nil {
 			return err
 		}
-		if hwPort.Busy {
-			return fmt.Errorf("UART is busying now, Occupied By:%s", hwPort.OccupyBy)
+		if uartPort.Busy {
+			return fmt.Errorf("UART is busying now, Occupied By:%s", uartPort.OccupyBy)
 		}
 		err1 := mdev.server.ListenRTU(&serial.Config{
-			Address:  mdev.hwPortConfig.Uart,
-			BaudRate: mdev.hwPortConfig.BaudRate,
-			DataBits: mdev.hwPortConfig.DataBits,
-			Parity:   mdev.hwPortConfig.Parity,
-			StopBits: mdev.hwPortConfig.StopBits,
-			Timeout:  time.Duration(mdev.hwPortConfig.Timeout) * (time.Millisecond),
+			Address:  mdev.uartConfig.Uart,
+			BaudRate: mdev.uartConfig.BaudRate,
+			DataBits: mdev.uartConfig.DataBits,
+			Parity:   mdev.uartConfig.Parity,
+			StopBits: mdev.uartConfig.StopBits,
+			Timeout:  time.Duration(mdev.uartConfig.Timeout) * (time.Millisecond),
 		})
 		if err1 != nil {
 			return err1

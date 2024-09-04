@@ -35,7 +35,7 @@ type UartConfigDto struct {
 	Parity   string
 	StopBits int
 }
-type HwPortDto struct {
+type UartDto struct {
 	UUID     string
 	Name     string        // 接口名称
 	Type     string        // 接口类型, UART(串口),USB(USB),FD(通用文件句柄)
@@ -58,36 +58,36 @@ func (u UartConfigDto) JsonString() string {
 * 所有的接口列表配置
 *
  */
-func AllHwPort() ([]model.MHwPort, error) {
-	ports := []model.MHwPort{}
+func AllUart() ([]model.MUart, error) {
+	ports := []model.MUart{}
 	return ports, interdb.DB().
-		Model(&model.MHwPort{}).Find(&ports).Error
+		Model(&model.MUart{}).Find(&ports).Error
 }
 
 /*
 *
-* 配置WIFI HwPort
+* 配置WIFI Uart
 *
  */
-func UpdateHwPortConfig(MHwPort model.MHwPort) error {
-	Model := model.MHwPort{}
+func UpdateUartConfig(MUart model.MUart) error {
+	Model := model.MUart{}
 	return interdb.DB().
 		Model(Model).
-		Where("uuid=?", MHwPort.UUID).
-		Updates(MHwPort).Error
+		Where("uuid=?", MUart.UUID).
+		Updates(MUart).Error
 }
 
 /*
 *
-* 获取HwPort的配置信息
+* 获取Uart的配置信息
 *
  */
-func GetHwPortConfig(uuid string) (model.MHwPort, error) {
-	MHwPort := model.MHwPort{}
+func GetUartConfig(uuid string) (model.MUart, error) {
+	MUart := model.MUart{}
 	err := interdb.DB().
 		Where("uuid=?", uuid).
-		Find(&MHwPort).Error
-	return MHwPort, err
+		Find(&MUart).Error
+	return MUart, err
 }
 
 /*
@@ -95,15 +95,15 @@ func GetHwPortConfig(uuid string) (model.MHwPort, error) {
 * 扫描
 *
  */
-func ReScanHwPortConfig() error {
+func ReScanUartConfig() error {
 	ClearNullPort()
 	for _, portName := range GetOsPort() {
 		count := int64(-1)
-		interdb.DB().Model(model.MHwPort{}).Where("name=?", portName).Count(&count)
+		interdb.DB().Model(model.MUart{}).Where("name=?", portName).Count(&count)
 		if count > 0 {
 			continue
 		}
-		NewPort := model.MHwPort{
+		NewPort := model.MUart{
 			UUID: portName,
 			Name: portName,
 			Type: "UART",
@@ -127,7 +127,7 @@ func ReScanHwPortConfig() error {
 		if err1 != nil {
 			return err1
 		}
-		uartctrl.SetHwPort(uartctrl.SystemHwPort{
+		uartctrl.SetUart(uartctrl.SystemUart{
 			UUID: portName,
 			Name: portName,
 			Type: "UART",
@@ -154,7 +154,7 @@ func ReScanHwPortConfig() error {
 *
  */
 func ClearNullPort() {
-	DbPorts, _ := AllHwPort()
+	DbPorts, _ := AllUart()
 	OsPorts := GetOsPort()
 	TotalPort := []string{}
 	for _, DbPort := range DbPorts {
@@ -163,7 +163,7 @@ func ClearNullPort() {
 	// 清除缓存里面的数据
 	for _, portName := range complement(TotalPort, OsPorts) {
 		uartctrl.RemovePort(portName)
-		interdb.DB().Model(model.MHwPort{}).Where("name=?", portName).Delete(model.MHwPort{})
+		interdb.DB().Model(model.MUart{}).Where("name=?", portName).Delete(model.MUart{})
 	}
 }
 
@@ -188,12 +188,12 @@ func complement(a, b []string) []string {
 * 重置
 *
  */
-func ResetHwPortConfig() error {
+func ResetUartConfig() error {
 	DbTx := interdb.DB()
 	errDbTx := DbTx.Transaction(func(tx *gorm.DB) error {
 		err0 := tx.Session(&gorm.Session{
 			AllowGlobalUpdate: true,
-		}).Delete(&model.MHwPort{}).Error
+		}).Delete(&model.MUart{}).Error
 		if err0 != nil {
 			return err0
 		}
@@ -202,7 +202,7 @@ func ResetHwPortConfig() error {
 	if errDbTx != nil {
 		return errDbTx
 	}
-	return InitHwPortConfig()
+	return InitUartConfig()
 }
 
 /*
@@ -210,9 +210,9 @@ func ResetHwPortConfig() error {
 * 初始化网卡配置参数
 *
  */
-func InitHwPortConfig() error {
+func InitUartConfig() error {
 	for _, portName := range GetOsPort() {
-		Port := model.MHwPort{
+		Port := model.MUart{
 			UUID: portName,
 			Name: portName,
 			Type: "UART",

@@ -520,13 +520,13 @@ func applyNewestEtcWlanConfig() error {
 // 			Version:  2,
 // 			Renderer: "NetworkManager",
 // 			Ethernets: service.EthInterface{
-// 				Eth0: service.HwPort{
+// 				Eth0: service.Uart{
 // 					Dhcp4:       Eth0.DHCPEnabled,
 // 					Addresses:   []string{Eth0.Address + "/24"},
 // 					Gateway4:    Eth0.Gateway,
 // 					Nameservers: Eth0.DNS,
 // 				},
-// 				Eth1: service.HwPort{
+// 				Eth1: service.Uart{
 // 					Dhcp4:       Eth1.DHCPEnabled,
 // 					Addresses:   []string{Eth1.Address + "/24"},
 // 					Gateway4:    Eth1.Gateway,

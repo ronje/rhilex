@@ -97,7 +97,7 @@ func (ms *modbusScanner) Service(arg typex.ServiceArg) typex.ServiceResult {
 						{"error": err.Error()},
 					}}
 				}
-				hwPort, err := uartctrl.GetHwPort(form1.PortUuid)
+				uartPort, err := uartctrl.GetUart(form1.PortUuid)
 				if err != nil {
 					ms.cancel()
 					ms.busying = false
@@ -105,11 +105,11 @@ func (ms *modbusScanner) Service(arg typex.ServiceArg) typex.ServiceResult {
 						{"error": "port not exists:" + form1.PortUuid},
 					}}
 				}
-				hwPortConfig := uartctrl.UartConfig{}
-				switch tcfg := hwPort.Config.(type) {
+				uartConfig := uartctrl.UartConfig{}
+				switch tcfg := uartPort.Config.(type) {
 				case uartctrl.UartConfig:
 					{
-						hwPortConfig = tcfg
+						uartConfig = tcfg
 					}
 				default:
 					{
@@ -122,11 +122,11 @@ func (ms *modbusScanner) Service(arg typex.ServiceArg) typex.ServiceResult {
 				}
 
 				config := serial.Config{
-					Address:  hwPortConfig.Uart,
-					BaudRate: hwPortConfig.BaudRate,
-					DataBits: hwPortConfig.DataBits,
-					Parity:   hwPortConfig.Parity,
-					StopBits: hwPortConfig.StopBits,
+					Address:  uartConfig.Uart,
+					BaudRate: uartConfig.BaudRate,
+					DataBits: uartConfig.DataBits,
+					Parity:   uartConfig.Parity,
+					StopBits: uartConfig.StopBits,
 					Timeout:  2 * time.Second,
 				}
 				serialPort, err := serial.Open(&config)

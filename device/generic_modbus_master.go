@@ -106,7 +106,7 @@ type GenericModbusMaster struct {
 	//
 	mainConfig     ModbusMasterConfig
 	retryTimes     int
-	hwPortConfig   uartctrl.UartConfig
+	uartConfig     uartctrl.UartConfig
 	Registers      map[string]*common.RegisterRW
 	RegisterGroups []*ModbusMasterGroupedTag
 }
@@ -204,21 +204,21 @@ func (mdev *GenericModbusMaster) Init(devId string, configMap map[string]interfa
 		}
 	}
 	if mdev.mainConfig.CommonConfig.Mode == "UART" {
-		hwPort, err := uartctrl.GetHwPort(mdev.mainConfig.PortUuid)
+		uartPort, err := uartctrl.GetUart(mdev.mainConfig.PortUuid)
 		if err != nil {
 			return err
 		}
-		if hwPort.Busy {
-			return fmt.Errorf("UART is busying now, Occupied By:%s", hwPort.OccupyBy)
+		if uartPort.Busy {
+			return fmt.Errorf("UART is busying now, Occupied By:%s", uartPort.OccupyBy)
 		}
-		switch tCfg := hwPort.Config.(type) {
+		switch tCfg := uartPort.Config.(type) {
 		case uartctrl.UartConfig:
 			{
-				mdev.hwPortConfig = tCfg
+				mdev.uartConfig = tCfg
 			}
 		default:
 			{
-				return fmt.Errorf("Invalid config:%s", hwPort.Config)
+				return fmt.Errorf("Invalid config:%s", uartPort.Config)
 			}
 		}
 	}
@@ -289,21 +289,21 @@ func (mdev *GenericModbusMaster) Start(cctx typex.CCTX) error {
 	mdev.CancelCTX = cctx.CancelCTX
 	mdev.retryTimes = 0
 	if mdev.mainConfig.CommonConfig.Mode == "UART" {
-		hwPort, err := uartctrl.GetHwPort(mdev.mainConfig.PortUuid)
+		uartPort, err := uartctrl.GetUart(mdev.mainConfig.PortUuid)
 		if err != nil {
 			return err
 		}
-		if hwPort.Busy {
-			return fmt.Errorf("UART is busying now, Occupied By:%s", hwPort.OccupyBy)
+		if uartPort.Busy {
+			return fmt.Errorf("UART is busying now, Occupied By:%s", uartPort.OccupyBy)
 		}
 
-		mdev.rtuHandler = modbus.NewRTUClientHandler(hwPort.Name)
-		mdev.rtuHandler.BaudRate = mdev.hwPortConfig.BaudRate
-		mdev.rtuHandler.DataBits = mdev.hwPortConfig.DataBits
-		mdev.rtuHandler.Parity = mdev.hwPortConfig.Parity
-		mdev.rtuHandler.StopBits = mdev.hwPortConfig.StopBits
+		mdev.rtuHandler = modbus.NewRTUClientHandler(uartPort.Name)
+		mdev.rtuHandler.BaudRate = mdev.uartConfig.BaudRate
+		mdev.rtuHandler.DataBits = mdev.uartConfig.DataBits
+		mdev.rtuHandler.Parity = mdev.uartConfig.Parity
+		mdev.rtuHandler.StopBits = mdev.uartConfig.StopBits
 		// timeout 最大不能超过20, 不然无意义
-		mdev.rtuHandler.Timeout = time.Duration(mdev.hwPortConfig.Timeout) * time.Millisecond
+		mdev.rtuHandler.Timeout = time.Duration(mdev.uartConfig.Timeout) * time.Millisecond
 		if core.GlobalConfig.AppDebugMode {
 			mdev.rtuHandler.Logger = golog.New(glogger.GLogger.Writer(),
 				"Modbus RTU Mode: "+mdev.PointId+": ", golog.LstdFlags)
@@ -312,7 +312,7 @@ func (mdev *GenericModbusMaster) Start(cctx typex.CCTX) error {
 		if err := mdev.rtuHandler.Connect(); err != nil {
 			return err
 		}
-		uartctrl.SetInterfaceBusy(mdev.mainConfig.PortUuid, uartctrl.HwPortOccupy{
+		uartctrl.SetInterfaceBusy(mdev.mainConfig.PortUuid, uartctrl.UartOccupy{
 			UUID: mdev.PointId,
 			Type: "DEVICE",
 			Name: mdev.Details().Name,

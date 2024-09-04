@@ -34,12 +34,12 @@ type _UartMainConfig struct {
 
 type genericUartDevice struct {
 	typex.XStatus
-	serialPort   serial.Port
-	hwPortConfig uartctrl.UartConfig
-	status       typex.DeviceState
-	RuleEngine   typex.Rhilex
-	mainConfig   _UartMainConfig
-	locker       sync.Locker
+	serialPort serial.Port
+	uartConfig uartctrl.UartConfig
+	status     typex.DeviceState
+	RuleEngine typex.Rhilex
+	mainConfig _UartMainConfig
+	locker     sync.Locker
 }
 
 /*
@@ -87,21 +87,21 @@ func (uart *genericUartDevice) Init(devId string, configMap map[string]interface
 		glogger.GLogger.Error(errA)
 		return errA
 	}
-	hwPort, errGetHwPort := uartctrl.GetHwPort(uart.mainConfig.PortUuid)
-	if errGetHwPort != nil {
-		return errGetHwPort
+	uartPort, errGetUart := uartctrl.GetUart(uart.mainConfig.PortUuid)
+	if errGetUart != nil {
+		return errGetUart
 	}
-	if hwPort.Busy {
-		return fmt.Errorf("UART is busying now, Occupied By:%s", hwPort.OccupyBy)
+	if uartPort.Busy {
+		return fmt.Errorf("UART is busying now, Occupied By:%s", uartPort.OccupyBy)
 	}
-	switch tCfg := hwPort.Config.(type) {
+	switch tCfg := uartPort.Config.(type) {
 	case uartctrl.UartConfig:
 		{
-			uart.hwPortConfig = tCfg
+			uart.uartConfig = tCfg
 		}
 	default:
 		{
-			return fmt.Errorf("Invalid config:%s", hwPort.Config)
+			return fmt.Errorf("Invalid config:%s", uartPort.Config)
 		}
 	}
 	return nil
@@ -113,11 +113,11 @@ func (uart *genericUartDevice) Start(cctx typex.CCTX) error {
 	uart.CancelCTX = cctx.CancelCTX
 
 	config := serial.Config{
-		Address:  uart.hwPortConfig.Uart,
-		BaudRate: uart.hwPortConfig.BaudRate,
-		DataBits: uart.hwPortConfig.DataBits,
-		Parity:   uart.hwPortConfig.Parity,
-		StopBits: uart.hwPortConfig.StopBits,
+		Address:  uart.uartConfig.Uart,
+		BaudRate: uart.uartConfig.BaudRate,
+		DataBits: uart.uartConfig.DataBits,
+		Parity:   uart.uartConfig.Parity,
+		StopBits: uart.uartConfig.StopBits,
 		// 固定写法，表示串口最小一个包耗时，一般50毫秒足够
 		Timeout: time.Duration(uart.mainConfig.RwConfig.TimeSlice) * time.Millisecond,
 	}
@@ -128,7 +128,7 @@ func (uart *genericUartDevice) Start(cctx typex.CCTX) error {
 	}
 
 	uartctrl.SetInterfaceBusy(uart.mainConfig.PortUuid,
-		uartctrl.HwPortOccupy{
+		uartctrl.UartOccupy{
 			UUID: uart.PointId,
 			Type: "DEVICE",
 			Name: uart.Details().Name,

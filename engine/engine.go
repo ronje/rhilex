@@ -102,7 +102,7 @@ func InitRuleEngine(config typex.RhilexConfig) typex.Rhilex {
 	// Internal Bus
 	internotify.InitInternalEventBus(__DefaultRuleEngine, core.GlobalConfig.MaxQueueSize)
 	// Load hardware Port Manager
-	uartctrl.InitHwPortsManager(__DefaultRuleEngine)
+	uartctrl.InitUartsManager(__DefaultRuleEngine)
 	// Internal Metric
 	intermetric.InitInternalMetric(__DefaultRuleEngine)
 	// lua appstack manager
