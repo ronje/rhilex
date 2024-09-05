@@ -40,7 +40,6 @@ type GrepTimeDbTargetConfig struct {
 type GrepTimeDbTarget struct {
 	typex.XStatus
 	client     *greptime.Client
-	table      *table.Table
 	mainConfig GrepTimeDbTargetConfig
 	status     typex.SourceState
 }
@@ -54,7 +53,7 @@ func NewGrepTimeDbTarget(e typex.Rhilex) typex.XTarget {
 		Port:     4001,
 		Username: "rhilex",
 		Password: "rhilex",
-		DataBase: "rhilex",
+		DataBase: "public",
 		Table:    "rhilex",
 	}
 	grep.status = typex.SOURCE_DOWN
@@ -66,12 +65,6 @@ func (grep *GrepTimeDbTarget) Init(outEndId string, configMap map[string]interfa
 	if err := utils.BindSourceConfig(configMap, &grep.mainConfig); err != nil {
 		return err
 	}
-	Table, err := table.New(grep.mainConfig.Table)
-	if err != nil {
-		glogger.GLogger.Error(err)
-		return err
-	}
-	grep.table = Table
 	return nil
 
 }
@@ -113,37 +106,42 @@ func (grep *GrepTimeDbTarget) To(data interface{}) (interface{}, error) {
 			glogger.GLogger.Error(errUnmarshal)
 			return 0, errUnmarshal
 		}
-		grep.table.AddTimestampColumn("ts", types.TIMESTAMP_MILLISECOND)
-		grep.table.AddTagColumn("device_name", types.STRING)
+		Table, errNew := table.New(grep.mainConfig.Table)
+		if errNew != nil {
+			glogger.GLogger.Error(errNew)
+			return 0, errNew
+		}
+		Table.AddTimestampColumn("ts", types.TIMESTAMP_MILLISECOND)
+		Table.AddTagColumn("gateway_sn", types.STRING)
 		values := []interface{}{time.Now().UnixMilli(), grep.mainConfig.GwSn}
 		for k, v := range Map {
 			switch VT := v.(type) {
 			case bool:
-				grep.table.AddTagColumn(k, types.BOOL)
+				Table.AddFieldColumn(k, types.BOOL)
 				values = append(values, VT)
 			case int32:
-				grep.table.AddTagColumn(k, types.INT32)
+				Table.AddFieldColumn(k, types.INT32)
 				values = append(values, VT)
 			case int64:
-				grep.table.AddTagColumn(k, types.INT64)
+				Table.AddFieldColumn(k, types.INT64)
 				values = append(values, VT)
 			case float32:
-				grep.table.AddTagColumn(k, types.FLOAT32)
+				Table.AddFieldColumn(k, types.FLOAT32)
 				values = append(values, VT)
 			case float64:
-				grep.table.AddTagColumn(k, types.FLOAT64)
+				Table.AddFieldColumn(k, types.FLOAT64)
 				values = append(values, VT)
 			case string:
-				grep.table.AddTagColumn(k, types.STRING)
+				Table.AddFieldColumn(k, types.STRING)
 				values = append(values, VT)
 			default:
-				grep.table.AddTagColumn(k, types.STRING)
+				Table.AddFieldColumn(k, types.STRING)
 				values = append(values, VT)
 			}
 		}
-		grep.table.AddRow(values...)
-		glogger.GLogger.Debug("grep.client.Write: ", values)
-		Response, errWrite := grep.client.Write(grep.Ctx, grep.table)
+		Table.AddRow(values...)
+		Response, errWrite := grep.client.Write(grep.Ctx, Table)
+		glogger.GLogger.Debug("grep.client.Write: ", values, Response, errWrite)
 		if errWrite != nil {
 			glogger.GLogger.Error(errWrite)
 			return 0, errWrite

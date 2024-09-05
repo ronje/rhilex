@@ -13,12 +13,13 @@ import (
 *
  */
 
-var Logrus *logrus.Logger = logrus.New()
+var Logrus *logrus.Logger
 var GLogger *logrus.Entry
 
 func StartGLogger(appId string, LogLevel string, EnableConsole bool,
 	AppDebugMode bool, LogPath string, LogMaxSize,
 	LogMaxBackups, LogMaxAge int, LogCompress bool) {
+	Logrus = logrus.New()
 	GLogger = Logrus.WithField("appId", appId)
 	Logrus.Formatter = new(logrus.JSONFormatter)
 	if AppDebugMode {
