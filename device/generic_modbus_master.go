@@ -162,6 +162,7 @@ func (mdev *GenericModbusMaster) Init(devId string, configMap map[string]interfa
 	if modbusPointLoadErr != nil {
 		return modbusPointLoadErr
 	}
+	LastFetchTime := uint64(time.Now().UnixMilli())
 	for _, ModbusPoint := range ModbusPointList {
 		// 频率不能太快
 		if ModbusPoint.Frequency < 50 {
@@ -180,13 +181,12 @@ func (mdev *GenericModbusMaster) Init(devId string, configMap map[string]interfa
 			DataOrder: ModbusPoint.DataOrder,
 			Weight:    ModbusPoint.Weight,
 		}
-		LastFetchTime := uint64(time.Now().UnixMilli())
 		intercache.SetValue(mdev.PointId, ModbusPoint.UUID, intercache.CacheValue{
 			UUID:          ModbusPoint.UUID,
 			Status:        0,
 			LastFetchTime: LastFetchTime,
 			Value:         "",
-			ErrMsg:        "Device Loading",
+			ErrMsg:        "Loading",
 		})
 	}
 

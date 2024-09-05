@@ -54,6 +54,11 @@ func UserLuaUuid() string {
 }
 
 // MakeUUID
+func MBusPointUUID() string {
+	return MakeUUID("MBUS")
+}
+
+// MakeUUID
 func ModbusPointUUID() string {
 	return MakeUUID("MDTB")
 }

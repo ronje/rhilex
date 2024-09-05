@@ -30,6 +30,7 @@ const (
 	TENCENT_IOTHUB_GATEWAY DeviceType = "TENCENT_IOTHUB_GATEWAY" // 腾讯云物联网平台
 	LORA_WAN_GATEWAY       DeviceType = "LORA_WAN_GATEWAY"       // LoraWan
 	KNX_GATEWAY            DeviceType = "KNX_GATEWAY"            // KNX 网关
+	GENERIC_MBUS_MASTER    DeviceType = "GENERIC_MBUS_MASTER"    // 通用 Mbus
 
 )
 

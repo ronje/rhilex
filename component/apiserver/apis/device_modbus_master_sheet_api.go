@@ -28,6 +28,7 @@ import (
 	"github.com/gin-gonic/gin"
 	common "github.com/hootrhino/rhilex/component/apiserver/common"
 	"github.com/hootrhino/rhilex/component/apiserver/model"
+	"github.com/hootrhino/rhilex/component/apiserver/server"
 	"github.com/hootrhino/rhilex/component/apiserver/service"
 	"github.com/hootrhino/rhilex/component/intercache"
 	"github.com/hootrhino/rhilex/component/interdb"
@@ -35,6 +36,19 @@ import (
 	"github.com/hootrhino/rhilex/utils"
 	"github.com/xuri/excelize/v2"
 )
+
+func InitModbusRoute() {
+	// Modbus 点位表
+	modbusMasterApi := server.RouteGroup(server.ContextUrl("/modbus_master_sheet"))
+	{
+		modbusMasterApi.POST(("/sheetImport"), server.AddRoute(ModbusMasterSheetImport))
+		modbusMasterApi.GET(("/sheetExport"), server.AddRoute(ModbusMasterPointsExport))
+		modbusMasterApi.GET(("/list"), server.AddRoute(ModbusMasterSheetPageList))
+		modbusMasterApi.POST(("/update"), server.AddRoute(ModbusMasterSheetUpdate))
+		modbusMasterApi.DELETE(("/delIds"), server.AddRoute(ModbusMasterSheetDelete))
+		modbusMasterApi.DELETE(("/delAll"), server.AddRoute(ModbusMasterSheetDeleteAll))
+	}
+}
 
 type ModbusMasterPointVo struct {
 	UUID          string      `json:"uuid,omitempty"`
@@ -405,14 +419,14 @@ func ModbusMasterSheetUpdate(c *gin.Context, ruleEngine typex.Rhilex) {
 
 }
 
-type DeviceDto struct {
+type ModbusDeviceDto struct {
 	UUID   string
 	Name   string
 	Type   string
 	Config string
 }
 
-func (md DeviceDto) GetConfig() map[string]interface{} {
+func (md ModbusDeviceDto) GetConfig() map[string]interface{} {
 	result := make(map[string]interface{})
 	err := json.Unmarshal([]byte(md.Config), &result)
 	if err != nil {
@@ -439,7 +453,7 @@ func ModbusMasterSheetImport(c *gin.Context, ruleEngine typex.Rhilex) {
 	defer file.Close()
 	deviceUuid := c.Request.Form.Get("device_uuid")
 
-	Device := DeviceDto{}
+	Device := ModbusDeviceDto{}
 	errDb := interdb.DB().Table("m_devices").
 		Where("uuid=?", deviceUuid).Find(&Device).Error
 	if errDb != nil {

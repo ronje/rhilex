@@ -29,6 +29,8 @@ require (
 	github.com/hootrhino/wmi v0.0.0-20230603082700-cfa077a8cf01
 	github.com/itchyny/gojq v0.12.16
 	github.com/jinzhu/copier v0.4.0
+	github.com/jonaz/gombus v0.0.0-20240503073839-320f3f4c5c02
+	github.com/jonaz/serial v0.0.0-20240104211900-cac2ee15ec1f
 	github.com/lithammer/shortuuid/v4 v4.0.0
 	github.com/mattn/go-sqlite3 v1.14.22
 	github.com/mitchellh/go-homedir v1.1.0

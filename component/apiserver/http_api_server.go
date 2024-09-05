@@ -199,6 +199,7 @@ func (hs *ApiServerPlugin) Init(config *ini.Section) error {
 		&model.MSnmpOid{},
 		&model.MBacnetDataPoint{},
 		&model.MBacnetRouterDataPoint{},
+		&model.MMBusDataPoint{},
 		&model.MDataPoint{},
 	)
 	// 初始化所有预制参数
@@ -222,22 +223,11 @@ func (hs *ApiServerPlugin) LoadRoute() {
 	{
 		systemApi.GET(("/ping"), server.AddRoute(apis.Ping))
 	}
-
-	//
-	//
-	//
 	server.DefaultApiServer.Route().GET(server.ContextUrl("drivers"), server.AddRoute(apis.Drivers))
-
-	//
-	// Get statistics data
-	//
 	server.DefaultApiServer.Route().GET(server.ContextUrl("statistics"), server.AddRoute(apis.Statistics))
-	//
-	// Auth
-	//
 	userApi := server.RouteGroup(server.ContextUrl("/users"))
 	{
-		// userApi.GET(("/"), server.AddRoute(apis.Users))
+		userApi.GET(("/"), server.AddRoute(apis.Users))
 		userApi.POST(("/"), server.AddRoute(apis.CreateUser))
 		userApi.PUT(("/update"), server.AddRoute(apis.UpdateUser))
 		userApi.GET(("/detail"), server.AddRoute(apis.UserDetail))
@@ -245,16 +235,8 @@ func (hs *ApiServerPlugin) LoadRoute() {
 		userApi.DELETE(("/clear"), server.AddRoute(apis.ClearAllUser))
 
 	}
-
-	//
-	//
-	//
 	server.DefaultApiServer.Route().POST(server.ContextUrl("login"), server.AddRoute(apis.Login))
-	//
-	//
-	//
 	server.DefaultApiServer.Route().GET(server.ContextUrl("info"), server.AddRoute(apis.Info))
-	//
 	InEndApi := server.RouteGroup(server.ContextUrl("/inends"))
 	{
 		InEndApi.GET(("/detail"), server.AddRoute(apis.InEndDetail))
@@ -333,16 +315,7 @@ func (hs *ApiServerPlugin) LoadRoute() {
 		deviceApi.PUT("/restart", server.AddRoute(apis.RestartDevice))
 		deviceApi.GET("/deviceErrMsg", server.AddRoute(apis.GetDeviceErrorMsg))
 	}
-	// Modbus 点位表
-	modbusMasterApi := server.RouteGroup(server.ContextUrl("/modbus_master_sheet"))
-	{
-		modbusMasterApi.POST(("/sheetImport"), server.AddRoute(apis.ModbusMasterSheetImport))
-		modbusMasterApi.GET(("/sheetExport"), server.AddRoute(apis.ModbusMasterPointsExport))
-		modbusMasterApi.GET(("/list"), server.AddRoute(apis.ModbusMasterSheetPageList))
-		modbusMasterApi.POST(("/update"), server.AddRoute(apis.ModbusMasterSheetUpdate))
-		modbusMasterApi.DELETE(("/delIds"), server.AddRoute(apis.ModbusMasterSheetDelete))
-		modbusMasterApi.DELETE(("/delAll"), server.AddRoute(apis.ModbusMasterSheetDeleteAll))
-	}
+
 	modbusApi := server.RouteGroup(server.ContextUrl("/modbus_slaver_sheet"))
 	{
 		modbusApi.GET(("/list"), server.AddRoute(apis.ModbusSlaverSheetPageList))
@@ -427,11 +400,6 @@ func (hs *ApiServerPlugin) LoadRoute() {
 		HwIFaceApi.GET("/refresh", server.AddRoute(apis.RefreshPortList))
 	}
 
-	//
-	// 系统设置
-	//
-	apis.LoadSystemSettingsAPI()
-
 	/**
 	 * 定时任务
 	 */
@@ -453,7 +421,12 @@ func (hs *ApiServerPlugin) LoadRoute() {
 		jpegStream.GET("/list", server.AddRoute(apis.GetJpegStreamList))
 		jpegStream.GET("/detail", server.AddRoute(apis.GetJpegStreamDetail))
 	}
-
+	// 系统设置
+	apis.LoadSystemSettingsAPI()
+	// Modbus
+	apis.InitModbusRoute()
+	// Mbus
+	apis.InitMBusRoute()
 	// Init Internal Notify Route
 	apis.InitInternalNotifyRoute()
 	// Snmp Route
@@ -468,7 +441,7 @@ func (hs *ApiServerPlugin) LoadRoute() {
 	apis.InitDataCenterApi()
 	// Transceiver
 	apis.InitTransceiverRoute()
-	// ata Point Route
+	// Data Point Route
 	apis.InitDataPointRoute()
 	// Mqtt Server
 	apis.InitMqttSourceServerRoute()
