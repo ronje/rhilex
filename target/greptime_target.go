@@ -141,7 +141,7 @@ func (grep *GrepTimeDbTarget) To(data interface{}) (interface{}, error) {
 		}
 		Table.AddRow(values...)
 		Response, errWrite := grep.client.Write(grep.Ctx, Table)
-		glogger.GLogger.Debug("grep.client.Write: ", values, Response, errWrite)
+		// glogger.GLogger.Debug("grep.client.Write: ", values, Response, errWrite)
 		if errWrite != nil {
 			glogger.GLogger.Error(errWrite)
 			return 0, errWrite
