@@ -4,19 +4,18 @@ go 1.22
 
 require (
 	github.com/GreptimeTeam/greptimedb-ingester-go v0.5.1
-	github.com/adrianmo/go-nmea v1.8.0
+	github.com/adrianmo/go-nmea v1.10.0
 	github.com/brocaar/lorawan v0.0.0-20240507141140-a18a1037da07
-	github.com/chirpstack/chirpstack/api/go/v4 v4.8.1
+	github.com/chirpstack/chirpstack/api/go/v4 v4.9.0
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
-	github.com/eclipse/paho.mqtt.golang v1.4.3
-	github.com/gin-contrib/graceful v1.0.2
+	github.com/eclipse/paho.mqtt.golang v1.5.0
 	github.com/gin-contrib/static v1.1.2
 	github.com/gin-gonic/gin v1.10.0
 	github.com/go-playground/validator/v10 v10.22.0
 	github.com/google/uuid v1.6.0
 	github.com/gopcua/opcua v0.5.3
 	github.com/gorilla/websocket v1.5.3
-	github.com/gosnmp/gosnmp v1.37.0
+	github.com/gosnmp/gosnmp v1.38.0
 	github.com/hootrhino/beautiful-lua-go v0.1.0
 	github.com/hootrhino/go-ais v1.0.0
 	github.com/hootrhino/go-dhcpd-leases v0.0.0-20240116064141-0730f287f9a2
@@ -25,60 +24,46 @@ require (
 	github.com/hootrhino/gomodbus-server v0.1.10
 	github.com/hootrhino/gopher-lua v1.0.3
 	github.com/hootrhino/goserial v0.2.1
-	github.com/hootrhino/rhilex-goat v0.0.0-20240628144111-889ce143bbd4
 	github.com/hootrhino/wmi v0.0.0-20230603082700-cfa077a8cf01
 	github.com/itchyny/gojq v0.12.16
 	github.com/jinzhu/copier v0.4.0
-	github.com/jonaz/gombus v0.0.0-20240503073839-320f3f4c5c02
-	github.com/jonaz/serial v0.0.0-20240104211900-cac2ee15ec1f
 	github.com/lithammer/shortuuid/v4 v4.0.0
-	github.com/mattn/go-sqlite3 v1.14.22
-	github.com/mitchellh/go-homedir v1.1.0
-	github.com/mochi-mqtt/server/v2 v2.6.4
-	github.com/nats-io/nats.go v1.36.0
-	github.com/patrikeh/go-deep v0.0.0-20230427173908-a2775168ab3d
+	github.com/mattn/go-sqlite3 v1.14.23
+	github.com/mochi-mqtt/server/v2 v2.6.5
+	github.com/nats-io/nats.go v1.37.0
 	github.com/pkg/errors v0.9.1
 	github.com/pkg6/go-sms v0.1.2
 	github.com/plgd-dev/go-coap/v3 v3.3.4
 	github.com/plgd-dev/kit/v2 v2.0.0-20211006190727-057b33161b90
 	github.com/robfig/cron/v3 v3.0.1
 	github.com/robinson/gos7 v0.0.0-20240315073918-1f14519e4846
-	github.com/samber/lo v1.39.0
+	github.com/samber/lo v1.47.0
 	github.com/shirou/gopsutil v3.21.11+incompatible
 	github.com/shirou/gopsutil/v3 v3.24.5
 	github.com/sirupsen/logrus v1.9.3
-	github.com/stretchr/testify v1.9.0
-	github.com/urfave/cli/v2 v2.27.2
-	github.com/vapourismo/knx-go v0.0.0-20240529174927-d4625b0a8913
+	github.com/urfave/cli/v2 v2.27.4
+	github.com/vapourismo/knx-go v0.0.0-20240623212929-3b325e3f5dcf
 	github.com/wwhai/ntp v0.3.0
 	github.com/wwhai/tinycache v0.0.0-20191004192108-46f407853014
 	github.com/xuri/excelize/v2 v2.8.1
 	go.bug.st/serial v1.6.2
-	go.mongodb.org/mongo-driver v1.15.1
+	go.mongodb.org/mongo-driver v1.16.1
 	gocv.io/x/gocv v0.37.0
-	golang.ngrok.com/ngrok v1.9.1
-	golang.org/x/exp v0.0.0-20240613232115-7f521ea00fb8
-	golang.org/x/sys v0.21.0
-	google.golang.org/grpc v1.64.0
+	golang.ngrok.com/ngrok v1.10.0
+	golang.org/x/exp v0.0.0-20240904232852-e7e105dedf7e
+	golang.org/x/sys v0.25.0
+	google.golang.org/grpc v1.66.0
 	google.golang.org/protobuf v1.34.2
 	gopkg.in/ini.v1 v1.67.0
 	gopkg.in/natefinch/lumberjack.v2 v2.2.1
 	gopkg.in/square/go-jose.v2 v2.6.0
 	gopkg.in/yaml.v2 v2.4.0
 	gorm.io/driver/sqlite v1.5.6
-	gorm.io/gorm v1.25.10
+	gorm.io/gorm v1.25.11
 )
 
 require (
 	github.com/GreptimeTeam/greptime-proto v0.7.0 // indirect
-	github.com/davecgh/go-spew v1.1.1 // indirect
-	github.com/pmezard/go-difflib v1.0.0 // indirect
-	github.com/stoewer/go-strcase v1.3.0 // indirect
-)
-
-require (
-	github.com/Kowiste/ProfinetServer v0.0.0-20200929093941-9c422ae1f008
-	github.com/bluele/gcache v0.0.2
 	github.com/bytedance/sonic v1.11.6 // indirect
 	github.com/bytedance/sonic/loader v0.1.1 // indirect
 	github.com/cloudwego/base64x v0.1.4 // indirect
@@ -113,7 +98,7 @@ require (
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
 	github.com/modern-go/reflect2 v1.0.2 // indirect
 	github.com/mohae/deepcopy v0.0.0-20170929034955-c48cc78d4826 // indirect
-	github.com/montanaflynn/stats v0.0.0-20171201202039-1bf9dbcd8cbe // indirect
+	github.com/montanaflynn/stats v0.7.1 // indirect
 	github.com/nats-io/nkeys v0.4.7 // indirect
 	github.com/nats-io/nuid v1.0.1 // indirect
 	github.com/notnoobmaster/luautil v1.4.12 // indirect
@@ -128,6 +113,7 @@ require (
 	github.com/rs/xid v1.4.0 // indirect
 	github.com/russross/blackfriday/v2 v2.1.0 // indirect
 	github.com/shoenig/go-m1cpu v0.1.6 // indirect
+	github.com/stoewer/go-strcase v1.3.0 // indirect
 	github.com/tklauser/go-sysconf v0.3.12 // indirect
 	github.com/tklauser/numcpus v0.6.1 // indirect
 	github.com/twitchyliquid64/golang-asm v0.15.1 // indirect
@@ -135,7 +121,7 @@ require (
 	github.com/xdg-go/pbkdf2 v1.0.0 // indirect
 	github.com/xdg-go/scram v1.1.2 // indirect
 	github.com/xdg-go/stringprep v1.0.4 // indirect
-	github.com/xrash/smetrics v0.0.0-20240312152122-5f08fbb34913 // indirect
+	github.com/xrash/smetrics v0.0.0-20240521201337-686a1a2994c1 // indirect
 	github.com/xuri/efp v0.0.0-20231025114914-d1ff6096ae53 // indirect
 	github.com/xuri/nfp v0.0.0-20230919160717-d98342af3f05 // indirect
 	github.com/youmark/pkcs8 v0.0.0-20181117223130-1be2e3e5546d // indirect
@@ -144,11 +130,11 @@ require (
 	go.uber.org/multierr v1.11.0 // indirect
 	golang.ngrok.com/muxado/v2 v2.0.0 // indirect
 	golang.org/x/arch v0.8.0 // indirect
-	golang.org/x/crypto v0.23.0
-	golang.org/x/net v0.25.0 // indirect
-	golang.org/x/sync v0.7.0 // indirect
-	golang.org/x/term v0.20.0 // indirect
-	golang.org/x/text v0.15.0 // indirect
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20240617180043-68d350f18fd4 // indirect
+	golang.org/x/crypto v0.25.0 // indirect
+	golang.org/x/net v0.27.0 // indirect
+	golang.org/x/sync v0.8.0 // indirect
+	golang.org/x/term v0.22.0 // indirect
+	golang.org/x/text v0.16.0 // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20240903143218-8af14fe29dc1 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
