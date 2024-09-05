@@ -280,10 +280,6 @@ func main() {
 					}
 					// linux
 					if runtime.GOOS == "linux" {
-						macAddr, err := ossupport.GetLinuxMacAddr(iface)
-						if err != nil {
-							return fmt.Errorf("[LICENCE ACTIVE]: Get Local Mac Address error: %s", err)
-						}
 						// Commercial version will implement it
 						// rhilex active
 						//     \ -H https://127.0.0.1/api/v1/device-active
@@ -292,11 +288,7 @@ func main() {
 						// - U: Active Server Account
 						// - P: Active Server Password
 						// - IF: Active IFace name
-						err1 := utils.FetchLoadLicense(host, sn, username, password, macAddr)
-						if err1 != nil {
-							return fmt.Errorf("[LICENCE ACTIVE]: Fetch license failed, error: %s", err1)
-						}
-						return nil
+						return fmt.Errorf("[LICENCE ACTIVE]: Operation Not Permission!")
 					}
 					if runtime.GOOS == "windows" {
 						// Just for test

@@ -34,14 +34,15 @@ import (
 )
 
 // FetchLoadLicense rhilex active -H 127.0.0.1 -U admin -P 123456
-func FetchLoadLicense(host, SN, username, password, macAddr string) error {
-	activeParams := fmt.Sprintf(`%s&%s&%s&%s&0&0`,
-		SN, username, password, macAddr)
+func FetchLoadLicense(host, SN, username, password, Iface, macAddr string) error {
+	activeParams := fmt.Sprintf(`%s&%s&%s&%s&%s&0&0`,
+		SN, username, password, Iface, macAddr)
 	CLog("\n*>> BEGIN LICENCE ACTIVE\n"+
 		"*# Vendor Admin: (%s, %s).\n"+
+		"*# Local Iface: (%s).\n"+
 		"*# Local Mac Address: (%s).\n"+
 		"*# Try to request license from server:(%s).",
-		username, password, macAddr, host)
+		username, password, Iface, macAddr, host)
 	filePath := fmt.Sprintf("license_%v.zip", time.Now().UnixMilli())
 	err := Download(host, activeParams, filePath)
 	if err != nil {
