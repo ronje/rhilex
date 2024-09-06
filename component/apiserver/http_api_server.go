@@ -413,14 +413,7 @@ func (hs *ApiServerPlugin) LoadRoute() {
 		crontaskApi.GET("/start", server.AddRouteV2(apis.StartTask))
 		crontaskApi.GET("/stop", server.AddRouteV2(apis.StopTask))
 	}
-	//
-	// jpegStream APi
-	//
-	jpegStream := server.DefaultApiServer.GetGroup(server.ContextUrl("/jpeg_stream"))
-	{
-		jpegStream.GET("/list", server.AddRoute(apis.GetJpegStreamList))
-		jpegStream.GET("/detail", server.AddRoute(apis.GetJpegStreamDetail))
-	}
+
 	// 系统设置
 	apis.LoadSystemSettingsAPI()
 	// Modbus
