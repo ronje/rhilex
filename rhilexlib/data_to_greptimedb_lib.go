@@ -20,8 +20,8 @@ import (
 	"github.com/hootrhino/rhilex/typex"
 )
 
-// / 数据推到 GreptimeDb local err: = data:ToGreptimeDb(uuid, data)
-func DataToGreptimeDb(rx typex.Rhilex) func(*lua.LState) int {
+// / 数据推到 GreptimeDb local err: = data:ToGreptimeDB(uuid, data)
+func DataToGreptimeDB(rx typex.Rhilex) func(*lua.LState) int {
 	return func(l *lua.LState) int {
 		id := l.ToString(2)
 		data := l.ToString(3)

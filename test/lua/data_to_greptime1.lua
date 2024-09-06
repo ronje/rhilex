@@ -25,9 +25,9 @@ Actions = {
             schemaData[row.tag] = row.value;
         end;
         local jsonString = json:T2J(schemaData)
-        local errToGrepTimeDb = data:ToGrepTimeDb('$UUID', jsonString)
-        if errToGrepTimeDb ~= nil then
-            Throw(errToGrepTimeDb)
+        local errToGreptimeDB = data:ToGreptimeDB('$UUID', jsonString)
+        if errToGreptimeDB ~= nil then
+            Throw(errToGreptimeDB)
         end
         return true, args
     end

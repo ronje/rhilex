@@ -6,7 +6,7 @@ import (
 	lua "github.com/hootrhino/gopher-lua"
 )
 
-func DataToMongo(rx typex.Rhilex, uuid string) func(*lua.LState) int {
+func DataToMongoDB(rx typex.Rhilex, uuid string) func(*lua.LState) int {
 	return func(l *lua.LState) int {
 		id := l.ToString(2)
 		data := l.ToString(3)

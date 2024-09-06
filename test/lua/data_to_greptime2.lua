@@ -16,13 +16,13 @@
 Actions = {
     function(args)
         for _ = 1, 10, 1 do
-            local errToGrepTimeDb = data:ToGrepTimeDb('$UUID', json:T2J({
+            local errToGreptimeDB = data:ToGreptimeDB('$UUID', json:T2J({
                 temperature = 12.34,
                 humidity = 34.56,
                 co2 = 56.78,
             }))
-            if errToGrepTimeDb ~= nil then
-                Throw(errToGrepTimeDb)
+            if errToGreptimeDB ~= nil then
+                Throw(errToGreptimeDB)
             end
         end
         return true, args

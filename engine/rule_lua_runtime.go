@@ -49,10 +49,10 @@ func LoadRuleLibGroup(r *typex.Rule, e typex.Rhilex) {
 			"ToUdp":        rhilexlib.DataToUdp(e, r.UUID),
 			"ToTcp":        rhilexlib.DataToTcp(e, r.UUID),
 			"ToTdEngine":   rhilexlib.DataToTdEngine(e, r.UUID),
-			"ToMongo":      rhilexlib.DataToMongo(e, r.UUID),
+			"ToMongoDB":    rhilexlib.DataToMongoDB(e, r.UUID),
 			"ToSemtechUdp": rhilexlib.DataToSemtechUdp(e, r.UUID),
 			"ToUart":       rhilexlib.DataToUart(e, r.UUID),
-			"ToGrepTimeDb": rhilexlib.DataToGreptimeDb(e),
+			"ToGreptimeDB": rhilexlib.DataToGreptimeDB(e),
 		}
 		AddRuleLibToGroup(r, e, "data", Funcs)
 	}

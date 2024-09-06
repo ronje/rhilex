@@ -29,5 +29,5 @@ JSON:
 
 ## 示例
 ```lua
-local err = data:ToGrepTimeDb('UUID', {"v1","v2","v3","v4"})
+local err = data:ToGreptimeDB('UUID', {"v1","v2","v3","v4"})
 ```

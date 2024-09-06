@@ -75,10 +75,10 @@ func LoadAppLibGroup(app *Application, e typex.Rhilex) {
 			"ToUdp":        rhilexlib.DataToUdp(e, app.UUID),
 			"ToTcp":        rhilexlib.DataToTcp(e, app.UUID),
 			"ToTdEngine":   rhilexlib.DataToTdEngine(e, app.UUID),
-			"ToMongo":      rhilexlib.DataToMongo(e, app.UUID),
+			"ToMongoDB":    rhilexlib.DataToMongoDB(e, app.UUID),
 			"ToSemtechUdp": rhilexlib.DataToSemtechUdp(e, app.UUID),
 			"ToUart":       rhilexlib.DataToUart(e, app.UUID),
-			"ToGrepTimeDb": rhilexlib.DataToGreptimeDb(e),
+			"ToGreptimeDB": rhilexlib.DataToGreptimeDB(e),
 		}
 		AddAppLibToGroup(app, e, "data", Funcs)
 	}

@@ -16,7 +16,7 @@ import (
 	"google.golang.org/grpc/credentials/insecure"
 )
 
-func Test_DataToMongo(t *testing.T) {
+func Test_DataToMongoDB(t *testing.T) {
 	engine := RunTestEngine()
 	engine.Start()
 
@@ -58,8 +58,8 @@ func Test_DataToMongo(t *testing.T) {
 		`
 		Actions = {
 			function(args)
-			    local err = data:ToMongo('mongoOut', data)
-				print("[LUA DataToMongo] ==>", err)
+			    local err = data:ToMongoDB('mongoOut', data)
+				print("[LUA DataToMongoDB] ==>", err)
 				return true, args
 			end
 		}`,

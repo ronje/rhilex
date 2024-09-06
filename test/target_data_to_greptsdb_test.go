@@ -54,7 +54,7 @@ func Test_DataToGrepTime(t *testing.T) {
 		`
 		Actions = {
 			function(args)
-			    local msg, err = data:ToGrepTimeDb('Test', args)
+			    local msg, err = data:ToGreptimeDB('Test', args)
 				print("[data To GrepTimeDb] ============= ", msg, err)
 				return true, args
 			end
