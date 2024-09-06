@@ -108,9 +108,26 @@ func ReScanUartConfig() error {
 			Name: portName,
 			Type: "UART",
 			Alias: func() string {
+				if portName == "/dev/ttyS1" {
+					return "RS458-1"
+				}
+				if portName == "/dev/ttyS2" {
+					return "RS458-2"
+				}
 				return portName
 			}(),
-			Description: portName,
+			Description: func() string {
+				// Alias Ext
+				if typex.DefaultVersionInfo.Product == "RHILEXG1" {
+					if portName == "/dev/ttyS1" {
+						return "RS458-1"
+					}
+					if portName == "/dev/ttyS2" {
+						return "RS458-2"
+					}
+				}
+				return portName
+			}(),
 		}
 		uartCfg := UartConfigDto{
 			Timeout:  3000,
@@ -132,6 +149,12 @@ func ReScanUartConfig() error {
 			Name: portName,
 			Type: "UART",
 			Alias: func() string {
+				if portName == "/dev/ttyS1" {
+					return "RS458-1"
+				}
+				if portName == "/dev/ttyS2" {
+					return "RS458-2"
+				}
 				return portName
 			}(),
 			Config: uartctrl.UartConfig{
@@ -142,7 +165,18 @@ func ReScanUartConfig() error {
 				Parity:   "N",
 				StopBits: 1,
 			},
-			Description: portName,
+			Description: func() string {
+				// Alias Ext
+				if typex.DefaultVersionInfo.Product == "RHILEXG1" {
+					if portName == "/dev/ttyS1" {
+						return "RS458-1"
+					}
+					if portName == "/dev/ttyS2" {
+						return "RS458-2"
+					}
+				}
+				return portName
+			}(),
 		})
 	}
 	return nil
@@ -218,9 +252,28 @@ func InitUartConfig() error {
 			Type: "UART",
 			Alias: func() string {
 				// Alias Ext
+				if typex.DefaultVersionInfo.Product == "RHILEXG1" {
+					if portName == "/dev/ttyS1" {
+						return "RS458-1"
+					}
+					if portName == "/dev/ttyS2" {
+						return "RS458-2"
+					}
+				}
 				return portName
 			}(),
-			Description: portName,
+			Description: func() string {
+				// Alias Ext
+				if typex.DefaultVersionInfo.Product == "RHILEXG1" {
+					if portName == "/dev/ttyS1" {
+						return "RS458-1"
+					}
+					if portName == "/dev/ttyS2" {
+						return "RS458-2"
+					}
+				}
+				return portName
+			}(),
 		}
 		uartCfg := UartConfigDto{
 			Timeout:  3000,
