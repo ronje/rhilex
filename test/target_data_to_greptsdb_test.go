@@ -2,8 +2,6 @@ package test
 
 import (
 	"context"
-	"fmt"
-	"math/rand"
 
 	"testing"
 	"time"
