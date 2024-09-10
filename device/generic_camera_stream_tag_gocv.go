@@ -1,4 +1,5 @@
 //go:build gocv
+
 package device
 
 import (
@@ -146,7 +147,7 @@ func (vc *videoCamera) OnWrite(cmd []byte, data []byte) (int, error) {
 *
  */
 func (vc *videoCamera) OnCtrl(cmd []byte, args []byte) ([]byte, error) {
-	return nil, nil
+	return 0, nil
 }
 
 // 设备当前状态

@@ -15,7 +15,6 @@ func (i TargetType) String() string {
 const (
 	MONGO_SINGLE          TargetType = "MONGO_SINGLE"          // To MongoDB
 	MQTT_TARGET           TargetType = "MQTT"                  // To Mqtt Server
-	NATS_TARGET           TargetType = "NATS"                  // To Nats.io
 	HTTP_TARGET           TargetType = "HTTP"                  // To Http Target
 	TDENGINE_TARGET       TargetType = "TDENGINE"              // To TDENGINE
 	GRPC_CODEC_TARGET     TargetType = "GRPC_CODEC_TARGET"     // To GRPC Target

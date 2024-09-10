@@ -21,6 +21,7 @@ import (
 
 	"github.com/GreptimeTeam/greptimedb-ingester-go/table"
 	"github.com/GreptimeTeam/greptimedb-ingester-go/table/types"
+	"github.com/hootrhino/rhilex/component/lostcache"
 	"github.com/hootrhino/rhilex/glogger"
 	"github.com/hootrhino/rhilex/typex"
 	"github.com/hootrhino/rhilex/utils"
@@ -85,6 +86,18 @@ func (grep *GrepTimeDbTarget) Start(cctx typex.CCTX) error {
 	}
 	grep.client = client
 	grep.status = typex.SOURCE_UP
+	// 补发数据
+	if CacheData, err1 := lostcache.GetLostCacheData(grep.PointId); err1 != nil {
+		glogger.GLogger.Error(err1)
+	} else {
+		for _, data := range CacheData {
+			_, errTo := grep.To(data.Data)
+			if errTo == nil {
+				lostcache.DeleteLostCacheData(data.ID)
+			}
+		}
+	}
+
 	glogger.GLogger.Info("Template Target started")
 	return nil
 }
@@ -142,13 +155,17 @@ func (grep *GrepTimeDbTarget) To(data interface{}) (interface{}, error) {
 			}
 		}
 		Table.AddRow(values...)
-		Response, errWrite := grep.client.Write(grep.Ctx, Table)
-		// glogger.GLogger.Debug("grep.client.Write: ", values, Response, errWrite)
+		_, errWrite := grep.client.Write(grep.Ctx, Table)
+		glogger.GLogger.Debug("grep.client.Write: ", values)
 		if errWrite != nil {
 			glogger.GLogger.Error(errWrite)
+			lostcache.SaveLostCacheData(lostcache.CacheDataDto{
+				TargetId: grep.PointId,
+				Data:     ST,
+			})
 			return 0, errWrite
 		}
-		return Response.String(), nil
+		return 0, errWrite
 	}
 	return 0, nil
 }

@@ -123,7 +123,7 @@ func (ht *SMSTarget) To(data interface{}) (interface{}, error) {
 				}
 			}
 		}
-		return nil, nil
+		return 0, nil
 	default:
 		return nil, fmt.Errorf("sms format error")
 	}

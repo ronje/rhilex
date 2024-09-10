@@ -21,6 +21,7 @@ import (
 	"net"
 	"time"
 
+	"github.com/hootrhino/rhilex/component/lostcache"
 	"github.com/hootrhino/rhilex/glogger"
 	"github.com/hootrhino/rhilex/typex"
 	"github.com/hootrhino/rhilex/utils"
@@ -115,6 +116,17 @@ func (ht *TTcpTarget) Start(cctx typex.CCTX) error {
 		}(ht)
 	}
 	ht.status = typex.SOURCE_UP
+	// 补发数据
+	if CacheData, err1 := lostcache.GetLostCacheData(ht.PointId); err1 != nil {
+		glogger.GLogger.Error(err1)
+	} else {
+		for _, data := range CacheData {
+			_, errTo := ht.To(data.Data)
+			if errTo == nil {
+				lostcache.DeleteLostCacheData(data.ID)
+			}
+		}
+	}
 	glogger.GLogger.Info("TTcpTarget  success connect to:", host)
 	return nil
 }

@@ -18,7 +18,9 @@ package target
 import (
 	"fmt"
 
+	"github.com/hootrhino/rhilex/component/lostcache"
 	"github.com/hootrhino/rhilex/component/rhilexrpc"
+	"github.com/hootrhino/rhilex/glogger"
 	"github.com/hootrhino/rhilex/typex"
 	"github.com/hootrhino/rhilex/utils"
 
@@ -74,7 +76,7 @@ func (ct *codecTarget) Start(cctx typex.CCTX) error {
 	ct.Ctx = cctx.Ctx
 	ct.CancelCTX = cctx.CancelCTX
 	//
-	rpcConnection, err := grpc.Dial(fmt.Sprintf("%s:%d", ct.mainConfig.Host, ct.mainConfig.Port),
+	rpcConnection, err := grpc.NewClient(fmt.Sprintf("%s:%d", ct.mainConfig.Host, ct.mainConfig.Port),
 		grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		return err
@@ -82,6 +84,18 @@ func (ct *codecTarget) Start(cctx typex.CCTX) error {
 	ct.rpcConnection = rpcConnection
 	ct.client = rhilexrpc.NewCodecClient(rpcConnection)
 	ct.status = typex.SOURCE_UP
+	// 补发数据
+	if CacheData, err1 := lostcache.GetLostCacheData(ct.PointId); err1 != nil {
+		glogger.GLogger.Error(err1)
+	} else {
+		for _, data := range CacheData {
+			_, errTo := ct.To(data.Data)
+			if errTo == nil {
+				lostcache.DeleteLostCacheData(data.ID)
+			}
+		}
+	}
+
 	return nil
 
 }

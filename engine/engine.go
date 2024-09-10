@@ -25,6 +25,7 @@ import (
 	"github.com/hootrhino/rhilex/component/aibase"
 	"github.com/hootrhino/rhilex/component/appstack"
 	"github.com/hootrhino/rhilex/component/interkv"
+	"github.com/hootrhino/rhilex/component/lostcache"
 	"github.com/hootrhino/rhilex/component/rhilexmanager"
 	"github.com/hootrhino/rhilex/component/ruleengine"
 	transceiver "github.com/hootrhino/rhilex/component/transceiver/manager"
@@ -94,6 +95,8 @@ func InitRuleEngine(config typex.RhilexConfig) typex.Rhilex {
 
 	// Internal DB
 	interdb.Init(__DefaultRuleEngine)
+	// Lost Data Cache
+	lostcache.Init(__DefaultRuleEngine)
 	// Internal kv Store
 	interkv.InitInterKVStore(core.GlobalConfig.MaxKvStoreSize)
 	// SuperVisor Admin
@@ -704,12 +707,6 @@ func (e *RuleEngine) InitTargetTypeManager() error {
 		&typex.XConfig{
 			Engine:    e,
 			NewTarget: target.NewMqttTarget,
-		},
-	)
-	e.TargetTypeManager.Register(typex.NATS_TARGET,
-		&typex.XConfig{
-			Engine:    e,
-			NewTarget: target.NewNatsTarget,
 		},
 	)
 	e.TargetTypeManager.Register(typex.HTTP_TARGET,

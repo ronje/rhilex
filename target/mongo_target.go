@@ -20,6 +20,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/hootrhino/rhilex/component/lostcache"
 	"github.com/hootrhino/rhilex/glogger"
 	"github.com/hootrhino/rhilex/typex"
 	"github.com/hootrhino/rhilex/utils"
@@ -83,6 +84,17 @@ func (m *mongoTarget) Start(cctx typex.CCTX) error {
 	m.client = client
 	m.Enable = true
 	m.status = typex.SOURCE_UP
+	// 补发数据
+	if CacheData, err1 := lostcache.GetLostCacheData(m.PointId); err1 != nil {
+		glogger.GLogger.Error(err1)
+	} else {
+		for _, data := range CacheData {
+			_, errTo := m.To(data.Data)
+			if errTo == nil {
+				lostcache.DeleteLostCacheData(data.ID)
+			}
+		}
+	}
 	glogger.GLogger.Info("mongoTarget connect successfully")
 	return nil
 

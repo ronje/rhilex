@@ -35,7 +35,7 @@ func (tc *TemplateCom) Start(map[string]any) error {
 	return nil
 }
 func (tc *TemplateCom) Ctrl(cmd []byte, timeout time.Duration) ([]byte, error) {
-	return nil, nil
+	return 0, nil
 }
 func (tc *TemplateCom) Info() transceivercom.CommunicatorInfo {
 	return transceivercom.CommunicatorInfo{

@@ -2,6 +2,7 @@ package apis
 
 import (
 	"errors"
+
 	"github.com/gin-gonic/gin"
 	common "github.com/hootrhino/rhilex/component/apiserver/common"
 	"github.com/hootrhino/rhilex/component/apiserver/dto"
@@ -231,7 +232,7 @@ func DataPointSheetCreateOrUpdate(c *gin.Context, ruleEngine typex.Rhilex) (any,
 	}
 
 	ruleEngine.RestartDevice(form.DeviceUUID)
-	return nil, nil
+	return 0, nil
 }
 
 func DataPointSheetDeleteByUUIDs(c *gin.Context, ruleEngine typex.Rhilex) {

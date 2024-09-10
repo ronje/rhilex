@@ -54,7 +54,7 @@ func DeleteCronTask(c *gin.Context, ruleEngine typex.Rhilex) (any, error) {
 	if err != nil {
 		return nil, err
 	}
-	return nil, nil
+	return 0, nil
 }
 
 // ListCronTask godoc
@@ -128,7 +128,7 @@ func StartTask(c *gin.Context, ruleEngine typex.Rhilex) (any, error) {
 	if err != nil {
 		return nil, err
 	}
-	return nil, nil
+	return 0, nil
 }
 
 // StopTask godoc
@@ -157,7 +157,7 @@ func StopTask(c *gin.Context, ruleEngine typex.Rhilex) (any, error) {
 	// 1. 调用cron的库进行调度
 	manager := cron_task.GetCronManager()
 	manager.DeleteTask(uuid)
-	return nil, nil
+	return 0, nil
 }
 
 func ListRunningTask(c *gin.Context, ruleEngine typex.Rhilex) (any, error) {

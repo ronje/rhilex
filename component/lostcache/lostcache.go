@@ -13,7 +13,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-package interdb
+package lostcache
 
 import (
 	"runtime"
@@ -28,19 +28,14 @@ import (
 	"gorm.io/gorm/logger"
 )
 
-const __DEFAULT_DB_PATH string = "./rhilex.db?cache=shared&mode=rwc"
+const __DEFAULT_DB_PATH string = "./rhilex_lostcache.db?cache=shared&mode=rwc"
 
 var __Sqlite *SqliteDAO
 
-/*
-*
-* Sqlite 数据持久层
-*
- */
 type SqliteDAO struct {
 	engine typex.Rhilex
-	name   string   // 框架可以根据名称来选择不同的数据库驱动,为以后扩展准备
-	db     *gorm.DB // Sqlite 驱动
+	name   string
+	db     *gorm.DB
 }
 
 /*
@@ -66,6 +61,7 @@ func Init(engine typex.Rhilex) error {
 	if err != nil {
 		glogger.GLogger.Fatal(err)
 	}
+	RegisterModel(&CacheData{})
 	__Sqlite.db.Exec("VACUUM;")
 	return err
 }
