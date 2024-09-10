@@ -20,7 +20,7 @@ package lostcache
  *
  */
 func SaveLostCacheData(data CacheDataDto) error {
-	__Sqlite.db.Model(&CacheData{}).Save(&CacheData{
+	__Sqlite.db.Table("cache_data").Create(&CacheData{
 		TargetId: data.TargetId,
 		Data:     data.Data,
 	})
