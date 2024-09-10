@@ -635,12 +635,7 @@ func (e *RuleEngine) InitSourceTypeManager() error {
 			NewSource: source.NewGrpcInEndSource,
 		},
 	)
-	e.SourceTypeManager.Register(typex.NATS_SERVER,
-		&typex.XConfig{
-			Engine:    e,
-			NewSource: source.NewNatsSource,
-		},
-	)
+
 	e.SourceTypeManager.Register(typex.UDP_SERVER,
 		&typex.XConfig{
 			Engine:    e,

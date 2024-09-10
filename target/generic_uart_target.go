@@ -41,6 +41,8 @@ type GenericUartMainConfig struct {
 	Timeout *int `json:"timeout" validate:"required"`
 	// 端口UUID，用于识别特定的串口设备
 	PortUuid string `json:"portUuid" validate:"required"`
+	// 离线缓存
+	CacheOfflineData *bool `json:"cacheOfflineData" title:"离线缓存"`
 }
 
 type GenericUart struct {
@@ -59,10 +61,7 @@ func NewGenericUart(e typex.Rhilex) typex.XTarget {
 		PortUuid:   "/dev/ttyS1",
 		DataMode:   "RAW_STRING",
 		PingPacket: "RHILEX",
-		AllowPing: func() *bool {
-			b := false
-			return &b
-		}(),
+		AllowPing:  new(bool),
 		Timeout: func() *int {
 			b := 3000
 			return &b

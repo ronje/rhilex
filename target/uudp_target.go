@@ -26,13 +26,19 @@ import (
 	"github.com/hootrhino/rhilex/utils"
 )
 
-type _UdpMainConfig struct {
-	AllowPing  *bool  `json:"allowPing"`
-	DataMode   string `json:"dataMode"`
-	Host       string `json:"host"`
-	PingPacket string `json:"pingPacket"`
-	Port       int    `json:"port"`
-	Timeout    int    `json:"timeout"`
+/**
+ * UDP
+ *
+ */
+
+type UdpHostConfig struct {
+	AllowPing        *bool  `json:"allowPing"`
+	DataMode         string `json:"dataMode"`
+	Host             string `json:"host"`
+	PingPacket       string `json:"pingPacket"`
+	Port             int    `json:"port"`
+	Timeout          int    `json:"timeout"`
+	CacheOfflineData *bool  `json:"cacheOfflineData" title:"离线缓存"`
 }
 
 /*
@@ -42,21 +48,20 @@ type _UdpMainConfig struct {
  */
 type UUdpTarget struct {
 	typex.XStatus
-	mainConfig _UdpMainConfig
+	mainConfig UdpHostConfig
 	status     typex.SourceState
 }
 
 func NewUUdpTarget(e typex.Rhilex) typex.XTarget {
 	ut := new(UUdpTarget)
 	ut.RuleEngine = e
-	ut.mainConfig = _UdpMainConfig{
+	ut.mainConfig = UdpHostConfig{
+		Host:       "127.0.0.1",
+		Port:       6502,
 		DataMode:   "RAW_STRING",
-		Timeout:    3000,
 		PingPacket: "rhilex\r\n",
-		AllowPing: func() *bool {
-			b := true
-			return &b
-		}(),
+		Timeout:    3000,
+		AllowPing:  new(bool),
 	}
 	ut.status = typex.SOURCE_DOWN
 	return ut

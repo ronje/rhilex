@@ -18,7 +18,6 @@ package target
 import (
 	"fmt"
 
-	"github.com/hootrhino/rhilex/common"
 	"github.com/hootrhino/rhilex/component/rhilexrpc"
 	"github.com/hootrhino/rhilex/typex"
 	"github.com/hootrhino/rhilex/utils"
@@ -27,17 +26,33 @@ import (
 	"google.golang.org/grpc/credentials/insecure"
 )
 
+/*
+*
+* GRPC
+*
+ */
+type GrpcConfig struct {
+	Host             string `json:"host" validate:"required" title:"地址"`
+	Port             int    `json:"port" validate:"required" title:"端口"`
+	Type             string `json:"type" title:"类型"`
+	CacheOfflineData *bool  `json:"cacheOfflineData" title:"离线缓存"`
+}
+
 type codecTarget struct {
 	typex.XStatus
 	client        rhilexrpc.CodecClient
 	rpcConnection *grpc.ClientConn
-	mainConfig    common.GrpcConfig
+	mainConfig    GrpcConfig
 	status        typex.SourceState
 }
 
 func NewCodecTarget(rx typex.Rhilex) typex.XTarget {
 	ct := &codecTarget{}
-	ct.mainConfig = common.GrpcConfig{}
+	ct.mainConfig = GrpcConfig{
+		Host:             "127.0.0.1",
+		Port:             2581,
+		CacheOfflineData: new(bool),
+	}
 	ct.RuleEngine = rx
 	ct.status = typex.SOURCE_DOWN
 	return ct

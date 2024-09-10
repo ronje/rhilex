@@ -19,24 +19,38 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/hootrhino/rhilex/common"
 	"github.com/hootrhino/rhilex/typex"
 	"github.com/hootrhino/rhilex/utils"
 
 	"github.com/nats-io/nats.go"
 )
 
+/*
+*
+* NATS
+*
+ */
+
+type NatsConfig struct {
+	Username         string `json:"username" validate:"required" title:"用户"`
+	Password         string `json:"password" validate:"required" title:"密码"`
+	Host             string `json:"host" validate:"required" title:"地址"`
+	Port             int    `json:"port" validate:"required" title:"端口"`
+	Topic            string `json:"topic" validate:"required" title:"转发Topic"`
+	CacheOfflineData *bool  `json:"cacheOfflineData" title:"离线缓存"`
+}
+
 type natsTarget struct {
 	typex.XStatus
 	natsConnector *nats.Conn
-	mainConfig    common.NatsConfig
+	mainConfig    NatsConfig
 	status        typex.SourceState
 }
 
 func NewNatsTarget(e typex.Rhilex) typex.XTarget {
 	nt := &natsTarget{}
 	nt.RuleEngine = e
-	nt.mainConfig = common.NatsConfig{}
+	nt.mainConfig = NatsConfig{}
 	return nt
 }
 func (nt *natsTarget) Init(outEndId string, configMap map[string]interface{}) error {

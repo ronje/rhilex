@@ -20,7 +20,6 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/hootrhino/rhilex/common"
 	"github.com/hootrhino/rhilex/glogger"
 	"github.com/hootrhino/rhilex/typex"
 	"github.com/hootrhino/rhilex/utils"
@@ -30,17 +29,34 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
+/*
+*
+* Mongodb 配置
+*
+ */
+type MongoConfig struct {
+	MongoUrl         string `json:"mongoUrl" validate:"required" title:"URL"`
+	Database         string `json:"database" validate:"required" title:"数据库"`
+	Collection       string `json:"collection" validate:"required" title:"集合"`
+	CacheOfflineData *bool  `json:"cacheOfflineData" title:"离线缓存"`
+}
+
 type mongoTarget struct {
 	typex.XStatus
 	client     *mongo.Client
 	collection *mongo.Collection
-	mainConfig common.MongoConfig
+	mainConfig MongoConfig
 	status     typex.SourceState
 }
 
 func NewMongoTarget(e typex.Rhilex) typex.XTarget {
 	mg := new(mongoTarget)
-	mg.mainConfig = common.MongoConfig{}
+	mg.mainConfig = MongoConfig{
+		MongoUrl:         "mongodb://rhilex:rhilex@localhost:27017/rhilex",
+		Database:         "rhilex",
+		Collection:       "rhilex",
+		CacheOfflineData: new(bool),
+	}
 	mg.RuleEngine = e
 	mg.status = typex.SOURCE_DOWN
 	return mg

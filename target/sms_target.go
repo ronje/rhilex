@@ -27,14 +27,19 @@ import (
 	"github.com/pkg6/go-sms/gateways/juhe"
 )
 
+/**
+ *
+ * 短信
+ */
 type SMSTargetConfig struct {
 	Type string `json:"type" validate:"required"` // ALI_SMS|JUHE_SMS
 	// juhe
 	AppId  string `json:"app_id"`
 	AppKey string `json:"app_key"`
 	// aliyun
-	AccessKeyId     string `json:"accessKeyId"`
-	AccessKeySecret string `json:"accessKeySecret"`
+	AccessKeyId      string `json:"accessKeyId"`
+	AccessKeySecret  string `json:"accessKeySecret"`
+	CacheOfflineData *bool  `json:"cacheOfflineData" title:"离线缓存"`
 }
 type SMSTarget struct {
 	typex.XStatus

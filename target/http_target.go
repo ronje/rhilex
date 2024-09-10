@@ -34,6 +34,8 @@ type HTTPTargetConfig struct {
 	AllowPing  *bool             `json:"allowPing"`
 	PingPacket string            `json:"pingPacket"`
 	Timeout    int               `json:"timeout"`
+	// 离线缓存
+	CacheOfflineData *bool `json:"cacheOfflineData" title:"离线缓存"`
 }
 type HTTPTarget struct {
 	typex.XStatus
@@ -46,12 +48,11 @@ func NewHTTPTarget(e typex.Rhilex) typex.XTarget {
 	ht := new(HTTPTarget)
 	ht.RuleEngine = e
 	ht.mainConfig = HTTPTargetConfig{
+		Url:        "http://127.0.0.1",
 		PingPacket: "rhilex",
 		Timeout:    3000,
-		AllowPing: func() *bool {
-			b := true
-			return &b
-		}(),
+		AllowPing:  new(bool),
+		Headers:    map[string]string{},
 	}
 	ht.status = typex.SOURCE_DOWN
 	return ht

@@ -23,11 +23,24 @@ import (
 	"strings"
 	"time"
 
-	"github.com/hootrhino/rhilex/common"
 	"github.com/hootrhino/rhilex/glogger"
 	"github.com/hootrhino/rhilex/typex"
 	"github.com/hootrhino/rhilex/utils"
 )
+
+// http://<fqdn>:<port>/rest/sql/[db_name]
+// fqnd: 集群中的任一台主机 FQDN 或 IP 地址
+// port: 配置文件中 httpPort 配置项，缺省为 6041
+// db_name: 可选参数，指定本次所执行的 SQL 语句的默认数据库库名
+// curl -u root:taosdata -d 'show databases;' 106.15.225.172:6041/rest/sql
+type TDEngineConfig struct {
+	Fqdn             string `json:"fqdn" validate:"required" title:"地址"`     // 服务地址
+	Port             int    `json:"port" validate:"required" title:"端口"`     // 服务端口
+	Username         string `json:"username" validate:"required" title:"用户"` // 用户
+	Password         string `json:"password" validate:"required" title:"密码"` // 密码
+	DbName           string `json:"dbName" validate:"required" title:"数据库名"` // 数据库名
+	CacheOfflineData *bool  `json:"cacheOfflineData" title:"离线缓存"`
+}
 
 /*
 *
@@ -38,7 +51,7 @@ import (
 type tdEngineTarget struct {
 	typex.XStatus
 	client     http.Client
-	mainConfig common.TDEngineConfig
+	mainConfig TDEngineConfig
 	status     typex.SourceState
 }
 type tdHttpResult struct {
@@ -50,7 +63,7 @@ type tdHttpResult struct {
 func NewTdEngineTarget(e typex.Rhilex) typex.XTarget {
 	td := tdEngineTarget{
 		client:     http.Client{Timeout: 2000 * time.Millisecond},
-		mainConfig: common.TDEngineConfig{},
+		mainConfig: TDEngineConfig{},
 	}
 	td.RuleEngine = e
 	td.status = typex.SOURCE_DOWN

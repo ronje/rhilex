@@ -8,13 +8,20 @@ import (
 	"sync"
 	"time"
 
-	"github.com/hootrhino/rhilex/common"
-
 	"github.com/hootrhino/rhilex/glogger"
 	"github.com/hootrhino/rhilex/typex"
 	"github.com/hootrhino/rhilex/utils"
 )
 
+/*
+*
+* HTTP
+*
+ */
+type __HttpConfig struct {
+	Url     string            `json:"url" validate:"required" title:"URL"`
+	Headers map[string]string `json:"headers" validate:"required" title:"HTTP Headers"`
+}
 type __HttpCommonConfig struct {
 	Timeout     *int   `json:"timeout" validate:"required"`
 	AutoRequest *bool  `json:"autoRequest" validate:"required"`
@@ -22,7 +29,7 @@ type __HttpCommonConfig struct {
 }
 type __HttpMainConfig struct {
 	CommonConfig __HttpCommonConfig `json:"commonConfig" validate:"required"`
-	HttpConfig   common.HTTPConfig  `json:"httpConfig" validate:"required"`
+	HttpConfig   __HttpConfig       `json:"httpConfig" validate:"required"`
 }
 
 type GenericHttpDevice struct {

@@ -36,6 +36,8 @@ type GrepTimeDbTargetConfig struct {
 	Password string `json:"password" validate:"required" title:"密码"`   // 密码
 	DataBase string `json:"database" validate:"required" title:"数据库名"` // 数据库名
 	Table    string `json:"table" validate:"required" title:"数据表"`     // 表名
+	// 离线缓存
+	CacheOfflineData *bool `json:"cacheOfflineData" title:"离线缓存"`
 }
 type GrepTimeDbTarget struct {
 	typex.XStatus

@@ -26,18 +26,24 @@ import (
 	"github.com/hootrhino/rhilex/utils"
 )
 
-type _TcpMainConfig struct {
-	AllowPing  *bool  `json:"allowPing"`
-	DataMode   string `json:"dataMode"`
-	Host       string `json:"host"`
-	PingPacket string `json:"pingPacket"`
-	Port       int    `json:"port"`
-	Timeout    int    `json:"timeout"`
+/**
+ * TCP
+ *
+ */
+type TcpHostConfig struct {
+	AllowPing        *bool  `json:"allowPing"`
+	DataMode         string `json:"dataMode"`
+	Host             string `json:"host"`
+	PingPacket       string `json:"pingPacket"`
+	Port             int    `json:"port"`
+	Timeout          int    `json:"timeout"`
+	CacheOfflineData *bool  `json:"cacheOfflineData" title:"离线缓存"`
 }
+
 type TTcpTarget struct {
 	typex.XStatus
 	client     *net.TCPConn
-	mainConfig _TcpMainConfig
+	mainConfig TcpHostConfig
 	status     typex.SourceState
 }
 
@@ -49,13 +55,13 @@ type TTcpTarget struct {
 func NewTTcpTarget(e typex.Rhilex) typex.XTarget {
 	ht := new(TTcpTarget)
 	ht.RuleEngine = e
-	ht.mainConfig = _TcpMainConfig{
-		PingPacket: "rhilex",
+	ht.mainConfig = TcpHostConfig{
+		Host:       "127.0.0.1",
+		Port:       6502,
+		DataMode:   "RAW_STRING",
+		PingPacket: "rhilex\r\n",
 		Timeout:    3000,
-		AllowPing: func() *bool {
-			b := true
-			return &b
-		}(),
+		AllowPing:  new(bool),
 	}
 	ht.status = typex.SOURCE_DOWN
 	return ht

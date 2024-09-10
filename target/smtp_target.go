@@ -26,18 +26,24 @@ import (
 	"github.com/hootrhino/rhilex/utils"
 )
 
-type smtpConfig struct {
-	Server   string `json:"server"`
-	Port     int    `json:"port"`
-	User     string `json:"user"`
-	Password string `json:"password"`
-	Subject  string `json:"subject"`
-	From     string `json:"from"`
-	To       string `json:"to"`
+/**
+ * 邮件
+ *
+ */
+
+type SmtpConfig struct {
+	Server           string `json:"server"`
+	Port             int    `json:"port"`
+	User             string `json:"user"`
+	Password         string `json:"password"`
+	Subject          string `json:"subject"`
+	From             string `json:"from"`
+	To               string `json:"to"`
+	CacheOfflineData *bool  `json:"cacheOfflineData" title:"离线缓存"`
 }
 type SmtpTarget struct {
 	typex.XStatus
-	mainConfig smtpConfig
+	mainConfig SmtpConfig
 	status     typex.SourceState
 }
 
@@ -54,7 +60,7 @@ type SmtpTarget struct {
 func NewSmtpTarget(e typex.Rhilex) typex.XTarget {
 	ht := new(SmtpTarget)
 	ht.RuleEngine = e
-	ht.mainConfig = smtpConfig{}
+	ht.mainConfig = SmtpConfig{}
 	ht.status = typex.SOURCE_DOWN
 	return ht
 }

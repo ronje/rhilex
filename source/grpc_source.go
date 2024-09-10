@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"net"
 
-	"github.com/hootrhino/rhilex/common"
 	"github.com/hootrhino/rhilex/component/rhilexrpc"
 	"github.com/hootrhino/rhilex/glogger"
 	"github.com/hootrhino/rhilex/typex"
@@ -18,6 +17,12 @@ const (
 	defaultTransport = "tcp"
 )
 
+type GrpcConfig struct {
+	Host             string `json:"host" validate:"required" title:"地址"`
+	Port             int    `json:"port" validate:"required" title:"端口"`
+	Type             string `json:"type" title:"类型"`
+	CacheOfflineData *bool  `json:"cacheOfflineData" title:"离线缓存"`
+}
 type RhilexRpcServer struct {
 	grpcInEndSource *grpcInEndSource
 	rhilexrpc.UnimplementedRhilexRpcServer
@@ -28,14 +33,14 @@ type grpcInEndSource struct {
 	typex.XStatus
 	rhilexServer *RhilexRpcServer
 	rpcServer    *grpc.Server
-	mainConfig   common.GrpcConfig
+	mainConfig   GrpcConfig
 	status       typex.SourceState
 }
 
 func NewGrpcInEndSource(e typex.Rhilex) typex.XSource {
 	g := grpcInEndSource{}
 	g.RuleEngine = e
-	g.mainConfig = common.GrpcConfig{}
+	g.mainConfig = GrpcConfig{}
 	return &g
 }
 
@@ -117,7 +122,6 @@ func (r *RhilexRpcServer) Work(ctx context.Context, in *rhilexrpc.Data) (*rhilex
 	}
 
 }
-
 
 // 来自外面的数据
 func (*grpcInEndSource) DownStream([]byte) (int, error) {
