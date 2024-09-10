@@ -35,8 +35,9 @@ func Test_data_to_tdengine(t *testing.T) {
 		"GRPC",
 		"Test_data_to_tdengine",
 		"Test_data_to_tdengine", map[string]interface{}{
-			"port": 2581,
-			"host": "127.0.0.1",
+			"port":             2581,
+			"host":             "127.0.0.1",
+			"cacheOfflineData": true,
 		})
 	ctx, cancelF := typex.NewCCTX() // ,ctx, cancelF
 	if err := engine.LoadInEndWithCtx(grpcInend, ctx, cancelF); err != nil {
@@ -100,7 +101,8 @@ func Test_data_to_tdengine(t *testing.T) {
 	rng.Int()
 	for i := 0; i < 3; i++ {
 		resp, err := client.Work(context.Background(), &rhilexrpc.Data{
-			Value: fmt.Sprintf(`{"co2":%v,"hum":%v,"lex":%v,"temp":%v}`, rand.Int63n(100), rand.Int63n(100), rand.Int63n(100), rand.Int63n(100)),
+			Value: fmt.Sprintf(`{"co2":%v,"hum":%v,"lex":%v,"temp":%v}`,
+				rand.Int63n(100), rand.Int63n(100), rand.Int63n(100), rand.Int63n(100)),
 		})
 		if err != nil {
 			t.Fatal(err)

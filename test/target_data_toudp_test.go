@@ -16,7 +16,16 @@ import (
 	"github.com/hootrhino/rhilex/typex"
 )
 
-var _DataToUdp_luaCase = `function Main(arg) for i = 1, 3, 1 do local err = data:ToUdp('UdpServer',applib:T2J({temp = 20,humi = 13.45})) applib:log('result =>',err) time:Sleep(100) end return 0 end`
+var _DataToUdp_luaCase = `
+function Main(arg)
+	for i = 1, 3, 1 do
+	local err = data:ToUdp('UdpServer',applib:T2J({temp = 20,humi = 13.45}))
+	applib:log('result =>',err)
+	time:Sleep(100)
+	end
+ return 0
+end
+`
 
 // go test -timeout 30s -run ^Test_DataToUdp github.com/hootrhino/rhilex/test -v -count=1
 
@@ -36,8 +45,9 @@ func Test_DataToUdp(t *testing.T) {
 
 	UdpServer := typex.NewOutEnd(typex.UDP_TARGET,
 		"Udp", "Udp", map[string]interface{}{
-			"host": "127.0.0.1",
-			"port": 8891,
+			"host":             "127.0.0.1",
+			"port":             8891,
+			"cacheOfflineData": true,
 		},
 	)
 	UdpServer.UUID = "UdpServer"

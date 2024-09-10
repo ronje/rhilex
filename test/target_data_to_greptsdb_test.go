@@ -34,13 +34,14 @@ func Test_DataToGrepTime(t *testing.T) {
 
 	OutEnd := typex.NewOutEnd(typex.GREPTIME_DATABASE,
 		"GREPTIME_DATABASE", "GREPTIME_DATABASE", map[string]interface{}{
-			"gwsn":     "rhilex",
-			"host":     "127.0.0.1",
-			"port":     4001,
-			"username": "rhilex",
-			"password": "rhilex",
-			"database": "public",
-			"table":    "public",
+			"gwsn":             "rhilex",
+			"host":             "127.0.0.1",
+			"port":             4001,
+			"username":         "rhilex",
+			"password":         "rhilex",
+			"database":         "public",
+			"table":            "public",
+			"cacheOfflineData": true,
 		})
 	OutEnd.UUID = "Test"
 	ctx1, cancelF1 := typex.NewCCTX() // ,ctx, cancelF
@@ -69,14 +70,11 @@ func Test_DataToGrepTime(t *testing.T) {
 		glogger.GLogger.Error(err)
 	}
 	defer conn.Close()
-	source := rand.NewSource(time.Now().UnixNano())
-	rng := rand.New(source)
 
 	client := rhilexrpc.NewRhilexRpcClient(conn)
 	for i := 0; i < 10; i++ {
 		resp, err := client.Work(context.Background(), &rhilexrpc.Data{
-			Value: fmt.Sprintf(`{"co2":%2f,"hum":%2f,"lex":%2f,"temp":%2f}`,
-				rng.Float32(), rng.Float32(), rng.Float32(), rng.Float32()),
+			Value: `{"co2":1,"hum":2,"lex":3,"temp":4}`,
 		})
 		if err != nil {
 			glogger.GLogger.Error(err)

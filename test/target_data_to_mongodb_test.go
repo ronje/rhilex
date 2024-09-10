@@ -39,9 +39,10 @@ func Test_DataToMongoDB(t *testing.T) {
 	mongoOut := typex.NewOutEnd(typex.MONGO_SINGLE,
 		"MONGO_SINGLE",
 		"MONGO_SINGLE", map[string]interface{}{
-			"mongoUrl":   "mongodb://root:root@127.0.0.1:27017/?connect=direct",
-			"database":   "temp_gateway_test_" + ts,
-			"collection": "temp_gateway_test_" + ts,
+			"mongoUrl":         "mongodb://root:root@127.0.0.1:27017/?connect=direct",
+			"database":         "temp_gateway_test_" + ts,
+			"collection":       "temp_gateway_test_" + ts,
+			"cacheOfflineData": true,
 		})
 	mongoOut.UUID = "mongoOut"
 	ctx1, cancelF1 := typex.NewCCTX() // ,ctx, cancelF
@@ -75,7 +76,7 @@ func Test_DataToMongoDB(t *testing.T) {
 	client := rhilexrpc.NewRhilexRpcClient(conn)
 
 	resp, err := client.Work(context.Background(), &rhilexrpc.Data{
-		Value: `[{"co2":10,"hum":30,"lex":22,"temp":100}]`,
+		Value: `{"co2":1,"hum":2,"lex":3,"temp":4}`,
 	})
 	if err != nil {
 		glogger.GLogger.Error(err)
