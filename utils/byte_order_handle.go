@@ -21,52 +21,6 @@ import (
 	"math"
 )
 
-func ParseBinaryValue(DataBlockType string, DataBlockOrder string,
-	Weight float32, byteSlice [256]byte) string {
-
-	if DataBlockType == "UTF8" {
-		acc := 0
-		for _, v := range byteSlice {
-			if v != 0 {
-				acc++
-			} else {
-				continue
-			}
-		}
-		if acc == 0 {
-			return ""
-		}
-		if DataBlockOrder == "BIG_ENDIAN" {
-			return string(byteSlice[:acc])
-		}
-		if DataBlockOrder == "LITTLE_ENDIAN" {
-			return stringReverse(string(byteSlice[:acc]))
-		}
-	}
-
-	if DataBlockType == "RAW" {
-		acc := 0
-		for _, v := range byteSlice {
-			if v != 0 {
-				acc++
-			} else {
-				continue
-			}
-		}
-		if acc == 0 {
-			return ""
-		}
-		return hex.EncodeToString(byteSlice[:acc])
-	}
-
-	if DataBlockType == "BYTE" {
-
-		return fmt.Sprintf("%d", byteSlice[0])
-	}
-
-	return ""
-}
-
 /*
 *
 *解析西门子的值 无符号
@@ -220,18 +174,7 @@ func ParseModbusValue(DataBlockType string, DataBlockOrder string,
 	}
 
 	if DataBlockType == "RAW" {
-		acc := 0
-		for _, v := range byteSlice {
-			if v != 0 {
-				acc++
-			} else {
-				continue
-			}
-		}
-		if acc == 0 {
-			return ""
-		}
-		return hex.EncodeToString(byteSlice[:acc])
+		return hex.EncodeToString(byteSlice[:4])
 	}
 
 	if DataBlockType == "BYTE" {
