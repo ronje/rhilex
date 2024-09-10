@@ -57,12 +57,13 @@ func NewUUdpTarget(e typex.Rhilex) typex.XTarget {
 	ut := new(UUdpTarget)
 	ut.RuleEngine = e
 	ut.mainConfig = UdpHostConfig{
-		Host:       "127.0.0.1",
-		Port:       6502,
-		DataMode:   "RAW_STRING",
-		PingPacket: "rhilex\r\n",
-		Timeout:    3000,
-		AllowPing:  new(bool),
+		Host:             "127.0.0.1",
+		Port:             6502,
+		DataMode:         "RAW_STRING",
+		PingPacket:       "rhilex\r\n",
+		Timeout:          3000,
+		AllowPing:        new(bool),
+		CacheOfflineData: new(bool),
 	}
 	ut.status = typex.SOURCE_DOWN
 	return ut
@@ -103,16 +104,19 @@ func (ut *UUdpTarget) Start(cctx typex.CCTX) error {
 	}
 	ut.status = typex.SOURCE_UP
 	// 补发数据
-	if CacheData, err1 := lostcache.GetLostCacheData(ut.PointId); err1 != nil {
-		glogger.GLogger.Error(err1)
-	} else {
-		for _, data := range CacheData {
-			_, errTo := ut.To(data.Data)
-			if errTo == nil {
-				lostcache.DeleteLostCacheData(data.ID)
+	if *ut.mainConfig.CacheOfflineData {
+		if CacheData, err1 := lostcache.GetLostCacheData(ut.PointId); err1 != nil {
+			glogger.GLogger.Error(err1)
+		} else {
+			for _, data := range CacheData {
+				_, errTo := ut.To(data.Data)
+				if errTo == nil {
+					lostcache.DeleteLostCacheData(data.ID)
+				}
 			}
 		}
 	}
+
 	glogger.GLogger.Info("UUdpTarget started")
 	return nil
 }
@@ -158,6 +162,12 @@ func (ut *UUdpTarget) To(data interface{}) (interface{}, error) {
 		_, err0 := socket.Write([]byte(outputData.String() + "\r\n"))
 		socket.SetReadDeadline(time.Time{})
 		if err0 != nil {
+			if *ut.mainConfig.CacheOfflineData {
+				lostcache.SaveLostCacheData(lostcache.CacheDataDto{
+					TargetId: ut.PointId,
+					Data:     s,
+				})
+			}
 			return 0, err0
 		}
 		return len(s), nil

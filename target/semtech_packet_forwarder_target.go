@@ -51,9 +51,10 @@ func NewSemtechUdpForwarder(e typex.Rhilex) typex.XTarget {
 	ht := new(SemtechUdpForwarder)
 	ht.RuleEngine = e
 	ht.mainConfig = SemtechUdpForwarderConfig{
-		Host:  "127.0.0.1",
-		Port:  1700,
-		GwMac: "0102030405060708",
+		Host:             "127.0.0.1",
+		Port:             1700,
+		GwMac:            "0102030405060708",
+		CacheOfflineData: new(bool),
 	}
 	ht.status = typex.SOURCE_DOWN
 	return ht
@@ -91,16 +92,19 @@ func (ht *SemtechUdpForwarder) Start(cctx typex.CCTX) error {
 	//
 	ht.status = typex.SOURCE_UP
 	// 补发数据
-	if CacheData, err1 := lostcache.GetLostCacheData(ht.PointId); err1 != nil {
-		glogger.GLogger.Error(err1)
-	} else {
-		for _, data := range CacheData {
-			_, errTo := ht.To(data.Data)
-			if errTo == nil {
-				lostcache.DeleteLostCacheData(data.ID)
+	if *ht.mainConfig.CacheOfflineData {
+		if CacheData, err1 := lostcache.GetLostCacheData(ht.PointId); err1 != nil {
+			glogger.GLogger.Error(err1)
+		} else {
+			for _, data := range CacheData {
+				_, errTo := ht.To(data.Data)
+				if errTo == nil {
+					lostcache.DeleteLostCacheData(data.ID)
+				}
 			}
 		}
 	}
+
 	glogger.GLogger.Info("Semtech Udp Forwarder started")
 	return nil
 }
@@ -121,16 +125,34 @@ func (ht *SemtechUdpForwarder) To(data interface{}) (interface{}, error) {
 		SemtechPushMessageByte, err1 := SemtechPushMessage.MarshalBinary()
 		if err1 != nil {
 			glogger.GLogger.Error(err1)
+			if *ht.mainConfig.CacheOfflineData {
+				lostcache.SaveLostCacheData(lostcache.CacheDataDto{
+					TargetId: ht.PointId,
+					Data:     T,
+				})
+			}
 			return nil, err1
 		}
 		glogger.GLogger.Debug("Semtech Udp Forwarder:", string(SemtechPushMessageByte))
 		PushAck, errAck := ht.SendUdpData(SemtechPushMessageByte)
 		if errAck != nil {
 			glogger.GLogger.Error(errAck)
+			if *ht.mainConfig.CacheOfflineData {
+				lostcache.SaveLostCacheData(lostcache.CacheDataDto{
+					TargetId: ht.PointId,
+					Data:     T,
+				})
+			}
 			return nil, errAck
 		}
 		if errCheckAck := checkAck(PushAck); errCheckAck != nil {
 			glogger.GLogger.Error(errCheckAck)
+			if *ht.mainConfig.CacheOfflineData {
+				lostcache.SaveLostCacheData(lostcache.CacheDataDto{
+					TargetId: ht.PointId,
+					Data:     T,
+				})
+			}
 			return nil, errCheckAck
 		}
 	default:

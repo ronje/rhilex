@@ -49,11 +49,12 @@ func NewHTTPTarget(e typex.Rhilex) typex.XTarget {
 	ht := new(HTTPTarget)
 	ht.RuleEngine = e
 	ht.mainConfig = HTTPTargetConfig{
-		Url:        "http://127.0.0.1",
-		PingPacket: "rhilex",
-		Timeout:    3000,
-		AllowPing:  new(bool),
-		Headers:    map[string]string{},
+		Url:              "http://127.0.0.1",
+		PingPacket:       "rhilex",
+		Timeout:          3000,
+		AllowPing:        new(bool),
+		Headers:          map[string]string{},
+		CacheOfflineData: new(bool),
 	}
 	ht.status = typex.SOURCE_DOWN
 	return ht
@@ -94,13 +95,15 @@ func (ht *HTTPTarget) Start(cctx typex.CCTX) error {
 		}(ht)
 	}
 	// 补发数据
-	if CacheData, err1 := lostcache.GetLostCacheData(ht.PointId); err1 != nil {
-		glogger.GLogger.Error(err1)
-	} else {
-		for _, data := range CacheData {
-			_, errTo := ht.To(data.Data)
-			if errTo == nil {
-				lostcache.DeleteLostCacheData(data.ID)
+	if *ht.mainConfig.CacheOfflineData {
+		if CacheData, err1 := lostcache.GetLostCacheData(ht.PointId); err1 != nil {
+			glogger.GLogger.Error(err1)
+		} else {
+			for _, data := range CacheData {
+				_, errTo := ht.To(data.Data)
+				if errTo == nil {
+					lostcache.DeleteLostCacheData(data.ID)
+				}
 			}
 		}
 	}
@@ -137,6 +140,12 @@ func (ht *HTTPTarget) To(data interface{}) (interface{}, error) {
 			ht.mainConfig.Url, ht.mainConfig.Headers)
 		if err != nil {
 			glogger.GLogger.Error(err)
+			if *ht.mainConfig.CacheOfflineData {
+				lostcache.SaveLostCacheData(lostcache.CacheDataDto{
+					TargetId: ht.PointId,
+					Data:     T,
+				})
+			}
 			return nil, err
 		}
 	}

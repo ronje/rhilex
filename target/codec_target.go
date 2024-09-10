@@ -85,13 +85,15 @@ func (ct *codecTarget) Start(cctx typex.CCTX) error {
 	ct.client = rhilexrpc.NewCodecClient(rpcConnection)
 	ct.status = typex.SOURCE_UP
 	// 补发数据
-	if CacheData, err1 := lostcache.GetLostCacheData(ct.PointId); err1 != nil {
-		glogger.GLogger.Error(err1)
-	} else {
-		for _, data := range CacheData {
-			_, errTo := ct.To(data.Data)
-			if errTo == nil {
-				lostcache.DeleteLostCacheData(data.ID)
+	if *ct.mainConfig.CacheOfflineData {
+		if CacheData, err1 := lostcache.GetLostCacheData(ct.PointId); err1 != nil {
+			glogger.GLogger.Error(err1)
+		} else {
+			for _, data := range CacheData {
+				_, errTo := ct.To(data.Data)
+				if errTo == nil {
+					lostcache.DeleteLostCacheData(data.ID)
+				}
 			}
 		}
 	}
@@ -127,6 +129,12 @@ func (ct *codecTarget) To(data interface{}) (interface{}, error) {
 		response, err = ct.client.Encode(ct.Ctx, dataRequest)
 	}
 	if err != nil {
+		if *ct.mainConfig.CacheOfflineData {
+			lostcache.SaveLostCacheData(lostcache.CacheDataDto{
+				TargetId: ct.PointId,
+				Data:     data.(string),
+			})
+		}
 		return nil, err
 	}
 	return response.GetData(), nil

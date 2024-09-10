@@ -51,13 +51,14 @@ func NewGrepTimeDbTarget(e typex.Rhilex) typex.XTarget {
 	grep := new(GrepTimeDbTarget)
 	grep.RuleEngine = e
 	grep.mainConfig = GrepTimeDbTargetConfig{
-		GwSn:     "rhilex",
-		Host:     "127.0.0.1",
-		Port:     4001,
-		Username: "rhilex",
-		Password: "rhilex",
-		DataBase: "public",
-		Table:    "rhilex",
+		GwSn:             "rhilex",
+		Host:             "127.0.0.1",
+		Port:             4001,
+		Username:         "rhilex",
+		Password:         "rhilex",
+		DataBase:         "public",
+		Table:            "rhilex",
+		CacheOfflineData: new(bool),
 	}
 	grep.status = typex.SOURCE_DOWN
 	return grep
@@ -87,15 +88,18 @@ func (grep *GrepTimeDbTarget) Start(cctx typex.CCTX) error {
 	grep.client = client
 	grep.status = typex.SOURCE_UP
 	// 补发数据
-	if CacheData, err1 := lostcache.GetLostCacheData(grep.PointId); err1 != nil {
-		glogger.GLogger.Error(err1)
-	} else {
-		for _, data := range CacheData {
-			_, errTo := grep.To(data.Data)
-			if errTo == nil {
-				lostcache.DeleteLostCacheData(data.ID)
+	if *grep.mainConfig.CacheOfflineData {
+		if CacheData, err1 := lostcache.GetLostCacheData(grep.PointId); err1 != nil {
+			glogger.GLogger.Error(err1)
+		} else {
+			for _, data := range CacheData {
+				_, errTo := grep.To(data.Data)
+				if errTo == nil {
+					lostcache.DeleteLostCacheData(data.ID)
+				}
 			}
 		}
+
 	}
 
 	glogger.GLogger.Info("Template Target started")
@@ -159,10 +163,12 @@ func (grep *GrepTimeDbTarget) To(data interface{}) (interface{}, error) {
 		glogger.GLogger.Debug("grep.client.Write: ", values)
 		if errWrite != nil {
 			glogger.GLogger.Error(errWrite)
-			lostcache.SaveLostCacheData(lostcache.CacheDataDto{
-				TargetId: grep.PointId,
-				Data:     ST,
-			})
+			if *grep.mainConfig.CacheOfflineData {
+				lostcache.SaveLostCacheData(lostcache.CacheDataDto{
+					TargetId: grep.PointId,
+					Data:     ST,
+				})
+			}
 			return 0, errWrite
 		}
 		return 0, errWrite

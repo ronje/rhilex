@@ -36,13 +36,14 @@ import (
 *
  */
 type MqttTargetConfig struct {
-	Host     string `json:"host" validate:"required" title:"服务地址"`
-	Port     int    `json:"port" validate:"required" title:"服务端口"`
-	ClientId string `json:"clientId" validate:"required" title:"客户端ID"`
-	Username string `json:"username" validate:"required" title:"连接账户"`
-	Password string `json:"password" validate:"required" title:"连接密码"`
-	PubTopic string `json:"pubTopic" title:"上报TOPIC" info:"上报TOPIC"` // 上报数据的 Topic
-	SubTopic string `json:"subTopic" title:"订阅TOPIC" info:"订阅TOPIC"` // 上报数据的 Topic
+	Host             string `json:"host" validate:"required" title:"服务地址"`
+	Port             int    `json:"port" validate:"required" title:"服务端口"`
+	ClientId         string `json:"clientId" validate:"required" title:"客户端ID"`
+	Username         string `json:"username" validate:"required" title:"连接账户"`
+	Password         string `json:"password" validate:"required" title:"连接密码"`
+	PubTopic         string `json:"pubTopic" title:"上报TOPIC" info:"上报TOPIC"` // 上报数据的 Topic
+	SubTopic         string `json:"subTopic" title:"订阅TOPIC" info:"订阅TOPIC"` // 上报数据的 Topic
+	CacheOfflineData *bool  `json:"cacheOfflineData" title:"离线缓存"`
 }
 type mqttOutEndTarget struct {
 	typex.XStatus
@@ -55,8 +56,9 @@ func NewMqttTarget(e typex.Rhilex) typex.XTarget {
 	m := new(mqttOutEndTarget)
 	m.RuleEngine = e
 	m.mainConfig = MqttTargetConfig{
-		Host: "127.0.0.1",
-		Port: 1883,
+		Host:             "127.0.0.1",
+		Port:             1883,
+		CacheOfflineData: new(bool),
 	}
 	m.status = typex.SOURCE_DOWN
 	return m
@@ -96,16 +98,19 @@ func (mq *mqttOutEndTarget) Start(cctx typex.CCTX) error {
 	}
 	mq.status = typex.SOURCE_UP
 	// 补发数据
-	if CacheData, err1 := lostcache.GetLostCacheData(mq.PointId); err1 != nil {
-		glogger.GLogger.Error(err1)
-	} else {
-		for _, data := range CacheData {
-			_, errTo := mq.To(data.Data)
-			if errTo == nil {
-				lostcache.DeleteLostCacheData(data.ID)
+	if *mq.mainConfig.CacheOfflineData {
+		if CacheData, err1 := lostcache.GetLostCacheData(mq.PointId); err1 != nil {
+			glogger.GLogger.Error(err1)
+		} else {
+			for _, data := range CacheData {
+				_, errTo := mq.To(data.Data)
+				if errTo == nil {
+					lostcache.DeleteLostCacheData(data.ID)
+				}
 			}
 		}
 	}
+
 	return nil
 }
 
@@ -152,6 +157,14 @@ func (mq *mqttOutEndTarget) To(data interface{}) (interface{}, error) {
 				Body:  s,
 			}
 			token := mq.client.Publish(mq.mainConfig.PubTopic, 1, false, outputData.String())
+			if token.Error() != nil {
+				if *mq.mainConfig.CacheOfflineData {
+					lostcache.SaveLostCacheData(lostcache.CacheDataDto{
+						TargetId: mq.PointId,
+						Data:     s,
+					})
+				}
+			}
 			return nil, token.Error()
 		default:
 			return nil, errors.New("Invalid mqtt data type")

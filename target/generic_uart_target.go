@@ -59,10 +59,11 @@ func NewGenericUart(e typex.Rhilex) typex.XTarget {
 	mdev := new(GenericUart)
 	mdev.RuleEngine = e
 	mdev.mainConfig = GenericUartMainConfig{
-		PortUuid:   "/dev/ttyS1",
-		DataMode:   "RAW_STRING",
-		PingPacket: "RHILEX",
-		AllowPing:  new(bool),
+		PortUuid:         "/dev/ttyS1",
+		DataMode:         "RAW_STRING",
+		PingPacket:       "RHILEX",
+		AllowPing:        new(bool),
+		CacheOfflineData: new(bool),
 		Timeout: func() *int {
 			b := 3000
 			return &b
@@ -136,13 +137,15 @@ func (mdev *GenericUart) Start(cctx typex.CCTX) error {
 	mdev.serialPort = serialPort
 	mdev.status = typex.SOURCE_UP
 	// 补发数据
-	if CacheData, err1 := lostcache.GetLostCacheData(mdev.PointId); err1 != nil {
-		glogger.GLogger.Error(err1)
-	} else {
-		for _, data := range CacheData {
-			_, errTo := mdev.To(data.Data)
-			if errTo == nil {
-				lostcache.DeleteLostCacheData(data.ID)
+	if *mdev.mainConfig.CacheOfflineData {
+		if CacheData, err1 := lostcache.GetLostCacheData(mdev.PointId); err1 != nil {
+			glogger.GLogger.Error(err1)
+		} else {
+			for _, data := range CacheData {
+				_, errTo := mdev.To(data.Data)
+				if errTo == nil {
+					lostcache.DeleteLostCacheData(data.ID)
+				}
 			}
 		}
 	}
@@ -169,20 +172,43 @@ func (mdev *GenericUart) Status() typex.SourceState {
  */
 func (mdev *GenericUart) To(data interface{}) (interface{}, error) {
 	if mdev.serialPort == nil {
-		mdev.status = typex.SOURCE_DOWN
+		switch S := data.(type) {
+		case string:
+			_, err := mdev.serialPort.Write([]byte(S))
+			if *mdev.mainConfig.CacheOfflineData {
+				lostcache.SaveLostCacheData(lostcache.CacheDataDto{
+					TargetId: mdev.PointId,
+					Data:     S,
+				})
+			}
+			return nil, err
+		}
 		return 0, fmt.Errorf("serial Port invalid")
 	}
 	if mdev.mainConfig.DataMode == "RAW_STRING" {
 		switch S := data.(type) {
 		case string:
-			return mdev.serialPort.Write([]byte(S))
+			_, err := mdev.serialPort.Write([]byte(S))
+			if *mdev.mainConfig.CacheOfflineData {
+				lostcache.SaveLostCacheData(lostcache.CacheDataDto{
+					TargetId: mdev.PointId,
+					Data:     S,
+				})
+			}
+			return nil, err
 		}
 	}
 	if mdev.mainConfig.DataMode == "HEX_STRING" {
-		switch t := data.(type) {
+		switch S := data.(type) {
 		case string:
-			Hex, err := hex.DecodeString(t)
+			Hex, err := hex.DecodeString(S)
 			if err != nil {
+				if *mdev.mainConfig.CacheOfflineData {
+					lostcache.SaveLostCacheData(lostcache.CacheDataDto{
+						TargetId: mdev.PointId,
+						Data:     S,
+					})
+				}
 				return nil, err
 			}
 			return mdev.serialPort.Write(Hex)

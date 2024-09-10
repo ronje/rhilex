@@ -57,12 +57,13 @@ func NewTTcpTarget(e typex.Rhilex) typex.XTarget {
 	ht := new(TTcpTarget)
 	ht.RuleEngine = e
 	ht.mainConfig = TcpHostConfig{
-		Host:       "127.0.0.1",
-		Port:       6502,
-		DataMode:   "RAW_STRING",
-		PingPacket: "rhilex\r\n",
-		Timeout:    3000,
-		AllowPing:  new(bool),
+		Host:             "127.0.0.1",
+		Port:             6502,
+		DataMode:         "RAW_STRING",
+		PingPacket:       "rhilex\r\n",
+		Timeout:          3000,
+		AllowPing:        new(bool),
+		CacheOfflineData: new(bool),
 	}
 	ht.status = typex.SOURCE_DOWN
 	return ht
@@ -117,16 +118,19 @@ func (ht *TTcpTarget) Start(cctx typex.CCTX) error {
 	}
 	ht.status = typex.SOURCE_UP
 	// 补发数据
-	if CacheData, err1 := lostcache.GetLostCacheData(ht.PointId); err1 != nil {
-		glogger.GLogger.Error(err1)
-	} else {
-		for _, data := range CacheData {
-			_, errTo := ht.To(data.Data)
-			if errTo == nil {
-				lostcache.DeleteLostCacheData(data.ID)
+	if *ht.mainConfig.CacheOfflineData {
+		if CacheData, err1 := lostcache.GetLostCacheData(ht.PointId); err1 != nil {
+			glogger.GLogger.Error(err1)
+		} else {
+			for _, data := range CacheData {
+				_, errTo := ht.To(data.Data)
+				if errTo == nil {
+					lostcache.DeleteLostCacheData(data.ID)
+				}
 			}
 		}
 	}
+
 	glogger.GLogger.Info("TTcpTarget  success connect to:", host)
 	return nil
 }
@@ -172,6 +176,12 @@ func (ht *TTcpTarget) To(data interface{}) (interface{}, error) {
 			_, err0 := ht.client.Write([]byte(outputData.String() + "\r\n"))
 			ht.client.SetReadDeadline(time.Time{})
 			if err0 != nil {
+				if *ht.mainConfig.CacheOfflineData {
+					lostcache.SaveLostCacheData(lostcache.CacheDataDto{
+						TargetId: ht.PointId,
+						Data:     s,
+					})
+				}
 				return 0, err0
 			}
 			return len(s), nil

@@ -85,16 +85,19 @@ func (m *mongoTarget) Start(cctx typex.CCTX) error {
 	m.Enable = true
 	m.status = typex.SOURCE_UP
 	// 补发数据
-	if CacheData, err1 := lostcache.GetLostCacheData(m.PointId); err1 != nil {
-		glogger.GLogger.Error(err1)
-	} else {
-		for _, data := range CacheData {
-			_, errTo := m.To(data.Data)
-			if errTo == nil {
-				lostcache.DeleteLostCacheData(data.ID)
+	if *m.mainConfig.CacheOfflineData {
+		if CacheData, err1 := lostcache.GetLostCacheData(m.PointId); err1 != nil {
+			glogger.GLogger.Error(err1)
+		} else {
+			for _, data := range CacheData {
+				_, errTo := m.To(data.Data)
+				if errTo == nil {
+					lostcache.DeleteLostCacheData(data.ID)
+				}
 			}
 		}
 	}
+
 	glogger.GLogger.Info("mongoTarget connect successfully")
 	return nil
 
@@ -128,11 +131,23 @@ func (m *mongoTarget) To(data interface{}) (interface{}, error) {
 
 		if err := bson.UnmarshalExtJSON([]byte(t), false, &data); err != nil {
 			glogger.GLogger.Error("Mongo To Failed:", err)
+			if *m.mainConfig.CacheOfflineData {
+				lostcache.SaveLostCacheData(lostcache.CacheDataDto{
+					TargetId: m.PointId,
+					Data:     t,
+				})
+			}
 			return nil, err
 		}
 		r, err := m.collection.InsertOne(m.Ctx, data)
 		if err != nil {
 			glogger.GLogger.Error("Mongo To Failed:", err)
+			if *m.mainConfig.CacheOfflineData {
+				lostcache.SaveLostCacheData(lostcache.CacheDataDto{
+					TargetId: m.PointId,
+					Data:     t,
+				})
+			}
 			return nil, err
 		}
 		return r.InsertedID, nil

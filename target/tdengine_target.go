@@ -63,8 +63,10 @@ type tdHttpResult struct {
 
 func NewTdEngineTarget(e typex.Rhilex) typex.XTarget {
 	td := tdEngineTarget{
-		client:     http.Client{Timeout: 2000 * time.Millisecond},
-		mainConfig: TDEngineConfig{},
+		client: http.Client{Timeout: 2000 * time.Millisecond},
+		mainConfig: TDEngineConfig{
+			CacheOfflineData: new(bool),
+		},
 	}
 	td.RuleEngine = e
 	td.status = typex.SOURCE_DOWN
@@ -110,16 +112,19 @@ func (td *tdEngineTarget) Start(cctx typex.CCTX) error {
 	//
 	td.status = typex.SOURCE_UP
 	// 补发数据
-	if CacheData, err1 := lostcache.GetLostCacheData(td.PointId); err1 != nil {
-		glogger.GLogger.Error(err1)
-	} else {
-		for _, data := range CacheData {
-			_, errTo := td.To(data.Data)
-			if errTo == nil {
-				lostcache.DeleteLostCacheData(data.ID)
+	if *td.mainConfig.CacheOfflineData {
+		if CacheData, err1 := lostcache.GetLostCacheData(td.PointId); err1 != nil {
+			glogger.GLogger.Error(err1)
+		} else {
+			for _, data := range CacheData {
+				_, errTo := td.To(data.Data)
+				if errTo == nil {
+					lostcache.DeleteLostCacheData(data.ID)
+				}
 			}
 		}
 	}
+
 	return nil
 }
 
@@ -206,8 +211,18 @@ func (td *tdEngineTarget) To(data interface{}) (interface{}, error) {
 	switch s := data.(type) {
 	case string:
 		{
-			return execQuery(td.client, td.mainConfig.Username,
-				td.mainConfig.Password, s, td.url()), nil
+			errQuery := execQuery(td.client, td.mainConfig.Username,
+				td.mainConfig.Password, s, td.url())
+			glogger.GLogger.Error(errQuery)
+			if errQuery != nil {
+				if *td.mainConfig.CacheOfflineData {
+					lostcache.SaveLostCacheData(lostcache.CacheDataDto{
+						TargetId: td.PointId,
+						Data:     s,
+					})
+				}
+			}
+			return 0, errQuery
 		}
 	}
 	return 0, nil
