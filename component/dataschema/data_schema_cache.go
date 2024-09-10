@@ -17,7 +17,6 @@ package dataschema
 
 import (
 	"encoding/json"
-	"fmt"
 	"time"
 
 	"github.com/hootrhino/rhilex/component/apiserver/model"
