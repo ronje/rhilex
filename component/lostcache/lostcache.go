@@ -16,7 +16,6 @@
 package lostcache
 
 import (
-	"fmt"
 	"runtime"
 
 	core "github.com/hootrhino/rhilex/config"
