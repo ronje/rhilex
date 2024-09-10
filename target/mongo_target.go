@@ -124,17 +124,17 @@ func (m *mongoTarget) Stop() {
 }
 
 func (m *mongoTarget) To(data interface{}) (interface{}, error) {
-	switch t := data.(type) {
+	switch T := data.(type) {
 	case string:
 		// 将 JSON 数据解析为 map
 		var data map[string]interface{}
 
-		if err := bson.UnmarshalExtJSON([]byte(t), false, &data); err != nil {
+		if err := bson.UnmarshalExtJSON([]byte(T), false, &data); err != nil {
 			glogger.GLogger.Error("Mongo To Failed:", err)
 			if *m.mainConfig.CacheOfflineData {
 				lostcache.SaveLostCacheData(lostcache.CacheDataDto{
 					TargetId: m.PointId,
-					Data:     t,
+					Data:     T,
 				})
 			}
 			return nil, err
@@ -145,7 +145,7 @@ func (m *mongoTarget) To(data interface{}) (interface{}, error) {
 			if *m.mainConfig.CacheOfflineData {
 				lostcache.SaveLostCacheData(lostcache.CacheDataDto{
 					TargetId: m.PointId,
-					Data:     t,
+					Data:     T,
 				})
 			}
 			return nil, err

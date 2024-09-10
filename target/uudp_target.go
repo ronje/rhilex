@@ -149,11 +149,11 @@ func (ut *UUdpTarget) To(data interface{}) (interface{}, error) {
 		return 0, err
 	}
 	defer socket.Close()
-	switch s := data.(type) {
+	switch T := data.(type) {
 	case string:
 		outputData := UdpOutEndTargetOutputData{
 			Label: ut.mainConfig.PingPacket,
-			Body:  s,
+			Body:  T,
 		}
 		socket.SetReadDeadline(
 			time.Now().Add((time.Duration(ut.mainConfig.Timeout) *
@@ -165,12 +165,12 @@ func (ut *UUdpTarget) To(data interface{}) (interface{}, error) {
 			if *ut.mainConfig.CacheOfflineData {
 				lostcache.SaveLostCacheData(lostcache.CacheDataDto{
 					TargetId: ut.PointId,
-					Data:     s,
+					Data:     T,
 				})
 			}
 			return 0, err0
 		}
-		return len(s), nil
+		return 0, nil
 	default:
 		return 0, fmt.Errorf("only support string format")
 	}

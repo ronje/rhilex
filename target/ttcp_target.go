@@ -163,7 +163,7 @@ func (O TcpOutEndTargetOutputData) String() string {
  */
 func (ht *TTcpTarget) To(data interface{}) (interface{}, error) {
 	if ht.client != nil {
-		switch s := data.(type) {
+		switch T := data.(type) {
 		case string:
 			ht.client.SetReadDeadline(
 				time.Now().Add((time.Duration(ht.mainConfig.Timeout) *
@@ -171,7 +171,7 @@ func (ht *TTcpTarget) To(data interface{}) (interface{}, error) {
 			)
 			outputData := TcpOutEndTargetOutputData{
 				Label: ht.mainConfig.PingPacket,
-				Body:  s,
+				Body:  T,
 			}
 			_, err0 := ht.client.Write([]byte(outputData.String() + "\r\n"))
 			ht.client.SetReadDeadline(time.Time{})
@@ -179,12 +179,12 @@ func (ht *TTcpTarget) To(data interface{}) (interface{}, error) {
 				if *ht.mainConfig.CacheOfflineData {
 					lostcache.SaveLostCacheData(lostcache.CacheDataDto{
 						TargetId: ht.PointId,
-						Data:     s,
+						Data:     T,
 					})
 				}
 				return 0, err0
 			}
-			return len(s), nil
+			return 0, nil
 		default:
 			return 0, fmt.Errorf("only support string format")
 		}

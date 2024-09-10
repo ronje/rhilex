@@ -149,19 +149,19 @@ func (O MqttOutEndTargetOutputData) String() string {
 }
 func (mq *mqttOutEndTarget) To(data interface{}) (interface{}, error) {
 	if mq.client != nil {
-		switch s := data.(type) {
+		switch T := data.(type) {
 		case string:
 			glogger.GLogger.Debug("MQTT Target publish:", mq.mainConfig.PubTopic, 1, false, data)
 			outputData := MqttOutEndTargetOutputData{
 				Label: mq.mainConfig.ClientId,
-				Body:  s,
+				Body:  T,
 			}
 			token := mq.client.Publish(mq.mainConfig.PubTopic, 1, false, outputData.String())
 			if token.Error() != nil {
 				if *mq.mainConfig.CacheOfflineData {
 					lostcache.SaveLostCacheData(lostcache.CacheDataDto{
 						TargetId: mq.PointId,
-						Data:     s,
+						Data:     T,
 					})
 				}
 			}

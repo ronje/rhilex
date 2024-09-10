@@ -172,13 +172,13 @@ func (mdev *GenericUart) Status() typex.SourceState {
  */
 func (mdev *GenericUart) To(data interface{}) (interface{}, error) {
 	if mdev.serialPort == nil {
-		switch S := data.(type) {
+		switch T := data.(type) {
 		case string:
-			_, err := mdev.serialPort.Write([]byte(S))
+			_, err := mdev.serialPort.Write([]byte(T))
 			if *mdev.mainConfig.CacheOfflineData {
 				lostcache.SaveLostCacheData(lostcache.CacheDataDto{
 					TargetId: mdev.PointId,
-					Data:     S,
+					Data:     T,
 				})
 			}
 			return nil, err
@@ -186,13 +186,13 @@ func (mdev *GenericUart) To(data interface{}) (interface{}, error) {
 		return 0, fmt.Errorf("serial Port invalid")
 	}
 	if mdev.mainConfig.DataMode == "RAW_STRING" {
-		switch S := data.(type) {
+		switch T := data.(type) {
 		case string:
-			_, err := mdev.serialPort.Write([]byte(S))
+			_, err := mdev.serialPort.Write([]byte(T))
 			if *mdev.mainConfig.CacheOfflineData {
 				lostcache.SaveLostCacheData(lostcache.CacheDataDto{
 					TargetId: mdev.PointId,
-					Data:     S,
+					Data:     T,
 				})
 			}
 			return nil, err

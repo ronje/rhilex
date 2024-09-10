@@ -117,10 +117,10 @@ func (grep *GrepTimeDbTarget) Status() typex.SourceState {
 // To: data-Map
 func (grep *GrepTimeDbTarget) To(data interface{}) (interface{}, error) {
 
-	switch ST := data.(type) {
+	switch T := data.(type) {
 	case string:
 		Map := map[string]interface{}{}
-		errUnmarshal := json.Unmarshal([]byte(ST), &Map)
+		errUnmarshal := json.Unmarshal([]byte(T), &Map)
 		if errUnmarshal != nil {
 			glogger.GLogger.Error(errUnmarshal)
 			return 0, errUnmarshal
@@ -166,7 +166,7 @@ func (grep *GrepTimeDbTarget) To(data interface{}) (interface{}, error) {
 			if *grep.mainConfig.CacheOfflineData {
 				lostcache.SaveLostCacheData(lostcache.CacheDataDto{
 					TargetId: grep.PointId,
-					Data:     ST,
+					Data:     T,
 				})
 			}
 			return 0, errWrite

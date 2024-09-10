@@ -208,17 +208,17 @@ func execQuery(client http.Client, username string, password string, sql string,
 *
  */
 func (td *tdEngineTarget) To(data interface{}) (interface{}, error) {
-	switch s := data.(type) {
+	switch T := data.(type) {
 	case string:
 		{
 			errQuery := execQuery(td.client, td.mainConfig.Username,
-				td.mainConfig.Password, s, td.url())
+				td.mainConfig.Password, T, td.url())
 			glogger.GLogger.Error(errQuery)
 			if errQuery != nil {
 				if *td.mainConfig.CacheOfflineData {
 					lostcache.SaveLostCacheData(lostcache.CacheDataDto{
 						TargetId: td.PointId,
-						Data:     s,
+						Data:     T,
 					})
 				}
 			}
