@@ -42,9 +42,25 @@ func InitGlobalConfig(path string) typex.RhilexConfig {
 		os.Exit(1)
 	}
 	GlobalConfig = typex.RhilexConfig{
-		IniPath: path,
+		AppId:                 "rhilex",
+		IniPath:               path,
+		MaxQueueSize:          10240,
+		SourceRestartInterval: 5000,
+		GomaxProcs:            0,
+		EnablePProf:           false,
+		EnableConsole:         false,
+		AppDebugMode:          false,
+		LogLevel:              "info",
+		LogPath:               "rhilex-running-log",
+		LogMaxSize:            5,     // MB
+		LogMaxBackups:         5,     // Per
+		LogMaxAge:             7,     // days
+		LogCompress:           true,  // Compress
+		MaxKvStoreSize:        1024,  // 20MB
+		MaxLostCacheSize:      10000, // 10000 lines
+		ExtLibs:               []string{},
+		DataSchemaSecret:      []string{"rhilex-secret"},
 	}
-	GlobalConfig.Init()
 	if err := cfg.Section("app").MapTo(&GlobalConfig); err != nil {
 		log.Fatalf("Fail to map config file: %v", err)
 		os.Exit(1)

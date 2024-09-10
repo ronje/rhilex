@@ -28,38 +28,9 @@ type RhilexConfig struct {
 	LogMaxAge             int      `ini:"log_max_age" json:"logMaxAge"`
 	LogCompress           bool     `ini:"log_compress" json:"logCompress"`
 	MaxKvStoreSize        int      `ini:"max_kv_store_size" json:"maxKvStoreSize"`
+	MaxLostCacheSize      int      `ini:"max_lost_cache_size" json:"maxLostCacheSize"`
 	ExtLibs               []string `ini:"ext_libs,,allowshadow" json:"extLibs"`
 	DataSchemaSecret      []string `ini:"dataschema_secrets,,allowshadow" json:"dataSchemaSecret"`
-}
-
-func (C *RhilexConfig) Init() {
-	if C.LogPath == "" {
-		C.LogPath = "./rhilexlog"
-	}
-	if C.LogLevel == "" {
-		C.LogLevel = "info"
-	}
-	if C.MaxQueueSize == 0 {
-		C.MaxQueueSize = 102400
-	}
-	if C.SourceRestartInterval == 0 {
-		C.SourceRestartInterval = 5000
-	}
-	if C.LogMaxSize == 0 {
-		C.LogMaxSize = 5
-	}
-	if C.LogMaxBackups == 0 {
-		C.LogMaxBackups = 5
-	}
-	if C.LogMaxAge == 0 {
-		C.LogMaxAge = 7
-	}
-	if !C.LogCompress {
-		C.LogCompress = true
-	}
-	if C.MaxKvStoreSize == 0 {
-		C.MaxKvStoreSize = 1024
-	}
 }
 
 // Rhilex interface
