@@ -153,7 +153,7 @@ func loadAllPortConfig() {
 		if MUart.Type == "UART" {
 			config := uartctrl.UartConfig{}
 			if err := utils.BindSourceConfig(MUart.GetConfig(), &config); err != nil {
-				glogger.GLogger.Error(err) // 这里必须不能出错
+				glogger.GLogger.Error(err)
 				continue
 			}
 			Port.Config = config
@@ -172,7 +172,6 @@ func (hs *ApiServerPlugin) Init(config *ini.Section) error {
 		return err
 	}
 	server.StartRhilexApiServer(hs.ruleEngine, hs.mainConfig.Port)
-
 	interdb.DB().Exec("VACUUM;")
 	interdb.RegisterModel(
 		&model.MInEnd{},
@@ -202,6 +201,7 @@ func (hs *ApiServerPlugin) Init(config *ini.Section) error {
 		&model.MMBusDataPoint{},
 		&model.MDataPoint{},
 	)
+
 	// 初始化所有预制参数
 	server.DefaultApiServer.InitializeGenericOSData()
 	server.DefaultApiServer.InitializeRHILEXG1Data()
