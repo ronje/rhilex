@@ -66,6 +66,7 @@ func NewGrepTimeDbTarget(e typex.Rhilex) typex.XTarget {
 
 func (grep *GrepTimeDbTarget) Init(outEndId string, configMap map[string]interface{}) error {
 	grep.PointId = outEndId
+	lostcache.CreateLostDataTable(outEndId)
 	if err := utils.BindSourceConfig(configMap, &grep.mainConfig); err != nil {
 		return err
 	}
@@ -93,9 +94,9 @@ func (grep *GrepTimeDbTarget) Start(cctx typex.CCTX) error {
 			glogger.GLogger.Error(err1)
 		} else {
 			for _, data := range CacheData {
-				_, errTo := grep.To(data.Data)
-				if errTo == nil {
-					lostcache.DeleteLostCacheData(data.ID)
+				grep.To(data.Data)
+				{
+					lostcache.DeleteLostCacheData(grep.PointId, data.ID)
 				}
 			}
 		}
@@ -164,7 +165,7 @@ func (grep *GrepTimeDbTarget) To(data interface{}) (interface{}, error) {
 		if errWrite != nil {
 			glogger.GLogger.Error(errWrite)
 			if *grep.mainConfig.CacheOfflineData {
-				lostcache.SaveLostCacheData(lostcache.CacheDataDto{
+				lostcache.SaveLostCacheData(grep.PointId, lostcache.CacheDataDto{
 					TargetId: grep.PointId,
 					Data:     T,
 				})

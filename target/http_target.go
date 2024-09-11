@@ -62,7 +62,7 @@ func NewHTTPTarget(e typex.Rhilex) typex.XTarget {
 
 func (ht *HTTPTarget) Init(outEndId string, configMap map[string]interface{}) error {
 	ht.PointId = outEndId
-
+	lostcache.CreateLostDataTable(outEndId)
 	if err := utils.BindSourceConfig(configMap, &ht.mainConfig); err != nil {
 		return err
 	}
@@ -100,9 +100,9 @@ func (ht *HTTPTarget) Start(cctx typex.CCTX) error {
 			glogger.GLogger.Error(err1)
 		} else {
 			for _, data := range CacheData {
-				_, errTo := ht.To(data.Data)
-				if errTo == nil {
-					lostcache.DeleteLostCacheData(data.ID)
+				ht.To(data.Data)
+				{
+					lostcache.DeleteLostCacheData(ht.PointId, data.ID)
 				}
 			}
 		}
@@ -141,7 +141,7 @@ func (ht *HTTPTarget) To(data interface{}) (interface{}, error) {
 		if err != nil {
 			glogger.GLogger.Error(err)
 			if *ht.mainConfig.CacheOfflineData {
-				lostcache.SaveLostCacheData(lostcache.CacheDataDto{
+				lostcache.SaveLostCacheData(ht.PointId, lostcache.CacheDataDto{
 					TargetId: ht.PointId,
 					Data:     T,
 				})

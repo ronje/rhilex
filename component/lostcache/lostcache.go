@@ -61,18 +61,7 @@ func Init(engine typex.Rhilex) error {
 	if err != nil {
 		glogger.GLogger.Fatal(err)
 	}
-	RegisterModel(&CacheData{})
-	// __Sqlite.db.Exec(fmt.Sprintf(`
-	// CREATE TRIGGER IF NOT EXISTS limit_cache_data
-	// AFTER INSERT ON cache_data
-	// BEGIN
-	// 	DELETE FROM cache_data
-	// 	WHERE id IN (
-	// 		SELECT id FROM cache_data
-	// 		ORDER BY id ASC
-	// 		LIMIT (SELECT COUNT(*) - %d FROM cache_data)
-	// 	);
-	// END;`, core.GlobalConfig.MaxLostCacheSize))
+
 	__Sqlite.db.Exec("VACUUM;")
 	return err
 }

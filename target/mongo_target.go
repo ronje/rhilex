@@ -65,6 +65,7 @@ func NewMongoTarget(e typex.Rhilex) typex.XTarget {
 
 func (m *mongoTarget) Init(outEndId string, configMap map[string]interface{}) error {
 	m.PointId = outEndId
+	lostcache.CreateLostDataTable(outEndId)
 	if err := utils.BindSourceConfig(configMap, &m.mainConfig); err != nil {
 		return err
 	}
@@ -90,9 +91,9 @@ func (m *mongoTarget) Start(cctx typex.CCTX) error {
 			glogger.GLogger.Error(err1)
 		} else {
 			for _, data := range CacheData {
-				_, errTo := m.To(data.Data)
-				if errTo == nil {
-					lostcache.DeleteLostCacheData(data.ID)
+				m.To(data.Data)
+				{
+					lostcache.DeleteLostCacheData(m.PointId, data.ID)
 				}
 			}
 		}
@@ -132,7 +133,7 @@ func (m *mongoTarget) To(data interface{}) (interface{}, error) {
 		if err := bson.UnmarshalExtJSON([]byte(T), false, &data); err != nil {
 			glogger.GLogger.Error("Mongo To Failed:", err)
 			if *m.mainConfig.CacheOfflineData {
-				lostcache.SaveLostCacheData(lostcache.CacheDataDto{
+				lostcache.SaveLostCacheData(m.PointId, lostcache.CacheDataDto{
 					TargetId: m.PointId,
 					Data:     T,
 				})
@@ -143,7 +144,7 @@ func (m *mongoTarget) To(data interface{}) (interface{}, error) {
 		if err != nil {
 			glogger.GLogger.Error("Mongo To Failed:", err)
 			if *m.mainConfig.CacheOfflineData {
-				lostcache.SaveLostCacheData(lostcache.CacheDataDto{
+				lostcache.SaveLostCacheData(m.PointId, lostcache.CacheDataDto{
 					TargetId: m.PointId,
 					Data:     T,
 				})

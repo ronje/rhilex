@@ -5,15 +5,15 @@ export GOPATH=$HOME/go
 export GOBIN=$GOPATH/bin
 export PATH=$PATH:$GOROOT:$GOPATH:$GOBIN
 # Install protoc
-go get -u google.golang.org/grpc
-go install google.golang.org/protobuf/cmd/protoc-gen-go@latest
-go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@latest
+# go get -u google.golang.org/grpc
+# go install google.golang.org/protobuf/cmd/protoc-gen-go@latest
+# go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@latest
 echo -e "\033[42;33m>>>\033[0m [BEGIN]"
 # RhilexRpc
 echo ">>> Generating RhilexRpc Proto..."
 protoc -I ./component/rhilexrpc --go_out=./component/rhilexrpc --go_opt paths=source_relative \
     --go-grpc_out=./component/rhilexrpc --go-grpc_opt paths=source_relative \
-    ./component/rhilexrpc/grpc_source.proto
+    ./component/rhilexrpc/rhilexrpc.proto
 echo ">>> Generate RhilexRpc Proto OK"
 
 # Stream
@@ -22,12 +22,7 @@ protoc -I ./component/xstream --go_out ./component/xstream --go_opt paths=source
     --go-grpc_out=./component/xstream --go-grpc_opt paths=source_relative \
     ./component/xstream/xstream.proto
 echo ">>> Generate XStream Proto OK."
-# Codec
-echo ">>> Generating Codec Proto..."
-protoc -I ./component/rhilexrpc --go_out ./component/rhilexrpc --go_opt paths=source_relative \
-    --go-grpc_out=./component/rhilexrpc --go-grpc_opt paths=source_relative \
-    ./component/rhilexrpc/xcodec.proto
-echo ">>> Generate Codec Proto OK."
+
 # Trailer
 echo ">>> Generating Trailer Proto..."
 protoc -I ./component/trailer --go_out ./component/trailer --go_opt paths=source_relative \
@@ -37,9 +32,9 @@ echo ">>> Generate Trailer Proto OK."
 
 # AI Base
 echo ">>> Generating Aibase Proto..."
-protoc -I ./component/aibase --go_out ./component/aibase --go_opt paths=source_relative \
-    --go-grpc_out=./component/aibase --go-grpc_opt paths=source_relative \
-    ./component/aibase/aibase.proto
+protoc -I ./component/aibase/grpc --go_out ./component/aibase/grpc --go_opt paths=source_relative \
+    --go-grpc_out=./component/aibase/grpc --go-grpc_opt paths=source_relative \
+    ./component/aibase/grpc/aibase.proto
 echo ">>> Generate AIBase Proto OK."
 
 echo -e "\033[42;33m>>>\033[0m [FINISHED]"

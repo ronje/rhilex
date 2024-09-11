@@ -721,10 +721,10 @@ func (e *RuleEngine) InitTargetTypeManager() error {
 			NewTarget: target.NewTdEngineTarget,
 		},
 	)
-	e.TargetTypeManager.Register(typex.GRPC_CODEC_TARGET,
+	e.TargetTypeManager.Register(typex.RHILEX_GRPC_TARGET,
 		&typex.XConfig{
 			Engine:    e,
-			NewTarget: target.NewCodecTarget,
+			NewTarget: target.NewRhilexRpcTarget,
 		},
 	)
 	e.TargetTypeManager.Register(typex.UDP_TARGET,

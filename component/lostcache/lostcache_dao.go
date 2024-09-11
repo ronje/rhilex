@@ -15,12 +15,55 @@
 
 package lostcache
 
+import (
+	"fmt"
+
+	core "github.com/hootrhino/rhilex/config"
+	"gorm.io/gorm"
+)
+
+func CreateLostDataTable(deviceId string) {
+	__Sqlite.db.Transaction(func(tx *gorm.DB) error {
+		sql1 := `
+		CREATE TABLE IF NOT EXISTS "lost_data_%s" (
+			id INTEGER PRIMARY KEY AUTOINCREMENT,
+			created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+			target_id TEXT NOT NULL,
+			data TEXT NOT NULL,
+			UNIQUE (target_id, created_at)
+		);`
+		tx.Exec(fmt.Sprintf(sql1, deviceId))
+
+		sql2 := `
+		CREATE TRIGGER IF NOT EXISTS limit_lost_data_%s
+		AFTER INSERT ON "lost_data_%s"
+		WHEN (SELECT COUNT(*) FROM "lost_data_%s") > %d
+		BEGIN
+			DELETE FROM "lost_data_%s"
+			WHERE id IN (
+				SELECT id FROM "lost_data_%s"
+				ORDER BY id ASC
+				LIMIT (SELECT COUNT(*) - %d FROM "lost_data_%s")
+			);
+		END;`
+		tx.Exec(fmt.Sprintf(sql2, deviceId, deviceId, deviceId,
+			core.GlobalConfig.MaxLostCacheSize, deviceId,
+			deviceId, core.GlobalConfig.MaxLostCacheSize, deviceId))
+		return tx.Error
+	})
+
+}
+func DeleteLostDataTable(deviceId string) {
+	sql := `DROP TABLE IF EXISTS "lost_data_%s";`
+	__Sqlite.db.Exec(fmt.Sprintf(sql, deviceId))
+}
+
 /**
  * Save
  *
  */
-func SaveLostCacheData(data CacheDataDto) error {
-	__Sqlite.db.Table("cache_data").Create(&CacheData{
+func SaveLostCacheData(deviceId string, data CacheDataDto) error {
+	__Sqlite.db.Table(fmt.Sprintf("lost_data_%s", deviceId)).Create(&CacheData{
 		TargetId: data.TargetId,
 		Data:     data.Data,
 	})
@@ -31,9 +74,9 @@ func SaveLostCacheData(data CacheDataDto) error {
  * Get
  *
  */
-func GetLostCacheData(uuid string) ([]CacheDataDto, error) {
+func GetLostCacheData(deviceId string) ([]CacheDataDto, error) {
 	dataDto := []CacheDataDto{}
-	__Sqlite.db.Model(&CacheData{}).Where("target_id=?", uuid).Find(&dataDto)
+	__Sqlite.db.Table(fmt.Sprintf("lost_data_%s", deviceId)).Where("target_id=?", deviceId).Find(&dataDto)
 	return dataDto, __Sqlite.db.Error
 
 }
@@ -42,14 +85,14 @@ func GetLostCacheData(uuid string) ([]CacheDataDto, error) {
  * Delete Lost Cache Data
  *
  */
-func DeleteLostCacheData(dbId uint) {
-	__Sqlite.db.Model(&CacheData{}).Where("id=?", dbId).Delete(&CacheData{})
+func DeleteLostCacheData(deviceId string, dbId uint) {
+	__Sqlite.db.Table(fmt.Sprintf("lost_data_%s", deviceId)).Where("id=?", dbId).Delete(&CacheData{})
 }
 
 /**
  * Clear
  *
  */
-func ClearLostCacheData(uuid string) {
-	__Sqlite.db.Model(&CacheData{}).Where("target_id=?", uuid).Delete(&CacheData{})
+func ClearLostCacheData(deviceId string) {
+	__Sqlite.db.Table(fmt.Sprintf("lost_data_%s", deviceId)).Where("target_id=?", deviceId).Delete(&CacheData{})
 }

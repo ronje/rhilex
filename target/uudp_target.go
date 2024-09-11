@@ -71,6 +71,7 @@ func NewUUdpTarget(e typex.Rhilex) typex.XTarget {
 
 func (ut *UUdpTarget) Init(outEndId string, configMap map[string]interface{}) error {
 	ut.PointId = outEndId
+	lostcache.CreateLostDataTable(outEndId)
 	if err := utils.BindSourceConfig(configMap, &ut.mainConfig); err != nil {
 		return err
 	}
@@ -109,9 +110,9 @@ func (ut *UUdpTarget) Start(cctx typex.CCTX) error {
 			glogger.GLogger.Error(err1)
 		} else {
 			for _, data := range CacheData {
-				_, errTo := ut.To(data.Data)
-				if errTo == nil {
-					lostcache.DeleteLostCacheData(data.ID)
+				ut.To(data.Data)
+				{
+					lostcache.DeleteLostCacheData(ut.PointId, data.ID)
 				}
 			}
 		}
@@ -163,7 +164,7 @@ func (ut *UUdpTarget) To(data interface{}) (interface{}, error) {
 		socket.SetReadDeadline(time.Time{})
 		if err0 != nil {
 			if *ut.mainConfig.CacheOfflineData {
-				lostcache.SaveLostCacheData(lostcache.CacheDataDto{
+				lostcache.SaveLostCacheData(ut.PointId, lostcache.CacheDataDto{
 					TargetId: ut.PointId,
 					Data:     T,
 				})

@@ -62,7 +62,7 @@ func NewSemtechUdpForwarder(e typex.Rhilex) typex.XTarget {
 
 func (ht *SemtechUdpForwarder) Init(outEndId string, configMap map[string]interface{}) error {
 	ht.PointId = outEndId
-
+	lostcache.CreateLostDataTable(outEndId)
 	if err := utils.BindSourceConfig(configMap, &ht.mainConfig); err != nil {
 		return err
 	}
@@ -97,9 +97,9 @@ func (ht *SemtechUdpForwarder) Start(cctx typex.CCTX) error {
 			glogger.GLogger.Error(err1)
 		} else {
 			for _, data := range CacheData {
-				_, errTo := ht.To(data.Data)
-				if errTo == nil {
-					lostcache.DeleteLostCacheData(data.ID)
+				ht.To(data.Data)
+				{
+					lostcache.DeleteLostCacheData(ht.PointId, data.ID)
 				}
 			}
 		}
@@ -126,7 +126,7 @@ func (ht *SemtechUdpForwarder) To(data interface{}) (interface{}, error) {
 		if err1 != nil {
 			glogger.GLogger.Error(err1)
 			if *ht.mainConfig.CacheOfflineData {
-				lostcache.SaveLostCacheData(lostcache.CacheDataDto{
+				lostcache.SaveLostCacheData(ht.PointId, lostcache.CacheDataDto{
 					TargetId: ht.PointId,
 					Data:     T,
 				})
@@ -138,7 +138,7 @@ func (ht *SemtechUdpForwarder) To(data interface{}) (interface{}, error) {
 		if errAck != nil {
 			glogger.GLogger.Error(errAck)
 			if *ht.mainConfig.CacheOfflineData {
-				lostcache.SaveLostCacheData(lostcache.CacheDataDto{
+				lostcache.SaveLostCacheData(ht.PointId, lostcache.CacheDataDto{
 					TargetId: ht.PointId,
 					Data:     T,
 				})
@@ -148,7 +148,7 @@ func (ht *SemtechUdpForwarder) To(data interface{}) (interface{}, error) {
 		if errCheckAck := checkAck(PushAck); errCheckAck != nil {
 			glogger.GLogger.Error(errCheckAck)
 			if *ht.mainConfig.CacheOfflineData {
-				lostcache.SaveLostCacheData(lostcache.CacheDataDto{
+				lostcache.SaveLostCacheData(ht.PointId, lostcache.CacheDataDto{
 					TargetId: ht.PointId,
 					Data:     T,
 				})

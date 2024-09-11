@@ -95,7 +95,7 @@ func (td *tdEngineTarget) url() string {
 
 func (td *tdEngineTarget) Init(outEndId string, configMap map[string]interface{}) error {
 	td.PointId = outEndId
-
+	lostcache.CreateLostDataTable(outEndId)
 	if err := utils.BindSourceConfig(configMap, &td.mainConfig); err != nil {
 		return err
 	}
@@ -117,9 +117,9 @@ func (td *tdEngineTarget) Start(cctx typex.CCTX) error {
 			glogger.GLogger.Error(err1)
 		} else {
 			for _, data := range CacheData {
-				_, errTo := td.To(data.Data)
-				if errTo == nil {
-					lostcache.DeleteLostCacheData(data.ID)
+				td.To(data.Data)
+				{
+					lostcache.DeleteLostCacheData(td.PointId, data.ID)
 				}
 			}
 		}
@@ -216,7 +216,7 @@ func (td *tdEngineTarget) To(data interface{}) (interface{}, error) {
 			glogger.GLogger.Error(errQuery)
 			if errQuery != nil {
 				if *td.mainConfig.CacheOfflineData {
-					lostcache.SaveLostCacheData(lostcache.CacheDataDto{
+					lostcache.SaveLostCacheData(td.PointId, lostcache.CacheDataDto{
 						TargetId: td.PointId,
 						Data:     T,
 					})

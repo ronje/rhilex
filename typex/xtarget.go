@@ -18,6 +18,7 @@ const (
 	HTTP_TARGET           TargetType = "HTTP"                  // To Http Target
 	TDENGINE_TARGET       TargetType = "TDENGINE"              // To TDENGINE
 	GRPC_CODEC_TARGET     TargetType = "GRPC_CODEC_TARGET"     // To GRPC Target
+	RHILEX_GRPC_TARGET    TargetType = "RHILEX_GRPC_TARGET"    // To GRPC Target
 	UDP_TARGET            TargetType = "UDP_TARGET"            // To UDP Server
 	GENERIC_UART_TARGET   TargetType = "GENERIC_UART_TARGET"   // To GENERIC_UART_TARGET DTU
 	TCP_TRANSPORT         TargetType = "TCP_TRANSPORT"         // To TCP Transport

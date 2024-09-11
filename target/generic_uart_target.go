@@ -76,6 +76,7 @@ func NewGenericUart(e typex.Rhilex) typex.XTarget {
 
 func (mdev *GenericUart) Init(outEndId string, configMap map[string]interface{}) error {
 	mdev.PointId = outEndId
+	lostcache.CreateLostDataTable(outEndId)
 	if err := utils.BindSourceConfig(configMap, &mdev.mainConfig); err != nil {
 		return err
 	}
@@ -142,9 +143,9 @@ func (mdev *GenericUart) Start(cctx typex.CCTX) error {
 			glogger.GLogger.Error(err1)
 		} else {
 			for _, data := range CacheData {
-				_, errTo := mdev.To(data.Data)
-				if errTo == nil {
-					lostcache.DeleteLostCacheData(data.ID)
+				mdev.To(data.Data)
+				{
+					lostcache.DeleteLostCacheData(mdev.PointId, data.ID)
 				}
 			}
 		}
@@ -176,7 +177,7 @@ func (mdev *GenericUart) To(data interface{}) (interface{}, error) {
 		case string:
 			_, err := mdev.serialPort.Write([]byte(T))
 			if *mdev.mainConfig.CacheOfflineData {
-				lostcache.SaveLostCacheData(lostcache.CacheDataDto{
+				lostcache.SaveLostCacheData(mdev.PointId, lostcache.CacheDataDto{
 					TargetId: mdev.PointId,
 					Data:     T,
 				})
@@ -190,7 +191,7 @@ func (mdev *GenericUart) To(data interface{}) (interface{}, error) {
 		case string:
 			_, err := mdev.serialPort.Write([]byte(T))
 			if *mdev.mainConfig.CacheOfflineData {
-				lostcache.SaveLostCacheData(lostcache.CacheDataDto{
+				lostcache.SaveLostCacheData(mdev.PointId, lostcache.CacheDataDto{
 					TargetId: mdev.PointId,
 					Data:     T,
 				})
@@ -204,7 +205,7 @@ func (mdev *GenericUart) To(data interface{}) (interface{}, error) {
 			Hex, err := hex.DecodeString(S)
 			if err != nil {
 				if *mdev.mainConfig.CacheOfflineData {
-					lostcache.SaveLostCacheData(lostcache.CacheDataDto{
+					lostcache.SaveLostCacheData(mdev.PointId, lostcache.CacheDataDto{
 						TargetId: mdev.PointId,
 						Data:     S,
 					})

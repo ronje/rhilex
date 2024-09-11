@@ -66,6 +66,7 @@ func NewMqttTarget(e typex.Rhilex) typex.XTarget {
 
 func (mq *mqttOutEndTarget) Init(outEndId string, configMap map[string]interface{}) error {
 	mq.PointId = outEndId
+	lostcache.CreateLostDataTable(outEndId)
 	if err := utils.BindSourceConfig(configMap, &mq.mainConfig); err != nil {
 		return err
 	}
@@ -103,9 +104,9 @@ func (mq *mqttOutEndTarget) Start(cctx typex.CCTX) error {
 			glogger.GLogger.Error(err1)
 		} else {
 			for _, data := range CacheData {
-				_, errTo := mq.To(data.Data)
-				if errTo == nil {
-					lostcache.DeleteLostCacheData(data.ID)
+				mq.To(data.Data)
+				{
+					lostcache.DeleteLostCacheData(mq.PointId, data.ID)
 				}
 			}
 		}
@@ -159,7 +160,7 @@ func (mq *mqttOutEndTarget) To(data interface{}) (interface{}, error) {
 			token := mq.client.Publish(mq.mainConfig.PubTopic, 1, false, outputData.String())
 			if token.Error() != nil {
 				if *mq.mainConfig.CacheOfflineData {
-					lostcache.SaveLostCacheData(lostcache.CacheDataDto{
+					lostcache.SaveLostCacheData(mq.PointId, lostcache.CacheDataDto{
 						TargetId: mq.PointId,
 						Data:     T,
 					})

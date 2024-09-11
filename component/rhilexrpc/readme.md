@@ -3,25 +3,24 @@
 ### 协议定义
 ```proto
 syntax = "proto3";
-
-option go_package = "./;xstream";
+option go_package = "./;rhilexrpc";
 option java_multiple_files = false;
-option java_package = "xstream";
-option java_outer_classname = "RhilexXStream";
+option java_package = "rhilexrpc";
+option java_outer_classname = "RhilexRpc";
 
-package xstream;
+package rhilexrpc;
 
-service XStream {
-  rpc OnStreamApproached (stream Data) returns (Response) {}
+service RhilexRpc {
+  rpc Request (RpcRequest) returns (RpcResponse) {}
 }
 
-message Data {
-  string value = 1;
+message RpcRequest {
+  bytes value = 1;
 }
 
-message Response {
+message RpcResponse {
   int32 code = 1;
   string message = 2;
+  bytes data = 3;
 }
-
 ```

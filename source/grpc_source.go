@@ -9,12 +9,11 @@ import (
 	"github.com/hootrhino/rhilex/glogger"
 	"github.com/hootrhino/rhilex/typex"
 	"github.com/hootrhino/rhilex/utils"
-
 	"google.golang.org/grpc"
 )
 
 const (
-	defaultTransport = "tcp"
+	__defaultTransport = "tcp"
 )
 
 type GrpcConfig struct {
@@ -40,7 +39,10 @@ type grpcInEndSource struct {
 func NewGrpcInEndSource(e typex.Rhilex) typex.XSource {
 	g := grpcInEndSource{}
 	g.RuleEngine = e
-	g.mainConfig = GrpcConfig{}
+	g.mainConfig = GrpcConfig{
+		Host: "127.0.0.1",
+		Port: 2583,
+	}
 	return &g
 }
 
@@ -61,7 +63,7 @@ func (g *grpcInEndSource) Start(cctx typex.CCTX) error {
 	g.Ctx = cctx.Ctx
 	g.CancelCTX = cctx.CancelCTX
 
-	listener, err := net.Listen(defaultTransport, fmt.Sprintf(":%d", g.mainConfig.Port))
+	listener, err := net.Listen(__defaultTransport, fmt.Sprintf(":%d", g.mainConfig.Port))
 	if err != nil {
 		return err
 	}
@@ -104,22 +106,21 @@ func (g *grpcInEndSource) Details() *typex.InEnd {
 	return g.RuleEngine.GetInEnd(g.PointId)
 }
 
-func (r *RhilexRpcServer) Work(ctx context.Context, in *rhilexrpc.Data) (*rhilexrpc.Response, error) {
+func (r *RhilexRpcServer) Request(ctx context.Context, in *rhilexrpc.RpcRequest) (*rhilexrpc.RpcResponse, error) {
 	ok, err := r.grpcInEndSource.RuleEngine.WorkInEnd(
 		r.grpcInEndSource.RuleEngine.GetInEnd(r.grpcInEndSource.PointId),
-		in.Value,
+		string(in.Value),
 	)
 	if ok {
-		return &rhilexrpc.Response{
+		return &rhilexrpc.RpcResponse{
 			Code:    0,
 			Message: "OK",
 		}, nil
-	} else {
-		return &rhilexrpc.Response{
-			Code:    1,
-			Message: err.Error(),
-		}, err
 	}
+	return &rhilexrpc.RpcResponse{
+		Code:    1,
+		Message: err.Error(),
+	}, err
 
 }
 
