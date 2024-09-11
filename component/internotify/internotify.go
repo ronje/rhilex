@@ -147,7 +147,7 @@ type MInternalNotify struct {
 }
 
 func StartInternalEventQueue(IB1 *InternalEventBus) {
-	StartClearInterNotifyCron()
+	go StartClearInterNotifyCron()
 	go func(ctx context.Context, IB2 *InternalEventBus) {
 		ticker := time.NewTicker(100 * time.Millisecond)
 		defer ticker.Stop()
