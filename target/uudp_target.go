@@ -33,13 +33,13 @@ import (
  */
 
 type UdpHostConfig struct {
-	AllowPing        *bool  `json:"allowPing"`
-	DataMode         string `json:"dataMode"`
-	Host             string `json:"host"`
-	PingPacket       string `json:"pingPacket"`
-	Port             int    `json:"port"`
-	Timeout          int    `json:"timeout"`
-	CacheOfflineData *bool  `json:"cacheOfflineData" title:"离线缓存"`
+	AllowPing        *bool  `json:"allowPing" validate:"required"`
+	CacheOfflineData *bool  `json:"cacheOfflineData" validate:"required"`
+	Host             string `json:"host" validate:"required"`
+	Port             int    `json:"port" validate:"required"`
+	Timeout          int    `json:"timeout" validate:"required"`
+	DataMode         string `json:"dataMode" validate:"required"`
+	PingPacket       string `json:"pingPacket" validate:"required"`
 }
 
 /*
