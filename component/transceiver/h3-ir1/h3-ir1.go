@@ -33,6 +33,7 @@ Found /sys/class/rc/rc0/ (/dev/input/event1) with:
 import (
 	"encoding/json"
 	"fmt"
+	transceivercom "github.com/hootrhino/rhilex/component/transceiver"
 	"os"
 	"time"
 	"unsafe"
@@ -68,7 +69,7 @@ type H3IR1 struct {
 	irFd       *os.File
 }
 
-func NewH3IR1(R typex.Rhilex) transceivercom.transceivercommunicator {
+func NewH3IR1(R typex.Rhilex) transceivercom.TransceiverCommunicator {
 	return &H3IR1{R: R, mainConfig: H3IR1Config{
 		InputHandle: __IR_DEV,
 	}}
