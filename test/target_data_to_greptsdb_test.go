@@ -71,8 +71,8 @@ func Test_DataToGrepTime(t *testing.T) {
 
 	client := rhilexrpc.NewRhilexRpcClient(conn)
 	for i := 0; i < 10; i++ {
-		resp, err := client.Work(context.Background(), &rhilexrpc.Data{
-			Value: `{"co2":1,"hum":2,"lex":3,"temp":4}`,
+		resp, err := client.Request(context.Background(), &rhilexrpc.RpcRequest{
+			Value: (`{"co2":10,"hum":30,"lex":22,"temp":100}`),
 		})
 		if err != nil {
 			glogger.GLogger.Error(err)

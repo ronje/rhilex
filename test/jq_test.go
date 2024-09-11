@@ -67,8 +67,8 @@ func Test_JQ_Parse(t *testing.T) {
 	defer conn.Close()
 	client := rhilexrpc.NewRhilexRpcClient(conn)
 
-	resp, err := client.Work(context.Background(), &rhilexrpc.Data{
-		Value: `[{"co2":10,"hum":30,"lex":22,"temp":100}]`,
+	resp, err := client.Request(context.Background(), &rhilexrpc.RpcRequest{
+		Value: (`{"co2":10,"hum":30,"lex":22,"temp":100}`),
 	})
 	if err != nil {
 		glogger.GLogger.Error(err)

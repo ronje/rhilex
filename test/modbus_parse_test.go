@@ -10,7 +10,7 @@ import (
 
 	httpserver "github.com/hootrhino/rhilex/component/apiserver"
 	"github.com/hootrhino/rhilex/component/rhilexrpc"
-	"github.com/hootrhino/rhilex/config"
+	core "github.com/hootrhino/rhilex/config"
 	"github.com/hootrhino/rhilex/engine"
 	"github.com/hootrhino/rhilex/glogger"
 	"github.com/hootrhino/rhilex/plugin/demo_plugin"
@@ -73,9 +73,8 @@ func Test_Modbus_LUA_Parse(t *testing.T) {
 	defer conn.Close()
 	client := rhilexrpc.NewRhilexRpcClient(conn)
 
-	resp, err := client.Work(context.Background(), &rhilexrpc.Data{
-		// lua 输出 {"a":"0000000000000001","b":"00000000","c":"00000001"}
-		Value: string([]byte{0, 1, 0, 1}),
+	resp, err := client.Request(context.Background(), &rhilexrpc.RpcRequest{
+		Value: (`{"co2":10,"hum":30,"lex":22,"temp":100}`),
 	})
 	if err != nil {
 		glogger.GLogger.Error(err)

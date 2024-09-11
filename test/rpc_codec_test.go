@@ -16,18 +16,18 @@ import (
 )
 
 type _rpcCodecServer struct {
-	rhilexrpc.UnimplementedCodecServer
+	rhilexrpc.UnimplementedRhilexRpcServer
 }
 
-func (_rpcCodecServer) Decode(c context.Context, req *rhilexrpc.CodecRequest) (resp *rhilexrpc.CodecResponse, err error) {
+func (_rpcCodecServer) Decode(c context.Context, req *rhilexrpc.RpcRequest) (resp *rhilexrpc.RpcResponse, err error) {
 	glogger.GLogger.Debug("[REQUEST]=====================> ", req.String())
-	resp = new(rhilexrpc.CodecResponse)
+	resp = new(rhilexrpc.RpcResponse)
 	resp.Data = []byte("DecodeOK")
 	return resp, nil
 }
-func (_rpcCodecServer) Encode(c context.Context, req *rhilexrpc.CodecRequest) (resp *rhilexrpc.CodecResponse, err error) {
+func (_rpcCodecServer) Encode(c context.Context, req *rhilexrpc.RpcRequest) (resp *rhilexrpc.RpcResponse, err error) {
 	glogger.GLogger.Debug("[REQUEST]=====================> ", req.String())
-	resp = new(rhilexrpc.CodecResponse)
+	resp = new(rhilexrpc.RpcResponse)
 	resp.Data = []byte("EncodeOK")
 	return resp, nil
 }
@@ -44,7 +44,7 @@ func _startServer() {
 		return
 	}
 	rpcServer := grpc.NewServer()
-	rhilexrpc.RegisterCodecServer(rpcServer, new(_rpcCodecServer))
+	rhilexrpc.RegisterRhilexRpcServer(rpcServer, new(_rpcCodecServer))
 	go func(c context.Context) {
 		defer listener.Close()
 		glogger.GLogger.Info("rpcCodecServer started on", listener.Addr())
@@ -122,10 +122,8 @@ func Test_Codec(t *testing.T) {
 	defer grpcConnection.Close()
 	client := rhilexrpc.NewRhilexRpcClient(grpcConnection)
 
-	resp, err := client.Work(context.Background(), &rhilexrpc.Data{
-		Value: string([]byte{
-			1, 2, 3, 4, 5, 6, 7, 8, 9,
-			10, 11, 12, 13, 14, 15, 16}),
+	resp, err := client.Request(context.Background(), &rhilexrpc.RpcRequest{
+		Value: (`{"co2":10,"hum":30,"lex":22,"temp":100}`),
 	})
 	if err != nil {
 		glogger.GLogger.Error(err)

@@ -21,7 +21,9 @@ func StartGLogger(appId string, LogLevel string, EnableConsole bool,
 	LogMaxBackups, LogMaxAge int, LogCompress bool) {
 	Logrus = logrus.New()
 	GLogger = Logrus.WithField("appId", appId)
-	Logrus.Formatter = new(logrus.JSONFormatter)
+	Logrus.Formatter = &logrus.JSONFormatter{
+		DisableHTMLEscape: true,
+	}
 	if AppDebugMode {
 		Logrus.SetReportCaller(true)
 	}

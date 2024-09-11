@@ -2,7 +2,6 @@ package test
 
 import (
 	"context"
-	"fmt"
 	"math/rand"
 	"testing"
 	"time"
@@ -100,9 +99,8 @@ func Test_data_to_tdengine(t *testing.T) {
 	rng := rand.New(source)
 	rng.Int()
 	for i := 0; i < 3; i++ {
-		resp, err := client.Work(context.Background(), &rhilexrpc.Data{
-			Value: fmt.Sprintf(`{"co2":%v,"hum":%v,"lex":%v,"temp":%v}`,
-				rand.Int63n(100), rand.Int63n(100), rand.Int63n(100), rand.Int63n(100)),
+		resp, err := client.Request(context.Background(), &rhilexrpc.RpcRequest{
+			Value: (`{"co2":10,"hum":30,"lex":22,"temp":100}`),
 		})
 		if err != nil {
 			t.Fatal(err)

@@ -120,7 +120,7 @@ func (ct *RhilexRpcTarget) To(data interface{}) (interface{}, error) {
 	switch T := data.(type) {
 	case string:
 		dataRequest := &rhilexrpc.RpcRequest{
-			Value: []byte(T),
+			Value: (T),
 		}
 		var err error
 		_, err = ct.client.Request(ct.Ctx, dataRequest)

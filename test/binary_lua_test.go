@@ -7,7 +7,7 @@ import (
 
 	httpserver "github.com/hootrhino/rhilex/component/apiserver"
 	"github.com/hootrhino/rhilex/component/rhilexrpc"
-	"github.com/hootrhino/rhilex/config"
+	core "github.com/hootrhino/rhilex/config"
 	"github.com/hootrhino/rhilex/engine"
 	"github.com/hootrhino/rhilex/glogger"
 	"github.com/hootrhino/rhilex/plugin/demo_plugin"
@@ -72,10 +72,8 @@ func Test_Binary_LUA_Parse(t *testing.T) {
 	client := rhilexrpc.NewRhilexRpcClient(conn)
 	for i := 0; i < 2; i++ {
 		glogger.GLogger.Infof("rhilex Rpc Call ==========================>>: %v", i)
-		resp, err := client.Work(context.Background(), &rhilexrpc.Data{
-			Value: string([]byte{
-				1, 2, 3, 4, 5, 6, 7, 8, 9,
-				10, 11, 12, 13, 14, 15, 16}),
+		resp, err := client.Request(context.Background(), &rhilexrpc.RpcRequest{
+			Value: (`{"co2":10,"hum":30,"lex":22,"temp":100}`),
 		})
 		if err != nil {
 			glogger.GLogger.Error(err)

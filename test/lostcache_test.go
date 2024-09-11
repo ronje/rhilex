@@ -70,8 +70,8 @@ func Test_DataToGrepTime_Local_Cache(t *testing.T) {
 
 	client := rhilexrpc.NewRhilexRpcClient(conn)
 	for i := 0; i < 10; i++ {
-		resp, err := client.Work(context.Background(), &rhilexrpc.Data{
-			Value: `{"co2":1.23,"hum":2.34,"lex":3.45,"temp":4.56}`,
+		resp, err := client.Request(context.Background(), &rhilexrpc.RpcRequest{
+			Value: (`{"co2":10,"hum":30,"lex":22,"temp":100}`),
 		})
 		if err != nil {
 			glogger.GLogger.Fatal(err)

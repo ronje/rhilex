@@ -67,10 +67,8 @@ func Test_S7_PLC_Parse(t *testing.T) {
 	defer conn.Close()
 	client := rhilexrpc.NewRhilexRpcClient(conn)
 
-	resp, err := client.Work(context.Background(), &rhilexrpc.Data{
-		Value: string([]byte{
-			1, 2, 3, 4, 5, 6, 7, 8, 9,
-			10, 11, 12, 13, 14, 15, 16}),
+	resp, err := client.Request(context.Background(), &rhilexrpc.RpcRequest{
+		Value: (`{"co2":10,"hum":30,"lex":22,"temp":100}`),
 	})
 	if err != nil {
 		glogger.GLogger.Errorf("grpc.Dial err: %v", err)

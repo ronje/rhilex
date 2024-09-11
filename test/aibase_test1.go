@@ -65,8 +65,8 @@ func Test_AIBASE_ANN_MNIST(t *testing.T) {
 	defer conn.Close()
 	client := rhilexrpc.NewRhilexRpcClient(conn)
 	for i := 0; i < 2; i++ {
-		resp, err := client.Work(context.Background(), &rhilexrpc.Data{
-			Value: `{"value":"0298010d"}`,
+		resp, err := client.Request(context.Background(), &rhilexrpc.RpcRequest{
+			Value: (`{"co2":10,"hum":30,"lex":22,"temp":100}`),
 		})
 		if err != nil {
 			t.Error(err)
