@@ -2,6 +2,7 @@ package test
 
 import (
 	"context"
+	"fmt"
 	"math/rand"
 	"testing"
 	"time"
@@ -98,17 +99,15 @@ func Test_data_to_tdengine(t *testing.T) {
 	source := rand.NewSource(time.Now().UnixNano())
 	rng := rand.New(source)
 	rng.Int()
-	for i := 0; i < 3; i++ {
+	for i := 0; i < 10; i++ {
 		resp, err := client.Request(context.Background(), &rhilexrpc.RpcRequest{
-			Value: (`{"co2":10,"hum":30,"lex":22,"temp":100}`),
+			Value: fmt.Sprintf(`{"co2":10,"hum":30,"lex":22,"temp":100,"idx":%d}`, i),
 		})
 		if err != nil {
-			t.Fatal(err)
+			t.Fatalf("grpc.Dial err: %v", err)
 		}
-		t.Logf("rhilex Rpc Call Result ====>>: %v --%v", resp.GetMessage(), i)
-
+		t.Logf("rhilex Rpc Call Result ====>>: %v", resp.GetMessage())
 	}
-
 	time.Sleep(3 * time.Second)
 	engine.Stop()
 }

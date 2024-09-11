@@ -2,6 +2,7 @@ package test
 
 import (
 	"context"
+	"fmt"
 	"testing"
 	"time"
 
@@ -77,12 +78,13 @@ func Test_DataToSemtechUdp(t *testing.T) {
 	defer grpcConn.Close()
 	client := rhilexrpc.NewRhilexRpcClient(grpcConn)
 	for i := 0; i < 10; i++ {
-		_, err1 := client.Request(context.Background(), &rhilexrpc.RpcRequest{
-			Value: (`{"co2":10,"hum":30,"lex":22,"temp":100}`),
+		resp, err := client.Request(context.Background(), &rhilexrpc.RpcRequest{
+			Value: fmt.Sprintf(`{"co2":10,"hum":30,"lex":22,"temp":100,"idx":%d}`, i),
 		})
-		if err1 != nil {
-			t.Fatal(err1)
+		if err != nil {
+			t.Fatalf("grpc.Dial err: %v", err)
 		}
+		t.Logf("rhilex Rpc Call Result ====>>: %v", resp.GetMessage())
 	}
 
 	time.Sleep(1 * time.Second)

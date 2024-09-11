@@ -2,6 +2,7 @@ package test
 
 import (
 	"context"
+	"fmt"
 
 	"testing"
 	"time"
@@ -71,13 +72,12 @@ func Test_DataToGrepTime_Local_Cache(t *testing.T) {
 	client := rhilexrpc.NewRhilexRpcClient(conn)
 	for i := 0; i < 10; i++ {
 		resp, err := client.Request(context.Background(), &rhilexrpc.RpcRequest{
-			Value: (`{"co2":10,"hum":30,"lex":22,"temp":100}`),
+			Value: fmt.Sprintf(`{"co2":10,"hum":30,"lex":22,"temp":100,"idx":%d}`, i),
 		})
 		if err != nil {
-			glogger.GLogger.Fatal(err)
+			glogger.GLogger.Errorf("grpc.Dial err: %v", err)
 		}
-		glogger.GLogger.Infof("ToGreptimeDB(%d)====: %v", i, resp.GetMessage())
-		time.Sleep(10 * time.Millisecond)
+		glogger.GLogger.Infof("rhilex Rpc Call Result ====>>: %v", resp.GetMessage())
 	}
 
 	time.Sleep(1 * time.Second)

@@ -2,6 +2,7 @@ package test
 
 import (
 	"context"
+	"fmt"
 	"testing"
 	"time"
 
@@ -70,10 +71,9 @@ func Test_Binary_LUA_Parse(t *testing.T) {
 	}
 	defer conn.Close()
 	client := rhilexrpc.NewRhilexRpcClient(conn)
-	for i := 0; i < 2; i++ {
-		glogger.GLogger.Infof("rhilex Rpc Call ==========================>>: %v", i)
+	for i := 0; i < 10; i++ {
 		resp, err := client.Request(context.Background(), &rhilexrpc.RpcRequest{
-			Value: (`{"co2":10,"hum":30,"lex":22,"temp":100}`),
+			Value: fmt.Sprintf(`{"co2":10,"hum":30,"lex":22,"temp":100,"idx":%d}`, i),
 		})
 		if err != nil {
 			glogger.GLogger.Error(err)

@@ -2,6 +2,7 @@ package test
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/hootrhino/rhilex/component/rhilexrpc"
 	"google.golang.org/grpc"
@@ -64,9 +65,9 @@ func Test_AIBASE_ANN_MNIST(t *testing.T) {
 	}
 	defer conn.Close()
 	client := rhilexrpc.NewRhilexRpcClient(conn)
-	for i := 0; i < 2; i++ {
+	for i := 0; i < 10; i++ {
 		resp, err := client.Request(context.Background(), &rhilexrpc.RpcRequest{
-			Value: (`{"co2":10,"hum":30,"lex":22,"temp":100}`),
+			Value: fmt.Sprintf(`{"co2":10,"hum":30,"lex":22,"temp":100,"idx":%d}`, i),
 		})
 		if err != nil {
 			t.Error(err)

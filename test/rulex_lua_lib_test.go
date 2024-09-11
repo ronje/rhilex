@@ -2,6 +2,7 @@ package test
 
 import (
 	"context"
+	"fmt"
 	"testing"
 	"time"
 
@@ -66,15 +67,15 @@ func Test_rhilex_base_lib(t *testing.T) {
 	}
 	client := rhilexrpc.NewRhilexRpcClient(conn)
 
-	resp, err := client.Request(context.Background(), &rhilexrpc.RpcRequest{
-		Value: (`{"co2":10,"hum":30,"lex":22,"temp":100}`),
-	})
-
-	if err != nil {
-		t.Error(err)
+	for i := 0; i < 10; i++ {
+		resp, err := client.Request(context.Background(), &rhilexrpc.RpcRequest{
+			Value: fmt.Sprintf(`{"co2":10,"hum":30,"lex":22,"temp":100,"idx":%d}`, i),
+		})
+		if err != nil {
+			t.Fatalf("grpc.Dial err: %v", err)
+		}
+		t.Logf("rhilex Rpc Call Result ====>>: %v", resp.GetMessage())
 	}
-	t.Logf("rhilex Rpc Call Result ====>>: %v", resp.GetMessage())
-
 	time.Sleep(5 * time.Second)
 	engine.Stop()
 }
