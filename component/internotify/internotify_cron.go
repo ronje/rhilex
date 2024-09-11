@@ -13,12 +13,13 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-package interdb
+package internotify
 
 import (
 	"fmt"
 	"time"
 
+	"github.com/hootrhino/rhilex/component/interdb"
 	core "github.com/hootrhino/rhilex/config"
 	"github.com/hootrhino/rhilex/glogger"
 	"github.com/hootrhino/rhilex/typex"
@@ -28,7 +29,7 @@ import (
  *  开启定时清理全局通知
  *
  */
-func StartInterNotifyCron() {
+func StartClearInterNotifyCron() {
 	for {
 		select {
 		case <-typex.GCTX.Done():
@@ -46,7 +47,7 @@ func StartInterNotifyCron() {
 }
 func execInterNotifyCron(period string) {
 	deleteSql := fmt.Sprintf("DELETE FROM %s WHERE create_at < date('now', '%s');", "m_internal_notifies", period)
-	ExecError := DB().Exec(deleteSql).Error
+	ExecError := interdb.DB().Exec(deleteSql).Error
 	if ExecError != nil {
 		glogger.GLogger.Error(ExecError)
 	}

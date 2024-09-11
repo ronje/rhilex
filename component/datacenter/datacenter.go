@@ -43,7 +43,7 @@ func InitDataCenter(rhilex typex.Rhilex) {
 		secrets[v] = true
 	}
 	loadSecrets(secrets)
-	go StartDataCenterCron()
+	go StartClearDataCenterCron()
 }
 func loadSecrets(secrets map[string]bool) {
 	__DefaultDataCenter.secrets = secrets
