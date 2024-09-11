@@ -309,18 +309,41 @@ func PublishSchema(c *gin.Context, ruleEngine typex.Rhilex) {
 		if err1 != nil {
 			return err1
 		}
-		if err2 := datacenter.DB().Exec(sql).Error; err2 != nil {
-			return err2
-		}
-		idxSql1 := `CREATE INDEX IF NOT EXISTS idx_id ON %s (id DESC);`
-		if errIdx1 := datacenter.DB().Exec(fmt.Sprintf(idxSql1, tableName)).Error; errIdx1 != nil {
-			return errIdx1
-		}
-		idxSql2 := `CREATE INDEX IF NOT EXISTS idx_create_at ON %s (create_at DESC);`
-		if errIdx2 := datacenter.DB().Exec(fmt.Sprintf(idxSql2, tableName)).Error; errIdx2 != nil {
-			return errIdx2
-		}
-		return nil
+		errTransaction := datacenter.DB().Transaction(func(datacenterTx *gorm.DB) error {
+			if err2 := datacenter.DB().Exec(sql).Error; err2 != nil {
+				return err2
+			}
+			idxSql1 := `CREATE INDEX IF NOT EXISTS idx_id ON %s (id DESC);`
+			if errIdx1 := datacenter.DB().Exec(fmt.Sprintf(idxSql1, tableName)).Error; errIdx1 != nil {
+				return errIdx1
+			}
+			idxSql2 := `CREATE INDEX IF NOT EXISTS idx_create_at ON %s (create_at DESC);`
+			if errIdx2 := datacenter.DB().Exec(fmt.Sprintf(idxSql2, tableName)).Error; errIdx2 != nil {
+				return errIdx2
+			}
+			// 防止数据爆炸撑死数据库，10000条数据大概吃10Mb硬盘.
+			// 通常来说这些数据完全足够代表最新数据了，历史数据反而是垃圾
+			trigger := `
+			CREATE TRIGGER IF NOT EXISTS "%s"
+			AFTER INSERT ON "%s"
+			WHEN (SELECT COUNT(*) FROM "%s") > 10000
+			BEGIN
+				DELETE FROM "%s"
+				WHERE id IN (
+					SELECT id FROM "%s"
+					ORDER BY id ASC
+					LIMIT (SELECT COUNT(*) - 10000 FROM "%s")
+				);
+			END;
+			`
+			if errTrigger := datacenter.DB().Exec(fmt.Sprintf(trigger, tableName, tableName,
+				tableName, tableName, tableName, tableName)).Error; errTrigger != nil {
+				return errTrigger
+			}
+			return nil
+		})
+
+		return errTransaction
 	})
 	if txErr != nil {
 		c.JSON(common.HTTP_OK, common.Error400(txErr))
