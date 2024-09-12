@@ -20,30 +20,26 @@ import (
 	"github.com/hootrhino/rhilex/component/interdb"
 )
 
-func GetMUser(username string) (*model.MUser, error) {
-	m := new(model.MUser)
-	return m, interdb.DB().Where("username=?", username).First(m).Error
-}
-func Login(username, pwd string) (*model.MUser, error) {
-	m := new(model.MUser)
-	return m, interdb.DB().
-		Where("username=? AND password=?", username, pwd).
-		First(m).Error
+/**
+ * 获取配置
+ *
+ */
+
+func GetCronRebootConfig() (*model.MCronRebootConfig, error) {
+	m := new(model.MCronRebootConfig)
+	m.ID = 1
+	m.Enable = new(bool)
+	m.CronExpr = "0 0 0 0 0 0"
+	return m, interdb.DB().Model(m).Where("id=?", 1).First(m).Error
 }
 
-func InsertMUser(o *model.MUser) error {
-	return interdb.DB().Table("m_users").Create(o).Error
-}
-func InitMUser(o *model.MUser) error {
-	return interdb.DB().Table("m_users").FirstOrCreate(o).Error
-}
-func ClearAllUser() error {
-	return interdb.DB().Table("m_users").Exec(`DELETE FROM m_users`).Error
-}
-
-func UpdateMUser(oldName string, o *model.MUser) error {
-	return interdb.DB().Table("m_users").
-		Where("username=?", oldName).
-		Updates(*o).Error
-
+/**
+ * 更新
+ *
+ */
+func UpdateMCronRebootConfig(o *model.MCronRebootConfig) error {
+	return interdb.DB().
+		Model(o).
+		Where("id=?", 1).
+		FirstOrCreate(o).Error
 }

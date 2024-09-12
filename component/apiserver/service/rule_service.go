@@ -12,7 +12,6 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
-
 package service
 
 import (
@@ -20,30 +19,27 @@ import (
 	"github.com/hootrhino/rhilex/component/interdb"
 )
 
-func GetMUser(username string) (*model.MUser, error) {
-	m := new(model.MUser)
-	return m, interdb.DB().Where("username=?", username).First(m).Error
-}
-func Login(username, pwd string) (*model.MUser, error) {
-	m := new(model.MUser)
-	return m, interdb.DB().
-		Where("username=? AND password=?", username, pwd).
-		First(m).Error
+// -----------------------------------------------------------------------------------
+func AllMRules() []model.MRule {
+	rules := []model.MRule{}
+	interdb.DB().Table("m_rules").Find(&rules)
+	return rules
 }
 
-func InsertMUser(o *model.MUser) error {
-	return interdb.DB().Table("m_users").Create(o).Error
-}
-func InitMUser(o *model.MUser) error {
-	return interdb.DB().Table("m_users").FirstOrCreate(o).Error
-}
-func ClearAllUser() error {
-	return interdb.DB().Table("m_users").Exec(`DELETE FROM m_users`).Error
+func AllMInEnd() []model.MInEnd {
+	inends := []model.MInEnd{}
+	interdb.DB().Table("m_in_ends").Find(&inends)
+	return inends
 }
 
-func UpdateMUser(oldName string, o *model.MUser) error {
-	return interdb.DB().Table("m_users").
-		Where("username=?", oldName).
-		Updates(*o).Error
+func AllMOutEnd() []model.MOutEnd {
+	outends := []model.MOutEnd{}
+	interdb.DB().Table("m_out_ends").Find(&outends)
+	return outends
+}
 
+func AllMUser() []model.MUser {
+	users := []model.MUser{}
+	interdb.DB().Find(&users)
+	return users
 }

@@ -200,6 +200,7 @@ func (hs *ApiServerPlugin) Init(config *ini.Section) error {
 		&model.MBacnetRouterDataPoint{},
 		&model.MMBusDataPoint{},
 		&model.MDataPoint{},
+		&model.MCronRebootConfig{},
 	)
 
 	// 初始化所有预制参数
@@ -291,6 +292,7 @@ func (hs *ApiServerPlugin) LoadRoute() {
 		osApi.GET(("/startedAt"), server.AddRoute(apis.StartedAt))
 		osApi.GET(("/getVideos"), server.AddRoute(apis.GetVideos))
 		osApi.GET(("/getGpuInfo"), server.AddRoute(apis.GetGpuInfo))
+		osApi.GET(("/sysConfig"), server.AddRoute(apis.GetSysConfig))
 		osApi.POST(("/resetInterMetric"), server.AddRoute(apis.ResetInterMetric))
 	}
 	backupApi := server.RouteGroup(server.ContextUrl("/backup"))
@@ -438,6 +440,8 @@ func (hs *ApiServerPlugin) LoadRoute() {
 	apis.InitDataPointRoute()
 	// Mqtt Server
 	apis.InitMqttSourceServerRoute()
+	// Cron Reboot
+	apis.InitCronRebootRoute()
 }
 
 // ApiServerPlugin Start

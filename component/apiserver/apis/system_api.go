@@ -11,6 +11,7 @@ import (
 	"github.com/hootrhino/rhilex/component/apiserver/service"
 	"github.com/hootrhino/rhilex/component/appstack"
 	"github.com/hootrhino/rhilex/component/intermetric"
+	core "github.com/hootrhino/rhilex/config"
 	"github.com/hootrhino/rhilex/glogger"
 	"github.com/hootrhino/rhilex/ossupport"
 	"github.com/hootrhino/rhilex/utils"
@@ -281,3 +282,13 @@ func GetGpuInfo(c *gin.Context, ruleEngine typex.Rhilex) {
 func GetDeviceCtrlTree(c *gin.Context, ruleEngine typex.Rhilex) {
 	c.JSON(common.HTTP_OK, common.OkWithData(archsupport.GetDeviceCtrlTree()))
 }
+
+/**
+ * 系统配置
+ *
+ */
+func GetSysConfig(c *gin.Context, ruleEngine typex.Rhilex) {
+	c.JSON(common.HTTP_OK, common.OkWithData(core.GlobalConfig))
+}
+
+

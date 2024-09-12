@@ -24,6 +24,7 @@ import (
 	lua "github.com/hootrhino/gopher-lua"
 	"github.com/hootrhino/rhilex/component/aibase"
 	"github.com/hootrhino/rhilex/component/appstack"
+	"github.com/hootrhino/rhilex/component/crontask"
 	"github.com/hootrhino/rhilex/component/interkv"
 	"github.com/hootrhino/rhilex/component/lostcache"
 	"github.com/hootrhino/rhilex/component/rhilexmanager"
@@ -119,6 +120,8 @@ func InitRuleEngine(config typex.RhilexConfig) typex.Rhilex {
 	interqueue.InitXQueue(__DefaultRuleEngine, core.GlobalConfig.MaxQueueSize)
 	// Init Transceiver Communicator Manager
 	transceiver.InitTransceiverCommunicatorManager(__DefaultRuleEngine)
+	// Cron Reboot Executor
+	crontask.InitCronRebootExecutor(__DefaultRuleEngine)
 	return __DefaultRuleEngine
 }
 
@@ -156,7 +159,7 @@ func (e *RuleEngine) GetConfig() *typex.RhilexConfig {
 // Stop
 func (e *RuleEngine) Stop() {
 	glogger.GLogger.Info("[*] Ready to stop rhilex")
-	// 所有的APP停了
+	crontask.StopCronRebootExecutor()
 	appstack.Stop()
 	// 资源
 	e.InEnds.Range(func(key, value interface{}) bool {
