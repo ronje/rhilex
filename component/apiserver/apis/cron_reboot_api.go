@@ -69,7 +69,7 @@ func SetCronRebootConfig(c *gin.Context, ruleEngine typex.Rhilex) {
 		c.JSON(common.HTTP_OK, common.Error400(err))
 		return
 	}
-	specParser := cron.NewParser(cron.Second | cron.Minute | cron.Hour | cron.Dom | cron.Month | cron.Dow)
+	specParser := cron.NewParser(cron.Minute | cron.Hour | cron.Dom | cron.Month | cron.Dow)
 	if _, errParse := specParser.Parse(vo.CronExpr); errParse != nil {
 		c.JSON(common.HTTP_OK, common.Error400(errParse))
 		return

@@ -41,7 +41,7 @@ type MCronRebootConfig struct {
 func InitCronRebootExecutor(rhilex typex.Rhilex) {
 	__DefaultCronRebootExecutor = &CronRebootExecutor{
 		LinuxBashShell: shellengine.InitLinuxBashShell(rhilex),
-		Cron:           cron.New(cron.WithSeconds()),
+		Cron:           cron.New(cron.WithChain()),
 		CronEntryID:    -100,
 	}
 	m := new(MCronRebootConfig)
@@ -77,7 +77,7 @@ func StopCronRebootCron(expr string) error {
  *
  */
 func StartCronRebootCron(expr string) error {
-	specParser := cron.NewParser(cron.Second | cron.Minute | cron.Hour | cron.Dom | cron.Month | cron.Dow)
+	specParser := cron.NewParser(cron.Minute | cron.Hour | cron.Dom | cron.Month | cron.Dow)
 	if _, errParse := specParser.Parse(expr); errParse != nil {
 		return errParse
 	}
