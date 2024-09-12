@@ -48,7 +48,7 @@ func StartClearInterNotifyCron() {
 func execInterNotifyCron(period string) {
 	deleteSql := fmt.Sprintf(`
 	DELETE FROM m_internal_notifies
-	WHERE create_at < date('now', '%s')
+	WHERE created_at < date('now', '%s')
 	AND EXISTS (
 		SELECT 1 FROM sqlite_master WHERE type='table' AND name='m_internal_notifies'
 	);`, period)

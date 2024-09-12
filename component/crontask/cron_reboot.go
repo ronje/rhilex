@@ -17,6 +17,7 @@ package crontask
 
 import (
 	"context"
+	"time"
 
 	"github.com/hootrhino/rhilex/component/interdb"
 	"github.com/hootrhino/rhilex/component/shellengine"
@@ -34,8 +35,10 @@ type CronRebootExecutor struct {
 	CronEntryID    cron.EntryID
 }
 type MCronRebootConfig struct {
-	Enable   *bool
-	CronExpr string
+	ID        uint
+	CreatedAt time.Time
+	Enable    bool
+	CronExpr  string
 }
 
 func InitCronRebootExecutor(rhilex typex.Rhilex) {
@@ -45,12 +48,16 @@ func InitCronRebootExecutor(rhilex typex.Rhilex) {
 		CronEntryID:    -100,
 	}
 	m := new(MCronRebootConfig)
-	err := interdb.DB().Model(m).Where("id=?", 1).First(m)
+	m.ID = 1
+	m.CreatedAt = time.Now()
+	m.Enable = false
+	m.CronExpr = "0 0 0 0 0"
+	err := interdb.DB().Model(m).FirstOrCreate(m).Error
 	if err != nil {
 		glogger.GLogger.Error(err)
 		return
 	}
-	if *m.Enable {
+	if m.Enable {
 		errParse := StartCronRebootCron(m.CronExpr)
 		if errParse != nil {
 			glogger.GLogger.Error(errParse)
@@ -86,7 +93,7 @@ func StartCronRebootCron(expr string) error {
 	var err error
 	__DefaultCronRebootExecutor.CronEntryID, err = __DefaultCronRebootExecutor.Cron.AddFunc(expr, func() {
 		if core.GlobalConfig.AppDebugMode {
-			glogger.GLogger.Info("Start Cron Reboot Cron:", expr)
+			glogger.GLogger.Debug("Start Cron Reboot Cron:", expr)
 		} else {
 			__DefaultCronRebootExecutor.LinuxBashShell.JustRun(context.Background(), "reboot")
 		}
