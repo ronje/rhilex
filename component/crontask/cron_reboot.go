@@ -17,6 +17,7 @@ package crontask
 
 import (
 	"context"
+	"runtime"
 	"time"
 
 	"github.com/hootrhino/rhilex/component/interdb"
@@ -94,8 +95,12 @@ func StartCronRebootCron(expr string) error {
 	__DefaultCronRebootExecutor.CronEntryID, err = __DefaultCronRebootExecutor.Cron.AddFunc(expr, func() {
 		if core.GlobalConfig.AppDebugMode {
 			glogger.GLogger.Debug("Start Cron Reboot Cron:", expr)
-		} else {
+		}
+		if runtime.GOOS == "linux" {
 			__DefaultCronRebootExecutor.LinuxBashShell.JustRun(context.Background(), "reboot")
+		}
+		if runtime.GOOS == "windows" {
+			glogger.GLogger.Error("Windows Not Support Reboot, Please Set On Windows Control Panel:", expr)
 		}
 	})
 	if err != nil {
