@@ -25,24 +25,20 @@ import (
 	"github.com/hootrhino/rhilex/component/aibase"
 	"github.com/hootrhino/rhilex/component/appstack"
 	"github.com/hootrhino/rhilex/component/crontask"
-	"github.com/hootrhino/rhilex/component/interkv"
-	"github.com/hootrhino/rhilex/component/lostcache"
-	"github.com/hootrhino/rhilex/component/rhilexmanager"
-	"github.com/hootrhino/rhilex/component/ruleengine"
-	transceiver "github.com/hootrhino/rhilex/component/transceiver/manager"
-
-	"github.com/hootrhino/rhilex/component/uartctrl"
-	core "github.com/hootrhino/rhilex/config"
-
-	intercache "github.com/hootrhino/rhilex/component/intercache"
-
-	supervisor "github.com/hootrhino/rhilex/component/supervisor"
-
 	datacenter "github.com/hootrhino/rhilex/component/datacenter"
+	intercache "github.com/hootrhino/rhilex/component/intercache"
 	"github.com/hootrhino/rhilex/component/interdb"
+	"github.com/hootrhino/rhilex/component/interkv"
 	"github.com/hootrhino/rhilex/component/intermetric"
 	"github.com/hootrhino/rhilex/component/internotify"
 	"github.com/hootrhino/rhilex/component/interqueue"
+	"github.com/hootrhino/rhilex/component/lostcache"
+	"github.com/hootrhino/rhilex/component/rhilexmanager"
+	"github.com/hootrhino/rhilex/component/ruleengine"
+	supervisor "github.com/hootrhino/rhilex/component/supervisor"
+	transceiver "github.com/hootrhino/rhilex/component/transceiver/manager"
+	"github.com/hootrhino/rhilex/component/uartctrl"
+	core "github.com/hootrhino/rhilex/config"
 	"github.com/hootrhino/rhilex/device"
 	"github.com/hootrhino/rhilex/glogger"
 	"github.com/hootrhino/rhilex/source"
@@ -96,6 +92,8 @@ func InitRuleEngine(config typex.RhilexConfig) typex.Rhilex {
 
 	// Internal DB
 	interdb.Init(__DefaultRuleEngine)
+	// Data center: future version maybe support
+	datacenter.InitDataCenter(__DefaultRuleEngine)
 	// Lost Data Cache
 	lostcache.Init(__DefaultRuleEngine)
 	// Internal kv Store
@@ -114,14 +112,11 @@ func InitRuleEngine(config typex.RhilexConfig) typex.Rhilex {
 	appstack.InitAppStack(__DefaultRuleEngine)
 	// current only support Internal ai
 	aibase.InitAlgorithmRuntime(__DefaultRuleEngine)
-	// Data center: future version maybe support
-	datacenter.InitDataCenter(__DefaultRuleEngine)
 	// Internal Queue
 	interqueue.InitXQueue(__DefaultRuleEngine, core.GlobalConfig.MaxQueueSize)
 	// Init Transceiver Communicator Manager
 	transceiver.InitTransceiverCommunicatorManager(__DefaultRuleEngine)
-	// Cron Reboot Executor
-	crontask.InitCronRebootExecutor(__DefaultRuleEngine)
+
 	return __DefaultRuleEngine
 }
 
