@@ -39,12 +39,12 @@ func GetSysMenus(c *gin.Context, ruleEngine typex.Rhilex) {
 		{Id: 0, Key: "dashboard", Access: true},
 		{Id: 1, Key: "device", Access: true},
 		{Id: 2, Key: "schema", Access: true},
-		{Id: 3, Key: "dataRepository", Access: true},
+		{Id: 3, Key: "repository", Access: true},
 		{Id: 4, Key: "inend", Access: true},
 		{Id: 5, Key: "outend", Access: true},
 		{Id: 6, Key: "app", Access: true},
 		{Id: 7, Key: "plugin", Access: true},
-		{Id: 8, Key: "communicationModule", Access: true},
+		{Id: 8, Key: "module", Access: true},
 		{Id: 9, Key: "system", Access: true},
 	}
 	c.JSON(common.HTTP_OK, common.OkWithData(allMenu))
