@@ -5,6 +5,7 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/hootrhino/rhilex/component/crontask"
 	cron_task "github.com/hootrhino/rhilex/component/crontask"
 	dataschema "github.com/hootrhino/rhilex/component/dataschema"
 	"github.com/hootrhino/rhilex/component/internotify"
@@ -202,14 +203,16 @@ func (hs *ApiServerPlugin) Init(config *ini.Section) error {
 		&model.MDataPoint{},
 		&model.MCronRebootConfig{},
 	)
-
 	// 初始化所有预制参数
 	server.DefaultApiServer.InitializeGenericOSData()
 	server.DefaultApiServer.InitializeRHILEXG1Data()
 	server.DefaultApiServer.InitializeWindowsData()
 	server.DefaultApiServer.InitializeUnixData()
 	server.DefaultApiServer.InitializeConfigCtl()
+	// InitDataSchemaCache
 	dataschema.InitDataSchemaCache(hs.ruleEngine)
+	// Cron Reboot Executor
+	crontask.InitCronRebootExecutor(hs.ruleEngine)
 	initRhilex(hs.ruleEngine)
 	return nil
 }
