@@ -25,6 +25,8 @@ const (
 	MainWorkDir = "/usr/local/rhilex/"
 	// 数据中心
 	DataCenterPath = MainWorkDir + "rhilex_datacenter.db"
+	// 离线缓存的数据
+	LostCacheDataPath = MainWorkDir + "rhilex_lostcache.db"
 	// RHILEX 的配置数据库
 	RunDbPath = MainWorkDir + "rhilex.db"
 	// 固件保存路径

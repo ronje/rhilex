@@ -200,11 +200,15 @@ func main() {
 					}
 					utils.CLog("[DATA RECOVER] Remove Old Db File")
 					if err := os.Remove(ossupport.RunDbPath); err != nil {
-						utils.CLog("[DATA RECOVER] Remove Old Db File error:%s", err.Error())
+						utils.CLog("[DATA RECOVER] Remove Main COnfig Db error:%s", err.Error())
 						return nil
 					}
 					if err := os.Remove(ossupport.DataCenterPath); err != nil {
-						utils.CLog("[DATA RECOVER] Remove Old Db File error:%s", err.Error())
+						utils.CLog("[DATA RECOVER] Remove Data Center Db error:%s", err.Error())
+						return nil
+					}
+					if err := os.Remove(ossupport.LostCacheDataPath); err != nil {
+						utils.CLog("[DATA RECOVER] Remove Lost Cache Db error:%s", err.Error())
 						return nil
 					}
 					utils.CLog("[DATA RECOVER] Remove Old Db File Finished")
