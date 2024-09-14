@@ -42,7 +42,7 @@ func GetSysMenus(c *gin.Context, ruleEngine typex.Rhilex) {
 		{Id: 3, Key: "dataRepository", Access: true},
 		{Id: 4, Key: "inend", Access: true},
 		{Id: 5, Key: "outend", Access: true},
-		{Id: 6, Key: "appStack", Access: true},
+		{Id: 6, Key: "app", Access: true},
 		{Id: 7, Key: "plugin", Access: true},
 		{Id: 8, Key: "communicationModule", Access: true},
 		{Id: 9, Key: "system", Access: true},
