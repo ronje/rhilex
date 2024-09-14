@@ -25,7 +25,7 @@ import (
 func InitSysMenuPermissionRoute() {
 	route := server.RouteGroup(server.ContextUrl("/menu"))
 	route.GET("/main", server.AddRoute(GetSysMenus))
-	route.GET("/config", server.AddRoute(GetSysMenus))
+	route.GET("/distConfig", server.AddRoute(GetDistConfigMenus))
 }
 
 type SysMenuPermissionVo struct {
@@ -46,6 +46,23 @@ func GetSysMenus(c *gin.Context, ruleEngine typex.Rhilex) {
 		{Id: 7, Key: "plugin", Access: true},
 		{Id: 8, Key: "module", Access: true},
 		{Id: 9, Key: "system", Access: true},
+	}
+	c.JSON(common.HTTP_OK, common.OkWithData(allMenu))
+}
+
+func GetDistConfigMenus(c *gin.Context, ruleEngine typex.Rhilex) {
+	allMenu := []SysMenuPermissionVo{
+		{Id: 0, Key: "resource", Access: true},
+		{Id: 1, Key: "netStatus", Access: true},
+		{Id: 2, Key: "port", Access: true},
+		{Id: 3, Key: "network", Access: true},
+		{Id: 4, Key: "routing", Access: false},
+		{Id: 5, Key: "wifi", Access: true},
+		{Id: 6, Key: "time", Access: true},
+		{Id: 7, Key: "firmware", Access: true},
+		{Id: 8, Key: "backup", Access: true},
+		{Id: 9, Key: "user", Access: true},
+		{Id: 10, Key: "reboot", Access: true},
 	}
 	c.JSON(common.HTTP_OK, common.OkWithData(allMenu))
 }
