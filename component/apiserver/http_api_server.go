@@ -415,8 +415,9 @@ func (hs *ApiServerPlugin) LoadRoute() {
 		crontaskApi.GET("/start", server.AddRouteV2(apis.StartTask))
 		crontaskApi.GET("/stop", server.AddRouteV2(apis.StopTask))
 	}
-
-	// 系统设置
+	// System Permission
+	apis.InitSysMenuPermissionRoute()
+	// System Settings
 	apis.LoadSystemSettingsAPI()
 	// Modbus
 	apis.InitModbusRoute()
