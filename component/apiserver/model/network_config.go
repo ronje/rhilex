@@ -22,24 +22,14 @@ package model
  */
 type MNetworkConfig struct {
 	RhilexModel
-	Type        string     `gorm:"not null"` // 类型: ubuntu16, ubuntu18
-	Interface   string     `gorm:"not null"` // eth1 eth0
-	Address     string     `gorm:"not null"`
-	Netmask     string     `gorm:"not null"`
-	Gateway     string     `gorm:"not null"`
-	DNS         StringList `gorm:"not null"`
-	DHCPEnabled *bool      `gorm:"not null"`
-}
-
-/*
-*
-* 无线网络配置
-*
- */
-type MWifiConfig struct {
-	RhilexModel
-	Interface string `gorm:"not null"`
-	SSID      string `gorm:"not null"`
-	Password  string `gorm:"not null"`
-	Security  string `gorm:"not null"` // wpa2-psk wpa3-psk
+	Type        string // 类型: ETH | WIFI
+	Interface   string // eth1 eth0
+	Address     string
+	Netmask     string
+	Gateway     string
+	DNS         StringList
+	DHCPEnabled *bool
+	SSID        string `gorm:"column:ssid"`
+	Password    string
+	Security    string // wpa2-psk wpa3-psk
 }

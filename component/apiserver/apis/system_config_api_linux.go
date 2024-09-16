@@ -127,7 +127,8 @@ func SetWifi(c *gin.Context, ruleEngine typex.Rhilex) {
 		return
 	}
 
-	MNetCfg := model.MWifiConfig{
+	MNetCfg := model.MNetworkConfig{
+		Type:      "WIFI",
 		Interface: DtoCfg.Interface,
 		SSID:      DtoCfg.SSID,
 		Password:  DtoCfg.Password,
@@ -404,20 +405,9 @@ func SetEthNetwork(c *gin.Context, ruleEngine typex.Rhilex) {
 			return
 		}
 	}
-	UbuntuVersion, err := utils.GetUbuntuVersion()
-	if err != nil {
-		c.JSON(common.HTTP_OK, common.Error400(err))
-		return
-	}
-	NetCfgType := "NETWORK_ETC"
-	if (UbuntuVersion == "ubuntu18") ||
-		UbuntuVersion == "ubuntu20" ||
-		UbuntuVersion == "ubuntu22" ||
-		(UbuntuVersion == "ubuntu24") {
-		NetCfgType = "NETPLAN"
-	}
+
 	MNetCfg := model.MNetworkConfig{
-		Type:        NetCfgType,
+		Type:        "ETH",
 		Interface:   DtoCfg.Interface,
 		Address:     DtoCfg.Address,
 		Netmask:     DtoCfg.Netmask,
@@ -499,46 +489,6 @@ func applyNewestEtcWlanConfig() error {
 	}
 	return nil
 }
-
-/*
-*
-* 生成YAML
-*
- */
-// func ApplyNewestNetplanEthConfig() error {
-// 	Eth0, err := service.GetEth0Config()
-// 	if err != nil {
-// 		return err
-// 	}
-// 	Eth1, err := service.GetEth1Config()
-// 	if err != nil {
-// 		return err
-// 	}
-
-// 	NetplanConfig := service.NetplanConfig{
-// 		Network: service.Network{
-// 			Version:  2,
-// 			Renderer: "NetworkManager",
-// 			Ethernets: service.EthInterface{
-// 				Eth0: service.Uart{
-// 					Dhcp4:       Eth0.DHCPEnabled,
-// 					Addresses:   []string{Eth0.Address + "/24"},
-// 					Gateway4:    Eth0.Gateway,
-// 					Nameservers: Eth0.DNS,
-// 				},
-// 				Eth1: service.Uart{
-// 					Dhcp4:       Eth1.DHCPEnabled,
-// 					Addresses:   []string{Eth1.Address + "/24"},
-// 					Gateway4:    Eth1.Gateway,
-// 					Nameservers: Eth1.DNS,
-// 				},
-// 			},
-// 		},
-// 	}
-// 	// fmt.Println(NetplanConfig.YAMLString())
-// 	return NetplanConfig.ApplyEthConfig()
-
-// }
 
 func isValidSubnetMask(mask string) bool {
 	// 分割子网掩码为4个整数

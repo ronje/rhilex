@@ -4,9 +4,8 @@ import (
 	"fmt"
 	"os/exec"
 
-	"github.com/hootrhino/rhilex/component/interdb"
 	"github.com/hootrhino/rhilex/component/apiserver/model"
-	"github.com/hootrhino/rhilex/glogger"
+	"github.com/hootrhino/rhilex/component/interdb"
 )
 
 /*
@@ -51,11 +50,6 @@ func GetEth1Config() (model.MNetworkConfig, error) {
 	return MNetworkConfig, err
 }
 
-/*
-*
-* 永远只更新id=0的
-*
- */
 func UpdateEth0Config(MNetworkConfig model.MNetworkConfig) error {
 	Model := model.MNetworkConfig{}
 	return interdb.DB().
@@ -64,54 +58,12 @@ func UpdateEth0Config(MNetworkConfig model.MNetworkConfig) error {
 		Updates(MNetworkConfig).Error
 }
 
-/*
-*
-* 永远只更新id=1的
-*
- */
 func UpdateEth1Config(MNetworkConfig model.MNetworkConfig) error {
 	Model := model.MNetworkConfig{}
 	return interdb.DB().
 		Model(Model).
 		Where("interface=?", "eth1").
 		Updates(MNetworkConfig).Error
-}
-
-/*
-*
-* 检查一下是否已经初始化过了，避免覆盖配置
-*
- */
-func CheckIfAlreadyInitNetWorkConfig() bool {
-	sql := `SELECT count(*) FROM m_network_configs;`
-	count := 0
-	err := interdb.DB().Raw(sql).Find(&count).Error
-	if err != nil {
-		glogger.GLogger.Error(err)
-		return false
-	}
-	if count > 0 {
-		return true
-	}
-	return false
-}
-
-/*
-*
-  - 清空表:DELETE FROM table_name;
-    DELETE FROM sqlite_sequence WHERE name='m_network_configs';
-
-*
-*/
-func TruncateConfig() error {
-	sql := `DELETE FROM m_network_configs;DELETE FROM sqlite_sequence WHERE name='m_network_configs';`
-	count := 0
-	err := interdb.DB().Raw(sql).Find(&count).Error
-	if err != nil {
-		glogger.GLogger.Error(err)
-		return err
-	}
-	return nil
 }
 
 /*
@@ -125,6 +77,7 @@ func InitNetWorkConfig() error {
 	dhcp0 := true
 	dhcp1 := false
 	eth0 := model.MNetworkConfig{
+		Type:      "ETH",
 		Interface: "eth0",
 		Address:   "192.168.1.100",
 		Netmask:   "255.255.255.0",
@@ -136,6 +89,7 @@ func InitNetWorkConfig() error {
 		DHCPEnabled: &dhcp0,
 	}
 	eth1 := model.MNetworkConfig{
+		Type:      "ETH",
 		Interface: "eth1",
 		Address:   "192.168.64.100",
 		Netmask:   "255.255.255.0",
@@ -153,25 +107,6 @@ func InitNetWorkConfig() error {
 	}
 	err = interdb.DB().Where("interface=? and id=2", "eth1").FirstOrCreate(&eth1).Error
 	if err != nil {
-		return err
-	}
-	return nil
-}
-
-/*
-*
-* 应用最新配置
-* sudo netplan apply
-*
- */
-func NetplanApply() error {
-	cmd := exec.Command("netplan", "apply")
-	cmd.Dir = "/etc/netplan/"
-	cmd.Env = append(cmd.Env,
-		"PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin")
-	out, err := cmd.CombinedOutput()
-	if err != nil {
-		glogger.GLogger.Error(err, string(out))
 		return err
 	}
 	return nil

@@ -185,7 +185,6 @@ func (hs *ApiServerPlugin) Init(config *ini.Section) error {
 		&model.MGenericGroup{},
 		&model.MGenericGroupRelation{},
 		&model.MNetworkConfig{},
-		&model.MWifiConfig{},
 		&model.MIotSchema{},
 		&model.MIotProperty{},
 		&model.MIpRoute{},

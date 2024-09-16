@@ -1,9 +1,8 @@
 package service
 
 import (
-	"github.com/hootrhino/rhilex/component/interdb"
 	"github.com/hootrhino/rhilex/component/apiserver/model"
-	"github.com/hootrhino/rhilex/glogger"
+	"github.com/hootrhino/rhilex/component/interdb"
 )
 
 /*
@@ -11,11 +10,11 @@ import (
 * 配置WIFI Wlan0
 *
  */
-func UpdateWlan0Config(MNetworkConfig model.MWifiConfig) error {
-	Model := model.MWifiConfig{Interface: "wlan0"}
+func UpdateWlan0Config(MNetworkConfig model.MNetworkConfig) error {
+	Model := model.MNetworkConfig{Interface: "wlan0"}
 	return interdb.DB().
 		Model(Model).
-		Where("interface=? and id = 1", "wlan0").
+		Where("interface=? and id=3 and type=\"WIFI\"", "wlan0").
 		Updates(MNetworkConfig).Error
 }
 
@@ -24,47 +23,12 @@ func UpdateWlan0Config(MNetworkConfig model.MWifiConfig) error {
 * 获取Wlan0的配置信息
 *
  */
-func GetWlan0Config() (model.MWifiConfig, error) {
-	MWifiConfig := model.MWifiConfig{}
+func GetWlan0Config() (model.MNetworkConfig, error) {
+	MWifiConfig := model.MNetworkConfig{}
 	err := interdb.DB().
-		Where("interface=? and id = 1", "wlan0").
+		Where("interface=? and id=3 and type=\"WIFI\"", "wlan0").
 		Find(&MWifiConfig).Error
 	return MWifiConfig, err
-}
-
-/*
-*
-* 检查是否设置了WIFI网络
-*
- */
-func CheckIfAlreadyInitWlanConfig() bool {
-	sql := `SELECT count(*) FROM m_wifi_configs;`
-	count := 0
-	err := interdb.DB().Raw(sql).Find(&count).Error
-	if err != nil {
-		glogger.GLogger.Error(err)
-		return false
-	}
-	if count > 0 {
-		return true
-	}
-	return false
-}
-
-/*
-*
-* 清空WIFI配置表
-*
- */
-func TruncateWifiConfig() error {
-	sql := `DELETE FROM m_wifi_configs;DELETE FROM sqlite_sequence WHERE name='m_wifi_configs';`
-	count := 0
-	err := interdb.DB().Raw(sql).Find(&count).Error
-	if err != nil {
-		glogger.GLogger.Error(err)
-		return err
-	}
-	return nil
 }
 
 /*
@@ -73,16 +37,23 @@ func TruncateWifiConfig() error {
 *
  */
 func InitWlanConfig() error {
-
 	// 默认给DHCP
-	wlan0 := model.MWifiConfig{
+	wlan0 := model.MNetworkConfig{
+		Type:      "WIFI",
 		Interface: "wlan0",
-		SSID:      "example.net",
+		SSID:      "example.wifi",
 		Password:  "123456",
 		Security:  "wpa2-psk",
+		Address:   "192.168.10.1",
+		Netmask:   "25.255.255.0",
+		Gateway:   "192.168.1.1",
+		DNS: []string{
+			"8.8.8.8",
+		},
+		DHCPEnabled: new(bool),
 	}
 	err := interdb.DB().
-		Where("interface=? and id=1", "wlan0").
+		Where("interface=? and id=3 and type=\"WIFI\"", "wlan0").
 		FirstOrCreate(&wlan0).Error
 	if err != nil {
 		return err
