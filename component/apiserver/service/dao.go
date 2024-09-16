@@ -259,14 +259,3 @@ func UpdateAiBase(AiBase *model.MAiBase) error {
 		return nil
 	}
 }
-
-// -------------------------------------------------------------------------------------
-// Cron Task
-// -------------------------------------------------------------------------------------
-
-// AllEnabledCronTask
-func AllEnabledCronTask() []model.MCronTask {
-	tasks := make([]model.MCronTask, 0)
-	interdb.DB().Where("enable = ?", "1").Find(&tasks)
-	return tasks
-}

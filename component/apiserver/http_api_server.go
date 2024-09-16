@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"github.com/hootrhino/rhilex/component/crontask"
-	cron_task "github.com/hootrhino/rhilex/component/crontask"
 	dataschema "github.com/hootrhino/rhilex/component/dataschema"
 	"github.com/hootrhino/rhilex/component/internotify"
 	"github.com/hootrhino/rhilex/component/uartctrl"
@@ -120,14 +119,6 @@ func initRhilex(engine typex.Rhilex) {
 			}
 		}
 	}
-	//
-	// load Cron Task
-	for _, task := range service.AllEnabledCronTask() {
-		if err := cron_task.GetCronManager().AddTask(task); err != nil {
-			glogger.GLogger.Error(err)
-			continue
-		}
-	}
 
 }
 
@@ -188,8 +179,6 @@ func (hs *ApiServerPlugin) Init(config *ini.Section) error {
 		&model.MIotSchema{},
 		&model.MIotProperty{},
 		&model.MIpRoute{},
-		&model.MCronTask{},
-		&model.MCronResult{},
 		&model.MUart{},
 		&model.MInternalNotify{},
 		&model.MUserLuaTemplate{},
