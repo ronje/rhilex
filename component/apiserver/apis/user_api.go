@@ -9,6 +9,7 @@ import (
 
 	common "github.com/hootrhino/rhilex/component/apiserver/common"
 	"github.com/hootrhino/rhilex/component/apiserver/model"
+	"github.com/hootrhino/rhilex/component/apiserver/server"
 	"github.com/hootrhino/rhilex/component/apiserver/service"
 	"github.com/hootrhino/rhilex/component/internotify"
 	"github.com/hootrhino/rhilex/glogger"
@@ -17,6 +18,19 @@ import (
 	"github.com/dgrijalva/jwt-go"
 	"github.com/gin-gonic/gin"
 )
+
+func InitUserRoute() {
+	userApi := server.RouteGroup(server.ContextUrl("/users"))
+	{
+		userApi.GET(("/"), server.AddRoute(Users))
+		userApi.POST(("/"), server.AddRoute(CreateUser))
+		userApi.PUT(("/update"), server.AddRoute(UpdateUser))
+		userApi.GET(("/detail"), server.AddRoute(UserDetail))
+		userApi.POST(("/logout"), server.AddRoute(LogOut))
+		userApi.DELETE(("/clear"), server.AddRoute(ClearAllUser))
+
+	}
+}
 
 const (
 	__SECRET_KEY = "you-can-not-get-this-secret"

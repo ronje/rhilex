@@ -13,6 +13,18 @@ import (
 	"gopkg.in/square/go-jose.v2/json"
 )
 
+func InitOutEndRoute() {
+	OutEndApi := server.RouteGroup(server.ContextUrl("/outends"))
+	{
+		OutEndApi.GET(("/detail"), server.AddRoute(OutEndDetail))
+		OutEndApi.GET(("/list"), server.AddRoute(OutEnds))
+		OutEndApi.POST(("/create"), server.AddRoute(CreateOutEnd))
+		OutEndApi.DELETE(("/del"), server.AddRoute(DeleteOutEnd))
+		OutEndApi.PUT(("/update"), server.AddRoute(UpdateOutEnd))
+		OutEndApi.PUT("/restart", server.AddRoute(RestartOutEnd))
+	}
+
+}
 func OutEnds(c *gin.Context, ruleEngine typex.Rhilex) {
 	uuid, _ := c.GetQuery("uuid")
 	if uuid == "" {

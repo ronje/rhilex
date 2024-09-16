@@ -18,6 +18,21 @@ import (
 	"gopkg.in/square/go-jose.v2/json"
 )
 
+func InitDeviceRoute() {
+	deviceApi := server.RouteGroup(server.ContextUrl("/devices"))
+	{
+		deviceApi.POST(("/create"), server.AddRoute(CreateDevice))
+		deviceApi.PUT(("/update"), server.AddRoute(UpdateDevice))
+		deviceApi.DELETE(("/del"), server.AddRoute(DeleteDevice))
+		deviceApi.GET(("/detail"), server.AddRoute(DeviceDetail))
+		deviceApi.GET("/group", server.AddRoute(ListDeviceGroup))
+		deviceApi.GET("/listByGroup", server.AddRoute(ListDeviceByGroup))
+		deviceApi.GET("/list", server.AddRoute(ListDevice))
+		deviceApi.PUT("/restart", server.AddRoute(RestartDevice))
+		deviceApi.GET("/deviceErrMsg", server.AddRoute(GetDeviceErrorMsg))
+	}
+}
+
 type DeviceVo struct {
 	UUID        string                 `json:"uuid"`
 	Gid         string                 `json:"gid"`

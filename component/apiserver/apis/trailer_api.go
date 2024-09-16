@@ -12,6 +12,7 @@ import (
 
 	common "github.com/hootrhino/rhilex/component/apiserver/common"
 	"github.com/hootrhino/rhilex/component/apiserver/model"
+	"github.com/hootrhino/rhilex/component/apiserver/server"
 	"github.com/hootrhino/rhilex/component/apiserver/service"
 	"github.com/hootrhino/rhilex/component/trailer"
 	"github.com/hootrhino/rhilex/glogger"
@@ -22,6 +23,20 @@ import (
 
 	"github.com/gin-gonic/gin"
 )
+
+func InitTrailerRoute() {
+	trailerApi := server.RouteGroup(server.ContextUrl("/goods"))
+	{
+		trailerApi.GET("/list", server.AddRoute(GoodsList))
+		trailerApi.GET(("/detail"), server.AddRoute(GoodsDetail))
+		trailerApi.POST("/create", server.AddRoute(CreateGoods))
+		trailerApi.PUT("/update", server.AddRoute(UpdateGoods))
+		trailerApi.PUT("/cleanGarbage", server.AddRoute(CleanGoodsUpload))
+		trailerApi.PUT("/start", server.AddRoute(StartGoods))
+		trailerApi.PUT("/stop", server.AddRoute(StopGoods))
+		trailerApi.DELETE("/", server.AddRoute(DeleteGoods))
+	}
+}
 
 /*
 *

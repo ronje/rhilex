@@ -21,11 +21,23 @@ import (
 	"github.com/gin-gonic/gin"
 	common "github.com/hootrhino/rhilex/component/apiserver/common"
 	"github.com/hootrhino/rhilex/component/apiserver/model"
+	"github.com/hootrhino/rhilex/component/apiserver/server"
 	"github.com/hootrhino/rhilex/component/apiserver/service"
 	"github.com/hootrhino/rhilex/component/uartctrl"
 	"github.com/hootrhino/rhilex/typex"
 	"github.com/hootrhino/rhilex/utils"
 )
+
+func InitHwIfaceRoute() {
+	// 硬件接口API
+	HwIFaceApi := server.DefaultApiServer.GetGroup(server.ContextUrl("/hwiface"))
+	{
+		HwIFaceApi.GET("/detail", server.AddRoute(GetUartDetail))
+		HwIFaceApi.GET("/list", server.AddRoute(AllUarts))
+		HwIFaceApi.POST("/update", server.AddRoute(UpdateUartConfig))
+		HwIFaceApi.GET("/refresh", server.AddRoute(RefreshPortList))
+	}
+}
 
 type UartVo struct {
 	UUID        string       `json:"uuid"`

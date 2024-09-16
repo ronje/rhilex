@@ -8,6 +8,7 @@ import (
 
 	archsupport "github.com/hootrhino/rhilex/archsupport"
 	common "github.com/hootrhino/rhilex/component/apiserver/common"
+	"github.com/hootrhino/rhilex/component/apiserver/server"
 	"github.com/hootrhino/rhilex/component/apiserver/service"
 	"github.com/hootrhino/rhilex/component/applet"
 	"github.com/hootrhino/rhilex/component/intermetric"
@@ -22,6 +23,32 @@ import (
 	"github.com/shirou/gopsutil/v3/cpu"
 	"github.com/shirou/gopsutil/v3/disk"
 )
+
+func InitSystemRoute() {
+	osApi := server.RouteGroup(server.ContextUrl("/os"))
+	{
+		osApi.GET(("/netInterfaces"), server.AddRoute(GetNetInterfaces))
+		osApi.GET(("/osRelease"), server.AddRoute(CatOsRelease))
+		osApi.GET(("/system"), server.AddRoute(System))
+		osApi.GET(("/startedAt"), server.AddRoute(StartedAt))
+		osApi.GET(("/getVideos"), server.AddRoute(GetVideos))
+		osApi.GET(("/getGpuInfo"), server.AddRoute(GetGpuInfo))
+		osApi.GET(("/sysConfig"), server.AddRoute(GetSysConfig))
+		osApi.POST(("/resetInterMetric"), server.AddRoute(ResetInterMetric))
+	}
+	systemApi := server.RouteGroup(server.ContextUrl("/"))
+	{
+		systemApi.GET(("/ping"), server.AddRoute(Ping))
+	}
+	server.DefaultApiServer.Route().
+		GET(server.ContextUrl("statistics"), server.AddRoute(Statistics))
+	server.DefaultApiServer.Route().
+		POST(server.ContextUrl("login"), server.AddRoute(Login))
+	server.DefaultApiServer.Route().
+		GET(server.ContextUrl("info"), server.AddRoute(Info))
+	server.DefaultApiServer.Route().
+		POST(server.ContextUrl("validateRule"), server.AddRoute(ValidateLuaSyntax))
+}
 
 // 启动时间
 var __StartedAt = time.Unix(time.Now().Unix(), 0).Format("2006-01-02 15:04:05")
@@ -134,12 +161,6 @@ func SnapshotDump(c *gin.Context, ruleEngine typex.Rhilex) {
 		fmt.Sprintf("attachment;filename=SnapshotDump_%v.json", time.Now().UnixMilli()))
 	c.Writer.Write([]byte(ruleEngine.SnapshotDump()))
 	c.Writer.Flush()
-}
-
-// Get all Drivers
-func Drivers(c *gin.Context, ruleEngine typex.Rhilex) {
-	data := []interface{}{}
-	c.JSON(common.HTTP_OK, common.OkWithData(data))
 }
 
 // Get statistics data

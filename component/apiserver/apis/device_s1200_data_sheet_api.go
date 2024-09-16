@@ -27,6 +27,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	common "github.com/hootrhino/rhilex/component/apiserver/common"
+	"github.com/hootrhino/rhilex/component/apiserver/server"
 	"github.com/hootrhino/rhilex/component/intercache"
 	"github.com/hootrhino/rhilex/component/interdb"
 
@@ -37,6 +38,18 @@ import (
 	"github.com/jinzhu/copier"
 	"github.com/xuri/excelize/v2"
 )
+
+func InitSiemensS7Route() {
+	SIEMENS_PLC := server.RouteGroup(server.ContextUrl("/s1200_data_sheet"))
+	{
+		SIEMENS_PLC.POST(("/sheetImport"), server.AddRoute(SiemensSheetImport))
+		SIEMENS_PLC.GET(("/sheetExport"), server.AddRoute(SiemensPointsExport))
+		SIEMENS_PLC.GET(("/list"), server.AddRoute(SiemensSheetPageList))
+		SIEMENS_PLC.POST(("/update"), server.AddRoute(SiemensSheetUpdate))
+		SIEMENS_PLC.DELETE(("/delIds"), server.AddRoute(SiemensSheetDelete))
+		SIEMENS_PLC.DELETE(("/delAll"), server.AddRoute(SiemensSheetDeleteAll))
+	}
+}
 
 type SiemensPointVo struct {
 	UUID           string      `json:"uuid"`

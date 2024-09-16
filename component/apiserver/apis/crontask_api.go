@@ -6,11 +6,25 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/hootrhino/rhilex/component/apiserver/dto"
 	"github.com/hootrhino/rhilex/component/apiserver/model"
+	"github.com/hootrhino/rhilex/component/apiserver/server"
 	"github.com/hootrhino/rhilex/component/apiserver/service"
 	cron_task "github.com/hootrhino/rhilex/component/crontask"
 	"github.com/hootrhino/rhilex/component/interdb"
 	"github.com/hootrhino/rhilex/typex"
 )
+
+func InitCronTaskRoute() {
+	crontaskApi := server.DefaultApiServer.GetGroup(server.ContextUrl("/crontask"))
+	{
+		crontaskApi.POST("/create", server.AddRouteV2(CreateCronTask))
+		crontaskApi.DELETE("/del", server.AddRouteV2(DeleteCronTask))
+		crontaskApi.PUT("/update", server.AddRouteV2(UpdateCronTask))
+		crontaskApi.GET("/list", server.AddRouteV2(ListCronTask))
+		crontaskApi.GET("/results/page", server.AddRouteV2(PageCronTaskResult))
+		crontaskApi.GET("/start", server.AddRouteV2(StartTask))
+		crontaskApi.GET("/stop", server.AddRouteV2(StopTask))
+	}
+}
 
 // 参考 https://blog.csdn.net/newbieJ/article/details/127125140
 

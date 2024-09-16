@@ -4,10 +4,20 @@ import (
 	"fmt"
 
 	common "github.com/hootrhino/rhilex/component/apiserver/common"
+	"github.com/hootrhino/rhilex/component/apiserver/server"
 	"github.com/hootrhino/rhilex/typex"
 
 	"github.com/gin-gonic/gin"
 )
+
+func InitPluginsRoute() {
+	pluginsApi := server.RouteGroup(server.ContextUrl("/plugware"))
+	{
+		pluginsApi.GET(("/list"), server.AddRoute(Plugins))
+		pluginsApi.POST(("/service"), server.AddRoute(PluginService))
+		pluginsApi.GET(("/detail"), server.AddRoute(PluginDetail))
+	}
+}
 
 /*
 *

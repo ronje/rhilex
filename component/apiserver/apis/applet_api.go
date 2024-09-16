@@ -5,6 +5,7 @@ import (
 
 	common "github.com/hootrhino/rhilex/component/apiserver/common"
 	"github.com/hootrhino/rhilex/component/apiserver/model"
+	"github.com/hootrhino/rhilex/component/apiserver/server"
 	"github.com/hootrhino/rhilex/component/apiserver/service"
 
 	"github.com/gin-gonic/gin"
@@ -13,6 +14,19 @@ import (
 	"github.com/hootrhino/rhilex/typex"
 	"github.com/hootrhino/rhilex/utils"
 )
+
+func InitAppletRoute() {
+	appApi := server.RouteGroup(server.ContextUrl("/app"))
+	{
+		appApi.GET(("/list"), server.AddRoute(Apps))
+		appApi.POST(("/create"), server.AddRoute(CreateApp))
+		appApi.PUT(("/update"), server.AddRoute(UpdateApp))
+		appApi.DELETE(("/del"), server.AddRoute(RemoveApp))
+		appApi.PUT(("/start"), server.AddRoute(StartApp))
+		appApi.PUT(("/stop"), server.AddRoute(StopApp))
+		appApi.GET(("/detail"), server.AddRoute(AppDetail))
+	}
+}
 
 /*
 *
