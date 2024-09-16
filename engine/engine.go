@@ -23,7 +23,7 @@ import (
 
 	lua "github.com/hootrhino/gopher-lua"
 	"github.com/hootrhino/rhilex/component/aibase"
-	"github.com/hootrhino/rhilex/component/appstack"
+	"github.com/hootrhino/rhilex/component/applet"
 	"github.com/hootrhino/rhilex/component/crontask"
 	datacenter "github.com/hootrhino/rhilex/component/datacenter"
 	intercache "github.com/hootrhino/rhilex/component/intercache"
@@ -108,8 +108,8 @@ func InitRuleEngine(config typex.RhilexConfig) typex.Rhilex {
 	uartctrl.InitUartsManager(__DefaultRuleEngine)
 	// Internal Metric
 	intermetric.InitInternalMetric(__DefaultRuleEngine)
-	// lua appstack manager
-	appstack.InitAppStack(__DefaultRuleEngine)
+	// lua applet manager
+	applet.InitApplet(__DefaultRuleEngine)
 	// current only support Internal ai
 	aibase.InitAlgorithmRuntime(__DefaultRuleEngine)
 	// Internal Queue
@@ -155,7 +155,7 @@ func (e *RuleEngine) GetConfig() *typex.RhilexConfig {
 func (e *RuleEngine) Stop() {
 	glogger.GLogger.Info("[*] Ready to stop rhilex")
 	crontask.StopCronRebootExecutor()
-	appstack.Stop()
+	applet.Stop()
 	// 资源
 	e.InEnds.Range(func(key, value interface{}) bool {
 		inEnd := value.(*typex.InEnd)

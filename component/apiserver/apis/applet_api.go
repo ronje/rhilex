@@ -8,7 +8,7 @@ import (
 	"github.com/hootrhino/rhilex/component/apiserver/service"
 
 	"github.com/gin-gonic/gin"
-	"github.com/hootrhino/rhilex/component/appstack"
+	"github.com/hootrhino/rhilex/component/applet"
 	"github.com/hootrhino/rhilex/glogger"
 	"github.com/hootrhino/rhilex/typex"
 	"github.com/hootrhino/rhilex/utils"
@@ -19,7 +19,7 @@ import (
 * 其实这个结构体扮演的角色VO层
 *
  */
-type appStackDto struct {
+type AppletDto struct {
 	UUID        string `json:"uuid,omitempty"` // 名称
 	Name        string `json:"name"`           // 名称
 	Version     string `json:"version"`        // 版本号
@@ -43,14 +43,14 @@ func AppDetail(c *gin.Context, ruleEngine typex.Rhilex) {
 		c.JSON(common.HTTP_OK, common.Error400EmptyObj(err1))
 		return
 	}
-	web_data := appStackDto{
+	web_data := AppletDto{
 		UUID:      appInfo.UUID,
 		Name:      appInfo.Name,
 		Version:   appInfo.Version,
 		AutoStart: appInfo.AutoStart,
 		Type:      "lua",
 		AppState: func() int {
-			if a := appstack.GetApp(appInfo.UUID); a != nil {
+			if a := applet.GetApp(appInfo.UUID); a != nil {
 				return int(a.AppState)
 			}
 			return 0
@@ -63,16 +63,16 @@ func AppDetail(c *gin.Context, ruleEngine typex.Rhilex) {
 
 // 列表
 func Apps(c *gin.Context, ruleEngine typex.Rhilex) {
-	result := []appStackDto{}
+	result := []AppletDto{}
 	for _, mApp := range service.AllApp() {
-		web_data := appStackDto{
+		web_data := AppletDto{
 			UUID:      mApp.UUID,
 			Name:      mApp.Name,
 			Version:   mApp.Version,
 			AutoStart: mApp.AutoStart,
 			Type:      "lua",
 			AppState: func() int {
-				if a := appstack.GetApp(mApp.UUID); a != nil {
+				if a := applet.GetApp(mApp.UUID); a != nil {
 					return int(a.AppState)
 				}
 				return 0
@@ -105,7 +105,7 @@ end
 `
 
 func CreateApp(c *gin.Context, ruleEngine typex.Rhilex) {
-	form := appStackDto{}
+	form := AppletDto{}
 	if err := c.ShouldBindJSON(&form); err != nil {
 		c.JSON(common.HTTP_OK, common.Error400(err))
 		return
@@ -129,10 +129,10 @@ func CreateApp(c *gin.Context, ruleEngine typex.Rhilex) {
 		return
 	}
 	// 立即加载但是不运行，主要是要加入内存
-	newAPP := appstack.NewApplication(newUUID, form.Name, form.Version)
+	newAPP := applet.NewApplication(newUUID, form.Name, form.Version)
 	newAPP.AutoStart = *form.AutoStart
 	newAPP.Description = form.Description
-	if err := appstack.LoadApp(newAPP, mAPP.LuaSource); err != nil {
+	if err := applet.LoadApp(newAPP, mAPP.LuaSource); err != nil {
 		glogger.GLogger.Error("app Load failed:", err)
 		c.JSON(common.HTTP_OK, common.Error400(err))
 		return
@@ -140,7 +140,7 @@ func CreateApp(c *gin.Context, ruleEngine typex.Rhilex) {
 	// 是否开启自启动立即运行
 	if *form.AutoStart {
 		glogger.GLogger.Debugf("App autoStart allowed:%s-%s-%s", newUUID, form.Version, form.Name)
-		if err2 := appstack.StartApp(newUUID); err2 != nil {
+		if err2 := applet.StartApp(newUUID); err2 != nil {
 			glogger.GLogger.Error("App autoStart failed:", err2)
 		}
 	}
@@ -153,7 +153,7 @@ func CreateApp(c *gin.Context, ruleEngine typex.Rhilex) {
 *
  */
 func UpdateApp(c *gin.Context, ruleEngine typex.Rhilex) {
-	form := appStackDto{}
+	form := AppletDto{}
 	if err := c.ShouldBindJSON(&form); err != nil {
 		c.JSON(common.HTTP_OK, common.Error400(err))
 		return
@@ -163,7 +163,7 @@ func UpdateApp(c *gin.Context, ruleEngine typex.Rhilex) {
 		return
 	}
 	// 校验语法
-	if err1 := appstack.ValidateLuaSyntax([]byte(form.LuaSource)); err1 != nil {
+	if err1 := applet.ValidateLuaSyntax([]byte(form.LuaSource)); err1 != nil {
 		c.JSON(common.HTTP_OK, common.Error400(err1))
 		return
 	}
@@ -180,26 +180,26 @@ func UpdateApp(c *gin.Context, ruleEngine typex.Rhilex) {
 		return
 	}
 	// 如果内存里面有, 先把内存里的清理了
-	if app := appstack.GetApp(form.UUID); app != nil {
+	if app := applet.GetApp(form.UUID); app != nil {
 		glogger.GLogger.Debug("Already loaded, will try to stop:", form.UUID)
 		// 已经启动了就不能再启动
 		if app.AppState == 1 {
-			appstack.StopApp(form.UUID)
+			applet.StopApp(form.UUID)
 		}
-		appstack.RemoveApp(app.UUID)
+		applet.RemoveApp(app.UUID)
 	}
 	// 必须先load后start
-	newAPP := appstack.NewApplication(mApp.UUID, mApp.Name, mApp.Version)
+	newAPP := applet.NewApplication(mApp.UUID, mApp.Name, mApp.Version)
 	newAPP.AutoStart = *mApp.AutoStart
 	newAPP.Description = mApp.Description
-	if err := appstack.LoadApp(newAPP, mApp.LuaSource); err != nil {
+	if err := applet.LoadApp(newAPP, mApp.LuaSource); err != nil {
 		c.JSON(common.HTTP_OK, common.Error400(err))
 		return
 	}
 	// 自启动
 	if *mApp.AutoStart {
 		glogger.GLogger.Debugf("App autoStart allowed:%s-%s-%s", mApp.UUID, mApp.Version, mApp.Name)
-		if err2 := appstack.StartApp(mApp.UUID); err2 != nil {
+		if err2 := applet.StartApp(mApp.UUID); err2 != nil {
 			glogger.GLogger.Error("App autoStart failed:", err2)
 			c.JSON(common.HTTP_OK, common.Error400(err2))
 			return
@@ -225,14 +225,14 @@ func StartApp(c *gin.Context, ruleEngine typex.Rhilex) {
 		return
 	}
 	// 如果内存里面有, 判断状态
-	if app := appstack.GetApp(uuid); app != nil {
+	if app := applet.GetApp(uuid); app != nil {
 		glogger.GLogger.Debug("Already loaded, will try to start:", uuid)
 		// 已经启动了就不能再启动
 		if app.AppState == 1 {
 			c.JSON(common.HTTP_OK, common.Error400(fmt.Errorf("app is running now:%s", uuid)))
 		}
 		if app.AppState == 0 {
-			if err := appstack.StartApp(uuid); err != nil {
+			if err := applet.StartApp(uuid); err != nil {
 				c.JSON(common.HTTP_OK, common.Error400(err))
 			} else {
 				c.JSON(common.HTTP_OK, common.OkWithData("app start successfully:"+uuid))
@@ -242,13 +242,13 @@ func StartApp(c *gin.Context, ruleEngine typex.Rhilex) {
 	}
 	// 如果内存里面没有，尝试从配置加载
 	glogger.GLogger.Debug("No loaded, will try to load:", uuid)
-	if err := appstack.LoadApp(appstack.NewApplication(
+	if err := applet.LoadApp(applet.NewApplication(
 		mApp.UUID, mApp.Name, mApp.Version), mApp.LuaSource); err != nil {
 		c.JSON(common.HTTP_OK, common.Error400(err))
 		return
 	}
 	glogger.GLogger.Debug("app loaded, will try to start:", uuid)
-	if err := appstack.StartApp(uuid); err != nil {
+	if err := applet.StartApp(uuid); err != nil {
 		c.JSON(common.HTTP_OK, common.Error400(err))
 		return
 	}
@@ -258,13 +258,13 @@ func StartApp(c *gin.Context, ruleEngine typex.Rhilex) {
 // 停止, 但是不删除，仅仅是把虚拟机进程给杀死
 func StopApp(c *gin.Context, ruleEngine typex.Rhilex) {
 	uuid, _ := c.GetQuery("uuid")
-	if app := appstack.GetApp(uuid); app != nil {
+	if app := applet.GetApp(uuid); app != nil {
 		if app.AppState == 0 {
 			c.JSON(common.HTTP_OK, common.Error400(fmt.Errorf("app is stopping now:%s", uuid)))
 			return
 		}
 		if app.AppState == 1 {
-			if err := appstack.StopApp(uuid); err != nil {
+			if err := applet.StopApp(uuid); err != nil {
 				c.JSON(common.HTTP_OK, common.Error400(err))
 				return
 			}
@@ -279,11 +279,11 @@ func StopApp(c *gin.Context, ruleEngine typex.Rhilex) {
 func RemoveApp(c *gin.Context, ruleEngine typex.Rhilex) {
 	uuid, _ := c.GetQuery("uuid")
 	// 先把正在运行的给停了
-	if app := appstack.GetApp(uuid); app != nil {
+	if app := applet.GetApp(uuid); app != nil {
 		app.Remove()
 	}
 	// 内存给清理了
-	if err := appstack.RemoveApp(uuid); err != nil {
+	if err := applet.RemoveApp(uuid); err != nil {
 		c.JSON(common.HTTP_OK, common.Error400(err))
 		return
 	}

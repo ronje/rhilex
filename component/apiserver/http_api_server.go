@@ -16,7 +16,7 @@ import (
 	"github.com/hootrhino/rhilex/component/apiserver/model"
 	"github.com/hootrhino/rhilex/component/apiserver/server"
 	"github.com/hootrhino/rhilex/component/apiserver/service"
-	"github.com/hootrhino/rhilex/component/appstack"
+	"github.com/hootrhino/rhilex/component/applet"
 	"github.com/hootrhino/rhilex/component/interdb"
 	"github.com/hootrhino/rhilex/component/trailer"
 
@@ -104,18 +104,18 @@ func initRhilex(engine typex.Rhilex) {
 	// APP stack
 	//
 	for _, mApp := range service.AllApp() {
-		app := appstack.NewApplication(
+		app := applet.NewApplication(
 			mApp.UUID,
 			mApp.Name,
 			mApp.Version,
 		)
-		if err := appstack.LoadApp(app, mApp.LuaSource); err != nil {
+		if err := applet.LoadApp(app, mApp.LuaSource); err != nil {
 			glogger.GLogger.Error(err)
 			continue
 		}
 		if *mApp.AutoStart {
 			glogger.GLogger.Debug("App autoStart allowed:", app.UUID)
-			if err1 := appstack.StartApp(app.UUID); err1 != nil {
+			if err1 := applet.StartApp(app.UUID); err1 != nil {
 				glogger.GLogger.Error("App autoStart failed:", err1)
 			}
 		}

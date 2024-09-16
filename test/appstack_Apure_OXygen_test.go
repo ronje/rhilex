@@ -18,7 +18,7 @@ package test
 import (
 	"time"
 
-	"github.com/hootrhino/rhilex/component/appstack"
+	"github.com/hootrhino/rhilex/component/applet"
 
 	"github.com/hootrhino/rhilex/glogger"
 
@@ -31,7 +31,7 @@ func Test_Run_Apure_OXygen_parse(t *testing.T) {
 	engine := RunTestEngine()
 	engine.Start()
 
-	app := appstack.NewApplication(
+	app := applet.NewApplication(
 		"JustForTest-UUID",
 		"JustForTest-Name",
 		"JustForTest-Version",
@@ -45,10 +45,10 @@ function Main(arg)
 end
 
 `
-	if err := appstack.LoadApp(app, luaSource); err != nil {
+	if err := applet.LoadApp(app, luaSource); err != nil {
 		glogger.GLogger.Fatal(err)
 	}
-	if err := appstack.StartApp("JustForTest-UUID"); err != nil {
+	if err := applet.StartApp("JustForTest-UUID"); err != nil {
 		glogger.GLogger.Fatal(err)
 	}
 	time.Sleep(3 * time.Second)

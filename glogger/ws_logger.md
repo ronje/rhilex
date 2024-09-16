@@ -12,8 +12,8 @@
     "appId":"rhilex",
     "appName":"rhilex",
     "topic": "app/UUID12345678/log",
-    "file":"appstack_runtime.go:86",
-    "func":"github.com/hootrhino/rhilex/appstack.(*AppStack).StartApp.func1",
+    "file":"applet_runtime.go:86",
+    "func":"github.com/hootrhino/rhilex/applet.(*applet).StartApp.func1",
     "level":"debug",
     "msg":"Ready to run app:APPefeebdf253544730a9dc38e15354d2d4-AAAA-1.0.0",
     "time":"2023-06-29T16:46:00+08:00"

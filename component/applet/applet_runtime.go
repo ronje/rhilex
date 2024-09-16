@@ -13,7 +13,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-package appstack
+package applet
 
 import (
 	"context"
@@ -27,18 +27,18 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-var __DefaultAppStackRuntime *AppStackRuntime
+var __DefaultappletRuntime *appletRuntime
 
-func InitAppStack(re typex.Rhilex) *AppStackRuntime {
-	__DefaultAppStackRuntime = &AppStackRuntime{
+func InitApplet(re typex.Rhilex) *appletRuntime {
+	__DefaultappletRuntime = &appletRuntime{
 		RuleEngine:   re,
 		locker:       sync.Mutex{},
 		Applications: make(map[string]*Application),
 	}
-	return __DefaultAppStackRuntime
+	return __DefaultappletRuntime
 }
-func AppRuntime() *AppStackRuntime {
-	return __DefaultAppStackRuntime
+func AppRuntime() *appletRuntime {
+	return __DefaultappletRuntime
 }
 
 /*
@@ -47,8 +47,8 @@ func AppRuntime() *AppStackRuntime {
 *
  */
 func LoadApp(app *Application, luaSource string) error {
-	__DefaultAppStackRuntime.locker.Lock()
-	defer __DefaultAppStackRuntime.locker.Unlock()
+	__DefaultappletRuntime.locker.Lock()
+	defer __DefaultappletRuntime.locker.Unlock()
 	// 重新读
 	app.VM().DoString(string(luaSource))
 	// 检查函数入口
@@ -63,10 +63,10 @@ func LoadApp(app *Application, luaSource string) error {
 	fMain := *AppMainVM.(*lua.LFunction)
 	app.SetMainFunc(&fMain)
 	// 加载库
-	// LoadAppLib(app, __DefaultAppStackRuntime.RuleEngine)
-	LoadAppLibGroup(app, __DefaultAppStackRuntime.RuleEngine)
+	// LoadAppLib(app, __DefaultappletRuntime.RuleEngine)
+	LoadAppLibGroup(app, __DefaultappletRuntime.RuleEngine)
 	// 加载到内存里
-	__DefaultAppStackRuntime.Applications[app.UUID] = app
+	__DefaultappletRuntime.Applications[app.UUID] = app
 	return nil
 }
 
@@ -76,9 +76,9 @@ func LoadApp(app *Application, luaSource string) error {
 *
  */
 func StartApp(uuid string) error {
-	__DefaultAppStackRuntime.locker.Lock()
-	defer __DefaultAppStackRuntime.locker.Unlock()
-	app, ok := __DefaultAppStackRuntime.Applications[uuid]
+	__DefaultappletRuntime.locker.Lock()
+	defer __DefaultappletRuntime.locker.Unlock()
+	app, ok := __DefaultappletRuntime.Applications[uuid]
 	if !ok {
 		return fmt.Errorf("Application not exists:%s", uuid)
 	}
@@ -178,11 +178,11 @@ func StartApp(uuid string) error {
 *
  */
 func RemoveApp(uuid string) error {
-	__DefaultAppStackRuntime.locker.Lock()
-	defer __DefaultAppStackRuntime.locker.Unlock()
-	if app, ok := __DefaultAppStackRuntime.Applications[uuid]; ok {
+	__DefaultappletRuntime.locker.Lock()
+	defer __DefaultappletRuntime.locker.Unlock()
+	if app, ok := __DefaultappletRuntime.Applications[uuid]; ok {
 		app.Remove()
-		delete(__DefaultAppStackRuntime.Applications, uuid)
+		delete(__DefaultappletRuntime.Applications, uuid)
 	}
 	glogger.GLogger.Info("App removed:", uuid)
 	return nil
@@ -194,9 +194,9 @@ func RemoveApp(uuid string) error {
 *
  */
 func StopApp(uuid string) error {
-	__DefaultAppStackRuntime.locker.Lock()
-	defer __DefaultAppStackRuntime.locker.Unlock()
-	if app, ok := __DefaultAppStackRuntime.Applications[uuid]; ok {
+	__DefaultappletRuntime.locker.Lock()
+	defer __DefaultappletRuntime.locker.Unlock()
+	if app, ok := __DefaultappletRuntime.Applications[uuid]; ok {
 		app.Stop()
 	}
 	glogger.GLogger.Info("App removed:", uuid)
@@ -209,9 +209,9 @@ func StopApp(uuid string) error {
 *
  */
 func UpdateApp(app Application) error {
-	__DefaultAppStackRuntime.locker.Lock()
-	defer __DefaultAppStackRuntime.locker.Unlock()
-	if oldApp, ok := __DefaultAppStackRuntime.Applications[app.UUID]; ok {
+	__DefaultappletRuntime.locker.Lock()
+	defer __DefaultappletRuntime.locker.Unlock()
+	if oldApp, ok := __DefaultappletRuntime.Applications[app.UUID]; ok {
 		oldApp.Name = app.Name
 		oldApp.AutoStart = app.AutoStart
 		oldApp.Version = app.Version
@@ -222,7 +222,7 @@ func UpdateApp(app Application) error {
 
 }
 func GetApp(uuid string) *Application {
-	if app, ok := __DefaultAppStackRuntime.Applications[uuid]; ok {
+	if app, ok := __DefaultappletRuntime.Applications[uuid]; ok {
 		return app
 	}
 	return nil
@@ -234,30 +234,30 @@ func GetApp(uuid string) *Application {
 *
  */
 func AppCount() int {
-	return len(__DefaultAppStackRuntime.Applications)
+	return len(__DefaultappletRuntime.Applications)
 }
 func AllApp() []*Application {
 	return ListApp()
 }
 func ListApp() []*Application {
 	apps := []*Application{}
-	for _, v := range __DefaultAppStackRuntime.Applications {
+	for _, v := range __DefaultappletRuntime.Applications {
 		apps = append(apps, v)
 	}
 	return apps
 }
 
 func Stop() {
-	__DefaultAppStackRuntime.locker.Lock()
-	defer __DefaultAppStackRuntime.locker.Unlock()
-	for _, app := range __DefaultAppStackRuntime.Applications {
+	__DefaultappletRuntime.locker.Lock()
+	defer __DefaultappletRuntime.locker.Unlock()
+	for _, app := range __DefaultappletRuntime.Applications {
 		glogger.GLogger.Info("Stop App:", app.UUID)
 		app.Stop()
 		glogger.GLogger.Info("Stop App:", app.UUID, " Successfully")
 	}
-	glogger.GLogger.Info("Appstack stopped")
+	glogger.GLogger.Info("applet stopped")
 
 }
 func GetRhilex() typex.Rhilex {
-	return __DefaultAppStackRuntime.RuleEngine
+	return __DefaultappletRuntime.RuleEngine
 }

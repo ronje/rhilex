@@ -13,7 +13,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-package appstack
+package applet
 
 import (
 	"sync"
@@ -26,7 +26,7 @@ import (
 * 管理器
 *
  */
-type AppStackRuntime struct {
+type appletRuntime struct {
 	locker       sync.Mutex
 	RuleEngine   typex.Rhilex
 	Applications map[string]*Application

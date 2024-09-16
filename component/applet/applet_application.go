@@ -1,4 +1,4 @@
-package appstack
+package applet
 
 import (
 	"context"
@@ -97,7 +97,7 @@ func (app *Application) Remove() {
 * APP Stack 管理器
 *
  */
-type XAppStack interface {
+type Xapplet interface {
 	GetRhilex() typex.Rhilex
 	ListApp() []*Application
 	// 把配置里的应用信息加载到内存里

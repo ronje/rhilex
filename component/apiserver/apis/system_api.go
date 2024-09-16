@@ -9,7 +9,7 @@ import (
 	archsupport "github.com/hootrhino/rhilex/archsupport"
 	common "github.com/hootrhino/rhilex/component/apiserver/common"
 	"github.com/hootrhino/rhilex/component/apiserver/service"
-	"github.com/hootrhino/rhilex/component/appstack"
+	"github.com/hootrhino/rhilex/component/applet"
 	"github.com/hootrhino/rhilex/component/intermetric"
 	core "github.com/hootrhino/rhilex/config"
 	"github.com/hootrhino/rhilex/glogger"
@@ -82,7 +82,7 @@ func source_count(e typex.Rhilex) map[string]int {
 		"plugins": c4,
 		"devices": c5,
 		"goods":   c6,
-		"apps":    appstack.AppCount(),
+		"apps":    applet.AppCount(),
 	}
 }
 
@@ -290,5 +290,3 @@ func GetDeviceCtrlTree(c *gin.Context, ruleEngine typex.Rhilex) {
 func GetSysConfig(c *gin.Context, ruleEngine typex.Rhilex) {
 	c.JSON(common.HTTP_OK, common.OkWithData(core.GlobalConfig))
 }
-
-
