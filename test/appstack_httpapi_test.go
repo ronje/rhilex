@@ -7,10 +7,11 @@ package test
 
 import (
 	"fmt"
-	"github.com/hootrhino/rhilex/component/apiserver/model"
-	"github.com/stretchr/testify/assert"
 	"os/exec"
 	"testing"
+
+	"github.com/hootrhino/rhilex/component/apiserver/model"
+	"github.com/stretchr/testify/assert"
 )
 
 /*
@@ -39,8 +40,8 @@ func UT_createApp(t *testing.T) string {
 	t.Log("UT_createApp: ", string(output))
 	//
 	LoadUnitTestDB()
-	mApp := []model.MApp{}
-	unitTestDB.Raw("SELECT * FROM m_apps").Find(&mApp)
+	mApp := []model.MApplet{}
+	unitTestDB.Raw("SELECT * FROM m_applets").Find(&mApp)
 	assert.Equal(t, 1, len(mApp))
 	t.Log(mApp[0].UUID)
 	assert.Equal(t, mApp[0].Name, "testlua1")
@@ -65,8 +66,8 @@ func UT_updateApp(t *testing.T, uuid string) {
 	}
 	t.Log("UT_updateApp: ", string(output))
 	LoadUnitTestDB()
-	mApp := []model.MApp{}
-	unitTestDB.Raw("SELECT * FROM m_apps").Find(&mApp)
+	mApp := []model.MApplet{}
+	unitTestDB.Raw("SELECT * FROM m_applets").Find(&mApp)
 	assert.Equal(t, 1, len(mApp))
 	t.Log(mApp[0].UUID)
 	assert.Equal(t, mApp[0].Name, "testlua11")
@@ -82,7 +83,7 @@ func UT_deleteApp(t *testing.T, uuid string) {
 	t.Log("UT_deleteApp: ", string(output))
 	//
 	LoadUnitTestDB()
-	mApp := []model.MApp{}
-	unitTestDB.Raw("SELECT * FROM m_apps").Find(&mApp)
+	mApp := []model.MApplet{}
+	unitTestDB.Raw("SELECT * FROM m_applets").Find(&mApp)
 	assert.Equal(t, 0, len(mApp))
 }

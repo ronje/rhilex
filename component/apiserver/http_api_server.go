@@ -181,7 +181,7 @@ func (hs *ApiServerPlugin) Init(config *ini.Section) error {
 		&model.MUser{},
 		&model.MDevice{},
 		&model.MGoods{},
-		&model.MApp{},
+		&model.MApplet{},
 		&model.MGenericGroup{},
 		&model.MGenericGroupRelation{},
 		&model.MNetworkConfig{},

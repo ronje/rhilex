@@ -129,7 +129,7 @@ func CreateApp(c *gin.Context, ruleEngine typex.Rhilex) {
 		return
 	}
 	newUUID := utils.AppUuid()
-	mAPP := &model.MApp{
+	mAPP := &model.MApplet{
 		UUID:    newUUID,
 		Name:    form.Name,
 		Version: form.Version,
@@ -181,7 +181,7 @@ func UpdateApp(c *gin.Context, ruleEngine typex.Rhilex) {
 		c.JSON(common.HTTP_OK, common.Error400(err1))
 		return
 	}
-	mApp := model.MApp{
+	mApp := model.MApplet{
 		UUID:        form.UUID,
 		Name:        form.Name,
 		Version:     form.Version,
