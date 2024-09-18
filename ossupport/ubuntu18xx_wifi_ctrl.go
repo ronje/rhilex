@@ -11,6 +11,17 @@ import (
 	"github.com/hootrhino/rhilex/glogger"
 )
 
+type WLANInterface struct {
+	Interface string `yaml:"-" json:"interface"`
+	SSID      string `yaml:"-" json:"ssid"`
+	Password  string `yaml:"-" json:"password"`
+	Security  string `yaml:"-" json:"security"`
+}
+
+type WlanConfig struct {
+	Wlan0 WLANInterface `yaml:"-" json:"wlan0"`
+}
+
 /*
 *
 * WIFI 控制
