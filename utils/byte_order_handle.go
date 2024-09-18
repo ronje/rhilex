@@ -174,7 +174,7 @@ func ParseModbusValue(DataBlockType string, DataBlockOrder string,
 	}
 
 	if DataBlockType == "RAW" {
-		return hex.EncodeToString(byteSlice[:4])
+		return hex.EncodeToString(byteSlice[:8])
 	}
 
 	if DataBlockType == "BYTE" {
