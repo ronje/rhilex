@@ -257,7 +257,7 @@ func CheckMBusMasterDataPoints(M MBusMasterPointVo) error {
 	if M.Frequency == nil {
 		return fmt.Errorf("missing required param 'frequency'")
 	}
-	if *M.Frequency < 50 {
+	if *M.Frequency < 1 {
 		return fmt.Errorf("'frequency' must be greater than 50ms")
 	}
 	if *M.Frequency > 100000 {

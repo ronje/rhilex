@@ -120,7 +120,7 @@ func (s1200 *SIEMENS_PLC) Init(devId string, configMap map[string]interface{}) e
 	// 开始解析地址表
 	for _, SiemensDataPoint := range list {
 		// 频率不能太快
-		if *SiemensDataPoint.Frequency < 50 {
+		if *SiemensDataPoint.Frequency < 1 {
 			return errors.New("'frequency' must grate than 50 millisecond")
 		}
 		//
@@ -320,7 +320,7 @@ func (s1200 *SIEMENS_PLC) Read() []ReadPLCRegisterValue {
 				ErrMsg:        "",
 			})
 		}
-		if *db.Frequency < 100 {
+		if *db.Frequency < 10 {
 			*db.Frequency = 100 // 不能太快
 		}
 		time.Sleep(time.Duration(*db.Frequency) * time.Millisecond)

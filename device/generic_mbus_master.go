@@ -106,7 +106,7 @@ func (gw *MBusMasterGateway) Init(devId string, configMap map[string]interface{}
 	}
 	LastFetchTime := uint64(time.Now().UnixMilli())
 	for _, MbusPoint := range ModbusPointList {
-		if MbusPoint.Frequency < 50 {
+		if MbusPoint.Frequency < 1 {
 			return errors.New("'frequency' must grate than 50 millisecond")
 		}
 		gw.MBusDataPoints[MbusPoint.UUID] = mbus_device.MBusDataPoint{

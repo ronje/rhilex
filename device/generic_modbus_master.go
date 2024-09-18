@@ -165,7 +165,7 @@ func (mdev *GenericModbusMaster) Init(devId string, configMap map[string]interfa
 	LastFetchTime := uint64(time.Now().UnixMilli())
 	for _, ModbusPoint := range ModbusPointList {
 		// 频率不能太快
-		if ModbusPoint.Frequency < 50 {
+		if ModbusPoint.Frequency < 1 {
 			return errors.New("'frequency' must grate than 50 millisecond")
 		}
 		mdev.Registers[ModbusPoint.UUID] = &common.RegisterRW{
