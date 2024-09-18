@@ -150,7 +150,7 @@ func HandleZeroValue[V int16 | int32 | int64 | float32 | float64](v *V) *V {
 注意：如果想解析值，必须不能超过4字节，目前常见的数一般都是4字节，也许后期会有8字节，但是目前暂时不支持
 *
 */
-func ParseModbusValue(DataBlockType string, DataBlockOrder string,
+func ParseModbusValue(dataLen int, DataBlockType string, DataBlockOrder string,
 	Weight float32, byteSlice [256]byte) string {
 	// binary
 	if DataBlockType == "UTF8" {
@@ -172,13 +172,12 @@ func ParseModbusValue(DataBlockType string, DataBlockOrder string,
 			return stringReverse(string(byteSlice[:acc]))
 		}
 	}
-
+	// TODO: RAW 类型需要扩展
 	if DataBlockType == "RAW" {
-		return hex.EncodeToString(byteSlice[:8])
+		return hex.EncodeToString(byteSlice[:dataLen])
 	}
 
 	if DataBlockType == "BYTE" {
-
 		return fmt.Sprintf("%d", byteSlice[0])
 	}
 	// signed

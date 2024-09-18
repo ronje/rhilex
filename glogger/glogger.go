@@ -23,6 +23,7 @@ func StartGLogger(appId string, LogLevel string, EnableConsole bool,
 	GLogger = Logrus.WithField("appId", appId)
 	Logrus.Formatter = &logrus.JSONFormatter{
 		DisableHTMLEscape: true,
+		TimestampFormat:   "2006-01-02T15:04:05.999999999Z07:00",
 	}
 	if AppDebugMode {
 		Logrus.SetReportCaller(true)
@@ -57,6 +58,24 @@ func setLogLevel(LogLevel string) {
 		Logrus.SetLevel(logrus.TraceLevel)
 	}
 
+}
+func Info(args ...interface{}) {
+	GLogger.Info(args...)
+}
+func Infof(format string, args ...interface{}) {
+	GLogger.Infof(format, args...)
+}
+func Error(args ...interface{}) {
+	GLogger.Error(args...)
+}
+func Errorf(format string, args ...interface{}) {
+	GLogger.Errorf(format, args...)
+}
+func Debug(args ...interface{}) {
+	GLogger.Debug(args...)
+}
+func Debugf(format string, args ...interface{}) {
+	GLogger.Debugf(format, args...)
 }
 
 /*

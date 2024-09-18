@@ -304,7 +304,7 @@ func (s1200 *SIEMENS_PLC) Read() []ReadPLCRegisterValue {
 			}
 			// ValidData := [4]byte{} // 固定4字节，以后有8自己的时候再支持
 			copy(__siemensReadResult[:], rData[:db.DataSize])
-			Value := utils.ParseModbusValue(db.DataBlockType, db.DataBlockOrder,
+			Value := utils.ParseModbusValue(db.DataSize, db.DataBlockType, db.DataBlockOrder,
 				float32(*db.Weight), __siemensReadResult)
 			values = append(values, ReadPLCRegisterValue{
 				Tag:           db.Tag,
