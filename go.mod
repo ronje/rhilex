@@ -3,7 +3,7 @@ module github.com/hootrhino/rhilex
 go 1.22
 
 require (
-	github.com/GreptimeTeam/greptimedb-ingester-go v0.5.1
+	github.com/GreptimeTeam/greptimedb-ingester-go v0.5.2
 	github.com/adrianmo/go-nmea v1.10.0
 	github.com/brocaar/lorawan v0.0.0-20240507141140-a18a1037da07
 	github.com/chirpstack/chirpstack/api/go/v4 v4.9.0

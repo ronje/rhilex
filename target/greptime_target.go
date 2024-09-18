@@ -109,10 +109,14 @@ func (grep *GrepTimeDbTarget) Start(cctx typex.CCTX) error {
 
 func (grep *GrepTimeDbTarget) Status() typex.SourceState {
 	if grep.client != nil {
+		_, err := grep.client.HealthCheck(grep.Ctx)
+		if err != nil {
+			glogger.GLogger.Error(err)
+			return typex.SOURCE_DOWN
+		}
 		return typex.SOURCE_UP
 	}
-	return grep.status
-
+	return typex.SOURCE_UP
 }
 
 // To: data-Map
