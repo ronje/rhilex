@@ -142,7 +142,7 @@ func (mq *mqttOutEndTarget) To(data interface{}) (interface{}, error) {
 	if mq.client != nil {
 		switch T := data.(type) {
 		case string:
-			glogger.GLogger.Debug("MQTT Target publish:", mq.mainConfig.PubTopic, 1, false, data)
+			// glogger.GLogger.Debug("MQTT Target publish:", mq.mainConfig.PubTopic, 1, false, data)
 			token := mq.client.Publish(mq.mainConfig.PubTopic, 1, false, T)
 			if token.Error() != nil {
 				if *mq.mainConfig.CacheOfflineData {
