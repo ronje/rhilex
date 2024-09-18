@@ -16,7 +16,6 @@
 package target
 
 import (
-	"encoding/json"
 	"fmt"
 	"net"
 	"net/http"
@@ -120,24 +119,11 @@ func (ht *HTTPTarget) Status() typex.SourceState {
 
 }
 
-type HTTPTargetOutputData struct {
-	Label string `json:"label"`
-	Body  string `json:"body"`
-}
-
-func (O HTTPTargetOutputData) String() string {
-	bytes, _ := json.Marshal(O)
-	return string(bytes)
-}
 func (ht *HTTPTarget) To(data interface{}) (interface{}, error) {
 	switch T := data.(type) {
 	case string:
-		outputData := HTTPTargetOutputData{
-			Label: ht.mainConfig.PingPacket,
-			Body:  T,
-		}
-		_, err := utils.Post(ht.client, outputData.String(),
-			ht.mainConfig.Url, ht.mainConfig.Headers)
+
+		_, err := utils.Post(ht.client, T, ht.mainConfig.Url, ht.mainConfig.Headers)
 		if err != nil {
 			glogger.GLogger.Error(err)
 			if *ht.mainConfig.CacheOfflineData {

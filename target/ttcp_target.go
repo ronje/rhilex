@@ -16,7 +16,6 @@
 package target
 
 import (
-	"encoding/json"
 	"fmt"
 	"net"
 	"time"
@@ -147,16 +146,6 @@ func (ht *TTcpTarget) Status() typex.SourceState {
 	return ht.status
 }
 
-type TcpOutEndTargetOutputData struct {
-	Label string `json:"label"`
-	Body  string `json:"body"`
-}
-
-func (O TcpOutEndTargetOutputData) String() string {
-	bytes, _ := json.Marshal(O)
-	return string(bytes)
-}
-
 /*
 *
 * 透传模式：字符串和十六进制
@@ -170,11 +159,7 @@ func (ht *TTcpTarget) To(data interface{}) (interface{}, error) {
 				time.Now().Add((time.Duration(ht.mainConfig.Timeout) *
 					time.Millisecond)),
 			)
-			outputData := TcpOutEndTargetOutputData{
-				Label: ht.mainConfig.PingPacket,
-				Body:  T,
-			}
-			_, err0 := ht.client.Write([]byte(outputData.String() + "\r\n"))
+			_, err0 := ht.client.Write([]byte(T + "\r\n"))
 			ht.client.SetReadDeadline(time.Time{})
 			if err0 != nil {
 				if *ht.mainConfig.CacheOfflineData {

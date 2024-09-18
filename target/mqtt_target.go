@@ -16,7 +16,6 @@
 package target
 
 import (
-	"encoding/json"
 	"errors"
 	"fmt"
 	"time"
@@ -139,25 +138,12 @@ func (mq *mqttOutEndTarget) Details() *typex.OutEnd {
 	return mq.RuleEngine.GetOutEnd(mq.PointId)
 }
 
-type MqttOutEndTargetOutputData struct {
-	Label string `json:"label"`
-	Body  string `json:"body"`
-}
-
-func (O MqttOutEndTargetOutputData) String() string {
-	bytes, _ := json.Marshal(O)
-	return string(bytes)
-}
 func (mq *mqttOutEndTarget) To(data interface{}) (interface{}, error) {
 	if mq.client != nil {
 		switch T := data.(type) {
 		case string:
 			glogger.GLogger.Debug("MQTT Target publish:", mq.mainConfig.PubTopic, 1, false, data)
-			outputData := MqttOutEndTargetOutputData{
-				Label: mq.mainConfig.ClientId,
-				Body:  T,
-			}
-			token := mq.client.Publish(mq.mainConfig.PubTopic, 1, false, outputData.String())
+			token := mq.client.Publish(mq.mainConfig.PubTopic, 1, false, T)
 			if token.Error() != nil {
 				if *mq.mainConfig.CacheOfflineData {
 					lostcache.SaveLostCacheData(mq.PointId, lostcache.CacheDataDto{

@@ -16,7 +16,6 @@
 package target
 
 import (
-	"encoding/json"
 	"fmt"
 	"net"
 	"time"
@@ -131,16 +130,6 @@ func (ut *UUdpTarget) Status() typex.SourceState {
 
 }
 
-type UdpOutEndTargetOutputData struct {
-	Label string `json:"label"`
-	Body  string `json:"body"`
-}
-
-func (O UdpOutEndTargetOutputData) String() string {
-	bytes, _ := json.Marshal(O)
-	return string(bytes)
-}
-
 func (ut *UUdpTarget) To(data interface{}) (interface{}, error) {
 	socket, err := net.DialUDP("udp", nil, &net.UDPAddr{
 		IP:   net.ParseIP(ut.mainConfig.Host),
@@ -152,15 +141,12 @@ func (ut *UUdpTarget) To(data interface{}) (interface{}, error) {
 	defer socket.Close()
 	switch T := data.(type) {
 	case string:
-		outputData := UdpOutEndTargetOutputData{
-			Label: ut.mainConfig.PingPacket,
-			Body:  T,
-		}
+
 		socket.SetReadDeadline(
 			time.Now().Add((time.Duration(ut.mainConfig.Timeout) *
 				time.Millisecond)),
 		)
-		_, err0 := socket.Write([]byte(outputData.String() + "\r\n"))
+		_, err0 := socket.Write([]byte(T + "\r\n"))
 		socket.SetReadDeadline(time.Time{})
 		if err0 != nil {
 			if *ut.mainConfig.CacheOfflineData {
