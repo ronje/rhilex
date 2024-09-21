@@ -13,7 +13,7 @@ package typex
 
 import "github.com/hootrhino/rhilex/utils"
 
-var MainVersion string
+var MainVersion string = "0.0.0-developing"
 
 type VersionInfo struct {
 	ReleaseTime string
