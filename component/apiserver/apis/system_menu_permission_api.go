@@ -62,8 +62,8 @@ func GetDistConfigMenus(c *gin.Context, ruleEngine typex.Rhilex) {
 	linuxMenu := []SysMenuPermissionVo{
 		{Id: 1, Key: "netStatus", Access: true},
 		{Id: 3, Key: "network", Access: true},
-		{Id: 4, Key: "routing", Access: false},
-		{Id: 5, Key: "wifi", Access: true},
+		// {Id: 4, Key: "routing", Access: false}, 软路由暂时不支持
+		{Id: 5, Key: "wifi", Access: true}, // 依赖nmcli
 		{Id: 6, Key: "time", Access: true},
 		{Id: 7, Key: "firmware", Access: true},
 		{Id: 10, Key: "reboot", Access: true},
