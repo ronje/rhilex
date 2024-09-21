@@ -200,24 +200,16 @@ func (sd *genericSnmpDevice) Start(cctx typex.CCTX) error {
 				time.Sleep(50 * time.Second)
 				continue
 			}
-			if !*sd.mainConfig.CommonConfig.BatchRequest {
-				for _, snmpOid := range snmpOids {
-					if bytes, err := json.Marshal(snmpOid); err != nil {
+			if *sd.mainConfig.CommonConfig.BatchRequest {
+				if len(snmpOids) > 0 {
+					if bytes, err := json.Marshal(snmpOids); err != nil {
 						glogger.GLogger.Error(err)
 					} else {
 						glogger.GLogger.Debug(string(bytes))
 						sd.RuleEngine.WorkDevice(sd.Details(), string(bytes))
 					}
 				}
-			} else {
-				if bytes, err := json.Marshal(snmpOids); err != nil {
-					glogger.GLogger.Error(err)
-				} else {
-					glogger.GLogger.Debug(string(bytes))
-					sd.RuleEngine.WorkDevice(sd.Details(), string(bytes))
-				}
 			}
-
 		END:
 			<-ticker.C
 		}
@@ -370,6 +362,13 @@ func (sd *genericSnmpDevice) readData() ([]ReadSnmpOidValue, error) {
 				})
 			}
 			intercache.SetValue(sd.PointId, snmpOid.UUID, NewValue)
+			if !*sd.mainConfig.CommonConfig.BatchRequest {
+				if bytes, errMarshal := json.Marshal(snmpOid); errMarshal != nil {
+					glogger.GLogger.Error(errMarshal)
+				} else {
+					sd.RuleEngine.WorkDevice(sd.Details(), string(bytes))
+				}
+			}
 		}(oid)
 	}
 	wg.Wait()

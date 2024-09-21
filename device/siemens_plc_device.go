@@ -190,19 +190,12 @@ func (s1200 *SIEMENS_PLC) Start(cctx typex.CCTX) error {
 				continue
 			}
 			if !*s1200.mainConfig.CommonConfig.BatchRequest {
-
-				for _, v := range ReadPLCRegisterValues {
-					if bytes, err := json.Marshal(v); err != nil {
+				if len(ReadPLCRegisterValues) > 0 {
+					if bytes, err := json.Marshal(ReadPLCRegisterValues); err != nil {
 						glogger.GLogger.Error(err)
 					} else {
 						s1200.RuleEngine.WorkDevice(s1200.Details(), string(bytes))
 					}
-				}
-			} else {
-				if bytes, err := json.Marshal(ReadPLCRegisterValues); err != nil {
-					glogger.GLogger.Error(err)
-				} else {
-					s1200.RuleEngine.WorkDevice(s1200.Details(), string(bytes))
 				}
 			}
 		}
@@ -306,12 +299,13 @@ func (s1200 *SIEMENS_PLC) Read() []ReadPLCRegisterValue {
 			copy(__siemensReadResult[:], rData[:db.DataSize])
 			Value := utils.ParseModbusValue(db.DataSize, db.DataBlockType, db.DataBlockOrder,
 				float32(*db.Weight), __siemensReadResult)
-			values = append(values, ReadPLCRegisterValue{
+			PlcReadReg := ReadPLCRegisterValue{
 				Tag:           db.Tag,
 				Alias:         db.Alias,
 				Value:         Value,
 				LastFetchTime: lastTimes,
-			})
+			}
+			values = append(values, PlcReadReg)
 			intercache.SetValue(s1200.PointId, uuid, intercache.CacheValue{
 				UUID:          uuid,
 				Status:        0,
@@ -319,6 +313,13 @@ func (s1200 *SIEMENS_PLC) Read() []ReadPLCRegisterValue {
 				Value:         Value,
 				ErrMsg:        "",
 			})
+			if !*s1200.mainConfig.CommonConfig.BatchRequest {
+				if bytes, errMarshal := json.Marshal(PlcReadReg); errMarshal != nil {
+					glogger.GLogger.Error(errMarshal)
+				} else {
+					s1200.RuleEngine.WorkDevice(s1200.Details(), string(bytes))
+				}
+			}
 		}
 		if *db.Frequency < 10 {
 			*db.Frequency = 100 // 不能太快
