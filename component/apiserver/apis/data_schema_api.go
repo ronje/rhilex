@@ -40,6 +40,8 @@ func InitDataSchemaApi() {
 		schemaApi.DELETE(("/properties/del"), server.AddRoute(DeleteIotSchemaProperty))
 		schemaApi.GET(("/properties/list"), server.AddRoute(IotSchemaPropertyPageList))
 		schemaApi.GET(("/properties/detail"), server.AddRoute(IotSchemaPropertyDetail))
+		// 模板
+		schemaApi.POST(("/genTemplate"), server.AddRoute(GenerateSchemaTemplate))
 
 	}
 }
