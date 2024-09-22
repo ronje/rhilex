@@ -513,6 +513,12 @@ func (e *RuleEngine) InitDeviceTypeManager() error {
 			NewDevice: device.NewTencentIoTGateway,
 		},
 	)
+	e.DeviceTypeManager.Register(typex.ITHINGS_IOTHUB_GATEWAY,
+		&typex.XConfig{
+			Engine:    e,
+			NewDevice: device.NewIThingsGateway,
+		},
+	)
 	e.DeviceTypeManager.Register(typex.GENERIC_HTTP_DEVICE,
 		&typex.XConfig{
 			Engine:    e,

@@ -161,7 +161,7 @@ func GenSecretDeviceInfo(hmacType string, productID string, deviceName string, d
 	clientID, userName, password string) {
 	var (
 		connID = utils.Random(5, 1)
-		expiry = time.Now().AddDate(0, 0, 10).Unix()
+		expiry = time.Now().AddDate(10, 10, 10).Unix()
 		token  string
 		pwd, _ = base64.StdEncoding.DecodeString(deviceSecret)
 	)

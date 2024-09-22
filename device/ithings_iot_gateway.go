@@ -46,10 +46,9 @@ type IThingsGatewayConfig struct {
 	ProductId      string `json:"productId" validate:"required"`      //产品名
 	DeviceName     string `json:"deviceName" validate:"required"`     //设备名
 	DevicePsk      string `json:"devicePsk" validate:"required"`      //秘钥
-	ClientId       string `json:"clientId" validate:"required"`       //客户端ID
 }
 type IThingsGatewayMainConfig struct {
-	CommonConfig IThingsGatewayConfig `json:"tencentConfig" validate:"required"` // 通用配置
+	CommonConfig IThingsGatewayConfig `json:"ithingsConfig" validate:"required"` // 通用配置
 }
 type IThingsSubDevice struct {
 	ProductID    string `json:"productID"`
@@ -83,11 +82,11 @@ func NewIThingsGateway(e typex.Rhilex) typex.XDevice {
 	hd.RuleEngine = e
 	hd.mainConfig = IThingsGatewayMainConfig{
 		CommonConfig: IThingsGatewayConfig{
-			Mode:       "DEVICE",
-			ProductId:  "",
-			DeviceName: "",
-			DevicePsk:  "",
-			ClientId:   "",
+			ServerEndpoint: "tcp://127.0.0.1:1883",
+			Mode:           "DEVICE",
+			ProductId:      "",
+			DeviceName:     "",
+			DevicePsk:      "",
 		},
 	}
 	hd.IThingsSubDevices = make([]IThingsSubDevice, 0)
@@ -145,7 +144,7 @@ func (hd *IThingsGateway) Start(cctx typex.CCTX) error {
 		hd.mainConfig.CommonConfig.ProductId, hd.mainConfig.CommonConfig.DeviceName)
 
 	var connectHandler mqtt.OnConnectHandler = func(client mqtt.Client) {
-		glogger.GLogger.Infof("IOTHUB Connected Success")
+		glogger.GLogger.Infof("IThings Connected Success")
 		// 属性下发
 		if err := hd.client.Subscribe(hd.propertyDownTopic, 1, func(c mqtt.Client, msg mqtt.Message) {
 			hd.RuleEngine.WorkDevice(hd.Details(), string(msg.Payload()))
@@ -174,14 +173,14 @@ func (hd *IThingsGateway) Start(cctx typex.CCTX) error {
 				glogger.GLogger.Error(token.Error())
 			} else {
 				// Get Topology: {"type": "describe_sub_devices"}
-				glogger.GLogger.Info("Connect iothub with Gateway Mode")
+				glogger.GLogger.Info("Connect IThings with Gateway Mode")
 				hd.client.Publish(hd.topologyTopicUp, 1, false, `{"type": "describe_sub_devices"}`)
 			}
 		}
 	}
 
 	var connectLostHandler mqtt.ConnectionLostHandler = func(client mqtt.Client, err error) {
-		glogger.GLogger.Warnf("IOTHUB Disconnect: %v, %v try to reconnect", err, hd.status)
+		glogger.GLogger.Warnf("IThings Disconnect: %v, %v try to reconnect", err, hd.status)
 	}
 	opts := mqtt.NewClientOptions()
 	opts.AddBroker(hd.mainConfig.CommonConfig.ServerEndpoint)
@@ -202,22 +201,6 @@ func (hd *IThingsGateway) Start(cctx typex.CCTX) error {
 	}
 	hd.status = typex.DEV_UP
 	return nil
-}
-
-type IthingsMethod string
-
-const (
-	__IThings_ONLINE   IthingsMethod = "online"
-	__IThings_OFFLINE  IthingsMethod = "offline"
-	__IThings_TOPOLOGY IthingsMethod = "describeSubDevices"
-)
-
-type IThingsSubDeviceMessage struct {
-	Method  Method                         `json:"method"`
-	Payload IThingsSubDeviceMessagePayload `json:"payload"`
-}
-type IThingsSubDeviceMessagePayload struct {
-	Devices []IThingsSubDevice `json:"devices"`
 }
 
 // 设备当前状态
@@ -271,16 +254,12 @@ func (hd *IThingsGateway) OnWrite(cmd []byte, b []byte) (int, error) {
 	return 0, nil
 }
 
-func (hd *IThingsGateway) subscribe(topic string) error {
-	token := hd.client.Subscribe(topic, 1, func(c mqtt.Client, msg mqtt.Message) {
-		glogger.GLogger.Debug("IThingsGateway: ", topic, msg)
-		hd.RuleEngine.WorkDevice(hd.Details(), string(msg.Payload()))
-	})
-	if token.Error() != nil {
-		return token.Error()
-	} else {
-		return nil
-	}
+type IThingsSubDeviceMessage struct {
+	Method  Method                         `json:"method"`
+	Payload IThingsSubDeviceMessagePayload `json:"payload"`
+}
+type IThingsSubDeviceMessagePayload struct {
+	Devices []IThingsSubDevice `json:"devices"`
 }
 
 // IThingsHubMQTTAuthInfo 腾讯云 Iot Hub MQTT 认证信息
