@@ -152,15 +152,18 @@ func _Template_TEMP_HUMIDITY(schemaId string) error {
 	}
 	uuid1 := utils.MakeUUID("PROP")
 	uuid2 := utils.MakeUUID("PROP")
+	uuid3 := utils.MakeUUID("PROP")
 	sql := `
 INSERT INTO m_iot_properties (created_at, schema_id, uuid, label, name, type, rw, unit, rule, description)
 VALUES
+(CURRENT_TIMESTAMP, '%s', '%s', '设备id', 'device_id', 'STRING', 'R', '-',
+	'{"defaultValue":"0","max":0,"min":0,"round":2}', '设备id'),
 (CURRENT_TIMESTAMP, '%s', '%s', '温度', 'temperature', 'FLOAT', 'R', '℃',
 	'{"defaultValue":"0","max":0,"min":0,"round":2}', '温度值'),
 (CURRENT_TIMESTAMP, '%s', '%s', '湿度', 'humidity', 'FLOAT', 'R', '%%',
 	'{"defaultValue":"0","max":0,"min":0,"round":2}', '湿度值');
 `
-	return tx.Exec(fmt.Sprintf(sql, schemaId, uuid1, schemaId, uuid2)).Error
+	return tx.Exec(fmt.Sprintf(sql, schemaId, uuid1, schemaId, uuid2, schemaId, uuid3)).Error
 }
 
 // SWITCH_STATUS
@@ -175,11 +178,14 @@ func _Template_SWITCH_STATUS(schemaId string) error {
 	sql := `
 INSERT INTO m_iot_properties (created_at, schema_id, uuid, label, name, type, rw, unit, rule, description)
 VALUES
+(CURRENT_TIMESTAMP, '%s', '%s', '设备id', 'device_id', 'STRING', 'R', '-',
+	'{"defaultValue":"0","max":0,"min":0,"round":2}', '设备id'),
 (CURRENT_TIMESTAMP, '%s', '%s', '开关状态', 'status', 'BOOL', 'RW', '-',
     '{"defaultValue":"0","max":0,"min":0,"trueLabel":"开","falseLabel":"关","round":2}', 'true 为开, false 为关');
 `
 	uuid1 := utils.MakeUUID("PROP")
-	return tx.Exec(fmt.Sprintf(sql, schemaId, uuid1)).Error
+	uuid2 := utils.MakeUUID("PROP")
+	return tx.Exec(fmt.Sprintf(sql, schemaId, uuid1, schemaId, uuid2)).Error
 
 }
 
@@ -196,6 +202,8 @@ func _Template_WATER_QUALITY(schemaId string) error {
 	sql := `
 INSERT INTO m_iot_properties (created_at, schema_id, uuid, label, name, type, rw, unit, rule, description)
 VALUES
+(CURRENT_TIMESTAMP, '%s', '%s', '设备id', 'device_id', 'STRING', 'R', '-',
+	'{"defaultValue":"0","max":0,"min":0,"round":2}', '设备id'),
 (CURRENT_TIMESTAMP, '%s', '%s', 'pH值', 'ph', 'FLOAT', 'R', 'mol/μl',
     '{"defaultValue":"0","max":0,"min":0,"round":2}', 'pH值'),
 (CURRENT_TIMESTAMP, '%s', '%s', '浊度', 'turbidity', 'FLOAT', 'R', 'NTU',
@@ -212,12 +220,14 @@ VALUES
 	uuid3 := utils.MakeUUID("PROP")
 	uuid4 := utils.MakeUUID("PROP")
 	uuid5 := utils.MakeUUID("PROP")
+	uuid6 := utils.MakeUUID("PROP")
 	return tx.Exec(fmt.Sprintf(sql,
 		schemaId, uuid1,
 		schemaId, uuid2,
 		schemaId, uuid3,
 		schemaId, uuid4,
-		schemaId, uuid5)).Error
+		schemaId, uuid5,
+		schemaId, uuid6)).Error
 }
 
 // AIR_QUALITY
@@ -233,6 +243,8 @@ func _Template_AIR_QUALITY(schemaId string) error {
 	sql := `
 INSERT INTO m_iot_properties (created_at, schema_id, uuid, label, name, type, rw, unit, rule, description)
 VALUES
+(CURRENT_TIMESTAMP, '%s', '%s', '设备id', 'device_id', 'STRING', 'R', '-',
+	'{"defaultValue":"0","max":0,"min":0,"round":2}', '设备id'),
 (CURRENT_TIMESTAMP, '%s', '%s', 'PM2.5浓度', 'pm25', 'FLOAT', 'R', 'μg/m³',
     '{"defaultValue":"0","max":0,"min":0,"round":2}' , 'PM2.5浓度'),
 (CURRENT_TIMESTAMP, '%s', '%s', 'PM10浓度', 'pm10', 'FLOAT', 'R', 'μg/m³',
@@ -252,13 +264,15 @@ VALUES
 	uuid4 := utils.MakeUUID("PROP")
 	uuid5 := utils.MakeUUID("PROP")
 	uuid6 := utils.MakeUUID("PROP")
+	uuid7 := utils.MakeUUID("PROP")
 	return tx.Exec(fmt.Sprintf(sql,
 		schemaId, uuid1,
 		schemaId, uuid2,
 		schemaId, uuid3,
 		schemaId, uuid4,
 		schemaId, uuid5,
-		schemaId, uuid6)).Error
+		schemaId, uuid6,
+		schemaId, uuid7)).Error
 }
 
 // MOTION_SENSOR
@@ -274,6 +288,8 @@ func _Template_MOTION_SENSOR(schemaId string) error {
 	sql := `
 INSERT INTO m_iot_properties (created_at, schema_id, uuid, label, name, type, rw, unit, rule, description)
 VALUES
+(CURRENT_TIMESTAMP, '%s', '%s', '设备id', 'device_id', 'STRING', 'R', '-',
+	'{"defaultValue":"0","max":0,"min":0,"round":2}', '设备id'),
 (CURRENT_TIMESTAMP, '%s', '%s', '运动状态', 'detected', 'BOOL', 'R', '-',
     '{"defaultValue":"0","max":0,"min":0,"round":2}', '是否检测到运动'),
 (CURRENT_TIMESTAMP, '%s', '%s', '运动强度', 'intensity', 'INTEGER', 'R', '-',
@@ -284,10 +300,12 @@ VALUES
 	uuid1 := utils.MakeUUID("PROP")
 	uuid2 := utils.MakeUUID("PROP")
 	uuid3 := utils.MakeUUID("PROP")
+	uuid4 := utils.MakeUUID("PROP")
 	return tx.Exec(fmt.Sprintf(sql,
 		schemaId, uuid1,
 		schemaId, uuid2,
-		schemaId, uuid3)).Error
+		schemaId, uuid3,
+		schemaId, uuid4)).Error
 }
 
 // SMART_METER
@@ -303,6 +321,8 @@ func _Template_SMART_METER(schemaId string) error {
 	sql := `
 INSERT INTO m_iot_properties (created_at, schema_id, uuid, label, name, type, rw, unit, rule, description)
 VALUES
+(CURRENT_TIMESTAMP, '%s', '%s', '设备id', 'device_id', 'STRING', 'R', '-',
+	'{"defaultValue":"0","max":0,"min":0,"round":2}', '设备id'),
 (CURRENT_TIMESTAMP, '%s', '%s', '能源消耗', 'energy_consumption', 'FLOAT', 'R', 'kWh',
    '{"defaultValue":"0","max":0,"min":0,"round":2}', '能源消耗'),
 (CURRENT_TIMESTAMP, '%s', '%s', '电流', 'current', 'FLOAT', 'R', 'A',
@@ -316,11 +336,13 @@ VALUES
 	uuid2 := utils.MakeUUID("PROP")
 	uuid3 := utils.MakeUUID("PROP")
 	uuid4 := utils.MakeUUID("PROP")
+	uuid5 := utils.MakeUUID("PROP")
 	return tx.Exec(fmt.Sprintf(sql,
 		schemaId, uuid1,
 		schemaId, uuid2,
 		schemaId, uuid3,
-		schemaId, uuid4)).Error
+		schemaId, uuid4,
+		schemaId, uuid5)).Error
 }
 
 // SOIL_MOISTURE
@@ -336,6 +358,8 @@ func _Template_SOIL_MOISTURE(schemaId string) error {
 	sql := `
 INSERT INTO m_iot_properties (created_at, schema_id, uuid, label, name, type, rw, unit, rule, description)
 VALUES
+(CURRENT_TIMESTAMP, '%s', '%s', '设备id', 'device_id', 'STRING', 'R', '-',
+	'{"defaultValue":"0","max":0,"min":0,"round":2}', '设备id'),
 (CURRENT_TIMESTAMP, '%s', '%s', '土壤湿度', 'moisture', 'FLOAT', 'R', '%%',
     '{"defaultValue":"0","max":0,"min":0,"round":2}', '土壤湿度'),
 (CURRENT_TIMESTAMP, '%s', '%s', '土壤温度', 'temperature', 'FLOAT', 'R', '℃',
@@ -346,10 +370,12 @@ VALUES
 	uuid1 := utils.MakeUUID("PROP")
 	uuid2 := utils.MakeUUID("PROP")
 	uuid3 := utils.MakeUUID("PROP")
+	uuid4 := utils.MakeUUID("PROP")
 	return tx.Exec(fmt.Sprintf(sql,
 		schemaId, uuid1,
 		schemaId, uuid2,
-		schemaId, uuid3)).Error
+		schemaId, uuid3,
+		schemaId, uuid4)).Error
 }
 
 // GPS_TRACKER
@@ -365,6 +391,7 @@ func _Template_GPS_TRACKER(schemaId string) error {
 	sql := `
 INSERT INTO m_iot_properties (created_at, schema_id, uuid, label, name, type, rw, unit, rule, description)
 VALUES
+(CURRENT_TIMESTAMP, '%s', '%s', '设备id', 'device_id', 'STRING', 'R', '-', '{"defaultValue":"0","max":0,"min":0,"round":2}', '设备id'),
 (CURRENT_TIMESTAMP, '%s', '%s', '纬度', 'latitude', 'FLOAT', 'R', '°', '{"defaultValue":"0","max":0,"min":0,"round":2}', '设备的纬度'),
 (CURRENT_TIMESTAMP, '%s', '%s', '经度', 'longitude', 'FLOAT', 'R', '°', '{"defaultValue":"0","max":0,"min":0,"round":2}', '设备的经度'),
 (CURRENT_TIMESTAMP, '%s', '%s', '海拔', 'altitude', 'FLOAT', 'R', '米', '{"defaultValue":"0","max":0,"min":0,"round":2}', '设备的海拔高度'),
@@ -376,12 +403,14 @@ VALUES
 	uuid3 := utils.MakeUUID("PROP")
 	uuid4 := utils.MakeUUID("PROP")
 	uuid5 := utils.MakeUUID("PROP")
+	uuid6 := utils.MakeUUID("PROP")
 	return tx.Exec(fmt.Sprintf(sql,
 		schemaId, uuid1,
 		schemaId, uuid2,
 		schemaId, uuid3,
 		schemaId, uuid4,
-		schemaId, uuid5)).Error
+		schemaId, uuid5,
+		schemaId, uuid6)).Error
 }
 
 // SMOKE_DETECTOR
@@ -397,6 +426,7 @@ func _Template_SMOKE_DETECTOR(schemaId string) error {
 	sql := `
 INSERT INTO m_iot_properties (created_at, schema_id, uuid, label, name, type, rw, unit, rule, description)
 VALUES
+(CURRENT_TIMESTAMP, '%s', '%s', '设备id', 'device_id', 'STRING', 'R', '-', '{"defaultValue":"0","max":0,"min":0,"round":2}', '设备id'),
 (CURRENT_TIMESTAMP, '%s', '%s', '烟雾检测状态', 'smoke_detected', 'BOOLEAN', 'R', '-', '{"defaultValue":"0","max":0,"min":0,"round":2}', '是否检测到烟雾'),
 (CURRENT_TIMESTAMP, '%s', '%s', '一氧化碳水平', 'co_level', 'FLOAT', 'R', 'ppm', '{"defaultValue":"0","max":0,"min":0,"round":2}', '一氧化碳浓度'),
 (CURRENT_TIMESTAMP, '%s', '%s', '电池电量百分比', 'battery_level', 'FLOAT', 'R', '%%', '{"defaultValue":"0","max":0,"min":0,"round":2}', '电池电量百分比'),
@@ -406,11 +436,13 @@ VALUES
 	uuid2 := utils.MakeUUID("PROP")
 	uuid3 := utils.MakeUUID("PROP")
 	uuid4 := utils.MakeUUID("PROP")
+	uuid5 := utils.MakeUUID("PROP")
 	return tx.Exec(fmt.Sprintf(sql,
 		schemaId, uuid1,
 		schemaId, uuid2,
 		schemaId, uuid3,
-		schemaId, uuid4)).Error
+		schemaId, uuid4,
+		schemaId, uuid5)).Error
 }
 
 // SMART_LOCK
@@ -426,6 +458,7 @@ func _Template_SMART_LOCK(schemaId string) error {
 	sql := `
 INSERT INTO m_iot_properties (created_at, schema_id, uuid, label, name, type, rw, unit, rule, description)
 VALUES
+(CURRENT_TIMESTAMP, '%s', '%s', '设备id', 'device_id', 'STRING', 'R', '-', '{"defaultValue":"0","max":0,"min":0,"round":2}', '设备id'),
 (CURRENT_TIMESTAMP, '%s', '%s', '锁状态', 'lock_status', 'BOOLEAN', 'RW', '-', '{"defaultValue":"0","max":0,"min":0,"round":2}', '锁的状态'),
 (CURRENT_TIMESTAMP, '%s', '%s', '访问方法', 'access_method', 'VARCHAR(20)', 'RW', '-', '{"defaultValue":"0","max":0,"min":0,"round":2}', '访问方式'),
 (CURRENT_TIMESTAMP, '%s', '%s', '操作用户ID', 'user_id', 'VARCHAR(50)', 'RW', '-', '{"defaultValue":"0","max":0,"min":0,"round":2}', '操作用户ID'),
@@ -435,11 +468,13 @@ VALUES
 	uuid2 := utils.MakeUUID("PROP")
 	uuid3 := utils.MakeUUID("PROP")
 	uuid4 := utils.MakeUUID("PROP")
+	uuid5 := utils.MakeUUID("PROP")
 	return tx.Exec(fmt.Sprintf(sql,
 		schemaId, uuid1,
 		schemaId, uuid2,
 		schemaId, uuid3,
-		schemaId, uuid4)).Error
+		schemaId, uuid4,
+		schemaId, uuid5)).Error
 }
 
 // SIX_AXIS_ACCELEROMETER
@@ -455,6 +490,7 @@ func _Template_SIX_AXIS_ACCELEROMETER(schemaId string) error {
 	sql := `
 INSERT INTO m_iot_properties (created_at, schema_id, uuid, label, name, type, rw, unit, rule, description)
 VALUES
+(CURRENT_TIMESTAMP, '%s', '%s', '设备id', 'device_id', 'STRING', 'R', '-', '{"defaultValue":"0","max":0,"min":0,"round":2}', '设备id'),
 (CURRENT_TIMESTAMP, '%s', '%s', 'X轴加速度', 'accel_x', 'FLOAT', 'R', 'g', '{"defaultValue":"0","max":0,"min":0,"round":2}', 'X轴方向的加速度'),
 (CURRENT_TIMESTAMP, '%s', '%s', 'Y轴加速度', 'accel_y', 'FLOAT', 'R', 'g', '{"defaultValue":"0","max":0,"min":0,"round":2}', 'Y轴方向的加速度'),
 (CURRENT_TIMESTAMP, '%s', '%s', 'Z轴加速度', 'accel_z', 'FLOAT', 'R', 'g', '{"defaultValue":"0","max":0,"min":0,"round":2}', 'Z轴方向的加速度'),
@@ -472,6 +508,7 @@ VALUES
 	uuid6 := utils.MakeUUID("PROP")
 	uuid7 := utils.MakeUUID("PROP")
 	uuid8 := utils.MakeUUID("PROP")
+	uuid9 := utils.MakeUUID("PROP")
 	return tx.Exec(fmt.Sprintf(sql,
 		schemaId, uuid1,
 		schemaId, uuid2,
@@ -480,5 +517,6 @@ VALUES
 		schemaId, uuid5,
 		schemaId, uuid6,
 		schemaId, uuid7,
-		schemaId, uuid8)).Error
+		schemaId, uuid8,
+		schemaId, uuid9)).Error
 }
