@@ -622,8 +622,8 @@ func GetTemplateFields(c *gin.Context, ruleEngine typex.Rhilex) {
 }
 
 type TemplateSensorType struct {
-	Label string
-	Value string
+	Label string `json:"label"`
+	Value string `json:"value"`
 }
 
 func GetTemplates(c *gin.Context, ruleEngine typex.Rhilex) {
