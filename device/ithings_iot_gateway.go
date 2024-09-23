@@ -22,6 +22,7 @@ import (
 	"time"
 
 	mqtt "github.com/eclipse/paho.mqtt.golang"
+	"github.com/google/uuid"
 	"github.com/hootrhino/rhilex/device/ithings"
 	"github.com/hootrhino/rhilex/glogger"
 	"github.com/hootrhino/rhilex/typex"
@@ -300,8 +301,35 @@ func (hd *IThingsGateway) OnWrite(cmd []byte, b []byte) (int, error) {
 		hd.client.Publish(hd.propertyUpTopic, 1, false, msg)
 		goto END
 	}
+	if Cmd == "PropertyReport" {
+		params := map[string]interface{}{}
+		if errUnmarshal := json.Unmarshal(b, &params); errUnmarshal != nil {
+			return 0, errUnmarshal
+		}
+		IthingsPropertyReport := IthingsPropertyReport{
+			Method:    "report",
+			MsgToken:  uuid.NewString(),
+			Timestamp: time.Now().UnixMilli(),
+			Params:    params,
+		}
+		msg := fmt.Sprintf(PropertyResp, IthingsPropertyReport.String())
+		hd.client.Publish(hd.propertyUpTopic, 1, false, msg)
+		goto END
+	}
 END:
 	return 0, nil
+}
+
+type IthingsPropertyReport struct {
+	Method    string                 `json:"method"`
+	MsgToken  string                 `json:"msgToken"`
+	Timestamp int64                  `json:"timestamp"`
+	Params    map[string]interface{} `json:"params"`
+}
+
+func (O IthingsPropertyReport) String() string {
+	bytes, _ := json.Marshal(O)
+	return string(bytes)
 }
 
 type IThingsSubDeviceMessage struct {

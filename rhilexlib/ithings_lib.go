@@ -16,6 +16,8 @@
 package rhilexlib
 
 import (
+	"encoding/json"
+
 	"github.com/hootrhino/rhilex/typex"
 
 	lua "github.com/hootrhino/gopher-lua"
@@ -102,6 +104,38 @@ func IthingsPropertyReplyFailure(rx typex.Rhilex) func(*lua.LState) int {
 		if Device != nil {
 			if Device.Device != nil {
 				_, err := Device.Device.OnWrite([]byte("PropertyReplyFailure"), []byte(token))
+				if err != nil {
+					stateStack.Push(lua.LString(err.Error()))
+					return 1
+				}
+			}
+		}
+		stateStack.Push(lua.LNil)
+		return 1
+	}
+}
+
+/**
+ * 上传属性
+ *
+ */
+func IthingsPropertyReport(rx typex.Rhilex) func(*lua.LState) int {
+	return func(stateStack *lua.LState) int {
+		uuid := stateStack.ToString(2)
+		paramsTable := stateStack.ToTable(3)
+		params := map[string]interface{}{}
+		paramsTable.ForEach(func(k, v lua.LValue) {
+			params[k.String()] = v
+		})
+		Device := rx.GetDevice(uuid)
+		if Device != nil {
+			if Device.Device != nil {
+				bytes, errMarshal := json.Marshal(params)
+				if errMarshal != nil {
+					stateStack.Push(lua.LString(errMarshal.Error()))
+					return 1
+				}
+				_, err := Device.Device.OnWrite([]byte("PropertyReport"), []byte(bytes))
 				if err != nil {
 					stateStack.Push(lua.LString(err.Error()))
 					return 1

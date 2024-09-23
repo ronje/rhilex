@@ -292,6 +292,7 @@ func LoadAppLibGroup(app *Application, e typex.Rhilex) {
 			"ActionReplyFailure":   rhilexlib.IthingsActionReplyFailure(e),
 			"PropertyReplySuccess": rhilexlib.IthingsPropertyReplySuccess(e),
 			"PropertyReplyFailure": rhilexlib.IthingsPropertyReplyFailure(e),
+			"PropertyReport":       rhilexlib.IthingsPropertyReport(e),
 		}
 		AddAppLibToGroup(app, e, "ithings", Funcs)
 	}

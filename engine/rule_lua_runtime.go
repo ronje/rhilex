@@ -259,6 +259,7 @@ func LoadRuleLibGroup(r *typex.Rule, e typex.Rhilex) {
 			"ActionReplyFailure":   rhilexlib.IthingsActionReplyFailure(e),
 			"PropertyReplySuccess": rhilexlib.IthingsPropertyReplySuccess(e),
 			"PropertyReplyFailure": rhilexlib.IthingsPropertyReplyFailure(e),
+			"PropertyReport":       rhilexlib.IthingsPropertyReport(e),
 		}
 		AddRuleLibToGroup(r, e, "ithings", Funcs)
 	}
