@@ -73,6 +73,7 @@ func RecoverNew(c *gin.Context, ruleEngine typex.Rhilex) {
 		return
 	}
 	c.JSON(common.HTTP_OK, common.Ok())
+	ossupport.StartRecoverProcess()
 }
 
 /*
