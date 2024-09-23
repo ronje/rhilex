@@ -383,9 +383,9 @@ func _Template_GPS_TRACKER(schemaId string) error {
 	tx := interdb.DB()
 	count := int64(0)
 	tx.Model(model.MIotProperty{}).Where("schema_id = ? and (name=? or name=? or name=? or name=? or name=?)",
-		schemaId, "latitude", "longitude", "altitude", "speed", "battery_level").Count(&count)
+		schemaId, "latitude", "longitude", "altitude", "speed", "battery").Count(&count)
 	if count > 0 {
-		return fmt.Errorf("Already exists fields :[latitude, longitude, altitude, speed, battery_level]")
+		return fmt.Errorf("Already exists fields :[latitude, longitude, altitude, speed, battery]")
 	}
 
 	sql := `
@@ -396,7 +396,7 @@ VALUES
 (CURRENT_TIMESTAMP, '%s', '%s', '经度', 'longitude', 'FLOAT', 'R', '°', '{"defaultValue":"0","max":0,"min":0,"round":2}', '设备的经度'),
 (CURRENT_TIMESTAMP, '%s', '%s', '海拔', 'altitude', 'FLOAT', 'R', '米', '{"defaultValue":"0","max":0,"min":0,"round":2}', '设备的海拔高度'),
 (CURRENT_TIMESTAMP, '%s', '%s', '速度', 'speed', 'FLOAT', 'R', 'km/h', '{"defaultValue":"0","max":0,"min":0,"round":2}', '设备移动速度'),
-(CURRENT_TIMESTAMP, '%s', '%s', '电池电量百分比', 'battery_level', 'FLOAT', 'R', '%%', '{"defaultValue":"0","max":0,"min":0,"round":2}', '电池电量百分比');
+(CURRENT_TIMESTAMP, '%s', '%s', '电池电量百分比', 'battery', 'FLOAT', 'R', '%%', '{"defaultValue":"0","max":0,"min":0,"round":2}', '电池电量百分比');
 `
 	uuid1 := utils.MakeUUID("PROP")
 	uuid2 := utils.MakeUUID("PROP")
@@ -418,9 +418,9 @@ func _Template_SMOKE_DETECTOR(schemaId string) error {
 	tx := interdb.DB()
 	count := int64(0)
 	tx.Model(model.MIotProperty{}).Where("schema_id = ? and (name=? or name=? or name=? or name=? or name=?)",
-		schemaId, "smoke_detected", "co_level", "battery_level", "last_tested").Count(&count)
+		schemaId, "smoke_detected", "co_level", "battery", "last_tested").Count(&count)
 	if count > 0 {
-		return fmt.Errorf("Already exists fields :[smoke_detected, co_level, battery_level, last_tested]")
+		return fmt.Errorf("Already exists fields :[smoke_detected, co_level, battery, last_tested]")
 	}
 
 	sql := `
@@ -429,7 +429,7 @@ VALUES
 (CURRENT_TIMESTAMP, '%s', '%s', '设备id', 'device_id', 'STRING', 'R', '-', '{"defaultValue":"0","max":0,"min":0,"round":2}', '设备id'),
 (CURRENT_TIMESTAMP, '%s', '%s', '烟雾检测状态', 'smoke_detected', 'BOOLEAN', 'R', '-', '{"defaultValue":"0","max":0,"min":0,"round":2}', '是否检测到烟雾'),
 (CURRENT_TIMESTAMP, '%s', '%s', '一氧化碳水平', 'co_level', 'FLOAT', 'R', 'ppm', '{"defaultValue":"0","max":0,"min":0,"round":2}', '一氧化碳浓度'),
-(CURRENT_TIMESTAMP, '%s', '%s', '电池电量百分比', 'battery_level', 'FLOAT', 'R', '%%', '{"defaultValue":"0","max":0,"min":0,"round":2}', '电池电量百分比'),
+(CURRENT_TIMESTAMP, '%s', '%s', '电池电量百分比', 'battery', 'FLOAT', 'R', '%%', '{"defaultValue":"0","max":0,"min":0,"round":2}', '电池电量百分比'),
 (CURRENT_TIMESTAMP, '%s', '%s', '上次测试时间', 'last_tested', 'TIMESTAMP', 'R', '-', '{"defaultValue":"0","max":0,"min":0,"round":2}', '上次测试时间');
 `
 	uuid1 := utils.MakeUUID("PROP")
@@ -450,9 +450,9 @@ func _Template_SMART_LOCK(schemaId string) error {
 	tx := interdb.DB()
 	count := int64(0)
 	tx.Model(model.MIotProperty{}).Where("schema_id = ? and (name=? or name=? or name=? or name=? or name=?)",
-		schemaId, "lock_status", "access_method", "user_id", "battery_level").Count(&count)
+		schemaId, "lock_status", "access_method", "user_id", "battery").Count(&count)
 	if count > 0 {
-		return fmt.Errorf("Already exists fields :[lock_status, access_method, user_id, battery_level]")
+		return fmt.Errorf("Already exists fields :[lock_status, access_method, user_id, battery]")
 	}
 
 	sql := `
@@ -461,8 +461,8 @@ VALUES
 (CURRENT_TIMESTAMP, '%s', '%s', '设备id', 'device_id', 'STRING', 'R', '-', '{"defaultValue":"0","max":0,"min":0,"round":2}', '设备id'),
 (CURRENT_TIMESTAMP, '%s', '%s', '锁状态', 'lock_status', 'BOOLEAN', 'RW', '-', '{"defaultValue":"0","max":0,"min":0,"round":2}', '锁的状态'),
 (CURRENT_TIMESTAMP, '%s', '%s', '访问方法', 'access_method', 'VARCHAR(20)', 'RW', '-', '{"defaultValue":"0","max":0,"min":0,"round":2}', '访问方式'),
-(CURRENT_TIMESTAMP, '%s', '%s', '操作用户ID', 'user_id', 'VARCHAR(50)', 'RW', '-', '{"defaultValue":"0","max":0,"min":0,"round":2}', '操作用户ID'),
-(CURRENT_TIMESTAMP, '%s', '%s', '电池电量百分比', 'battery_level', 'FLOAT', 'R', '%%', '{"defaultValue":"0","max":0,"min":0,"round":2}', '电池电量百分比');
+(CURRENT_TIMESTAMP, '%s', '%s', '操作用户ID', 'user_id', 'STRING', 'RW', '-', '{"defaultValue":"0","max":0,"min":0,"round":2}', '操作用户ID'),
+(CURRENT_TIMESTAMP, '%s', '%s', '电池电量百分比', 'battery', 'FLOAT', 'R', '%%', '{"defaultValue":"0","max":0,"min":0,"round":2}', '电池电量百分比');
 `
 	uuid1 := utils.MakeUUID("PROP")
 	uuid2 := utils.MakeUUID("PROP")
@@ -482,9 +482,9 @@ func _Template_SIX_AXIS_ACCELEROMETER(schemaId string) error {
 	tx := interdb.DB()
 	count := int64(0)
 	tx.Model(model.MIotProperty{}).Where("schema_id = ? and (name=? or name=? or name=? or name=? or name=? or name=? or name=?)",
-		schemaId, "accel_x", "accel_y", "accel_z", "gyro_x", "gyro_y", "gyro_z", "temperature", "battery_level").Count(&count)
+		schemaId, "accel_x", "accel_y", "accel_z", "gyro_x", "gyro_y", "gyro_z", "temperature", "battery").Count(&count)
 	if count > 0 {
-		return fmt.Errorf("Already exists fields :[accel_x, accel_y, accel_z, gyro_x, gyro_y, gyro_z, temperature, battery_level]")
+		return fmt.Errorf("Already exists fields :[accel_x, accel_y, accel_z, gyro_x, gyro_y, gyro_z, temperature, battery]")
 	}
 
 	sql := `
@@ -498,7 +498,7 @@ VALUES
 (CURRENT_TIMESTAMP, '%s', '%s', 'Y轴角速度', 'gyro_y', 'FLOAT', 'R', 'deg/s', '{"defaultValue":"0","max":0,"min":0,"round":2}', 'Y轴方向的角速度'),
 (CURRENT_TIMESTAMP, '%s', '%s', 'Z轴角速度', 'gyro_z', 'FLOAT', 'R', 'deg/s', '{"defaultValue":"0","max":0,"min":0,"round":2}', 'Z轴方向的角速度'),
 (CURRENT_TIMESTAMP, '%s', '%s', '传感器温度', 'temperature', 'FLOAT', 'R', '℃', '{"defaultValue":"0","max":0,"min":0,"round":2}', '传感器的温度'),
-(CURRENT_TIMESTAMP, '%s', '%s', '电池电量百分比', 'battery_level', 'FLOAT', 'R', '%%', '{"defaultValue":"0","max":0,"min":0,"round":2}', '电池电量百分比');
+(CURRENT_TIMESTAMP, '%s', '%s', '电池电量百分比', 'battery', 'FLOAT', 'R', '%%', '{"defaultValue":"0","max":0,"min":0,"round":2}', '电池电量百分比');
 `
 	uuid1 := utils.MakeUUID("PROP")
 	uuid2 := utils.MakeUUID("PROP")
@@ -519,4 +519,126 @@ VALUES
 		schemaId, uuid7,
 		schemaId, uuid8,
 		schemaId, uuid9)).Error
+}
+
+// Field struct represents each field's name, type, and comment in the template.
+type TemplateField struct {
+	Name    string `json:"name"`
+	Type    string `json:"type"`
+	Comment string `json:"comment"`
+}
+
+func GetTemplateFields(c *gin.Context, ruleEngine typex.Rhilex) {
+
+	// Define the map of templates with different schema categories
+	var templates = map[string][]TemplateField{
+		"TEMP_HUMIDITY": {
+			{Name: "device_id", Type: "STRING", Comment: "设备唯一标识符"},
+			{Name: "temperature", Type: "FLOAT", Comment: "温度值，精确到小数点后两位"},
+			{Name: "humidity", Type: "FLOAT", Comment: "湿度值，精确到小数点后两位"},
+			{Name: "battery", Type: "INTEGER", Comment: "电池电量百分比"},
+		},
+		"SWITCH_STATUS": {
+			{Name: "device_id", Type: "STRING", Comment: "设备唯一标识符"},
+			{Name: "status", Type: "BOOLEAN", Comment: "开关状态：true为开，false为关"},
+			{Name: "last_changed", Type: "TIMESTAMP", Comment: "最后一次状态改变的时间"},
+			{Name: "changed_by", Type: "STRING", Comment: "触发状态改变的用户或系统标识"},
+		},
+		"WATER_QUALITY": {
+			{Name: "device_id", Type: "STRING", Comment: "设备唯一标识符"},
+			{Name: "ph", Type: "FLOAT", Comment: "pH值，范围通常在0-14之间"},
+			{Name: "turbidity", Type: "FLOAT", Comment: "浊度，单位可能是NTU"},
+			{Name: "dissolved_oxygen", Type: "FLOAT", Comment: "溶解氧含量，单位mg/L"},
+			{Name: "conductivity", Type: "FLOAT", Comment: "电导率，单位可能是μS/cm"},
+			{Name: "temperature", Type: "FLOAT", Comment: "水温，单位摄氏度"},
+		},
+		"AIR_QUALITY": {
+			{Name: "device_id", Type: "STRING", Comment: "设备唯一标识符"},
+			{Name: "pm25", Type: "FLOAT", Comment: "PM2.5浓度，单位μg/m³"},
+			{Name: "pm10", Type: "FLOAT", Comment: "PM10浓度，单位μg/m³"},
+			{Name: "co2", Type: "INTEGER", Comment: "CO2浓度，单位ppm"},
+			{Name: "tvoc", Type: "FLOAT", Comment: "总挥发性有机化合物，单位ppb"},
+			{Name: "temperature", Type: "FLOAT", Comment: "温度，单位摄氏度"},
+			{Name: "humidity", Type: "FLOAT", Comment: "湿度，百分比"},
+		},
+		"MOTION_SENSOR": {
+			{Name: "device_id", Type: "STRING", Comment: "设备唯一标识符"},
+			{Name: "motion_detected", Type: "BOOLEAN", Comment: "是否检测到运动"},
+			{Name: "intensity", Type: "INTEGER", Comment: "运动强度，可选"},
+			{Name: "battery", Type: "INTEGER", Comment: "电池电量百分比"},
+		},
+		"SMART_METER": {
+			{Name: "device_id", Type: "STRING", Comment: "设备唯一标识符"},
+			{Name: "energy_consumption", Type: "FLOAT", Comment: "能源消耗，单位kWh"},
+			{Name: "current", Type: "FLOAT", Comment: "电流，单位A"},
+			{Name: "voltage", Type: "FLOAT", Comment: "电压，单位V"},
+			{Name: "power_factor", Type: "FLOAT", Comment: "功率因数"},
+		},
+		"SOIL_MOISTURE": {
+			{Name: "device_id", Type: "STRING", Comment: "设备唯一标识符"},
+			{Name: "moisture_level", Type: "FLOAT", Comment: "土壤湿度水平，百分比"},
+			{Name: "temperature", Type: "FLOAT", Comment: "土壤温度，单位摄氏度"},
+			{Name: "ec", Type: "FLOAT", Comment: "土壤电导率，单位mS/cm"},
+			{Name: "ph", Type: "FLOAT", Comment: "土壤pH值"},
+			{Name: "battery", Type: "INTEGER", Comment: "电池电量百分比"},
+		},
+		"GPS_TRACKER": {
+			{Name: "device_id", Type: "STRING", Comment: "设备唯一标识符"},
+			{Name: "latitude", Type: "FLOAT", Comment: "纬度"},
+			{Name: "longitude", Type: "FLOAT", Comment: "经度"},
+			{Name: "altitude", Type: "FLOAT", Comment: "海拔，单位米"},
+			{Name: "speed", Type: "FLOAT", Comment: "速度，单位km/h"},
+			{Name: "battery", Type: "INTEGER", Comment: "电池电量百分比"},
+		},
+		"SMOKE_DETECTOR": {
+			{Name: "device_id", Type: "STRING", Comment: "设备唯一标识符"},
+			{Name: "smoke_detected", Type: "BOOLEAN", Comment: "是否检测到烟雾"},
+			{Name: "co_level", Type: "FLOAT", Comment: "一氧化碳水平，单位ppm"},
+			{Name: "battery", Type: "INTEGER", Comment: "电池电量百分比"},
+			{Name: "last_tested", Type: "TIMESTAMP", Comment: "上次测试时间"},
+		},
+		"SMART_LOCK": {
+			{Name: "device_id", Type: "STRING", Comment: "设备唯一标识符"},
+			{Name: "lock_status", Type: "BOOLEAN", Comment: "锁状态：true为锁定，false为解锁"},
+			{Name: "access_method", Type: "VARCHAR(20)", Comment: "访问方法：PIN、指纹、NFC等"},
+			{Name: "user_id", Type: "STRING", Comment: "操作用户ID"},
+			{Name: "battery", Type: "INTEGER", Comment: "电池电量百分比"},
+		},
+		"SIX_AXIS_ACCELEROMETER": {
+			{Name: "device_id", Type: "STRING", Comment: "设备唯一标识符"},
+			{Name: "accel_x", Type: "FLOAT", Comment: "X轴加速度，单位g"},
+			{Name: "accel_y", Type: "FLOAT", Comment: "Y轴加速度，单位g"},
+			{Name: "accel_z", Type: "FLOAT", Comment: "Z轴加速度，单位g"},
+			{Name: "gyro_x", Type: "FLOAT", Comment: "X轴角速度，单位deg/s"},
+			{Name: "gyro_y", Type: "FLOAT", Comment: "Y轴角速度，单位deg/s"},
+			{Name: "gyro_z", Type: "FLOAT", Comment: "Z轴角速度，单位deg/s"},
+			{Name: "temperature", Type: "FLOAT", Comment: "传感器温度，单位摄氏度"},
+			{Name: "battery", Type: "INTEGER", Comment: "电池电量百分比"},
+		},
+	}
+
+	c.JSON(common.HTTP_OK, common.OkWithData(templates))
+
+}
+
+type TemplateSensorType struct {
+	Label string
+	Value string
+}
+
+func GetTemplates(c *gin.Context, ruleEngine typex.Rhilex) {
+	sensorTypes := []TemplateSensorType{
+		{Label: "温湿度传感器", Value: "TEMP_HUMIDITY"},
+		{Label: "开关状态", Value: "SWITCH_STATUS"},
+		{Label: "水质传感器", Value: "WATER_QUALITY"},
+		{Label: "空气质量传感器", Value: "AIR_QUALITY"},
+		{Label: "动作传感器", Value: "MOTION_SENSOR"},
+		{Label: "智能电表", Value: "SMART_METER"},
+		{Label: "土壤湿度传感器", Value: "SOIL_MOISTURE"},
+		{Label: "GPS追踪器", Value: "GPS_TRACKER"},
+		{Label: "烟雾探测器", Value: "SMOKE_DETECTOR"},
+		{Label: "智能锁", Value: "SMART_LOCK"},
+		{Label: "六轴加速度计", Value: "SIX_AXIS_ACCELEROMETER"},
+	}
+	c.JSON(common.HTTP_OK, common.OkWithData(sensorTypes))
 }

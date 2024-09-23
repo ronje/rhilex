@@ -41,6 +41,8 @@ func InitDataSchemaApi() {
 		schemaApi.GET(("/properties/list"), server.AddRoute(IotSchemaPropertyPageList))
 		schemaApi.GET(("/properties/detail"), server.AddRoute(IotSchemaPropertyDetail))
 		// 模板
+		schemaApi.GET(("/getTemplates"), server.AddRoute(GetTemplates))
+		schemaApi.GET(("/getTemplateFields"), server.AddRoute(GetTemplateFields))
 		schemaApi.POST(("/genTemplate"), server.AddRoute(GenerateSchemaTemplate))
 
 	}
