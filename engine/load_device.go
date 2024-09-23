@@ -138,8 +138,7 @@ func (e *RuleEngine) loadDevices(xDevice typex.XDevice, deviceInstance *typex.De
 		})
 		configBytes, _ := json.Marshal(config)
 		// 注册一个缓存器
-		intercache.SetValue(fmt.Sprintf("__DeviceConfigMap",
-			deviceInstance.UUID), deviceInstance.UUID, intercache.CacheValue{
+		intercache.SetValue("__DeviceConfigMap", deviceInstance.UUID, intercache.CacheValue{
 			UUID:          deviceInstance.UUID,
 			Status:        1,
 			ErrMsg:        err.Error(),

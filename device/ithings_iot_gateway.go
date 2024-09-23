@@ -28,10 +28,14 @@ import (
 	"github.com/hootrhino/rhilex/utils"
 )
 
+// 设备属性上行请求 Topic： $thing/up/property/{ProductID}/{DeviceName}
+// 设备属性下行响应 Topic： $thing/down/property/{ProductID}/{DeviceName}
+// 设备响应行为执行结果或设备请求服务端行为 Topic： $thing/up/action/{ProductID}/{DeviceName}
+// 应用调用设备行为或服务端响应设备请求执行结果 Topic： $thing/down/action/{ProductID}/{DeviceName}
 const (
 	// 属性
-	_ithings_PropertyTopic   = "$thing/down/property/%v/%v"
 	_ithings_PropertyUpTopic = "$thing/up/property/%v/%v"
+	_ithings_PropertyTopic   = "$thing/down/property/%v/%v"
 	// 动作
 	_ithings_ActionTopic   = "$thing/down/action/%v/%v"
 	_ithings_ActionUpTopic = "$thing/up/action/%v/%v"
@@ -134,10 +138,12 @@ func (hd *IThingsGateway) Start(cctx typex.CCTX) error {
 		hd.mainConfig.CommonConfig.ProductId, hd.mainConfig.CommonConfig.DeviceName)
 	hd.propertyUpTopic = fmt.Sprintf(_ithings_PropertyUpTopic,
 		hd.mainConfig.CommonConfig.ProductId, hd.mainConfig.CommonConfig.DeviceName)
+	// 动作
 	hd.actionDownTopic = fmt.Sprintf(_ithings_ActionTopic,
 		hd.mainConfig.CommonConfig.ProductId, hd.mainConfig.CommonConfig.DeviceName)
 	hd.actionUpTopic = fmt.Sprintf(_ithings_ActionUpTopic,
 		hd.mainConfig.CommonConfig.ProductId, hd.mainConfig.CommonConfig.DeviceName)
+	// 子设备
 	hd.topologyTopicUp = fmt.Sprintf(_ithings_operation_up,
 		hd.mainConfig.CommonConfig.ProductId, hd.mainConfig.CommonConfig.DeviceName)
 	hd.topologyTopicDown = fmt.Sprintf(_ithings_operation_down,
@@ -147,17 +153,19 @@ func (hd *IThingsGateway) Start(cctx typex.CCTX) error {
 		glogger.GLogger.Infof("IThings Connected Success")
 		// 属性下发
 		if err := hd.client.Subscribe(hd.propertyDownTopic, 1, func(c mqtt.Client, msg mqtt.Message) {
+			glogger.GLogger.Debug("Property Down, Topic: [", msg.Topic(), "] Payload: ", string(msg.Payload()))
 			hd.RuleEngine.WorkDevice(hd.Details(), string(msg.Payload()))
 		}); err != nil {
 			glogger.GLogger.Error(err)
 		}
 		// 动作下发
 		if err := hd.client.Subscribe(hd.actionDownTopic, 1, func(c mqtt.Client, msg mqtt.Message) {
+			glogger.GLogger.Debug("Action Down, Topic: [", msg.Topic(), "] Payload: ", string(msg.Payload()))
 			hd.RuleEngine.WorkDevice(hd.Details(), string(msg.Payload()))
 		}); err != nil {
 			glogger.GLogger.Error(err)
 		}
-		// 网关模式
+		// 网关模式:
 		//    数据上行 Topic（用于发布）：$gateway/operation/${productid}/${devicename}
 		//    数据下行 Topic（用于订阅）：$gateway/operation/result/${productid}/${devicename}
 		if hd.mainConfig.CommonConfig.Mode == "GATEWAY" {
@@ -241,6 +249,15 @@ func (hd *IThingsGateway) OnDCACall(UUID string, Command string, Args interface{
 	return typex.DCAResult{}
 }
 
+/**
+ * Lua输入进来的指令
+ *
+ */
+type IThingsInputMsg struct {
+	Type string      `json:"type"`
+	Cmd  interface{} `json:"cmd"`
+}
+
 func (hd *IThingsGateway) OnCtrl(cmd []byte, args []byte) ([]byte, error) {
 	return []byte{}, nil
 }
@@ -250,7 +267,40 @@ func (hd *IThingsGateway) OnRead(cmd []byte, data []byte) (int, error) {
 	return 0, nil
 }
 
+// ActionReplySuccess
+// ActionReplyFailure
+// PropertyReplySuccess
+// PropertyReplyFailure
+// LUA 调用接口
 func (hd *IThingsGateway) OnWrite(cmd []byte, b []byte) (int, error) {
+	Cmd := string(cmd)
+	ActionResp := `{"method": "actionReply","msgToken": "%s","code": 200,"msg":"success"}`
+	PropertyResp := `{"method": "reportReply","msgToken": "%s","code": 200,"msg":"success"}`
+	if Cmd == "ActionReplySuccess" {
+		Token := string(b)
+		msg := fmt.Sprintf(ActionResp, Token)
+		hd.client.Publish(hd.actionUpTopic, 1, false, msg)
+		goto END
+	}
+	if Cmd == "ActionReplyFailure" {
+		Token := string(b)
+		msg := fmt.Sprintf(ActionResp, Token)
+		hd.client.Publish(hd.actionUpTopic, 1, false, msg)
+		goto END
+	}
+	if Cmd == "PropertyReplySuccess" {
+		Token := string(b)
+		msg := fmt.Sprintf(PropertyResp, Token)
+		hd.client.Publish(hd.propertyUpTopic, 1, false, msg)
+		goto END
+	}
+	if Cmd == "PropertyReplyFailure" {
+		Token := string(b)
+		msg := fmt.Sprintf(PropertyResp, Token)
+		hd.client.Publish(hd.propertyUpTopic, 1, false, msg)
+		goto END
+	}
+END:
 	return 0, nil
 }
 

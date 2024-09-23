@@ -41,27 +41,17 @@ Actions = {
         end
         if dataT.method == "control" then
             Debug("[====] Ithings Send Control CMD:" .. args)
-            if dataT.params.led1 == 0 then
-                rhilexg1:Led1Off()
-            end
-            if dataT.params.led1 == 1 then
-                rhilexg1:Led1On()
-            end
-            if dataT.params.do1 == 1 then
-                rhilexg1:DO1Set(1)
-            end
-            if dataT.params.do1 == 0 then
-                rhilexg1:DO1Set(0)
-            end
-            if dataT.params.do2 == 1 then
-                rhilexg1:DO2Set(1)
-            end
-            if dataT.params.do2 == 0 then
-                rhilexg1:DO2Set(0)
-            end
-            local errIothub = ithings:ActionReplySuccess('OUTSKGLIQJX', dataT.token)
+            local errIothub = ithings:ActionReplySuccess('DEVICE62MJLVLS', dataT.msgToken)
             if errIothub ~= nil then
-                Throw("data:ToMqtt Error:" .. errIothub)
+                Throw("ithings:ActionReplySuccess Error:" .. errIothub)
+                return false, args
+            end
+        end
+        if dataT.method == "property" then
+            Debug("[====] Ithings Send Property CMD:" .. args)
+            local errIothub = ithings:PropertyReplySuccess('DEVICE62MJLVLS', dataT.msgToken)
+            if errIothub ~= nil then
+                Throw("ithings:PropertyReplySuccess Error:" .. errIothub)
                 return false, args
             end
         end

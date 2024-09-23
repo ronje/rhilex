@@ -228,7 +228,7 @@ func LoadAppLibGroup(app *Application, e typex.Rhilex) {
 	}
 	{
 		Funcs := map[string]func(l *lua.LState) int{
-			"Request": rhilexlib.Request(e, app.UUID),
+			"Request": rhilexlib.Request(e),
 		}
 		AddAppLibToGroup(app, e, "rpc", Funcs)
 	}
@@ -285,5 +285,14 @@ func LoadAppLibGroup(app *Application, e typex.Rhilex) {
 			"F6": rhilexlib.SlaverF6(e),
 		}
 		AddAppLibToGroup(app, e, "modbus_slaver", Funcs)
+	}
+	{
+		Funcs := map[string]func(l *lua.LState) int{
+			"ActionReplySuccess":   rhilexlib.IthingsActionReplySuccess(e),
+			"ActionReplyFailure":   rhilexlib.IthingsActionReplyFailure(e),
+			"PropertyReplySuccess": rhilexlib.IthingsPropertyReplySuccess(e),
+			"PropertyReplyFailure": rhilexlib.IthingsPropertyReplyFailure(e),
+		}
+		AddAppLibToGroup(app, e, "ithings", Funcs)
 	}
 }

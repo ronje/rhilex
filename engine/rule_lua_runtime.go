@@ -202,7 +202,7 @@ func LoadRuleLibGroup(r *typex.Rule, e typex.Rhilex) {
 	}
 	{
 		Funcs := map[string]func(l *lua.LState) int{
-			"Request": rhilexlib.Request(e, r.UUID),
+			"Request": rhilexlib.Request(e),
 		}
 		AddRuleLibToGroup(r, e, "rpc", Funcs)
 	}
@@ -252,6 +252,15 @@ func LoadRuleLibGroup(r *typex.Rule, e typex.Rhilex) {
 			"F6": rhilexlib.SlaverF6(e),
 		}
 		AddRuleLibToGroup(r, e, "modbus_slaver", Funcs)
+	}
+	{
+		Funcs := map[string]func(l *lua.LState) int{
+			"ActionReplySuccess":   rhilexlib.IthingsActionReplySuccess(e),
+			"ActionReplyFailure":   rhilexlib.IthingsActionReplyFailure(e),
+			"PropertyReplySuccess": rhilexlib.IthingsPropertyReplySuccess(e),
+			"PropertyReplyFailure": rhilexlib.IthingsPropertyReplyFailure(e),
+		}
+		AddRuleLibToGroup(r, e, "ithings", Funcs)
 	}
 }
 

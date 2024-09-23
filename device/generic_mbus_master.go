@@ -158,12 +158,12 @@ func (gw *MBusMasterGateway) Start(cctx typex.CCTX) error {
 }
 
 func (gw *MBusMasterGateway) Status() typex.DeviceState {
-	if gw.mainConfig.CommonConfig.Mode == "TCP" {
+	// if gw.mainConfig.CommonConfig.Mode == "TCP" {
 
-	}
-	if gw.mainConfig.CommonConfig.Mode == "UART" {
+	// }
+	// if gw.mainConfig.CommonConfig.Mode == "UART" {
 
-	}
+	// }
 	return typex.DEV_UP
 }
 

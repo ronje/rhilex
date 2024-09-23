@@ -243,18 +243,6 @@ func (hd *TencentIoTGateway) OnWrite(cmd []byte, b []byte) (int, error) {
 	return 0, nil
 }
 
-func (hd *TencentIoTGateway) subscribe(topic string) error {
-	token := hd.client.Subscribe(topic, 1, func(c mqtt.Client, msg mqtt.Message) {
-		glogger.GLogger.Debug("TencentIoTGateway: ", topic, msg)
-		hd.RuleEngine.WorkDevice(hd.Details(), string(msg.Payload()))
-	})
-	if token.Error() != nil {
-		return token.Error()
-	} else {
-		return nil
-	}
-}
-
 // TencentIotHubMQTTAuthInfo 腾讯云 Iot Hub MQTT 认证信息
 type TencentIotHubMQTTAuthInfo struct {
 	ClientID string `json:"clientid"`

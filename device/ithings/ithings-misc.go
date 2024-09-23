@@ -165,7 +165,7 @@ func GenSecretDeviceInfo(hmacType string, productID string, deviceName string, d
 		token  string
 		pwd, _ = base64.StdEncoding.DecodeString(deviceSecret)
 	)
-	clientID = productID + deviceName
+	clientID = productID + "&" + deviceName
 	userName = fmt.Sprintf("%s;12010126;%s;%d", clientID, connID, expiry)
 	if hmacType == HmacSha1 {
 		token = utils.HmacSha1(userName, pwd)

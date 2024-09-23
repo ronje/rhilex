@@ -251,7 +251,7 @@ func (e *RuleEngine) RunSourceCallbacks(in *typex.InEnd, callbackArgs string) {
 					rule.LuaVM.GetInfo("n", Debugger, lua.LNil)
 					LFunction := LValue.(*lua.LFunction)
 					LastCall := lua.DbgCall{
-						Name: "_main", Pc: 0,
+						Name: "_main",
 					}
 					if len(LFunction.Proto.DbgCalls) > 0 {
 						LastCall = LFunction.Proto.DbgCalls[0]
@@ -298,7 +298,7 @@ func (e *RuleEngine) RunDeviceCallbacks(Device *typex.Device, callbackArgs strin
 				rule.LuaVM.GetInfo("n", Debugger, lua.LNil)
 				LFunction := LValue.(*lua.LFunction)
 				LastCall := lua.DbgCall{
-					Name: "_main", Pc: 0,
+					Name: "_main",
 				}
 				if len(LFunction.Proto.DbgCalls) > 0 {
 					LastCall = LFunction.Proto.DbgCalls[0]
