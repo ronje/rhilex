@@ -35,8 +35,9 @@ import (
 // 应用调用设备行为或服务端响应设备请求执行结果 Topic： $thing/down/action/{ProductID}/{DeviceName}
 const (
 	// 属性
-	_ithings_PropertyUpTopic = "$thing/up/property/%v/%v"
-	_ithings_PropertyTopic   = "$thing/down/property/%v/%v"
+	_ithings_PropertyUpTopic    = "$thing/up/property/%v/%v"
+	_ithings_PropertyTopic      = "$thing/down/property/%v/%v"
+	_ithings_PropertyReplyTopic = "$thing/down/property/%v/%v"
 	// 动作
 	_ithings_ActionTopic   = "$thing/down/action/%v/%v"
 	_ithings_ActionUpTopic = "$thing/up/action/%v/%v"
@@ -68,16 +69,17 @@ type IThingsSubDevice struct {
 // 腾讯云物联网平台网关
 type IThingsGateway struct {
 	typex.XStatus
-	status            typex.DeviceState
-	mainConfig        IThingsGatewayMainConfig
-	client            mqtt.Client
-	authInfo          IThingsMQTTAuthInfo
-	propertyUpTopic   string
-	propertyDownTopic string
-	actionUpTopic     string
-	actionDownTopic   string
-	topologyTopicUp   string
-	topologyTopicDown string
+	status             typex.DeviceState
+	mainConfig         IThingsGatewayMainConfig
+	client             mqtt.Client
+	authInfo           IThingsMQTTAuthInfo
+	propertyUpTopic    string
+	propertyDownTopic  string
+	propertyReplyTopic string
+	actionUpTopic      string
+	actionDownTopic    string
+	topologyTopicUp    string
+	topologyTopicDown  string
 	//
 	IThingsSubDevices []IThingsSubDevice
 }
@@ -139,6 +141,8 @@ func (hd *IThingsGateway) Start(cctx typex.CCTX) error {
 		hd.mainConfig.CommonConfig.ProductId, hd.mainConfig.CommonConfig.DeviceName)
 	hd.propertyUpTopic = fmt.Sprintf(_ithings_PropertyUpTopic,
 		hd.mainConfig.CommonConfig.ProductId, hd.mainConfig.CommonConfig.DeviceName)
+	hd.propertyReplyTopic = fmt.Sprintf(_ithings_PropertyReplyTopic,
+		hd.mainConfig.CommonConfig.ProductId, hd.mainConfig.CommonConfig.DeviceName)
 	// 动作
 	hd.actionDownTopic = fmt.Sprintf(_ithings_ActionTopic,
 		hd.mainConfig.CommonConfig.ProductId, hd.mainConfig.CommonConfig.DeviceName)
@@ -153,18 +157,18 @@ func (hd *IThingsGateway) Start(cctx typex.CCTX) error {
 	var connectHandler mqtt.OnConnectHandler = func(client mqtt.Client) {
 		glogger.GLogger.Infof("IThings Connected Success")
 		// 属性下发
-		if err := hd.client.Subscribe(hd.propertyDownTopic, 1, func(c mqtt.Client, msg mqtt.Message) {
+		if token := hd.client.Subscribe(hd.propertyDownTopic, 1, func(c mqtt.Client, msg mqtt.Message) {
 			glogger.GLogger.Debug("Property Down, Topic: [", msg.Topic(), "] Payload: ", string(msg.Payload()))
 			hd.RuleEngine.WorkDevice(hd.Details(), string(msg.Payload()))
-		}); err != nil {
-			glogger.GLogger.Error(err)
+		}); token.Error() != nil {
+			glogger.GLogger.Error(token.Error())
 		}
 		// 动作下发
-		if err := hd.client.Subscribe(hd.actionDownTopic, 1, func(c mqtt.Client, msg mqtt.Message) {
+		if token := hd.client.Subscribe(hd.actionDownTopic, 1, func(c mqtt.Client, msg mqtt.Message) {
 			glogger.GLogger.Debug("Action Down, Topic: [", msg.Topic(), "] Payload: ", string(msg.Payload()))
 			hd.RuleEngine.WorkDevice(hd.Details(), string(msg.Payload()))
-		}); err != nil {
-			glogger.GLogger.Error(err)
+		}); token.Error() != nil {
+			glogger.GLogger.Error(token.Error())
 		}
 		// 网关模式:
 		//    数据上行 Topic（用于发布）：$gateway/operation/${productid}/${devicename}
@@ -312,12 +316,43 @@ func (hd *IThingsGateway) OnWrite(cmd []byte, b []byte) (int, error) {
 			Timestamp: time.Now().UnixMilli(),
 			Params:    params,
 		}
-		msg := fmt.Sprintf(PropertyResp, IthingsPropertyReport.String())
-		hd.client.Publish(hd.propertyUpTopic, 1, false, msg)
+		hd.client.Publish(hd.propertyUpTopic, 1, false, IthingsPropertyReport.String())
+		goto END
+	}
+	if Cmd == "GetPropertyReply" {
+		params := map[string]interface{}{}
+		if errUnmarshal := json.Unmarshal(b, &params); errUnmarshal != nil {
+			return 0, errUnmarshal
+		}
+		IthingsGetPropertyReply := IthingsGetPropertyReply{
+			Method:    "getReportReply",
+			Type:      "report",
+			MsgToken:  uuid.NewString(),
+			Timestamp: time.Now().UnixMilli(),
+			Code:      0,
+			Data:      params,
+			Msg:       "success",
+		}
+		hd.client.Publish(hd.propertyReplyTopic, 1, false, IthingsGetPropertyReply.String())
 		goto END
 	}
 END:
 	return 0, nil
+}
+
+type IthingsGetPropertyReply struct {
+	Method    string                 `json:"method"`
+	Timestamp int64                  `json:"timestamp"`
+	MsgToken  string                 `json:"msgToken"`
+	Type      string                 `json:"type"`
+	Code      int                    `json:"code"`
+	Data      map[string]interface{} `json:"data"`
+	Msg       string                 `json:"msg"`
+}
+
+func (O IthingsGetPropertyReply) String() string {
+	bytes, _ := json.Marshal(O)
+	return string(bytes)
 }
 
 type IthingsPropertyReport struct {

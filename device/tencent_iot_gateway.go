@@ -26,6 +26,7 @@ import (
 	"time"
 
 	mqtt "github.com/eclipse/paho.mqtt.golang"
+	"github.com/google/uuid"
 	"github.com/hootrhino/rhilex/glogger"
 	"github.com/hootrhino/rhilex/typex"
 	"github.com/hootrhino/rhilex/utils"
@@ -33,8 +34,9 @@ import (
 
 const (
 	// 属性
-	_tencent_iothub_PropertyTopic   = "$thing/down/property/%v/%v"
-	_tencent_iothub_PropertyUpTopic = "$thing/up/property/%v/%v"
+	_tencent_iothub_PropertyTopic      = "$thing/down/property/%v/%v"
+	_tencent_iothub_PropertyUpTopic    = "$thing/up/property/%v/%v"
+	_tencent_iothub_PropertyReplyTopic = "$thing/up/property/%v/%v"
 	// 动作
 	_tencent_iothub_ActionTopic   = "$thing/down/action/%v/%v"
 	_tencent_iothub_ActionUpTopic = "$thing/up/action/%v/%v"
@@ -50,7 +52,6 @@ type TencentIoTGatewayConfig struct {
 	ProductId  string `json:"productId" validate:"required"`  //产品名
 	DeviceName string `json:"deviceName" validate:"required"` //设备名
 	DevicePsk  string `json:"devicePsk" validate:"required"`  //秘钥
-	ClientId   string `json:"clientId" validate:"required"`   //客户端ID
 }
 type TencentIoTGatewayMainConfig struct {
 	CommonConfig TencentIoTGatewayConfig `json:"tencentConfig" validate:"required"` // 通用配置
@@ -59,18 +60,19 @@ type TencentIoTGatewayMainConfig struct {
 // 腾讯云物联网平台网关
 type TencentIoTGateway struct {
 	typex.XStatus
-	status            typex.DeviceState
-	mainConfig        TencentIoTGatewayMainConfig
-	client            mqtt.Client
-	mqttClientId      string
-	mqttUsername      string
-	mqttPassword      string
-	propertyUpTopic   string
-	propertyDownTopic string
-	actionUpTopic     string
-	actionDownTopic   string
-	topologyTopicUp   string
-	topologyTopicDown string
+	status             typex.DeviceState
+	mainConfig         TencentIoTGatewayMainConfig
+	client             mqtt.Client
+	mqttClientId       string
+	mqttUsername       string
+	mqttPassword       string
+	propertyUpTopic    string
+	propertyDownTopic  string
+	propertyReplyTopic string
+	actionUpTopic      string
+	actionDownTopic    string
+	topologyTopicUp    string
+	topologyTopicDown  string
 	//
 	TencentIotSubDevices []TencentIotSubDevice
 }
@@ -84,7 +86,6 @@ func NewTencentIoTGateway(e typex.Rhilex) typex.XDevice {
 			ProductId:  "",
 			DeviceName: "",
 			DevicePsk:  "",
-			ClientId:   "",
 		},
 	}
 	hd.TencentIotSubDevices = make([]TencentIotSubDevice, 0)
@@ -120,6 +121,8 @@ func (hd *TencentIoTGateway) Start(cctx typex.CCTX) error {
 		hd.mainConfig.CommonConfig.ProductId, hd.mainConfig.CommonConfig.DeviceName)
 	hd.propertyUpTopic = fmt.Sprintf(_tencent_iothub_PropertyUpTopic,
 		hd.mainConfig.CommonConfig.ProductId, hd.mainConfig.CommonConfig.DeviceName)
+	hd.propertyReplyTopic = fmt.Sprintf(_tencent_iothub_PropertyReplyTopic,
+		hd.mainConfig.CommonConfig.ProductId, hd.mainConfig.CommonConfig.DeviceName)
 	hd.actionDownTopic = fmt.Sprintf(_tencent_iothub_ActionTopic,
 		hd.mainConfig.CommonConfig.ProductId, hd.mainConfig.CommonConfig.DeviceName)
 	hd.actionUpTopic = fmt.Sprintf(_tencent_iothub_ActionUpTopic,
@@ -132,16 +135,18 @@ func (hd *TencentIoTGateway) Start(cctx typex.CCTX) error {
 	var connectHandler mqtt.OnConnectHandler = func(client mqtt.Client) {
 		glogger.GLogger.Infof("IOTHUB Connected Success")
 		// 属性下发
-		if err := hd.client.Subscribe(hd.propertyDownTopic, 1, func(c mqtt.Client, msg mqtt.Message) {
+		if token := hd.client.Subscribe(hd.propertyDownTopic, 1, func(c mqtt.Client, msg mqtt.Message) {
+			glogger.GLogger.Debug("Property Down, Topic: [", msg.Topic(), "] Payload: ", string(msg.Payload()))
 			hd.RuleEngine.WorkDevice(hd.Details(), string(msg.Payload()))
-		}); err != nil {
-			glogger.GLogger.Error(err)
+		}); token.Error() != nil {
+			glogger.GLogger.Error(token.Error())
 		}
 		// 动作下发
-		if err := hd.client.Subscribe(hd.actionDownTopic, 1, func(c mqtt.Client, msg mqtt.Message) {
+		if token := hd.client.Subscribe(hd.actionDownTopic, 1, func(c mqtt.Client, msg mqtt.Message) {
+			glogger.GLogger.Debug("Action Down, Topic: [", msg.Topic(), "] Payload: ", string(msg.Payload()))
 			hd.RuleEngine.WorkDevice(hd.Details(), string(msg.Payload()))
-		}); err != nil {
-			glogger.GLogger.Error(err)
+		}); token.Error() != nil {
+			glogger.GLogger.Error(token.Error())
 		}
 		// 网关模式
 		//    数据上行 Topic（用于发布）：$gateway/operation/${productid}/${devicename}
@@ -171,7 +176,6 @@ func (hd *TencentIoTGateway) Start(cctx typex.CCTX) error {
 	opts := mqtt.NewClientOptions()
 	endPoint := "tcp://%s.iotcloud.tencentdevices.com:1883"
 	ServerEndpoint := fmt.Sprintf(endPoint, hd.mainConfig.CommonConfig.ProductId)
-	// endPoint := "tcp://192.168.1.170:1883"
 	opts.AddBroker(ServerEndpoint)
 	opts.SetClientID(hd.mqttClientId)
 	opts.SetUsername(hd.mqttUsername)
@@ -239,7 +243,71 @@ func (hd *TencentIoTGateway) OnRead(cmd []byte, data []byte) (int, error) {
 	return 0, nil
 }
 
+// ActionReplySuccess
+// ActionReplyFailure
+// PropertyReplySuccess
+// PropertyReplyFailure
+// LUA 调用接口
 func (hd *TencentIoTGateway) OnWrite(cmd []byte, b []byte) (int, error) {
+	Cmd := string(cmd)
+	ActionResp := `{"method": "control_reply","clientToken": "%s","code": 200,"msg":"success"}`
+	PropertyResp := `{"method": "reportReply","clientToken": "%s","code": 200,"msg":"success"}`
+	if Cmd == "ActionReplySuccess" {
+		Token := string(b)
+		msg := fmt.Sprintf(ActionResp, Token)
+		hd.client.Publish(hd.actionUpTopic, 1, false, msg)
+		goto END
+	}
+	if Cmd == "ActionReplyFailure" {
+		Token := string(b)
+		msg := fmt.Sprintf(ActionResp, Token)
+		hd.client.Publish(hd.actionUpTopic, 1, false, msg)
+		goto END
+	}
+	if Cmd == "PropertyReplySuccess" {
+		Token := string(b)
+		msg := fmt.Sprintf(PropertyResp, Token)
+		hd.client.Publish(hd.propertyUpTopic, 1, false, msg)
+		goto END
+	}
+	if Cmd == "PropertyReplyFailure" {
+		Token := string(b)
+		msg := fmt.Sprintf(PropertyResp, Token)
+		hd.client.Publish(hd.propertyUpTopic, 1, false, msg)
+		goto END
+	}
+	if Cmd == "PropertyReport" {
+		params := map[string]interface{}{}
+		if errUnmarshal := json.Unmarshal(b, &params); errUnmarshal != nil {
+			return 0, errUnmarshal
+		}
+		TencentIotPropertyReport := TencentIotPropertyReport{
+			Method:      "report",
+			ClientToken: uuid.NewString(),
+			Timestamp:   time.Now().UnixMilli(),
+			Params:      params,
+		}
+		hd.client.Publish(hd.propertyUpTopic, 1, false, TencentIotPropertyReport.String())
+		goto END
+	}
+	if Cmd == "GetPropertyReply" {
+		params := map[string]interface{}{}
+		if errUnmarshal := json.Unmarshal(b, &params); errUnmarshal != nil {
+			return 0, errUnmarshal
+		}
+		TencentIotGetPropertyReply := TencentIotGetPropertyReply{
+			Method:      "get_status_reply",
+			Type:        "report",
+			ClientToken: uuid.NewString(),
+			Timestamp:   time.Now().UnixMilli(),
+			Code:        0,
+			Data:        params,
+			Msg:         "success",
+		}
+		hd.client.Publish(hd.propertyReplyTopic, 1, false, TencentIotGetPropertyReply.String())
+		goto END
+	}
+END:
 	return 0, nil
 }
 
@@ -325,4 +393,31 @@ type TencentIotSubDevice struct {
 	Timestamp    string `json:"timestamp"`
 	SignMethod   string `json:"signMethod"`
 	DeviceSecret string `json:"deviceSecret"`
+}
+
+type TencentIotGetPropertyReply struct {
+	Method      string                 `json:"method"`
+	Timestamp   int64                  `json:"timestamp"`
+	ClientToken string                 `json:"clientToken"`
+	Type        string                 `json:"type"`
+	Code        int                    `json:"code"`
+	Data        map[string]interface{} `json:"data"`
+	Msg         string                 `json:"msg"`
+}
+
+func (O TencentIotGetPropertyReply) String() string {
+	bytes, _ := json.Marshal(O)
+	return string(bytes)
+}
+
+type TencentIotPropertyReport struct {
+	Method      string                 `json:"method"`
+	ClientToken string                 `json:"clientToken"`
+	Timestamp   int64                  `json:"timestamp"`
+	Params      map[string]interface{} `json:"params"`
+}
+
+func (O TencentIotPropertyReport) String() string {
+	bytes, _ := json.Marshal(O)
+	return string(bytes)
 }

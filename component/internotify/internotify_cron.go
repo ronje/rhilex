@@ -47,14 +47,13 @@ func StartClearInterNotifyCron() {
 }
 func execInterNotifyCron(period string) {
 	deleteSql := fmt.Sprintf(`
-	DELETE FROM m_internal_notifies
-	WHERE created_at < date('now', '%s')
-	AND EXISTS (
-		SELECT 1 FROM sqlite_master WHERE type='table' AND name='m_internal_notifies'
-	);`, period)
+DELETE FROM m_internal_notifies
+WHERE created_at < date('now', '%s')
+AND EXISTS (SELECT 1 FROM sqlite_master WHERE type='table' AND name='m_internal_notifies');
+`, period)
 	ExecError := interdb.DB().Exec(deleteSql).Error
 	if ExecError != nil {
 		glogger.GLogger.Error(ExecError)
 	}
-	glogger.GLogger.Debug("ExecDataCenterCron:", deleteSql)
+	// glogger.GLogger.Debug("ExecDataCenterCron:", deleteSql)
 }

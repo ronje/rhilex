@@ -15,20 +15,13 @@
 
 -- 控制
 -- {
---     "method": "control",
---     "msgToken": "token",
+--     "method": "action",
+--     "clientToken": "v2530389123MqUdx::3602dfed-c3f8-4d53-804a-7365ba4e8c1f",
+--     "actionId": "action",
+--     "timestamp": 1727166317,
 --     "params": {
---       "power_switch": 1,
---       "color": 1,
---       "brightness": 66
+--         "a1": 1
 --     }
--- }
--- 回复
--- {
---     "method":"controlReply",
---     "msgToken":"123",
---     "code":200,
---     "msg":"some message where error"
 -- }
 
 Actions = {
@@ -39,29 +32,13 @@ Actions = {
             Throw('json:J2T error:' .. errJ2T)
             return false, args
         end
-        if dataT.method == "control" then
-            Debug("[====] Ithings Send Control CMD:" .. args)
-            if dataT.params.led1 == 0 then
-                rhilexg1:Led1Off()
-            end
-            if dataT.params.led1 == 1 then
-                rhilexg1:Led1On()
-            end
-            if dataT.params.do1 == 1 then
-                rhilexg1:DO1Set(1)
-            end
-            if dataT.params.do1 == 0 then
-                rhilexg1:DO1Set(0)
-            end
-            if dataT.params.do2 == 1 then
-                rhilexg1:DO2Set(1)
-            end
-            if dataT.params.do2 == 0 then
-                rhilexg1:DO2Set(0)
-            end
-            local errIothub = ithings:ActionReplySuccess('OUTSKGLIQJX', dataT.token)
+        if dataT.method == "get_status" then
+            Debug("[====] tciothub Get Status:" .. args)
+            local errIothub = tciothub:GetPropertyReply('DEVICE62MJLVLS', {
+                key = "value"
+            })
             if errIothub ~= nil then
-                Throw("data:ToMqtt Error:" .. errIothub)
+                Throw("tciothub:PropertyReplySuccess Error:" .. errIothub)
                 return false, args
             end
         end

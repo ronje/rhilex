@@ -228,7 +228,7 @@ func (mdev *GenericUartProtocolDevice) ctrl(args []byte) ([]byte, error) {
 	result := [__DEFAULT_BUFFER_SIZE]byte{}
 	ctx, cancel := context.WithTimeout(context.Background(),
 		time.Duration(mdev.uartConfig.Timeout)*time.Millisecond)
-	var count int = 0
+	count := 0
 	var errSliceRequest error = nil
 	if mdev.mainConfig.CommonConfig.Mode == "UART" {
 		count, errSliceRequest = utils.SliceRequest(ctx, mdev.serialPort,

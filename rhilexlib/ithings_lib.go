@@ -146,3 +146,35 @@ func IthingsPropertyReport(rx typex.Rhilex) func(*lua.LState) int {
 		return 1
 	}
 }
+
+/**
+ * 获取属性回复
+ *
+ */
+func IthingsGetPropertyReply(rx typex.Rhilex) func(*lua.LState) int {
+	return func(stateStack *lua.LState) int {
+		uuid := stateStack.ToString(2)
+		paramsTable := stateStack.ToTable(3)
+		params := map[string]interface{}{}
+		paramsTable.ForEach(func(k, v lua.LValue) {
+			params[k.String()] = v
+		})
+		Device := rx.GetDevice(uuid)
+		if Device != nil {
+			if Device.Device != nil {
+				bytes, errMarshal := json.Marshal(params)
+				if errMarshal != nil {
+					stateStack.Push(lua.LString(errMarshal.Error()))
+					return 1
+				}
+				_, err := Device.Device.OnWrite([]byte("GetPropertyReply"), []byte(bytes))
+				if err != nil {
+					stateStack.Push(lua.LString(err.Error()))
+					return 1
+				}
+			}
+		}
+		stateStack.Push(lua.LNil)
+		return 1
+	}
+}

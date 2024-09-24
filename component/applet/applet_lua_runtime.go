@@ -293,7 +293,19 @@ func LoadAppLibGroup(app *Application, e typex.Rhilex) {
 			"PropertyReplySuccess": rhilexlib.IthingsPropertyReplySuccess(e),
 			"PropertyReplyFailure": rhilexlib.IthingsPropertyReplyFailure(e),
 			"PropertyReport":       rhilexlib.IthingsPropertyReport(e),
+			"GetPropertyReply":     rhilexlib.IthingsGetPropertyReply(e),
 		}
 		AddAppLibToGroup(app, e, "ithings", Funcs)
+	}
+	{
+		Funcs := map[string]func(l *lua.LState) int{
+			"ActionReplySuccess":   rhilexlib.IthingsActionReplySuccess(e),
+			"ActionReplyFailure":   rhilexlib.IthingsActionReplyFailure(e),
+			"PropertyReplySuccess": rhilexlib.IthingsPropertyReplySuccess(e),
+			"PropertyReplyFailure": rhilexlib.IthingsPropertyReplyFailure(e),
+			"PropertyReport":       rhilexlib.IthingsPropertyReport(e),
+			"GetPropertyReply":     rhilexlib.IthingsGetPropertyReply(e),
+		}
+		AddAppLibToGroup(app, e, "tciothub", Funcs)
 	}
 }
