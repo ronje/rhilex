@@ -333,7 +333,7 @@ func (O IthingsPropertyReport) String() string {
 }
 
 type IThingsSubDeviceMessage struct {
-	Method  Method                         `json:"method"`
+	Method  string                         `json:"method"`
 	Payload IThingsSubDeviceMessagePayload `json:"payload"`
 }
 type IThingsSubDeviceMessagePayload struct {

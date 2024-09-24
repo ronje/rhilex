@@ -309,16 +309,9 @@ func randConnID(n int) string {
 	  }
 	}
 */
-type Method string
-
-const (
-	ONLINE   Method = "online"
-	OFFLINE  Method = "offline"
-	TOPOLOGY Method = "describeSubDevices"
-)
 
 type TencentIotSubDeviceMessage struct {
-	Method  Method                            `json:"method"`
+	Method  string                            `json:"method"`
 	Payload TencentIotSubDeviceMessagePayload `json:"payload"`
 }
 type TencentIotSubDeviceMessagePayload struct {
