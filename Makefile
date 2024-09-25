@@ -98,7 +98,7 @@ mips64le:
 riscv64:
 	go generate
 	# sudo apt install g++-riscv64-linux-gnu gcc-riscv64-linux-gnu
-	GOOS=linux GOARCH=riscv64 CGO_ENABLED=1 CC=riscv64-linux-gnu-gcc go build $(GO_BUILD_OPTIONS) -o ${APP}-riscv64
+	GOOS=linux GOARCH=riscv64 CGO_ENABLED=1 CC=riscv64-linux-gnu-gcc go build $(GO_BUILD_OPTIONS) -o ${APP}-riscv64linux
 
 .PHONY: release
 release:

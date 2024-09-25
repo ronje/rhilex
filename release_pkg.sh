@@ -2,7 +2,7 @@
 set -e
 APP=rhilex
 RESPOSITORY="https://github.com/hootrhino"
-ARCHS=("arm64linux" "arm32linux" "x64linux" "windows")
+ARCHS=("arm32linux" "arm64linux" "riscv64linux" "x64linux" "windows")
 
 create_pkg() {
     local target=$1
@@ -52,12 +52,8 @@ build_arm32linux() {
     make arm32
 }
 
-build_mips64linux() {
-    make mips64
-}
-
-build_mips32linux() {
-    make mips32
+build_riscv64_linux() {
+    make riscv64
 }
 
 cross_compile() {
@@ -95,6 +91,12 @@ cross_compile() {
         if [[ "${arch}" == "arm32linux" ]]; then
             # sudo apt install gcc-arm-linux-gnueabi -y
             build_arm32linux $arch
+            make_zip $arch
+            echo -e "\033[33m [√] Compile target => ["$arch"] Ok. \033[0m"
+        fi
+        if [[ "${arch}" == "riscv64linux" ]]; then
+            # sudo apt install g++-riscv64-linux-gnu gcc-riscv64-linux-gnu -y
+            build_riscv64_linux $arch
             make_zip $arch
             echo -e "\033[33m [√] Compile target => ["$arch"] Ok. \033[0m"
         fi
