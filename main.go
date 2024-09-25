@@ -19,7 +19,6 @@ import (
 	"context"
 	"fmt"
 	"log"
-	_ "net/http/pprof"
 	"os"
 	"runtime"
 	"time"
@@ -61,12 +60,12 @@ func init() {
 //go:generate bash ./gen_info.sh
 func main() {
 	app := &cli.App{
-		Name:  "rhilex",
-		Usage: "For more documentation, please refer to: http://rhilex.hootrhino.com",
+		Name:  "RHILEX STREAM SYSTEM",
+		Usage: "For more, please refer to: https://www.hootrhino.com",
 		Commands: []*cli.Command{
 			{
 				Name:  "run",
-				Usage: "Start rhilex, Must with config: -config=path/rhilex.ini",
+				Usage: "Start rhilex, Must with config: -config=/path/rhilex.ini",
 				Flags: []cli.Flag{
 					&cli.StringFlag{
 						Name:  "db",
