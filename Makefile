@@ -55,35 +55,50 @@ x64linux:
 .PHONY: windows
 windows:
 	go generate
+	# sudo apt install gcc-mingw-w64-x86-64	gcc-mingw-w64
 	CGO_ENABLED=1 GOOS=windows GOARCH=amd64 CC=x86_64-w64-mingw32-gcc go build $(GO_BUILD_OPTIONS) -o ${APP}-windows.exe
 
 .PHONY: arm32
 arm32:
 	go generate
+	# sudo apt install gcc-arm-linux-gnueabi
 	CGO_ENABLED=1 GOOS=linux GOARCH=arm CC=arm-linux-gnueabi-gcc go build $(GO_BUILD_OPTIONS) -o ${APP}-arm32linux
 
 .PHONY: arm64
 arm64:
 	go generate
+	# sudo apt install gcc-aarch64-linux-gnu
 	CGO_ENABLED=1 GOOS=linux GOARCH=arm64 CC=aarch64-linux-gnu-gcc go build $(GO_BUILD_OPTIONS) -o ${APP}-arm64linux
 
 .PHONY: mips32
 mips32:
 	go generate
-	# Install gcc-mips-linux-gnu if not available
+	# sudo apt install gcc-mips-linux-gnu
 	GOOS=linux GOARCH=mips CGO_ENABLED=1 CC=mips-linux-gnu-gcc go build $(GO_BUILD_OPTIONS) -o ${APP}-mips32linux
 
 .PHONY: mips64
 mips64:
 	go generate
-	# Install gcc-mips-linux-gnu if not available
+	# sudo apt install gcc-mips-linux-gnu
 	GOOS=linux GOARCH=mips64 CGO_ENABLED=1 CC=mips-linux-gnu-gcc go build $(GO_BUILD_OPTIONS) -o ${APP}-mips64linux
 
-.PHONY: mipsle
-mipsle:
+.PHONY: mips32le
+mips32le:
 	go generate
-	# Install gcc-mipsel-linux-gnu if not available
+	# sudo apt install gcc-mips-linux-gnu
 	GOOS=linux GOARCH=mipsle CGO_ENABLED=1 GOMIPS=softfloat CC=mipsel-linux-gnu-gcc go build $(GO_BUILD_OPTIONS) -o ${APP}-mipslelinux
+
+.PHONY: mips64le
+mips64le:
+	go generate
+	# sudo apt install gcc-mips-linux-gnu
+	GOOS=linux GOARCH=mips64le CGO_ENABLED=1 GOMIPS=softfloat CC=mipsel-linux-gnu-gcc go build $(GO_BUILD_OPTIONS) -o ${APP}-mipslelinux
+
+.PHONY: riscv64
+riscv64:
+	go generate
+	# sudo apt install g++-riscv64-linux-gnu gcc-riscv64-linux-gnu
+	GOOS=linux GOARCH=riscv64 CGO_ENABLED=1 CC=riscv64-linux-gnu-gcc go build $(GO_BUILD_OPTIONS) -o ${APP}-riscv64
 
 .PHONY: release
 release:
@@ -112,4 +127,6 @@ staticcheck:
 .PHONY: clean
 clean:
 	go clean
-	rm -rf _release ${APP}-arm32linux ${APP}-arm64linux *.db *.txt *.txt.gz upload/*
+	rm -rf _release \
+	    ${APP}-arm32linux ${APP}-arm64linux ${APP}-riscv64 ${APP}-mips* \
+		*.db *.txt *.txt.gz

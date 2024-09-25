@@ -19,7 +19,6 @@ import (
 	"encoding/binary"
 	"encoding/json"
 
-	"github.com/brocaar/lorawan"
 	"github.com/pkg/errors"
 )
 
@@ -28,7 +27,7 @@ import (
 type PushDataPacket struct {
 	ProtocolVersion uint8
 	RandomToken     uint16
-	GatewayMAC      lorawan.EUI64
+	GatewayMAC      [8]byte
 	Payload         PushDataPayload
 }
 

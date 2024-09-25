@@ -21,7 +21,6 @@ import (
 	"net"
 	"time"
 
-	"github.com/brocaar/lorawan"
 	"github.com/hootrhino/rhilex/component/lostcache"
 	"github.com/hootrhino/rhilex/glogger"
 	"github.com/hootrhino/rhilex/target/semtechudp"
@@ -267,7 +266,7 @@ func checkAck(ack []byte) error {
 }
 func NewSemtechPushMessage(Mac [8]byte, Payload []byte) semtechudp.PushDataPacket {
 	currentTime := time.Now().UTC()
-	GatewayMAC := lorawan.EUI64(Mac)
+	GatewayMAC := [8]byte{}
 	return semtechudp.PushDataPacket{
 		ProtocolVersion: 2,
 		RandomToken:     0x0305,

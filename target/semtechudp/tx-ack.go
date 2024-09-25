@@ -19,8 +19,6 @@ import (
 	"encoding/binary"
 	"encoding/json"
 	"errors"
-
-	"github.com/brocaar/lorawan"
 )
 
 // TXACKPacket is used by the gateway to send a feedback to the server
@@ -29,7 +27,7 @@ import (
 type TXACKPacket struct {
 	ProtocolVersion uint8
 	RandomToken     uint16
-	GatewayMAC      lorawan.EUI64
+	GatewayMAC      [8]byte
 	Payload         *TXACKPayload
 }
 
