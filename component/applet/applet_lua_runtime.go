@@ -310,14 +310,26 @@ func LoadAppLibGroup(app *Application, e typex.Rhilex) {
 	}
 	{
 		Funcs := map[string]func(l *lua.LState) int{
-			"Led2On":  rhilexlib.HAAS506_Led2On(e),
-			"Led3On":  rhilexlib.HAAS506_Led3On(e),
-			"Led4On":  rhilexlib.HAAS506_Led4On(e),
-			"Led5On":  rhilexlib.HAAS506_Led5On(e),
+			// LED On
+			"Led2On": rhilexlib.HAAS506_Led2On(e),
+			"Led3On": rhilexlib.HAAS506_Led3On(e),
+			"Led4On": rhilexlib.HAAS506_Led4On(e),
+			"Led5On": rhilexlib.HAAS506_Led5On(e),
+			// Led Off
 			"Led2Off": rhilexlib.HAAS506_Led2Off(e),
 			"Led3Off": rhilexlib.HAAS506_Led2Off(e),
 			"Led4Off": rhilexlib.HAAS506_Led2Off(e),
 			"Led5Off": rhilexlib.HAAS506_Led2Off(e),
+			// DO On
+			"DO1On": rhilexlib.HAAS506_DO1_On(e),
+			"DO2On": rhilexlib.HAAS506_Do2_On(e),
+			"DO3On": rhilexlib.HAAS506_Do3_On(e),
+			"DO4On": rhilexlib.HAAS506_Do4_On(e),
+			// DO Off
+			"DO1Off": rhilexlib.HAAS506_DO1_Off(e),
+			"DO2Off": rhilexlib.HAAS506_Do2_Off(e),
+			"DO3Off": rhilexlib.HAAS506_Do3_Off(e),
+			"DO4Off": rhilexlib.HAAS506_Do4_Off(e),
 		}
 		AddAppLibToGroup(app, e, "haas506", Funcs)
 	}
