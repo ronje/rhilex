@@ -308,4 +308,17 @@ func LoadAppLibGroup(app *Application, e typex.Rhilex) {
 		}
 		AddAppLibToGroup(app, e, "tciothub", Funcs)
 	}
+	{
+		Funcs := map[string]func(l *lua.LState) int{
+			"Led2On":  rhilexlib.HAAS506_Led2On(e),
+			"Led3On":  rhilexlib.HAAS506_Led3On(e),
+			"Led4On":  rhilexlib.HAAS506_Led4On(e),
+			"Led5On":  rhilexlib.HAAS506_Led5On(e),
+			"Led2Off": rhilexlib.HAAS506_Led2Off(e),
+			"Led3Off": rhilexlib.HAAS506_Led2Off(e),
+			"Led4Off": rhilexlib.HAAS506_Led2Off(e),
+			"Led5Off": rhilexlib.HAAS506_Led2Off(e),
+		}
+		AddAppLibToGroup(app, e, "haas506", Funcs)
+	}
 }
