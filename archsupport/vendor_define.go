@@ -19,6 +19,10 @@ import (
 	"golang.org/x/exp/slices"
 )
 
+/**
+ * 获取厂商
+ *
+ */
 func CheckVendor(env string) string {
 	if slices.Contains([]string{
 		"RHILEXG1",
@@ -26,6 +30,7 @@ func CheckVendor(env string) string {
 		"WKYS805",
 		"RPI4B",
 		"EN6400",
+		"HAAS506",
 	}, env) {
 		return env
 	}

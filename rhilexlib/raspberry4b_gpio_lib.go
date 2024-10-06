@@ -2,7 +2,7 @@ package rhilexlib
 
 import (
 	lua "github.com/hootrhino/gopher-lua"
-	archsupport "github.com/hootrhino/rhilex/archsupport"
+	rpi4b "github.com/hootrhino/rhilex/archsupport/rpi4b"
 	"github.com/hootrhino/rhilex/typex"
 )
 
@@ -14,7 +14,7 @@ import (
 func RASPI4_GPIOGet(rx typex.Rhilex, uuid string) func(*lua.LState) int {
 	return func(l *lua.LState) int {
 		pin := l.ToNumber(2)
-		v, e := archsupport.RASPI4_GPIOGet(int(pin))
+		v, e := rpi4b.RASPI4_GPIOGet(int(pin))
 		if e != nil {
 			l.Push(lua.LNil)
 			l.Push(lua.LString(e.Error()))
@@ -35,7 +35,7 @@ func RASPI4_GPIOSet(rx typex.Rhilex, uuid string) func(*lua.LState) int {
 	return func(l *lua.LState) int {
 		pin := l.ToNumber(2)
 		value := l.ToNumber(3)
-		_, e := archsupport.RASPI4_GPIOSet(int(pin), int(value))
+		_, e := rpi4b.RASPI4_GPIOSet(int(pin), int(value))
 		if e != nil {
 			l.Push(lua.LString(e.Error()))
 		} else {

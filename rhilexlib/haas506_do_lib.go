@@ -17,7 +17,7 @@ package rhilexlib
 
 import (
 	lua "github.com/hootrhino/gopher-lua"
-	archsupport "github.com/hootrhino/rhilex/archsupport"
+	haas506 "github.com/hootrhino/rhilex/archsupport/haas506"
 	"github.com/hootrhino/rhilex/typex"
 )
 
@@ -25,7 +25,7 @@ import (
 // DO1
 func HAAS506_DO1_On(rx typex.Rhilex) func(*lua.LState) int {
 	return func(l *lua.LState) int {
-		err := archsupport.HAAS506_GPIOSetDO1(1)
+		err := haas506.HAAS506_GPIOSetDO1(1)
 		if err != nil {
 			l.Push(lua.LString(err.Error()))
 		} else {
@@ -36,7 +36,7 @@ func HAAS506_DO1_On(rx typex.Rhilex) func(*lua.LState) int {
 }
 func HAAS506_Do2_On(rx typex.Rhilex) func(*lua.LState) int {
 	return func(l *lua.LState) int {
-		err := archsupport.HAAS506_GPIOSetDO2(1)
+		err := haas506.HAAS506_GPIOSetDO2(1)
 		if err != nil {
 			l.Push(lua.LString(err.Error()))
 		} else {
@@ -47,7 +47,7 @@ func HAAS506_Do2_On(rx typex.Rhilex) func(*lua.LState) int {
 }
 func HAAS506_Do3_On(rx typex.Rhilex) func(*lua.LState) int {
 	return func(l *lua.LState) int {
-		err := archsupport.HAAS506_GPIOSetDO3(1)
+		err := haas506.HAAS506_GPIOSetDO3(1)
 		if err != nil {
 			l.Push(lua.LString(err.Error()))
 		} else {
@@ -58,7 +58,7 @@ func HAAS506_Do3_On(rx typex.Rhilex) func(*lua.LState) int {
 }
 func HAAS506_Do4_On(rx typex.Rhilex) func(*lua.LState) int {
 	return func(l *lua.LState) int {
-		err := archsupport.HAAS506_GPIOSetDO4(1)
+		err := haas506.HAAS506_GPIOSetDO4(1)
 		if err != nil {
 			l.Push(lua.LString(err.Error()))
 		} else {
@@ -72,7 +72,7 @@ func HAAS506_Do4_On(rx typex.Rhilex) func(*lua.LState) int {
 // DO1
 func HAAS506_DO1_Off(rx typex.Rhilex) func(*lua.LState) int {
 	return func(l *lua.LState) int {
-		err := archsupport.HAAS506_GPIOSetDO1(0)
+		err := haas506.HAAS506_GPIOSetDO1(0)
 		if err != nil {
 			l.Push(lua.LString(err.Error()))
 		} else {
@@ -83,7 +83,7 @@ func HAAS506_DO1_Off(rx typex.Rhilex) func(*lua.LState) int {
 }
 func HAAS506_Do2_Off(rx typex.Rhilex) func(*lua.LState) int {
 	return func(l *lua.LState) int {
-		err := archsupport.HAAS506_GPIOSetDO2(0)
+		err := haas506.HAAS506_GPIOSetDO2(0)
 		if err != nil {
 			l.Push(lua.LString(err.Error()))
 		} else {
@@ -94,7 +94,7 @@ func HAAS506_Do2_Off(rx typex.Rhilex) func(*lua.LState) int {
 }
 func HAAS506_Do3_Off(rx typex.Rhilex) func(*lua.LState) int {
 	return func(l *lua.LState) int {
-		err := archsupport.HAAS506_GPIOSetDO3(0)
+		err := haas506.HAAS506_GPIOSetDO3(0)
 		if err != nil {
 			l.Push(lua.LString(err.Error()))
 		} else {
@@ -105,7 +105,7 @@ func HAAS506_Do3_Off(rx typex.Rhilex) func(*lua.LState) int {
 }
 func HAAS506_Do4_Off(rx typex.Rhilex) func(*lua.LState) int {
 	return func(l *lua.LState) int {
-		err := archsupport.HAAS506_GPIOSetDO4(0)
+		err := haas506.HAAS506_GPIOSetDO4(0)
 		if err != nil {
 			l.Push(lua.LString(err.Error()))
 		} else {

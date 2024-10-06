@@ -13,7 +13,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-package archsupport
+package haas506
 
 import (
 	"fmt"
@@ -22,6 +22,8 @@ import (
 	"os/exec"
 	"strings"
 )
+
+const HAAS506_DO_SYSDEV_PATH = "/sys/class/gpio/gpio%d/value"
 
 //-----------------------------------------------
 // 这是HAAS506网关的DI-DO支持库
@@ -123,7 +125,7 @@ func HAAS506_GPIOGetDO4() (int, error) {
 }
 
 func HAAS506_GPIOGetByFile(pin byte) (int, error) {
-	return _HAAS506_GPIO_Get(fmt.Sprintf(__h3_GPIO_PATH, pin))
+	return _HAAS506_GPIO_Get(fmt.Sprintf(HAAS506_DO_SYSDEV_PATH, pin))
 }
 
 func _HAAS506_GPIO_Get(gpioPath string) (int, error) {
@@ -158,7 +160,7 @@ func HAAS506_GPIOSetDO4(value int) error {
 }
 
 func HAAS506_GPIOSetByFile(pin, value int) error {
-	return _HAAS506_GPIO_Set(fmt.Sprintf(__h3_GPIO_PATH, pin), value)
+	return _HAAS506_GPIO_Set(fmt.Sprintf(HAAS506_DO_SYSDEV_PATH, pin), value)
 }
 
 func _HAAS506_GPIO_Set(gpioPath string, value int) error {

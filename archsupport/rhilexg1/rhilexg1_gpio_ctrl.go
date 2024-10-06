@@ -13,7 +13,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-package archsupport
+package rhilexg1
 
 //-----------------------------------------------
 // 这是RHILEXG1网关的DI-DO支持库
@@ -156,7 +156,7 @@ func _RHILEXG1_GPIOInit(Pin string, direction string) {
 *
  */
 const (
-	__h3_GPIO_PATH = "/sys/class/gpio/gpio%v/value"
+	RHILEXG1_GPIO_SYSDEV_PATH = "/sys/class/gpio/gpio%v/value"
 )
 
 /*
@@ -183,7 +183,7 @@ func RHILEXG1_GPIOGetUserGpio() (int, error) {
 	return RHILEXG1_GPIOGetByFile(20)
 }
 func RHILEXG1_GPIOGetByFile(pin byte) (int, error) {
-	return __GPIOGet(fmt.Sprintf(__h3_GPIO_PATH, pin))
+	return __GPIOGet(fmt.Sprintf(RHILEXG1_GPIO_SYSDEV_PATH, pin))
 }
 
 func __GPIOGet(gpioPath string) (int, error) {
@@ -224,7 +224,7 @@ func RHILEXG1_GPIOSetUserGpio(value int) error {
 }
 
 func RHILEXG1_GPIOSetByFile(pin, value int) error {
-	return __GPIOSet(fmt.Sprintf(__h3_GPIO_PATH, pin), value)
+	return __GPIOSet(fmt.Sprintf(RHILEXG1_GPIO_SYSDEV_PATH, pin), value)
 }
 
 func __GPIOSet(gpioPath string, value int) error {

@@ -2,7 +2,7 @@ package rhilexlib
 
 import (
 	lua "github.com/hootrhino/gopher-lua"
-	archsupport "github.com/hootrhino/rhilex/archsupport"
+	amlogics805 "github.com/hootrhino/rhilex/archsupport/amlogics805"
 	"github.com/hootrhino/rhilex/typex"
 	"github.com/plgd-dev/kit/v2/strings"
 )
@@ -20,7 +20,7 @@ func WKYWS1608_GPIOGet(rx typex.Rhilex, uuid string) func(*lua.LState) int {
 			l.Push(lua.LNil)
 			return 1
 		}
-		v, e := archsupport.AmlogicWKYS805_RGBGet(pin)
+		v, e := amlogics805.AmlogicWKYS805_RGBGet(pin)
 		if e != nil {
 			l.Push(lua.LNil)
 			l.Push(lua.LString(e.Error()))
@@ -45,7 +45,7 @@ func WKYWS1608_GPIOSet(rx typex.Rhilex, uuid string) func(*lua.LState) int {
 			l.Push(lua.LNil)
 			return 1
 		}
-		_, e := archsupport.AmlogicWKYS805_RGBSet((pin), int(value))
+		_, e := amlogics805.AmlogicWKYS805_RGBSet((pin), int(value))
 		if e != nil {
 			l.Push(lua.LString(e.Error()))
 		} else {

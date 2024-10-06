@@ -17,13 +17,13 @@ package rhilexlib
 
 import (
 	lua "github.com/hootrhino/gopher-lua"
-	archsupport "github.com/hootrhino/rhilex/archsupport"
+	en6400 "github.com/hootrhino/rhilex/archsupport/en6400"
 	"github.com/hootrhino/rhilex/typex"
 )
 
 func EN6400_LedOn(rx typex.Rhilex, uuid string) func(*lua.LState) int {
 	return func(l *lua.LState) int {
-		err := archsupport.EN6400_GPIO231Set(int(1))
+		err := en6400.EN6400_GPIO231Set(int(1))
 		if err != nil {
 			l.Push(lua.LString(err.Error()))
 		} else {
@@ -35,7 +35,7 @@ func EN6400_LedOn(rx typex.Rhilex, uuid string) func(*lua.LState) int {
 }
 func EN6400_LedOff(rx typex.Rhilex, uuid string) func(*lua.LState) int {
 	return func(l *lua.LState) int {
-		err := archsupport.EN6400_GPIO231Set(int(0))
+		err := en6400.EN6400_GPIO231Set(int(0))
 		if err != nil {
 			l.Push(lua.LString(err.Error()))
 		} else {

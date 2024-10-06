@@ -17,7 +17,7 @@ package rhilexlib
 
 import (
 	lua "github.com/hootrhino/gopher-lua"
-	archsupport "github.com/hootrhino/rhilex/archsupport"
+	haas506 "github.com/hootrhino/rhilex/archsupport/haas506"
 	"github.com/hootrhino/rhilex/typex"
 )
 
@@ -25,7 +25,7 @@ import (
 // LED2
 func HAAS506_Led2On(rx typex.Rhilex) func(*lua.LState) int {
 	return func(l *lua.LState) int {
-		err := archsupport.HAAS506_LEDSet(int(2), 1)
+		err := haas506.HAAS506_LEDSet(int(2), 1)
 		if err != nil {
 			l.Push(lua.LString(err.Error()))
 		} else {
@@ -39,7 +39,7 @@ func HAAS506_Led2On(rx typex.Rhilex) func(*lua.LState) int {
 // LED3
 func HAAS506_Led3On(rx typex.Rhilex) func(*lua.LState) int {
 	return func(l *lua.LState) int {
-		err := archsupport.HAAS506_LEDSet(int(3), 1)
+		err := haas506.HAAS506_LEDSet(int(3), 1)
 		if err != nil {
 			l.Push(lua.LString(err.Error()))
 		} else {
@@ -53,7 +53,7 @@ func HAAS506_Led3On(rx typex.Rhilex) func(*lua.LState) int {
 // LED4
 func HAAS506_Led4On(rx typex.Rhilex) func(*lua.LState) int {
 	return func(l *lua.LState) int {
-		err := archsupport.HAAS506_LEDSet(int(4), 1)
+		err := haas506.HAAS506_LEDSet(int(4), 1)
 		if err != nil {
 			l.Push(lua.LString(err.Error()))
 		} else {
@@ -67,7 +67,7 @@ func HAAS506_Led4On(rx typex.Rhilex) func(*lua.LState) int {
 // LED5
 func HAAS506_Led5On(rx typex.Rhilex) func(*lua.LState) int {
 	return func(l *lua.LState) int {
-		err := archsupport.HAAS506_LEDSet(int(5), 1)
+		err := haas506.HAAS506_LEDSet(int(5), 1)
 		if err != nil {
 			l.Push(lua.LString(err.Error()))
 		} else {
@@ -82,7 +82,7 @@ func HAAS506_Led5On(rx typex.Rhilex) func(*lua.LState) int {
 // LED2
 func HAAS506_Led2Off(rx typex.Rhilex) func(*lua.LState) int {
 	return func(l *lua.LState) int {
-		err := archsupport.HAAS506_LEDSet(int(2), 0)
+		err := haas506.HAAS506_LEDSet(int(2), 0)
 		if err != nil {
 			l.Push(lua.LString(err.Error()))
 		} else {
@@ -96,7 +96,7 @@ func HAAS506_Led2Off(rx typex.Rhilex) func(*lua.LState) int {
 // LED3
 func HAAS506_Led3Off(rx typex.Rhilex) func(*lua.LState) int {
 	return func(l *lua.LState) int {
-		err := archsupport.HAAS506_LEDSet(int(3), 0)
+		err := haas506.HAAS506_LEDSet(int(3), 0)
 		if err != nil {
 			l.Push(lua.LString(err.Error()))
 		} else {
@@ -110,7 +110,7 @@ func HAAS506_Led3Off(rx typex.Rhilex) func(*lua.LState) int {
 // LED4
 func HAAS506_Led4Off(rx typex.Rhilex) func(*lua.LState) int {
 	return func(l *lua.LState) int {
-		err := archsupport.HAAS506_LEDSet(int(4), 0)
+		err := haas506.HAAS506_LEDSet(int(4), 0)
 		if err != nil {
 			l.Push(lua.LString(err.Error()))
 		} else {
@@ -124,7 +124,7 @@ func HAAS506_Led4Off(rx typex.Rhilex) func(*lua.LState) int {
 // LED5
 func HAAS506_Led5Off(rx typex.Rhilex) func(*lua.LState) int {
 	return func(l *lua.LState) int {
-		err := archsupport.HAAS506_LEDSet(int(5), 0)
+		err := haas506.HAAS506_LEDSet(int(5), 0)
 		if err != nil {
 			l.Push(lua.LString(err.Error()))
 		} else {

@@ -2,7 +2,7 @@ package rhilexlib
 
 import (
 	lua "github.com/hootrhino/gopher-lua"
-	archsupport "github.com/hootrhino/rhilex/archsupport"
+	rhilexg1 "github.com/hootrhino/rhilex/archsupport/rhilexg1"
 	"github.com/hootrhino/rhilex/typex"
 )
 
@@ -15,7 +15,7 @@ func RHILEXG1_DO1Set(rx typex.Rhilex, uuid string) func(*lua.LState) int {
 	return func(l *lua.LState) int {
 		value := l.ToNumber(2)
 		if value == 0 || value == 1 {
-			e := archsupport.RHILEXG1_GPIOSetDO1((int(value)))
+			e := rhilexg1.RHILEXG1_GPIOSetDO1((int(value)))
 			if e != nil {
 				l.Push(lua.LString(e.Error()))
 			} else {
@@ -29,7 +29,7 @@ func RHILEXG1_DO1Set(rx typex.Rhilex, uuid string) func(*lua.LState) int {
 }
 func RHILEXG1_DO1Get(rx typex.Rhilex, uuid string) func(*lua.LState) int {
 	return func(l *lua.LState) int {
-		v, e := archsupport.RHILEXG1_GPIOGetDO1()
+		v, e := rhilexg1.RHILEXG1_GPIOGetDO1()
 		if e != nil {
 			l.Push(lua.LNil)
 			l.Push(lua.LString(e.Error()))
@@ -45,7 +45,7 @@ func RHILEXG1_DO2Set(rx typex.Rhilex, uuid string) func(*lua.LState) int {
 	return func(l *lua.LState) int {
 		value := l.ToNumber(2)
 		if value == 0 || value == 1 {
-			e := archsupport.RHILEXG1_GPIOSetDO2(int(value))
+			e := rhilexg1.RHILEXG1_GPIOSetDO2(int(value))
 			if e != nil {
 				l.Push(lua.LString(e.Error()))
 			} else {
@@ -59,7 +59,7 @@ func RHILEXG1_DO2Set(rx typex.Rhilex, uuid string) func(*lua.LState) int {
 }
 func RHILEXG1_DO2Get(rx typex.Rhilex, uuid string) func(*lua.LState) int {
 	return func(l *lua.LState) int {
-		v, e := archsupport.RHILEXG1_GPIOGetDO2()
+		v, e := rhilexg1.RHILEXG1_GPIOGetDO2()
 		if e != nil {
 			l.Push(lua.LNil)
 			l.Push(lua.LString(e.Error()))
@@ -78,7 +78,7 @@ func RHILEXG1_DO2Get(rx typex.Rhilex, uuid string) func(*lua.LState) int {
  */
 func RHILEXG1_DI1Get(rx typex.Rhilex, uuid string) func(*lua.LState) int {
 	return func(l *lua.LState) int {
-		Value, e := archsupport.RHILEXG1_GPIOGetDI1()
+		Value, e := rhilexg1.RHILEXG1_GPIOGetDI1()
 		if e != nil {
 			l.Push(lua.LNil)
 			l.Push(lua.LString(e.Error()))
@@ -91,7 +91,7 @@ func RHILEXG1_DI1Get(rx typex.Rhilex, uuid string) func(*lua.LState) int {
 }
 func RHILEXG1_DI2Get(rx typex.Rhilex, uuid string) func(*lua.LState) int {
 	return func(l *lua.LState) int {
-		Value, e := archsupport.RHILEXG1_GPIOGetDI2()
+		Value, e := rhilexg1.RHILEXG1_GPIOGetDI2()
 		if e != nil {
 			l.Push(lua.LNil)
 			l.Push(lua.LString(e.Error()))
@@ -104,7 +104,7 @@ func RHILEXG1_DI2Get(rx typex.Rhilex, uuid string) func(*lua.LState) int {
 }
 func RHILEXG1_DI3Get(rx typex.Rhilex, uuid string) func(*lua.LState) int {
 	return func(l *lua.LState) int {
-		v, e := archsupport.RHILEXG1_GPIOGetDI3()
+		v, e := rhilexg1.RHILEXG1_GPIOGetDI3()
 		if e != nil {
 			l.Push(lua.LNil)
 			l.Push(lua.LString(e.Error()))
@@ -120,7 +120,7 @@ func RHILEXG1_DI3Get(rx typex.Rhilex, uuid string) func(*lua.LState) int {
 // 注意：低电平亮
 func Led1On(rx typex.Rhilex, uuid string) func(*lua.LState) int {
 	return func(l *lua.LState) int {
-		e := archsupport.RHILEXG1_GPIOSetUserGpio(0)
+		e := rhilexg1.RHILEXG1_GPIOSetUserGpio(0)
 		if e != nil {
 			l.Push(lua.LString(e.Error()))
 		} else {
@@ -131,7 +131,7 @@ func Led1On(rx typex.Rhilex, uuid string) func(*lua.LState) int {
 }
 func Led1Off(rx typex.Rhilex, uuid string) func(*lua.LState) int {
 	return func(l *lua.LState) int {
-		e := archsupport.RHILEXG1_GPIOSetUserGpio(1)
+		e := rhilexg1.RHILEXG1_GPIOSetUserGpio(1)
 		if e != nil {
 			l.Push(lua.LString(e.Error()))
 		} else {
