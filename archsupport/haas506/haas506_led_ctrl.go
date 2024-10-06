@@ -43,8 +43,8 @@ func _HAAS506_LED_Init() {
 }
 
 func _HAAS506_LedInit(Pin string, direction string) {
-	log.Printf("[HAAS506_LEDInit] LED(%s, %s) Init...", Pin, direction)
-	log.Printf("[HAAS506_LEDInit] LED(%s, %s) Init Ok.", Pin, direction)
+	log.Printf("[HAAS506_LEDInit] LED(%s, %s) Init...\n", Pin, direction)
+	log.Printf("[HAAS506_LEDInit] LED(%s, %s) Init Ok.\n", Pin, direction)
 }
 
 func HAAS506_LEDSet(pin, value int) error {

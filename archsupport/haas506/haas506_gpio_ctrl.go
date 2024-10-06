@@ -25,6 +25,7 @@ import (
 func init() {
 	env := os.Getenv("ARCHSUPPORT")
 	if env == "HAAS506" {
+		_HAAS506_AI_Init()
 		_HAAS506_DI_Init()
 		_HAAS506_DO_Init()
 		_HAAS506_LED_Init()

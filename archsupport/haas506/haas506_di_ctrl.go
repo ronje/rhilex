@@ -93,18 +93,3 @@ func HAAS506_GPIOGetDI3() (int, error) {
 func HAAS506_GPIOGetDI4() (int, error) {
 	return HAAS506_GPIOGetByFile(59)
 }
-
-// Set
-
-func HAAS506_GPIOSetDI1(value int) error {
-	return HAAS506_GPIOSetByFile(56, value)
-}
-func HAAS506_GPIOSetDI2(value int) error {
-	return HAAS506_GPIOSetByFile(57, value)
-}
-func HAAS506_GPIOSetDI3(value int) error {
-	return HAAS506_GPIOSetByFile(58, value)
-}
-func HAAS506_GPIOSetDI4(value int) error {
-	return HAAS506_GPIOSetByFile(59, value)
-}
