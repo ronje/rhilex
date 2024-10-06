@@ -173,7 +173,7 @@ main(){
     cd ./_build/
     # fetch_dashboard
     cross_compile
-    find . -not -path "./_release/*" -not -name "_release"
+    find . -mindepth 1 -not -path "./_release/*" -not -name "_release" -exec rm -rf {} +
     gen_changelog
 }
 #
