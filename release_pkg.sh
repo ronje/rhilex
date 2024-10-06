@@ -154,9 +154,9 @@ init_env() {
 }
 
 check_cmd() {
-    DEPS=("bash" "git" "jq" "gcc" "make" "x86_64-w64-mingw32-gcc")
+    DEPS=("bash" "git" "jq" "gcc" "make" "x86_64-w64-mingw32-gcc" "aarch64-linux-gnu-gcc" "arm-linux-gnueabi-gcc")
     for dep in ${DEPS[@]}; do
-        echo -e "\033[34m [*] Check dependcy command: $dep. \033[0m"
+        echo -e "\033[34m [*] Check Env: $dep. \033[0m"
         if ! [ -x "$(command -v $dep)" ]; then
             echo -e "\033[31m |x| Error: $dep is not installed. \033[0m"
             exit 1
@@ -173,6 +173,7 @@ main(){
     cd ./_build/
     # fetch_dashboard
     cross_compile
+    find . -not -path "./_release/*" -not -name "_release"
     gen_changelog
 }
 #
