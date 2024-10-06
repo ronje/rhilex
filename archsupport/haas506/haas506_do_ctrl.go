@@ -17,9 +17,7 @@ package haas506
 
 import (
 	"fmt"
-	"log"
 	"os"
-	"os/exec"
 	"strings"
 )
 
@@ -40,11 +38,6 @@ const (
 	HAAS506_DO2 string = "48"
 	HAAS506_DO3 string = "49"
 	HAAS506_DO4 string = "50"
-)
-
-const (
-	HAAS506_Out string = "out"
-	HAAS506_In  string = "in"
 )
 
 func init() {
@@ -90,22 +83,6 @@ func _HAAS506_DO_Init() int {
 	return 1
 }
 
-func _HAAS506_GPIOInit(Pin string, direction string) {
-	//gpio export
-	cmd := fmt.Sprintf("echo %s > /sys/class/gpio/export", Pin)
-	output, err := exec.Command("sh", "-c", cmd).CombinedOutput()
-	if err != nil {
-		log.Println("[HAAS506_GPIOInit] error", err, string(output))
-		return
-	}
-	//gpio set direction
-	cmd = fmt.Sprintf("echo %s > /sys/class/gpio/gpio%s/direction", direction, Pin)
-	output, err = exec.Command("sh", "-c", cmd).CombinedOutput()
-	if err != nil {
-		log.Println("[HAAS506_GPIOInit] error", err, string(output))
-	}
-}
-
 /*
 *
 * 新版本的文件读取形式获取GPIO状态
@@ -124,26 +101,6 @@ func HAAS506_GPIOGetDO4() (int, error) {
 	return HAAS506_GPIOGetByFile(50)
 }
 
-func HAAS506_GPIOGetByFile(pin byte) (int, error) {
-	return _HAAS506_GPIO_Get(fmt.Sprintf(HAAS506_DO_SYSDEV_PATH, pin))
-}
-
-func _HAAS506_GPIO_Get(gpioPath string) (int, error) {
-	bites, err := os.ReadFile(gpioPath)
-	if err != nil {
-		return 0, err
-	}
-	if len(bites) > 0 {
-		if bites[0] == '0' || bites[0] == 48 {
-			return 0, nil
-		}
-		if bites[1] == '1' || bites[0] == 49 {
-			return 1, nil
-		}
-	}
-	return 0, fmt.Errorf("read gpio value failed: %s, value: %v", gpioPath, bites)
-}
-
 // Set
 
 func HAAS506_GPIOSetDO1(value int) error {
@@ -157,24 +114,4 @@ func HAAS506_GPIOSetDO3(value int) error {
 }
 func HAAS506_GPIOSetDO4(value int) error {
 	return HAAS506_GPIOSetByFile(50, value)
-}
-
-func HAAS506_GPIOSetByFile(pin, value int) error {
-	return _HAAS506_GPIO_Set(fmt.Sprintf(HAAS506_DO_SYSDEV_PATH, pin), value)
-}
-
-func _HAAS506_GPIO_Set(gpioPath string, value int) error {
-	if value == 1 {
-		err := os.WriteFile(gpioPath, []byte{'1'}, 0644)
-		if err != nil {
-			return err
-		}
-	}
-	if value == 0 {
-		err := os.WriteFile(gpioPath, []byte{'0'}, 0644)
-		if err != nil {
-			return err
-		}
-	}
-	return nil
 }

@@ -128,5 +128,5 @@ staticcheck:
 clean:
 	go clean
 	rm -rf _release \
-	    ${APP}-arm32linux ${APP}-arm64linux ${APP}-riscv64 ${APP}-mips* \
+	    ${APP}-arm* ${APP}-riscv* ${APP}-mips* \
 		*.db *.txt *.txt.gz

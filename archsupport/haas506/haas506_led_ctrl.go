@@ -35,13 +35,7 @@ const (
 // echo "0" > /sys/devices/platform/leds/leds/led4/brightness
 // echo "0" > /sys/devices/platform/leds/leds/led5/brightness
 
-func init() {
-	env := os.Getenv("ARCHSUPPORT")
-	if env == "HAAS506" {
-		_HAAS506_LEDAllInit()
-	}
-}
-func _HAAS506_LEDAllInit() {
+func _HAAS506_LED_Init() {
 	_HAAS506_LedInit(__HAAS506_LED2_SYSDEV_PATH, "out")
 	_HAAS506_LedInit(__HAAS506_LED3_SYSDEV_PATH, "out")
 	_HAAS506_LedInit(__HAAS506_LED4_SYSDEV_PATH, "out")
