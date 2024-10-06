@@ -297,6 +297,12 @@ func LoadRuleLibGroup(r *typex.Rule, e typex.Rhilex) {
 			"DO2Off": rhilexlib.HAAS506_Do2_Off(e),
 			"DO3Off": rhilexlib.HAAS506_Do3_Off(e),
 			"DO4Off": rhilexlib.HAAS506_Do4_Off(e),
+			// AI
+			"GetAI1": rhilexlib.HAAS506_AI1_Get(e),
+			"GetAI2": rhilexlib.HAAS506_AI2_Get(e),
+			"GetAI3": rhilexlib.HAAS506_AI3_Get(e),
+			"GetAI4": rhilexlib.HAAS506_AI4_Get(e),
+			"GetAI5": rhilexlib.HAAS506_AI5_Get(e),
 		}
 		AddRuleLibToGroup(r, e, "haas506", Funcs)
 	}
