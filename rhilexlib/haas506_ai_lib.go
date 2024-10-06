@@ -16,6 +16,8 @@
 package rhilexlib
 
 import (
+	"math"
+
 	lua "github.com/hootrhino/gopher-lua"
 	haas506 "github.com/hootrhino/rhilex/archsupport/haas506"
 	"github.com/hootrhino/rhilex/typex"
@@ -29,7 +31,7 @@ func HAAS506_AI1_Get(rx typex.Rhilex) func(*lua.LState) int {
 			l.Push(lua.LNil)
 			l.Push(lua.LString(err.Error()))
 		} else {
-			l.Push(lua.LNumber(V))
+			l.Push(lua.LNumber(HAAS506_AI_RoundFloat32(float64(V), 2)))
 			l.Push(lua.LNil)
 		}
 		return 2
@@ -44,7 +46,7 @@ func HAAS506_AI2_Get(rx typex.Rhilex) func(*lua.LState) int {
 			l.Push(lua.LNil)
 			l.Push(lua.LString(err.Error()))
 		} else {
-			l.Push(lua.LNumber(V))
+			l.Push(lua.LNumber(HAAS506_AI_RoundFloat32(float64(V), 2)))
 			l.Push(lua.LNil)
 		}
 		return 2
@@ -59,7 +61,7 @@ func HAAS506_AI3_Get(rx typex.Rhilex) func(*lua.LState) int {
 			l.Push(lua.LNil)
 			l.Push(lua.LString(err.Error()))
 		} else {
-			l.Push(lua.LNumber(V))
+			l.Push(lua.LNumber(HAAS506_AI_RoundFloat32(float64(V), 2)))
 			l.Push(lua.LNil)
 		}
 		return 2
@@ -74,7 +76,7 @@ func HAAS506_AI4_Get(rx typex.Rhilex) func(*lua.LState) int {
 			l.Push(lua.LNil)
 			l.Push(lua.LString(err.Error()))
 		} else {
-			l.Push(lua.LNumber(V))
+			l.Push(lua.LNumber(HAAS506_AI_RoundFloat32(float64(V), 2)))
 			l.Push(lua.LNil)
 		}
 		return 2
@@ -89,9 +91,16 @@ func HAAS506_AI5_Get(rx typex.Rhilex) func(*lua.LState) int {
 			l.Push(lua.LNil)
 			l.Push(lua.LString(err.Error()))
 		} else {
-			l.Push(lua.LNumber(V))
+			l.Push(lua.LNumber(HAAS506_AI_RoundFloat32(float64(V), 2)))
 			l.Push(lua.LNil)
 		}
 		return 2
 	}
+}
+
+// 取2位小数
+func HAAS506_AI_RoundFloat32(number float64, decimalPlaces int) float64 {
+	scale := math.Pow(10, float64(decimalPlaces))
+	result := math.Floor(number/100*scale) / scale
+	return result
 }

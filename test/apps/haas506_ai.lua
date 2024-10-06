@@ -15,39 +15,39 @@
 
 function Main(arg)
     local V, err
-    V, err = haas506:GetAI1()
+    V, err = haas506ld1:GetAI1()
     if err ~= nil then
         Throw(err)
     else
-        Debug("== haas506:GetAI1=" .. V)
+        Debug("== haas506ld1:GetAI1=" .. V)
     end
 
-    V, err = haas506:GetAI2()
+    V, err = haas506ld1:GetAI2()
     if err ~= nil then
         Throw(err)
     else
-        Debug("== haas506:GetAI2=" .. V)
+        Debug("== haas506ld1:GetAI2=" .. V)
     end
 
-    V, err = haas506:GetAI3()
+    V, err = haas506ld1:GetAI3()
     if err ~= nil then
         Throw(err)
     else
-        Debug("== haas506:GetAI3=" .. V)
+        Debug("== haas506ld1:GetAI3=" .. V)
     end
 
-    V, err = haas506:GetAI4()
+    V, err = haas506ld1:GetAI4()
     if err ~= nil then
         Throw(err)
     else
-        Debug("== haas506:GetAI4=" .. V)
+        Debug("== haas506ld1:GetAI4=" .. V)
     end
 
-    V, err = haas506:GetAI5()
+    V, err = haas506ld1:GetAI5()
     if err ~= nil then
         Throw(err)
     else
-        Debug("== haas506:GetAI5=" .. V)
+        Debug("== haas506ld1:GetAI5=" .. V)
     end
 
     return 0

@@ -201,20 +201,6 @@ func LoadAppLibGroup(app *Application, e typex.Rhilex) {
 	}
 	{
 		Funcs := map[string]func(l *lua.LState) int{
-			"GPIOGet": rhilexlib.RASPI4_GPIOGet(e, app.UUID),
-			"GPIOSet": rhilexlib.RASPI4_GPIOSet(e, app.UUID),
-		}
-		AddAppLibToGroup(app, e, "raspi4b", Funcs)
-	}
-	{
-		Funcs := map[string]func(l *lua.LState) int{
-			"GPIOGet": rhilexlib.WKYWS1608_GPIOGet(e, app.UUID),
-			"GPIOSet": rhilexlib.WKYWS1608_GPIOSet(e, app.UUID),
-		}
-		AddAppLibToGroup(app, e, "ws1608", Funcs)
-	}
-	{
-		Funcs := map[string]func(l *lua.LState) int{
 			"TFloat":    rhilexlib.TruncateFloat(e, app.UUID),
 			"RandomInt": rhilexlib.RandomInt(e, app.UUID),
 		}
@@ -317,9 +303,9 @@ func LoadAppLibGroup(app *Application, e typex.Rhilex) {
 			"Led5On": rhilexlib.HAAS506_Led5On(e),
 			// Led Off
 			"Led2Off": rhilexlib.HAAS506_Led2Off(e),
-			"Led3Off": rhilexlib.HAAS506_Led2Off(e),
-			"Led4Off": rhilexlib.HAAS506_Led2Off(e),
-			"Led5Off": rhilexlib.HAAS506_Led2Off(e),
+			"Led3Off": rhilexlib.HAAS506_Led3Off(e),
+			"Led4Off": rhilexlib.HAAS506_Led4Off(e),
+			"Led5Off": rhilexlib.HAAS506_Led5Off(e),
 			// DO On
 			"DO1On": rhilexlib.HAAS506_DO1_On(e),
 			"DO2On": rhilexlib.HAAS506_Do2_On(e),
@@ -337,6 +323,6 @@ func LoadAppLibGroup(app *Application, e typex.Rhilex) {
 			"GetAI4": rhilexlib.HAAS506_AI4_Get(e),
 			"GetAI5": rhilexlib.HAAS506_AI5_Get(e),
 		}
-		AddAppLibToGroup(app, e, "haas506", Funcs)
+		AddAppLibToGroup(app, e, "haas506ld1", Funcs)
 	}
 }

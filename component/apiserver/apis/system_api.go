@@ -2,11 +2,16 @@ package apis
 
 import (
 	"fmt"
+	"os"
 	"runtime"
 	"strconv"
 	"time"
 
 	archsupport "github.com/hootrhino/rhilex/archsupport"
+	"github.com/hootrhino/rhilex/archsupport/en6400"
+	"github.com/hootrhino/rhilex/archsupport/haas506"
+	"github.com/hootrhino/rhilex/archsupport/rhilexg1"
+	"github.com/hootrhino/rhilex/archsupport/rhilexpro1"
 	common "github.com/hootrhino/rhilex/component/apiserver/common"
 	"github.com/hootrhino/rhilex/component/apiserver/server"
 	"github.com/hootrhino/rhilex/component/apiserver/service"
@@ -301,7 +306,25 @@ func GetGpuInfo(c *gin.Context, ruleEngine typex.Rhilex) {
 *
  */
 func GetDeviceCtrlTree(c *gin.Context, ruleEngine typex.Rhilex) {
-	c.JSON(common.HTTP_OK, common.OkWithData(archsupport.GetDeviceCtrlTree()))
+	env := os.Getenv("ARCHSUPPORT")
+	if env == "RHILEXG1" {
+		c.JSON(common.HTTP_OK, common.OkWithData(rhilexg1.GetSysDevTree()))
+		return
+	}
+	if env == "RHILEXPRO1" {
+		c.JSON(common.HTTP_OK, common.OkWithData(rhilexpro1.GetSysDevTree()))
+		return
+	}
+	if env == "EN6400" {
+		c.JSON(common.HTTP_OK, common.OkWithData(en6400.GetSysDevTree()))
+		return
+	}
+
+	if env == "HAAS506LD1" {
+		c.JSON(common.HTTP_OK, common.OkWithData(haas506.GetSysDevTree()))
+		return
+	}
+	c.JSON(common.HTTP_OK, common.OkWithData(archsupport.DefaultDeviceTree()))
 }
 
 /**

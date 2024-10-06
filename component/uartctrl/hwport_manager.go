@@ -24,6 +24,7 @@ package uartctrl
 import (
 	"encoding/json"
 	"fmt"
+	"runtime"
 	"sync"
 
 	"github.com/hootrhino/rhilex/typex"
@@ -149,9 +150,9 @@ func AllUart() []SystemUart {
 		if Port.OccupyBy.Type != "DEVICE" {
 			if err := CheckSerialBusy(Port.Name); err != nil {
 				SetInterfaceBusy(Port.Name, UartOccupy{
-					UUID: "OS",
+					UUID: runtime.GOOS,
 					Type: "OS",
-					Name: "OS",
+					Name: runtime.GOOS,
 				})
 			} else {
 				FreeInterfaceBusy(Port.Name)

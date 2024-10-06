@@ -16,6 +16,5 @@ rhilex run
 | RHILEXPro1 版本网关 | RHILEXPRO1 | `ARCHSUPPORT=RHILEXPRO1 rhilex run` |
 | RHILEXG1 版本网关   | RHILEXG1   | `ARCHSUPPORT=RHILEXG1 rhilex run`   |
 | RHILEXG2 版本网关   | RHILEXG2   | `ARCHSUPPORT=RHILEXG2 rhilex run`   |
-| 树莓派4             | RPI4       | `ARCHSUPPORT=RPI4B rhilex run`      |
 | 玩客云S805          | WKYS805    | `ARCHSUPPORT=WKYS805 rhilex run`    |
-| HAAS506             | HAAS506    | `ARCHSUPPORT=HAAS506 rhilex run`    |
+| HAAS506LD1          | HAAS506LD1 | `ARCHSUPPORT=HAAS506LD1 rhilex run` |

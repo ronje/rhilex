@@ -16,28 +16,28 @@
 function Main(arg)
     while true do
         -- LED2
-        haas506:Led2On()
+        haas506ld1:Led2On()
         time:Sleep(1000)
         -- LED3
-        haas506:Led3On()
+        haas506ld1:Led3On()
         time:Sleep(1000)
         -- LED4
-        haas506:Led4On()
+        haas506ld1:Led4On()
         time:Sleep(1000)
         -- LED5
-        haas506:Led5On()
+        haas506ld1:Led5On()
         time:Sleep(1000)
         -- LED2
-        haas506:Led2Off()
+        haas506ld1:Led2Off()
         time:Sleep(1000)
         -- LED3
-        haas506:Led3Off()
+        haas506ld1:Led3Off()
         time:Sleep(1000)
         -- LED4
-        haas506:Led4Off()
+        haas506ld1:Led4Off()
         time:Sleep(1000)
         -- LED5
-        haas506:Led5Off()
+        haas506ld1:Led5Off()
         time:Sleep(1000)
     end
     return 0

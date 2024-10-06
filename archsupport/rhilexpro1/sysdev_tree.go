@@ -13,26 +13,22 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-package archsupport
+package rhilexpro1
 
-import (
-	"golang.org/x/exp/slices"
-)
+import "github.com/hootrhino/rhilex/archsupport"
 
-/**
- * 获取厂商
- *
- */
-func CheckVendor(env string) string {
-	if slices.Contains([]string{
-		"RHILEXG1",
-		"RHILEXG1T507",
-		"WKYS805",
-		"RPI4B",
-		"EN6400",
-		"HAAS506LD1",
-	}, env) {
-		return env
+func GetSysDevTree() archsupport.DeviceTree {
+	return archsupport.DeviceTree{
+		Network: []archsupport.DeviceNode{
+			{Name: "eth0", Type: "ethernet", Status: 1},
+			{Name: "eth1", Type: "ethernet", Status: 1},
+		},
+		Wlan: []archsupport.DeviceNode{
+			{Name: "wlan0", Type: "wlan", Status: 1},
+		},
+		MNet4g:     []archsupport.DeviceNode{},
+		MNet5g:     []archsupport.DeviceNode{},
+		SoftRouter: []archsupport.DeviceNode{},
+		SerialPort: []archsupport.DeviceNode{},
 	}
-	return "COMMON"
 }

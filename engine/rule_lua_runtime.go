@@ -175,20 +175,6 @@ func LoadRuleLibGroup(r *typex.Rule, e typex.Rhilex) {
 	}
 	{
 		Funcs := map[string]func(l *lua.LState) int{
-			"GPIOGet": rhilexlib.RASPI4_GPIOGet(e, r.UUID),
-			"GPIOSet": rhilexlib.RASPI4_GPIOSet(e, r.UUID),
-		}
-		AddRuleLibToGroup(r, e, "raspi4b", Funcs)
-	}
-	{
-		Funcs := map[string]func(l *lua.LState) int{
-			"GPIOGet": rhilexlib.WKYWS1608_GPIOGet(e, r.UUID),
-			"GPIOSet": rhilexlib.WKYWS1608_GPIOSet(e, r.UUID),
-		}
-		AddRuleLibToGroup(r, e, "ws1608", Funcs)
-	}
-	{
-		Funcs := map[string]func(l *lua.LState) int{
 			"TFloat":    rhilexlib.TruncateFloat(e, r.UUID),
 			"RandomInt": rhilexlib.RandomInt(e, r.UUID),
 		}
@@ -304,7 +290,7 @@ func LoadRuleLibGroup(r *typex.Rule, e typex.Rhilex) {
 			"GetAI4": rhilexlib.HAAS506_AI4_Get(e),
 			"GetAI5": rhilexlib.HAAS506_AI5_Get(e),
 		}
-		AddRuleLibToGroup(r, e, "haas506", Funcs)
+		AddRuleLibToGroup(r, e, "haas506ld1", Funcs)
 	}
 }
 

@@ -15,5 +15,5 @@
  along with this program.  If not, see <https://www.gnu.org/licenses/>.
 -->
 
-## HAAS506
+## HAAS506LD1
 HAAS506网关的一些GPIO操作。

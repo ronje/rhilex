@@ -16,7 +16,13 @@
 package service
 
 import (
+	"bufio"
 	"encoding/json"
+	"fmt"
+	"os"
+	"path/filepath"
+	"runtime"
+	"strings"
 
 	"github.com/hootrhino/rhilex/component/apiserver/model"
 	"github.com/hootrhino/rhilex/component/interdb"
@@ -301,7 +307,11 @@ func InitUartConfig() error {
  */
 func GetOsPort() []string {
 	var ports []string
-	ports, _ = serial.GetPortsList()
+	if runtime.GOOS == "linux" {
+		ports, _ = GetPortsList()
+	} else {
+		ports, _ = serial.GetPortsList()
+	}
 	List := []string{}
 	for _, port := range ports {
 		if typex.DefaultVersionInfo.Product == "RHILEXG1" {
@@ -323,4 +333,56 @@ func GetOsPort() []string {
 		List = append(List, port)
 	}
 	return List
+}
+
+// GetPortsList: 获取系统中所有可用的串口设备
+func GetPortsList() ([]string, error) {
+	var availablePorts []string
+	serialFile := "/proc/tty/driver/serial"
+	if _, err := os.Stat(serialFile); os.IsNotExist(err) {
+		fmt.Printf("%s does not exist, skipping this check.\n", serialFile)
+	} else {
+		file, err := os.Open(serialFile)
+		if err != nil {
+			return nil, fmt.Errorf("failed to open %s: %v", serialFile, err)
+		}
+		defer file.Close()
+		scanner := bufio.NewScanner(file)
+		for scanner.Scan() {
+			line := scanner.Text()
+			fields := strings.Fields(line)
+			if len(fields) > 1 && strings.HasPrefix(fields[0], "0:") ||
+				strings.HasPrefix(fields[0], "1:") || strings.HasPrefix(fields[0], "2:") {
+				index := strings.TrimSuffix(fields[0], ":")
+				uartType := fields[1]
+				if uartType != "unknown" {
+					device := fmt.Sprintf("/dev/ttyS%s", index)
+					availablePorts = append(availablePorts, device)
+				}
+			}
+		}
+		if err := scanner.Err(); err != nil {
+			return nil, fmt.Errorf("error reading file: %v", err)
+		}
+	}
+	devDir := "/dev/"
+	files, err := os.ReadDir(devDir)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read %s directory: %v", devDir, err)
+	}
+
+	for _, file := range files {
+		if file.IsDir() {
+			continue
+		}
+		name := file.Name()
+		// 检查是否是 ttyS*、ttyUSB* 或 tty485_*
+		if strings.HasPrefix(name, "ttyS") ||
+			strings.HasPrefix(name, "ttyUSB") ||
+			strings.HasPrefix(name, "tty232") ||
+			strings.HasPrefix(name, "tty485") {
+			availablePorts = append(availablePorts, filepath.Join(devDir, name))
+		}
+	}
+	return availablePorts, nil
 }

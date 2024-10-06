@@ -16,28 +16,28 @@
 function Main(arg)
     while true do
         -- DO1
-        haas506:DO1On()
+        haas506ld1:DO1On()
         time:Sleep(1000)
         -- DO2
-        haas506:DO2On()
+        haas506ld1:DO2On()
         time:Sleep(1000)
         -- DO3
-        haas506:DO3On()
+        haas506ld1:DO3On()
         time:Sleep(1000)
         -- DO4
-        haas506:DO4On()
+        haas506ld1:DO4On()
         time:Sleep(1000)
         -- DO1
-        haas506:DO1Off()
+        haas506ld1:DO1Off()
         time:Sleep(1000)
         -- DO2
-        haas506:DO2Off()
+        haas506ld1:DO2Off()
         time:Sleep(1000)
         -- DO3
-        haas506:DO3Off()
+        haas506ld1:DO3Off()
         time:Sleep(1000)
         -- DO4
-        haas506:DO4Off()
+        haas506ld1:DO4Off()
         time:Sleep(1000)
     end
     return 0

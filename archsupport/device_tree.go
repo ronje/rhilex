@@ -15,92 +15,34 @@
 
 package archsupport
 
-import "os"
+type DeviceNodeType string
+
+const (
+	UART   DeviceNodeType = "UART"
+	ETHNET DeviceNodeType = "ETHNET"
+	NM4G   DeviceNodeType = "NM4G"
+	NM5G   DeviceNodeType = "NM5G"
+	CAN    DeviceNodeType = "CAN"
+	RS485  DeviceNodeType = "RS485"
+	RS232  DeviceNodeType = "RS232"
+)
 
 type DeviceNode struct {
-	Name   string `json:"name"`
-	Type   string `json:"type"`
-	Status int    `json:"status"`
+	Name   string         `json:"name"`
+	Type   DeviceNodeType `json:"type"`
+	Status int            `json:"status"`
 }
+
 type DeviceTree struct {
 	Network    []DeviceNode `json:"network"`
 	Wlan       []DeviceNode `json:"wlan"`
 	MNet4g     []DeviceNode `json:"net4g"`
 	MNet5g     []DeviceNode `json:"net5g"`
+	SerialPort []DeviceNode `json:"serialPort"`
 	SoftRouter []DeviceNode `json:"soft_router"`
+	CanBus     []DeviceNode `json:"canbus"`
 }
 
-/*
-*
-* 获取设备树
-*
- */
-func GetDeviceCtrlTree() DeviceTree {
-	env := os.Getenv("ARCHSUPPORT")
-	if env == "RHILEXG1" {
-		return DeviceTree{
-			Network: []DeviceNode{
-				{"eth0", "ethernet", 1},
-				{"eth1", "ethernet", 1},
-			},
-			Wlan: []DeviceNode{
-				{"wlan0", "wlan", 1},
-			},
-			MNet4g: []DeviceNode{
-				{"usb0", "4g", 1},
-			},
-			MNet5g: []DeviceNode{},
-			SoftRouter: []DeviceNode{
-				{"eth0", "ethernet", 1},
-				{"eth1", "ethernet", 1},
-			},
-		}
-	}
-	if env == "RPI4B" {
-		return DeviceTree{
-			Network: []DeviceNode{
-				{"eth0", "ethernet", 1},
-			},
-			Wlan: []DeviceNode{
-				{"wlan0", "wlan", 1},
-			},
-			MNet4g:     []DeviceNode{},
-			MNet5g:     []DeviceNode{},
-			SoftRouter: []DeviceNode{},
-		}
-	}
-	if env == "EN6400" {
-		return DeviceTree{
-			Network: []DeviceNode{
-				{"eth0", "ethernet", 1},
-			},
-			Wlan:       []DeviceNode{},
-			MNet4g:     []DeviceNode{},
-			MNet5g:     []DeviceNode{},
-			SoftRouter: []DeviceNode{},
-		}
-	}
-	if env == "RHILEXPRO1" {
-		return DeviceTree{
-			Network: []DeviceNode{
-				{"eth0", "ethernet", 1},
-				{"eth2", "ethernet", 1},
-			},
-			Wlan: []DeviceNode{
-				{"wlan0", "wlan", 1},
-			},
-			MNet4g:     []DeviceNode{},
-			MNet5g:     []DeviceNode{},
-			SoftRouter: []DeviceNode{},
-		}
-	}
-	return DeviceTree{
-		Network: []DeviceNode{
-			{"eth0", "ethernet", 1},
-		},
-		Wlan:       []DeviceNode{},
-		MNet4g:     []DeviceNode{},
-		MNet5g:     []DeviceNode{},
-		SoftRouter: []DeviceNode{},
-	}
+func DefaultDeviceTree() DeviceTree {
+	return DeviceTree{}
 }
