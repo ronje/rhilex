@@ -43,5 +43,5 @@ var Banner = \`
 \`
 EOF
 
-echo "[√] Generate Version Susseccfully"
+echo "[v] Generate Version Susseccfully"
 

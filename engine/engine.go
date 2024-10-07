@@ -209,7 +209,7 @@ func (e *RuleEngine) Stop() {
 	// UnRegister __DeviceConfigMap
 	intercache.UnRegisterSlot("__DeviceConfigMap")
 	// END
-	glogger.GLogger.Info("[√] Stop rhilex successfully")
+	glogger.GLogger.Info("[v] Stop rhilex successfully")
 	if err := glogger.Close(); err != nil {
 		fmt.Println("Close logger error: ", err)
 	}
