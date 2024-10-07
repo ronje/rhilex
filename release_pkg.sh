@@ -142,7 +142,64 @@ gen_changelog() {
     log=$(git log --oneline --pretty=format:" \033[0;31m[*]\033[0m%s\n" $(git describe --abbrev=0 --tags).. | cat)
     echo -e $log
 }
+gen_release_versions(){
+    cd _release
+    local json="{\"code\": 200, \"data\": {\"software_versions\": ["
+    local version="$(git describe --tags $(git rev-list --tags --max-count=1))"
+    declare -A platforms
+    platforms["windows"]="Windows:x86_64"
+    platforms["ubuntu_arm32"]="Ubuntu:arm32"
+    platforms["ubuntu_arm64"]="Ubuntu:arm64"
+    platforms["ubuntu_x86_64"]="Ubuntu:x86_64"
+    platforms["ubuntu_riscv64"]="Ubuntu:riscv64"
+    platforms["debian_arm32"]="Debian:arm32"
+    platforms["debian_arm64"]="Debian:arm64"
+    platforms["debian_x86_64"]="Debian:x86_64"
+    platforms["debian_riscv64"]="Debian:riscv64"
+    platforms["busybox_riscv64"]="Busybox:riscv64"
+    platforms["openwrt_arm32"]="OpenWRT:arm32"
+    platforms["openwrt_arm64"]="OpenWRT:arm64"
+    platforms["openwrt_mips"]="OpenWRT:mips"
+    platforms["openwrt_riscv64"]="OpenWRT:riscv64"
+    json+="{\"version\": \"$version\", \"platforms\": {"
+    for platform in "windows" "ubuntu" "debian" "openwrt" "busybox"; do
+        json+="\"$platform\": ["
+        case $platform in
+            windows)
+                json+="{\"name\": \"${platforms[windows]}\", \"url\": \"/share/rhilex-windows-$version.zip\"}"
+            ;;
+            ubuntu)
+                json+="{\"name\": \"${platforms[ubuntu_arm32]}\", \"url\": \"/share/rhilex-arm32linux-$version.zip\"},"
+                json+="{\"name\": \"${platforms[ubuntu_arm64]}\", \"url\": \"/share/rhilex-arm64linux-$version.zip\"},"
+                json+="{\"name\": \"${platforms[ubuntu_x86_64]}\", \"url\": \"/share/rhilex-x64linux-$version.zip\"},"
+                json+="{\"name\": \"${platforms[ubuntu_riscv64]}\", \"url\": \"/share/rhilex-riscv64linux-$version.zip\"}"
+            ;;
+            debian)
+                json+="{\"name\": \"${platforms[debian_arm32]}\", \"url\": \"/share/rhilex-arm32linux-$version.zip\"},"
+                json+="{\"name\": \"${platforms[debian_arm64]}\", \"url\": \"/share/rhilex-arm64linux-$version.zip\"},"
+                json+="{\"name\": \"${platforms[debian_x86_64]}\", \"url\": \"/share/rhilex-x64linux-$version.zip\"},"
+                json+="{\"name\": \"${platforms[debian_riscv64]}\", \"url\": \"/share/rhilex-riscv64linux-$version.zip\"}"
+            ;;
+            openwrt)
+                json+="{\"name\": \"${platforms[openwrt_arm32]}\", \"url\": \"/share/rhilex-arm32linux-$version.zip\"},"
+                json+="{\"name\": \"${platforms[openwrt_arm64]}\", \"url\": \"/share/rhilex-arm64linux-$version.zip\"},"
+                json+="{\"name\": \"${platforms[openwrt_mips]}\", \"url\": \"/share/rhilex-mipslinux-$version.zip\"},"
+                json+="{\"name\": \"${platforms[openwrt_riscv64]}\", \"url\": \"/share/rhilex-riscv64linux-$version.zip\"}"
+            ;;
+            busybox)
+                json+="{\"name\": \"${platforms[busybox_riscv64]}\", \"url\": \"/share/rhilex-riscv64linux-$version.zip\"}"
+            ;;
+        esac
 
+        json+="],"
+    done
+    json=${json%,}
+    json+="}}]}"
+    json+=",\"msg\": \"Success\"}"
+    echo "$json" > "${version}.json"
+    cd ..
+
+}
 init_env() {
     if [ ! -d "./_build/" ]; then
         mkdir -p ./_build/
@@ -173,8 +230,9 @@ main(){
     cd ./_build/
     # fetch_dashboard
     cross_compile
-    find . -mindepth 1 -not -path "./_release/*" -not -name "_release" -exec rm -rf {} +
+    gen_release_versions
     gen_changelog
+    find . -mindepth 1 -not -path "./_release/*" -not -name "_release" -exec rm -rf {} +
 }
 #
 #-----------------------------------
