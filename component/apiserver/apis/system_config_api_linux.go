@@ -1,21 +1,22 @@
 package apis
 
 import (
-	"fmt"
 	"net"
 	"os"
-	"os/exec"
 	"regexp"
 	"runtime"
 	"strconv"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/hootrhino/rhilex/archsupport/haas506"
+	"github.com/hootrhino/rhilex/archsupport/rhilexg1"
+	"github.com/hootrhino/rhilex/archsupport/rhilexpro1"
 	common "github.com/hootrhino/rhilex/component/apiserver/common"
 	"github.com/hootrhino/rhilex/component/apiserver/model"
 	"github.com/hootrhino/rhilex/component/apiserver/service"
-	"github.com/hootrhino/rhilex/glogger"
 	"github.com/hootrhino/rhilex/ossupport"
 	"github.com/hootrhino/rhilex/typex"
 	"github.com/hootrhino/rhilex/utils"
@@ -140,16 +141,28 @@ func SetWifi(c *gin.Context, ruleEngine typex.Rhilex) {
 			return
 		}
 	}
-	/*
-	*
-	* 全部使用nmcli操作
-	*
-	 */
-	applyNewestEtcWlanConfig()
-	service.EtcApply()
-
-	// 保存到数据库, 并且写入配置
-	c.JSON(common.HTTP_OK, common.Ok())
+	if typex.DefaultVersionInfo.Product == "RHILEXPRO1" {
+		errSetWifi := rhilexpro1.SetWifi(MNetCfg.Interface, MNetCfg.SSID, MNetCfg.Password, 3*time.Second)
+		if errSetWifi != nil {
+			c.JSON(common.HTTP_OK, common.Error400(errSetWifi))
+			return
+		}
+	}
+	if typex.DefaultVersionInfo.Product == "HAAS506LD1" {
+		errSetWifi := haas506.SetWifi(MNetCfg.Interface, MNetCfg.SSID, MNetCfg.Password, 3*time.Second)
+		if errSetWifi != nil {
+			c.JSON(common.HTTP_OK, common.Error400(errSetWifi))
+			return
+		}
+	}
+	if typex.DefaultVersionInfo.Product == "RHILEXG1" {
+		errSetWifi := rhilexg1.SetWifi(MNetCfg.Interface, MNetCfg.SSID, MNetCfg.Password, 3*time.Second)
+		if errSetWifi != nil {
+			c.JSON(common.HTTP_OK, common.Error400(errSetWifi))
+			return
+		}
+	}
+	c.JSON(common.HTTP_OK, common.Error("Unsupported Product:"+typex.DefaultVersionInfo.Product))
 
 }
 
@@ -454,40 +467,6 @@ func UpdateTimeByNtp(c *gin.Context, ruleEngine typex.Rhilex) {
 	}
 	c.JSON(common.HTTP_OK, common.Ok())
 
-}
-
-/*
-*
-* ubuntu1604网络, 使用一个 nmcli 指令
-*
- */
-func applyNewestEtcWlanConfig() error {
-	MWlan0, err := service.GetWlan0Config()
-	if err != nil {
-		return err
-	}
-	// nmcli dev wifi connect SSID password pwd
-	if ossupport.WifiAlreadyConfig(MWlan0.SSID) {
-		s := "nmcli connection up %s"
-		cmd := exec.Command("sh", "-c", fmt.Sprintf(s, MWlan0.SSID))
-		out, err := cmd.CombinedOutput()
-		if err != nil {
-			glogger.GLogger.Error(err)
-			return err
-		}
-		glogger.GLogger.Info(string(out))
-	} else {
-		s := "nmcli dev wifi connect \"%s\" password \"%s\""
-		cmd := exec.Command("sh", "-c",
-			fmt.Sprintf(s, MWlan0.SSID, MWlan0.Password))
-		out, err := cmd.CombinedOutput()
-		if err != nil {
-			glogger.GLogger.Error(err)
-			return err
-		}
-		glogger.GLogger.Info(string(out))
-	}
-	return nil
 }
 
 func isValidSubnetMask(mask string) bool {
