@@ -15,7 +15,14 @@
 
 package rhilexpro1
 
-func SetEthernet(Interface, Address, Netmask, Gateway string, DHCPEnabled bool) error {
+type NetworkInterfaceConfig struct {
+	Interface   string
+	Address     string
+	Netmask     string
+	Gateway     string
+	DHCPEnabled bool
+}
 
+func SetEthernet(configs []NetworkInterfaceConfig) error {
 	return nil
 }

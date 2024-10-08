@@ -19,7 +19,6 @@ require (
 	github.com/gosnmp/gosnmp v1.38.0
 	github.com/hootrhino/beautiful-lua-go v0.1.0
 	github.com/hootrhino/go-ais v1.0.0
-	github.com/hootrhino/go-dhcpd-leases v0.0.0-20240116064141-0730f287f9a2
 	github.com/hootrhino/gobacnet v0.0.0-20240610124438-e673dc57700e
 	github.com/hootrhino/gomodbus v0.2.5
 	github.com/hootrhino/gomodbus-server v0.1.10
@@ -29,12 +28,11 @@ require (
 	github.com/itchyny/gojq v0.12.16
 	github.com/jinzhu/copier v0.4.0
 	github.com/lithammer/shortuuid/v4 v4.0.0
-	github.com/mattn/go-sqlite3 v1.14.23
+	github.com/mattn/go-sqlite3 v1.14.24
 	github.com/mochi-mqtt/server/v2 v2.6.5
 	github.com/pkg/errors v0.9.1
 	github.com/pkg6/go-sms v0.1.2
 	github.com/plgd-dev/go-coap/v3 v3.3.6
-	github.com/plgd-dev/kit/v2 v2.0.0-20211006190727-057b33161b90
 	github.com/robfig/cron/v3 v3.0.1
 	github.com/robinson/gos7 v0.0.0-20240315073918-1f14519e4846
 	github.com/samber/lo v1.47.0
@@ -47,13 +45,13 @@ require (
 	github.com/wwhai/tinycache v0.0.0-20191004192108-46f407853014
 	github.com/xuri/excelize/v2 v2.8.1
 	go.bug.st/serial v1.6.2
-	go.mongodb.org/mongo-driver v1.17.0
+	go.mongodb.org/mongo-driver v1.17.1
 	gocv.io/x/gocv v0.38.0
 	golang.ngrok.com/ngrok v1.10.0
-	golang.org/x/exp v0.0.0-20240909161429-701f63a606c0
-	golang.org/x/sys v0.25.0
-	google.golang.org/grpc v1.67.0
-	google.golang.org/protobuf v1.34.2
+	golang.org/x/exp v0.0.0-20241004190924-225e2abe05e6
+	golang.org/x/sys v0.26.0
+	google.golang.org/grpc v1.67.1
+	google.golang.org/protobuf v1.35.1
 	gopkg.in/ini.v1 v1.67.0
 	gopkg.in/natefinch/lumberjack.v2 v2.2.1
 	gopkg.in/square/go-jose.v2 v2.6.0
@@ -129,7 +127,7 @@ require (
 	golang.org/x/sync v0.8.0 // indirect
 	golang.org/x/term v0.23.0 // indirect
 	golang.org/x/text v0.17.0 // indirect
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20240924160255-9d4c2d233b61 // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20240814211410-ddb44dafa142 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )

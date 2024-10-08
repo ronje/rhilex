@@ -10,11 +10,11 @@ import (
 * 配置WIFI Wlan0
 *
  */
-func UpdateWlan0Config(MNetworkConfig model.MNetworkConfig) error {
-	Model := model.MNetworkConfig{Interface: "wlan0"}
+func UpdateWlanConfig(MNetworkConfig model.MNetworkConfig) error {
+	Model := model.MNetworkConfig{Interface: MNetworkConfig.Interface}
 	return interdb.DB().
 		Model(Model).
-		Where("interface=? and id=3 and type=\"WIFI\"", "wlan0").
+		Where("interface=? and type=\"WIFI\"", MNetworkConfig.Interface).
 		Updates(MNetworkConfig).Error
 }
 
@@ -23,10 +23,10 @@ func UpdateWlan0Config(MNetworkConfig model.MNetworkConfig) error {
 * 获取Wlan0的配置信息
 *
  */
-func GetWlan0Config() (model.MNetworkConfig, error) {
+func GetWlanConfig(Interface string) (model.MNetworkConfig, error) {
 	MWifiConfig := model.MNetworkConfig{}
 	err := interdb.DB().
-		Where("interface=? and id=3 and type=\"WIFI\"", "wlan0").
+		Where("interface=? and type=\"WIFI\"", Interface).
 		Find(&MWifiConfig).Error
 	return MWifiConfig, err
 }
@@ -53,7 +53,7 @@ func InitWlanConfig() error {
 		DHCPEnabled: new(bool),
 	}
 	err := interdb.DB().
-		Where("interface=? and id=3 and type=\"WIFI\"", "wlan0").
+		Where("interface=? and type=\"WIFI\"", "wlan0").
 		FirstOrCreate(&wlan0).Error
 	if err != nil {
 		return err

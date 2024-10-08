@@ -1,9 +1,6 @@
 package service
 
 import (
-	"fmt"
-	"os/exec"
-
 	"github.com/hootrhino/rhilex/component/apiserver/model"
 	"github.com/hootrhino/rhilex/component/interdb"
 )
@@ -24,45 +21,19 @@ import (
     IPv4: 119.29.29.29, 182.254.116.116
 */
 
-/*
-*
-* 永远只有一个配置,eth0
-*
- */
-func GetEth0Config() (model.MNetworkConfig, error) {
+func GetEthConfig(Interface string) (model.MNetworkConfig, error) {
 	MNetworkConfig := model.MNetworkConfig{}
 	err := interdb.DB().
-		Where("interface=?", "eth0").
+		Where("interface=?", Interface).
 		Find(&MNetworkConfig).Error
 	return MNetworkConfig, err
 }
 
-/*
-*
-* 永远只有一个配置,eth1
-*
- */
-func GetEth1Config() (model.MNetworkConfig, error) {
-	MNetworkConfig := model.MNetworkConfig{}
-	err := interdb.DB().
-		Where("interface=?", "eth1").
-		Find(&MNetworkConfig).Error
-	return MNetworkConfig, err
-}
-
-func UpdateEth0Config(MNetworkConfig model.MNetworkConfig) error {
+func UpdateEthConfig(MNetworkConfig model.MNetworkConfig) error {
 	Model := model.MNetworkConfig{}
 	return interdb.DB().
 		Model(Model).
-		Where("interface=?", "eth0").
-		Updates(MNetworkConfig).Error
-}
-
-func UpdateEth1Config(MNetworkConfig model.MNetworkConfig) error {
-	Model := model.MNetworkConfig{}
-	return interdb.DB().
-		Model(Model).
-		Where("interface=?", "eth1").
+		Where("interface=?", MNetworkConfig.Interface).
 		Updates(MNetworkConfig).Error
 }
 
@@ -72,8 +43,6 @@ func UpdateEth1Config(MNetworkConfig model.MNetworkConfig) error {
 *
  */
 func InitNetWorkConfig() error {
-
-	// 默认给DHCP
 	dhcp0 := true
 	dhcp1 := false
 	eth0 := model.MNetworkConfig{
@@ -108,30 +77,6 @@ func InitNetWorkConfig() error {
 	err = interdb.DB().Where("interface=? and id=2", "eth1").FirstOrCreate(&eth1).Error
 	if err != nil {
 		return err
-	}
-	return nil
-}
-
-// RestartNetworkManager 用于重启 NetworkManager 服务
-func RestartNetworkManager() error {
-	cmd := exec.Command("systemctl", "restart", "NetworkManager")
-	output, err := cmd.CombinedOutput()
-	if err != nil {
-		return fmt.Errorf(err.Error() + ":" + string(output))
-	}
-	return nil
-}
-
-/*
-*
-* Ubuntu16 ETC 配置应用
-* sudo service networking restart
- */
-func EtcApply() error {
-	cmd := exec.Command("sh", "-c", `service networking restart`)
-	output, err := cmd.CombinedOutput()
-	if err != nil {
-		return fmt.Errorf(err.Error() + ":" + string(output))
 	}
 	return nil
 }

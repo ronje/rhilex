@@ -68,19 +68,6 @@ func LoadSystemSettingsAPI() {
 		settings4GApi.GET("/apn", server.AddRoute(GetAPN))
 		settings4GApi.POST("/apn", server.AddRoute(SetAPN))
 	}
-	// 软路由相关
-	settingsSoftRouterApi := server.RouteGroup(server.ContextUrl("/softRouter"))
-	{
-		settingsSoftRouterApi.GET("/dhcp", server.AddRoute(GetDHCP))
-		settingsSoftRouterApi.POST("/dhcp", server.AddRoute(SetDHCP))
-		settingsSoftRouterApi.GET("/dhcp/clients", server.AddRoute(GetDhcpClients))
-		settingsSoftRouterApi.DELETE("/dhcp/clients/del", server.AddRoute(DeleteDhcpClient))
-		settingsSoftRouterApi.DELETE("/dhcp/clients/clean", server.AddRoute(CleanDhcpClients))
-		// 默认 Ip route
-		settingsSoftRouterApi.POST("/iproute", server.AddRoute(SetNewDefaultIpRoute))
-		settingsSoftRouterApi.GET("/iproute", server.AddRoute(GetOldDefaultIpRoute))
-
-	}
 	// 固件
 	settingsFirmware := server.RouteGroup(server.ContextUrl("/firmware"))
 	{

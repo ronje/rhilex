@@ -7,7 +7,6 @@ import (
 	"net"
 	"net/http"
 	"os"
-	"os/exec"
 	"runtime/debug"
 	"time"
 
@@ -19,7 +18,6 @@ import (
 	"github.com/hootrhino/rhilex/component/apiserver/service"
 	core "github.com/hootrhino/rhilex/config"
 	"github.com/hootrhino/rhilex/glogger"
-	"github.com/hootrhino/rhilex/ossupport"
 	"github.com/hootrhino/rhilex/typex"
 )
 
@@ -191,77 +189,10 @@ func (s *RhilexApiServer) InitializeWindowsData() {
 	glogger.GLogger.Info("Initialize Windows Default Data")
 }
 
-func (s *RhilexApiServer) InitializeRHILEXG1Data() {
+func (s *RhilexApiServer) InitializeProduct() {
 	env := os.Getenv("ARCHSUPPORT")
 	if env == "RHILEXG1" {
 		glogger.GLogger.Info("Initialize Rhilex Pi Default Data")
-	}
-}
-
-/*
-*
-* 初始化配置
-*
- */
-func (s *RhilexApiServer) InitializeConfigCtl() {
-	// 一组操作, 主要用来初始化 DHCP和DNS、网卡配置等
-	// 1 2 3 的目的是为了每次重启的时候初始化软路由
-	env := os.Getenv("ARCHSUPPORT")
-	if env == "RHILEXG1" {
-		{
-			MIproute, err := service.GetDefaultIpRoute()
-			if err != nil {
-				return
-			}
-			// 1 初始化默认路由表: ip route
-			ossupport.ConfigDefaultIpTable(MIproute.Iface)
-			// 2 初始化默认DHCP
-			ossupport.ConfigDefaultIscServer(MIproute.Iface)
-			// 3 初始化Eth1的静态IP地址
-			ossupport.ConfigDefaultIscServeDhcp(ossupport.IscServerDHCPConfig{
-				Iface:       MIproute.Iface,
-				Ip:          MIproute.Ip,
-				Network:     MIproute.Network,
-				Gateway:     MIproute.Gateway,
-				Netmask:     MIproute.Netmask,
-				IpPoolBegin: MIproute.IpPoolBegin,
-				IpPoolEnd:   MIproute.IpPoolEnd,
-				IfaceFrom:   MIproute.IfaceFrom,
-				IfaceTo:     MIproute.IfaceTo,
-			})
-		}
-		{
-			// 4 配置WIFI
-			MWlan0, err := service.GetWlan0Config()
-			if err != nil {
-				return
-			}
-			if ossupport.WifiAlreadyConfig(MWlan0.SSID) {
-				s := "nmcli connection up %s"
-				shell := fmt.Sprintf(s, MWlan0.SSID)
-				glogger.GLogger.Debug(shell)
-				cmd := exec.Command("sh", "-c", shell)
-				out, err := cmd.CombinedOutput()
-				if err != nil {
-					glogger.GLogger.Error(err)
-					return
-				}
-				glogger.GLogger.Debug(string(out))
-			} else {
-				s := "nmcli dev wifi connect \"%s\" password \"%s\""
-				shell := fmt.Sprintf(s, MWlan0.SSID, MWlan0.Password)
-				glogger.GLogger.Debug(shell)
-				cmd := exec.Command("sh", "-c", shell)
-				out, err := cmd.CombinedOutput()
-				if err != nil {
-					glogger.GLogger.Error(err)
-					return
-				}
-				glogger.GLogger.Debug(string(out))
-			}
-
-			return
-		}
 	}
 }
 
@@ -275,8 +206,6 @@ func initStaticModel() {
 	service.InitNetWorkConfig()
 	// 初始化WIFI配置
 	service.InitWlanConfig()
-	// 初始化默认路由, 如果没有配置会在数据库生成关于eth1的一个默认路由数据
-	service.InitDefaultIpRoute()
 	// 初始化硬件接口参数
 	service.InitUartConfig()
 	// 配置一个默认分组

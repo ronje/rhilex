@@ -2,7 +2,6 @@ package apis
 
 import (
 	"net"
-	"os"
 	"regexp"
 	"runtime"
 	"strconv"
@@ -79,7 +78,8 @@ func GetVolume(c *gin.Context, ruleEngine typex.Rhilex) {
 *
  */
 func GetWifi(c *gin.Context, ruleEngine typex.Rhilex) {
-	MWifiConfig, err := service.GetWlan0Config()
+	iface, _ := c.GetQuery("iface")
+	MWifiConfig, err := service.GetWlanConfig(iface)
 	if err != nil {
 		c.JSON(common.HTTP_OK, common.Error400(err))
 		return
@@ -135,7 +135,7 @@ func SetWifi(c *gin.Context, ruleEngine typex.Rhilex) {
 		Password:  DtoCfg.Password,
 		Security:  DtoCfg.Security,
 	}
-	if err := service.UpdateWlan0Config(MNetCfg); err != nil {
+	if err := service.UpdateWlanConfig(MNetCfg); err != nil {
 		if err != nil {
 			c.JSON(common.HTTP_OK, common.Error400(err))
 			return
@@ -147,6 +147,7 @@ func SetWifi(c *gin.Context, ruleEngine typex.Rhilex) {
 			c.JSON(common.HTTP_OK, common.Error400(errSetWifi))
 			return
 		}
+		goto END
 	}
 	if typex.DefaultVersionInfo.Product == "HAAS506LD1" {
 		errSetWifi := haas506.SetWifi(MNetCfg.Interface, MNetCfg.SSID, MNetCfg.Password, 3*time.Second)
@@ -154,6 +155,7 @@ func SetWifi(c *gin.Context, ruleEngine typex.Rhilex) {
 			c.JSON(common.HTTP_OK, common.Error400(errSetWifi))
 			return
 		}
+		goto END
 	}
 	if typex.DefaultVersionInfo.Product == "RHILEXG1" {
 		errSetWifi := rhilexg1.SetWifi(MNetCfg.Interface, MNetCfg.SSID, MNetCfg.Password, 3*time.Second)
@@ -161,7 +163,9 @@ func SetWifi(c *gin.Context, ruleEngine typex.Rhilex) {
 			c.JSON(common.HTTP_OK, common.Error400(errSetWifi))
 			return
 		}
+		goto END
 	}
+END:
 	c.JSON(common.HTTP_OK, common.Error("Unsupported Product:"+typex.DefaultVersionInfo.Product))
 
 }
@@ -172,37 +176,7 @@ func SetWifi(c *gin.Context, ruleEngine typex.Rhilex) {
 *
  */
 func ApplyNewestEtcEthConfig() error {
-	MEth0, err := service.GetEth0Config()
-	if err != nil {
-		return err
-	}
-	MEth1, err := service.GetEth1Config()
-	if err != nil {
-		return err
-	}
-	EtcEth0Cfg := ossupport.EtcNetworkConfig{
-		Interface:   MEth0.Interface,
-		Address:     MEth0.Address,
-		Netmask:     MEth0.Netmask,
-		Gateway:     MEth0.Gateway,
-		DNS:         MEth0.DNS,
-		DHCPEnabled: *MEth0.DHCPEnabled,
-	}
-	EtcEth1Cfg := ossupport.EtcNetworkConfig{
-		Interface:   MEth1.Interface,
-		Address:     MEth1.Address,
-		Netmask:     MEth1.Netmask,
-		Gateway:     MEth1.Gateway,
-		DNS:         MEth1.DNS,
-		DHCPEnabled: *MEth1.DHCPEnabled,
-	}
-	loopBack := "# DON'T EDIT THIS FILE!\nauto lo\niface lo inet loopback\n"
-	return os.WriteFile("/etc/network/interfaces",
-		[]byte(
-			loopBack+
-				EtcEth0Cfg.GenEtcConfig()+
-				"\n"+
-				EtcEth1Cfg.GenEtcConfig()+"\n"), 0755)
+	return nil
 
 }
 
@@ -319,37 +293,7 @@ func validTimeZone(timezone string) bool {
 *
  */
 func GetEthNetwork(c *gin.Context, ruleEngine typex.Rhilex) {
-	MEth0, err := service.GetEth0Config()
-	if err != nil {
-		c.JSON(common.HTTP_OK, common.Error400(err))
-		return
-
-	}
-	MEth1, err := service.GetEth1Config()
-	if err != nil {
-		c.JSON(common.HTTP_OK, common.Error400(err))
-		return
-	}
-	Eth0Cfg := ossupport.EtcNetworkConfig{
-		Interface:   MEth0.Interface,
-		Address:     MEth0.Address,
-		Netmask:     MEth0.Address,
-		Gateway:     MEth0.Address,
-		DNS:         MEth0.DNS,
-		DHCPEnabled: *MEth0.DHCPEnabled,
-	}
-	Eth1Cfg := ossupport.EtcNetworkConfig{
-		Interface:   MEth1.Interface,
-		Address:     MEth1.Address,
-		Netmask:     MEth1.Address,
-		Gateway:     MEth1.Address,
-		DNS:         MEth1.DNS,
-		DHCPEnabled: *MEth1.DHCPEnabled,
-	}
-	c.JSON(common.HTTP_OK, common.OkWithData(map[string]ossupport.EtcNetworkConfig{
-		"eth0": Eth0Cfg,
-		"eth1": Eth1Cfg,
-	}))
+	c.JSON(common.HTTP_OK, common.OkWithData(map[string]ossupport.EtcNetworkConfig{}))
 
 }
 
@@ -385,17 +329,12 @@ func SetEthNetwork(c *gin.Context, ruleEngine typex.Rhilex) {
 		DNS         []string `json:"dns"`
 		DHCPEnabled bool     `json:"dhcp_enabled"`
 	}
-
 	DtoCfg := Form{}
 	if err0 := c.ShouldBindJSON(&DtoCfg); err0 != nil {
 		c.JSON(common.HTTP_OK, common.Error400(err0))
 		return
 	}
-	if !utils.SContains([]string{"eth1", "eth0"}, DtoCfg.Interface) {
-		c.JSON(common.HTTP_OK,
-			common.Error(("Only have 2 valid interface:eth1 and eth0")))
-		return
-	}
+
 	if !isValidIP(DtoCfg.Address) {
 		c.JSON(common.HTTP_OK,
 			common.Error(("Invalid IP:" + DtoCfg.Address)))
@@ -428,29 +367,64 @@ func SetEthNetwork(c *gin.Context, ruleEngine typex.Rhilex) {
 		DNS:         DtoCfg.DNS,
 		DHCPEnabled: &DtoCfg.DHCPEnabled,
 	}
-	if DtoCfg.Interface == "eth0" {
-		if err := service.UpdateEth0Config(MNetCfg); err != nil {
-			if err != nil {
-				c.JSON(common.HTTP_OK, common.Error400(err))
-				return
-			}
+	if err := service.UpdateEthConfig(MNetCfg); err != nil {
+		if err != nil {
+			c.JSON(common.HTTP_OK, common.Error400(err))
+			return
 		}
 	}
-	if DtoCfg.Interface == "eth1" {
-		if err := service.UpdateEth1Config(MNetCfg); err != nil {
-			if err != nil {
-				c.JSON(common.HTTP_OK, common.Error400(err))
-				return
-			}
+	if typex.DefaultVersionInfo.Product == "RHILEXPRO1" {
+		config := []rhilexpro1.NetworkInterfaceConfig{
+			rhilexpro1.NetworkInterfaceConfig{
+				Interface:   MNetCfg.Interface,
+				Address:     MNetCfg.Address,
+				Netmask:     MNetCfg.Netmask,
+				Gateway:     MNetCfg.Gateway,
+				DHCPEnabled: *MNetCfg.DHCPEnabled,
+			},
 		}
+		errSetWifi := rhilexpro1.SetEthernet(config)
+		if errSetWifi != nil {
+			c.JSON(common.HTTP_OK, common.Error400(errSetWifi))
+			return
+		}
+		goto END
 	}
-	/*
-	*
-	* 全部采用nmcli
-	*
-	 */
-	ApplyNewestEtcEthConfig()
-	service.EtcApply()
+	if typex.DefaultVersionInfo.Product == "HAAS506LD1" {
+		config := []haas506.NetworkInterfaceConfig{
+			haas506.NetworkInterfaceConfig{
+				Interface:   MNetCfg.Interface,
+				Address:     MNetCfg.Address,
+				Netmask:     MNetCfg.Netmask,
+				Gateway:     MNetCfg.Gateway,
+				DHCPEnabled: *MNetCfg.DHCPEnabled,
+			},
+		}
+		errSetWifi := haas506.SetEthernet(config)
+		if errSetWifi != nil {
+			c.JSON(common.HTTP_OK, common.Error400(errSetWifi))
+			return
+		}
+		goto END
+	}
+	if typex.DefaultVersionInfo.Product == "RHILEXG1" {
+		config := []rhilexg1.NetworkInterfaceConfig{
+			rhilexg1.NetworkInterfaceConfig{
+				Interface:   MNetCfg.Interface,
+				Address:     MNetCfg.Address,
+				Netmask:     MNetCfg.Netmask,
+				Gateway:     MNetCfg.Gateway,
+				DHCPEnabled: *MNetCfg.DHCPEnabled,
+			},
+		}
+		errSetWifi := rhilexg1.SetEthernet(config)
+		if errSetWifi != nil {
+			c.JSON(common.HTTP_OK, common.Error400(errSetWifi))
+			return
+		}
+		goto END
+	}
+END:
 	c.JSON(common.HTTP_OK, common.Ok())
 
 }
