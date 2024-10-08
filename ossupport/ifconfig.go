@@ -1,4 +1,4 @@
-// Copyright (C) 2023 wwhai
+// Copyright (C) 2024 wwhai
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License as
@@ -11,26 +11,35 @@
 // GNU Affero General Public License for more details.
 //
 // You should have received a copy of the GNU Affero General Public License
-// along with this program.  If not, see <http://www.gnu.org/licenses/>.
+// along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-package apis
+package ossupport
 
 import (
-	"github.com/gin-gonic/gin"
-	common "github.com/hootrhino/rhilex/component/apiserver/common"
-	"github.com/hootrhino/rhilex/ossupport"
-	"github.com/hootrhino/rhilex/typex"
+	"bytes"
+	"errors"
+	"os/exec"
+	"runtime"
 )
 
-/**
- * ifconfig
- *
- */
-func GetNetworkStatus(c *gin.Context, ruleEngine typex.Rhilex) {
-	out, err := ossupport.Ifconfig()
-	if err != nil {
-		c.JSON(common.HTTP_OK, common.Error400(err))
-		return
+// Ifconfig 执行系统的 ifconfig 或 ipconfig 命令，并返回输出结果
+func Ifconfig() (string, error) {
+	var cmd *exec.Cmd
+	if runtime.GOOS == "windows" {
+		cmd = exec.Command("ipconfig", "/all")
+	} else {
+		cmd = exec.Command("ifconfig", "-a")
 	}
-	c.JSON(common.HTTP_OK, common.OkWithData(string(out)))
+	var out bytes.Buffer
+	cmd.Stdout = &out
+	err := cmd.Run()
+	if err != nil {
+		return "", err
+	}
+	result := out.String()
+	if result == "" {
+		return "", errors.New("no output from ifconfig/ipconfig command")
+	}
+
+	return result, nil
 }
