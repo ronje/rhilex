@@ -23,6 +23,42 @@ import (
 	"github.com/hootrhino/wmi"
 )
 
+// GetSystemTime
+func GetSystemTime() (string, error) {
+	currentTime := time.Now()
+	formattedTime := currentTime.Format("2006-01-02 15:04:05")
+	return formattedTime, nil
+}
+
+/*
+*
+* 时区
+*
+ */
+type TimeZoneInfo struct {
+	CurrentTimezone string `json:"currentTimezone"`
+	NTPSynchronized string `json:"NTPSynchronized"`
+}
+
+func GetTimeZone() (TimeZoneInfo, error) {
+	timezoneInfo, err := GetWindowsTimeZone()
+	if err != nil {
+		return TimeZoneInfo{}, err
+	}
+	return TimeZoneInfo{CurrentTimezone: timezoneInfo}, nil
+}
+
+// GetWindowsTimeZone 返回当前 Windows 系统的时区
+func GetWindowsTimeZone() (string, error) {
+	loc, err := time.LoadLocation("Local")
+	if err != nil {
+		return "", err
+	}
+	now := time.Now()
+	timeZoneName, _ := now.In(loc).Zone()
+	return timeZoneName, nil
+}
+
 /*
 *
 * 获取开机时间

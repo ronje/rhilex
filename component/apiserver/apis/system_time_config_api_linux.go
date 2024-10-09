@@ -29,10 +29,6 @@ type TimeVo struct {
     获取时间: date "+%Y-%m-%d %H:%M:%S" -> 2023-08-07 15:30:00
 */
 func SetSystemTime(c *gin.Context, ruleEngine typex.Rhilex) {
-	if runtime.GOOS != "linux" {
-		c.JSON(common.HTTP_OK, common.Error("OS Not Support:"+runtime.GOOS))
-		return
-	}
 	DtoCfg := TimeVo{}
 	if err0 := c.ShouldBindJSON(&DtoCfg); err0 != nil {
 		c.JSON(common.HTTP_OK, common.Error400(err0))
@@ -63,10 +59,6 @@ func SetSystemTime(c *gin.Context, ruleEngine typex.Rhilex) {
 *
  */
 func GetSystemTime(c *gin.Context, ruleEngine typex.Rhilex) {
-	if runtime.GOOS != "linux" {
-		c.JSON(common.HTTP_OK, common.Error("OS Not Support:"+runtime.GOOS))
-		return
-	}
 	SysTime, err := ossupport.GetSystemTime()
 	if err != nil {
 		c.JSON(common.HTTP_OK, common.Error400(err))

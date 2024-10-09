@@ -17,9 +17,12 @@ package ossupport
 
 import (
 	"bytes"
-	"errors"
+	"io"
 	"os/exec"
 	"runtime"
+
+	"golang.org/x/text/encoding/simplifiedchinese"
+	"golang.org/x/text/transform"
 )
 
 // Ifconfig 执行系统的 ifconfig 或 ipconfig 命令，并返回输出结果
@@ -36,10 +39,18 @@ func Ifconfig() (string, error) {
 	if err != nil {
 		return "", err
 	}
-	result := out.String()
-	if result == "" {
-		return "", errors.New("no output from ifconfig/ipconfig command")
-	}
+	if runtime.GOOS == "windows" {
+		// 将 GBK 转换为 UTF-8
+		reader := transform.NewReader(
+			bytes.NewReader(out.Bytes()), // 使用 bytes.NewReader
+			simplifiedchinese.GBK.NewDecoder(),
+		)
+		decodedOutput, err := io.ReadAll(reader)
+		if err != nil {
+			return "", err
+		}
+		return string(decodedOutput), nil
 
-	return result, nil
+	}
+	return string(out.Bytes()), nil
 }

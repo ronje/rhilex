@@ -17,6 +17,7 @@ package ossupport
 
 import (
 	"fmt"
+	"os"
 	"os/exec"
 	"strings"
 	"time"
@@ -116,35 +117,40 @@ type TimeZoneInfo struct {
 }
 
 func GetTimeZone() (TimeZoneInfo, error) {
-	timezoneInfo, err := getTimeZoneInfo()
+	timezoneInfo, err := GetLinuxTimeZone()
 	if err != nil {
 		return TimeZoneInfo{}, err
 	}
-	return timezoneInfo, nil
+	return TimeZoneInfo{CurrentTimezone: timezoneInfo}, nil
 }
-func getTimeZoneInfo() (TimeZoneInfo, error) {
-	var timezoneInfo TimeZoneInfo
 
-	cmd := exec.Command("timedatectl", "status", "--no-pager")
-	output, err := cmd.Output()
+// GetLinuxTimeZone 返回当前 Linux 系统的时区
+func GetLinuxTimeZone() (string, error) {
+	// Linux 系统的时区通常存储在 /etc/timezone 文件中
+	timezoneFilePath := "/etc/timezone"
+	// 读取时区文件内容
+	content, err := os.ReadFile(timezoneFilePath)
 	if err != nil {
-		return timezoneInfo, fmt.Errorf(err.Error() + ":" + string(output))
-	}
-	outputStr := string(output)
-	lines := strings.Split(outputStr, "\n")
-	for _, line := range lines {
-		fields := strings.Split(line, ": ")
-		if len(fields) >= 2 {
-			switch strings.TrimSpace(fields[0]) {
-			case "Time zone":
-				timezoneInfo.CurrentTimezone = fields[1]
-			case "System clock synchronized":
-				timezoneInfo.NTPSynchronized = fields[1]
-			}
+		// 如果 /etc/timezone 文件不存在，尝试读取 /etc/localtime 文件
+		localtimeFilePath := "/etc/localtime"
+		_, err := os.Stat(localtimeFilePath)
+		if err != nil {
+			return "", err
 		}
+		realPath, err := os.Readlink(localtimeFilePath)
+		if err != nil {
+			return "", err
+		}
+		zoneinfoPath := "/usr/share/zoneinfo/"
+		if strings.HasPrefix(realPath, zoneinfoPath) {
+			return realPath[len(zoneinfoPath):], nil
+		}
+		return "", fmt.Errorf("cannot determine timezone from %s", localtimeFilePath)
 	}
 
-	return timezoneInfo, nil
+	// 去除内容中的换行符
+	timezone := strings.TrimSpace(string(content))
+	return timezone, nil
 }
 
 // SetTimeZone 设置系统时区

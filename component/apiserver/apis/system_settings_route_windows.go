@@ -27,4 +27,11 @@ func LoadSystemSettingsAPI() {
 		iFacesApi.GET(("/uarts"), server.AddRoute(GetUartList))
 		iFacesApi.GET(("/netStatus"), server.AddRoute(GetNetworkStatus))
 	}
+	// time
+	timesApi := server.RouteGroup(server.ContextUrl("/settings"))
+	{
+		timesApi.GET("/time", server.AddRoute(GetSystemTime))
+		timesApi.POST("/time", server.AddRoute(SetSystemTime))
+		timesApi.PUT("/ntp", server.AddRoute(UpdateTimeByNtp))
+	}
 }
