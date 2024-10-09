@@ -36,15 +36,10 @@ import (
 *
  */
 type WifiConfigVo struct {
-	Type        string `json:"type"`      // 类型: ETH | WIFI
-	Interface   string `json:"interface"` // eth1 eth0
-	Address     string `json:"address"`
-	Netmask     string `json:"netmask"`
-	Gateway     string `json:"gateway"`
-	DHCPEnabled *bool  `json:"dhcp_enabled"`
-	SSID        string `json:"ssid"`
-	Password    string `json:"password"`
-	Security    string `json:"security"`
+	Interface string `json:"interface"` // eth1 eth0
+	SSID      string `json:"ssid"`
+	Password  string `json:"password"`
+	Security  string `json:"security"` // wpa2-psk wpa3-psk
 }
 
 /**
@@ -59,15 +54,10 @@ func GetWifi(c *gin.Context, ruleEngine typex.Rhilex) {
 		return
 	}
 	vo := WifiConfigVo{
-		Type:        MWifiConfig.Type,
-		Interface:   MWifiConfig.Interface,
-		Address:     MWifiConfig.Address,
-		Netmask:     MWifiConfig.Netmask,
-		Gateway:     MWifiConfig.Gateway,
-		DHCPEnabled: MWifiConfig.DHCPEnabled,
-		SSID:        MWifiConfig.SSID,
-		Password:    MWifiConfig.Password,
-		Security:    MWifiConfig.Security,
+		Interface: MWifiConfig.Interface,
+		SSID:      MWifiConfig.SSID,
+		Password:  MWifiConfig.Password,
+		Security:  MWifiConfig.Security,
 	}
 	c.JSON(common.HTTP_OK, common.OkWithData(vo))
 
@@ -83,14 +73,7 @@ func SetWifi(c *gin.Context, ruleEngine typex.Rhilex) {
 		c.JSON(common.HTTP_OK, common.Error("OS Not Support:"+runtime.GOOS))
 		return
 	}
-	type Form struct {
-		Interface string `json:"interface"`
-		SSID      string `json:"ssid"`
-		Password  string `json:"password"`
-		Security  string `json:"security"` // wpa2-psk wpa3-psk
-	}
-
-	DtoCfg := Form{}
+	DtoCfg := WifiConfigVo{}
 	if err0 := c.ShouldBindJSON(&DtoCfg); err0 != nil {
 		c.JSON(common.HTTP_OK, common.Error400(err0))
 		return
