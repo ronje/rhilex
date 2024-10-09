@@ -18,8 +18,8 @@ package archsupport
 type DeviceNodeType string
 
 const (
-	UART   DeviceNodeType = "UART"
 	ETHNET DeviceNodeType = "ETHNET"
+	WLAN   DeviceNodeType = "WLAN"
 	NM4G   DeviceNodeType = "NM4G"
 	NM5G   DeviceNodeType = "NM5G"
 	CAN    DeviceNodeType = "CAN"

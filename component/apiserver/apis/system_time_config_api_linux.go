@@ -1,7 +1,6 @@
 package apis
 
 import (
-	"net"
 	"regexp"
 	"runtime"
 	"sync"
@@ -17,7 +16,7 @@ import (
 * 时区设置
 *
  */
-type timeVo struct {
+type TimeVo struct {
 	SysTime     string `json:"sysTime"`
 	SysTimeZone string `json:"sysTimeZone"`
 	EnableNtp   bool   `json:"enableNtp"`
@@ -34,7 +33,7 @@ func SetSystemTime(c *gin.Context, ruleEngine typex.Rhilex) {
 		c.JSON(common.HTTP_OK, common.Error("OS Not Support:"+runtime.GOOS))
 		return
 	}
-	DtoCfg := timeVo{}
+	DtoCfg := TimeVo{}
 	if err0 := c.ShouldBindJSON(&DtoCfg); err0 != nil {
 		c.JSON(common.HTTP_OK, common.Error400(err0))
 		return
@@ -79,7 +78,7 @@ func GetSystemTime(c *gin.Context, ruleEngine typex.Rhilex) {
 		return
 	}
 
-	c.JSON(common.HTTP_OK, common.OkWithData(timeVo{
+	c.JSON(common.HTTP_OK, common.OkWithData(TimeVo{
 		EnableNtp:   true,
 		SysTime:     SysTime,
 		SysTimeZone: SysTimeZone.CurrentTimezone,
