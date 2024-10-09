@@ -2,7 +2,6 @@ package apis
 
 import (
 	"regexp"
-	"runtime"
 	"sync"
 
 	"github.com/gin-gonic/gin"
