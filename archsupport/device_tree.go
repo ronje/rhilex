@@ -34,15 +34,19 @@ type DeviceNode struct {
 }
 
 type DeviceTree struct {
-	Network    []DeviceNode `json:"network"`
-	Wlan       []DeviceNode `json:"wlan"`
-	MNet4g     []DeviceNode `json:"net4g"`
-	MNet5g     []DeviceNode `json:"net5g"`
-	SerialPort []DeviceNode `json:"serialPort"`
-	SoftRouter []DeviceNode `json:"soft_router"`
-	CanBus     []DeviceNode `json:"canbus"`
+	Network []DeviceNode `json:"network"` // 网络
+	Wlan    []DeviceNode `json:"wlan"`    // WIFI
+	MNet4g  []DeviceNode `json:"net4g"`   // 4G网络
+	MNet5g  []DeviceNode `json:"net5g"`   // 5G网络
+	CanBus  []DeviceNode `json:"canbus"`  // CAN总线
 }
 
 func DefaultDeviceTree() DeviceTree {
-	return DeviceTree{}
+	return DeviceTree{
+		Network: []DeviceNode{},
+		Wlan:    []DeviceNode{},
+		MNet4g:  []DeviceNode{},
+		MNet5g:  []DeviceNode{},
+		CanBus:  []DeviceNode{},
+	}
 }

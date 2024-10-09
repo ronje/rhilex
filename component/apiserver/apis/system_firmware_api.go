@@ -25,6 +25,7 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	common "github.com/hootrhino/rhilex/component/apiserver/common"
@@ -134,6 +135,7 @@ func UpgradeFirmWare(c *gin.Context, ruleEngine typex.Rhilex) {
 		return
 	}
 	c.JSON(common.HTTP_OK, common.Ok())
+	time.Sleep(1 * time.Second)
 	ossupport.StartUpgradeProcess()
 
 }

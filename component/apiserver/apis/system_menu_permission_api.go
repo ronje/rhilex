@@ -16,8 +16,6 @@
 package apis
 
 import (
-	"runtime"
-
 	"github.com/gin-gonic/gin"
 	common "github.com/hootrhino/rhilex/component/apiserver/common"
 	"github.com/hootrhino/rhilex/component/apiserver/server"
@@ -30,45 +28,78 @@ func InitSysMenuPermissionRoute() {
 	route.GET("/distConfig", server.AddRoute(GetDistConfigMenus))
 }
 
-type SysMenuPermissionVo struct {
+type SysMenu struct {
+	Id       int32          `json:"id"`
+	Group    string         `json:"group"`
+	Key      string         `json:"key"`
+	Access   bool           `json:"access"`
+	Children []SysMenuChild `json:"children"`
+}
+
+type SysMenuChild struct {
 	Id     int32  `json:"id"`
 	Key    string `json:"key"`
 	Access bool   `json:"access"`
 }
 
 func GetSysMenus(c *gin.Context, ruleEngine typex.Rhilex) {
-	allMenu := []SysMenuPermissionVo{
-		{Id: 0, Key: "dashboard", Access: true},
-		{Id: 1, Key: "device", Access: true},
-		{Id: 2, Key: "schema", Access: true},
-		{Id: 3, Key: "repository", Access: true},
-		{Id: 4, Key: "inend", Access: true},
-		{Id: 5, Key: "outend", Access: true},
-		{Id: 6, Key: "app", Access: true},
-		{Id: 7, Key: "plugin", Access: true},
-		{Id: 8, Key: "module", Access: true},
-		{Id: 9, Key: "system", Access: true},
+	allMenu := []SysMenu{
+		{Group: "root", Children: []SysMenuChild{}, Id: 0, Key: "dashboard", Access: true},
+		{Group: "root", Children: []SysMenuChild{}, Id: 1, Key: "device", Access: true},
+		{Group: "root", Children: []SysMenuChild{}, Id: 2, Key: "schema", Access: true},
+		{Group: "root", Children: []SysMenuChild{}, Id: 3, Key: "repository", Access: true},
+		{Group: "root", Children: []SysMenuChild{}, Id: 4, Key: "inend", Access: true},
+		{Group: "root", Children: []SysMenuChild{}, Id: 5, Key: "outend", Access: true},
+		{Group: "root", Children: []SysMenuChild{}, Id: 6, Key: "app", Access: true},
+		{Group: "root", Children: []SysMenuChild{}, Id: 7, Key: "plugin", Access: true},
+		{Group: "root", Children: []SysMenuChild{}, Id: 8, Key: "module", Access: true},
+		{Group: "root", Children: []SysMenuChild{}, Id: 9, Key: "system", Access: true},
 	}
 	c.JSON(common.HTTP_OK, common.OkWithData(allMenu))
 }
 
+// 系统资源
+
+// 网络配置
+//     网络状态
+//     网卡设置
+//     WIFI设置
+//     4G设置
+//     5G设置
+//     CAN设置
+
+// 时间设置
+//     系统时间
+//     定时重启
+
+// 系统版本
+//     固件设置
+//     数据备份
+
+// 用户设置
 func GetDistConfigMenus(c *gin.Context, ruleEngine typex.Rhilex) {
-	allMenu := []SysMenuPermissionVo{
-		{Id: 0, Key: "resource", Access: true},
-		{Id: 2, Key: "port", Access: true},
-		{Id: 9, Key: "user", Access: true},
-		{Id: 8, Key: "backup", Access: true},
-	}
-	linuxMenu := []SysMenuPermissionVo{
-		{Id: 1, Key: "netStatus", Access: true},
-		{Id: 3, Key: "network", Access: true},
-		{Id: 4, Key: "wifi", Access: true}, // 依赖nmcli
-		{Id: 5, Key: "time", Access: true},
-		{Id: 6, Key: "firmware", Access: true},
-		{Id: 7, Key: "reboot", Access: true},
-	}
-	if runtime.GOOS == "linux" {
-		allMenu = append(allMenu, linuxMenu...)
+	allMenu := []SysMenu{
+		{Id: 0, Group: "resource", Key: "resource", Access: true, Children: []SysMenuChild{}},
+		{Id: 1, Group: "nerworking", Key: "nerworking", Access: true,
+			Children: []SysMenuChild{
+				{Id: 1, Key: "netStatus", Access: true},
+				{Id: 2, Key: "network", Access: true},
+				{Id: 3, Key: "wifi", Access: true},
+			},
+		},
+		{Id: 3, Group: "datetime", Key: "datetime", Access: true,
+			Children: []SysMenuChild{
+				{Id: 1, Key: "time", Access: true},
+				{Id: 2, Key: "reboot", Access: true},
+			},
+		},
+		{Id: 4, Group: "sysver", Key: "sysver", Access: true,
+			Children: []SysMenuChild{
+				{Id: 1, Key: "firmware", Access: true},
+				{Id: 2, Key: "backup", Access: true},
+			},
+		},
+		{Id: 5, Group: "user", Key: "user", Access: true, Children: []SysMenuChild{}},
 	}
 	c.JSON(common.HTTP_OK, common.OkWithData(allMenu))
 }

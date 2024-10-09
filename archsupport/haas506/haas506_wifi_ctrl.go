@@ -16,10 +16,12 @@
 package haas506
 
 import (
+	"bufio"
 	"context"
 	"fmt"
 	"os"
 	"os/exec"
+	"strings"
 	"text/template"
 	"time"
 )
@@ -57,7 +59,7 @@ func SetWifi(iface, ssid, psk string, timeout time.Duration) error {
 	}
 	configFilePath := fmt.Sprintf("/etc/wpa_supplicant/wpa_supplicant-%s.conf", iface)
 	// configFilePath := fmt.Sprintf("./data/wpa_supplicant-%s.conf", iface)
-	file, err := os.OpenFile(configFilePath, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0600)
+	file, err := os.Create(configFilePath)
 	if err != nil {
 		return fmt.Errorf("failed to open config file: %v", err)
 	}
@@ -94,4 +96,39 @@ func SetWifi(iface, ssid, psk string, timeout time.Duration) error {
 		return ctx.Err()
 	}
 	return nil
+}
+
+/*
+*
+* 升级版，带上了WIFI信号强度
+*
+ */
+func ScanWlanList(WFace string) ([][2]string, error) {
+	wifiList := [][2]string{}
+	shell := `
+iw dev %s scan | awk '
+  /SSID/ { ssid=$2 } \
+  /signal/ { signal=$2; if (!seen[ssid] || signal > seen[ssid]) { seen[ssid]=signal } } \
+  END { for (s in seen) print s "," seen[s]}
+' | sort
+`
+	cmd := exec.Command("sh", "-c", fmt.Sprintf(shell, WFace))
+	fmt.Println("ScanWlanList == ", cmd.String())
+	output, err := cmd.Output()
+	if err != nil {
+		return nil, fmt.Errorf("Error executing nmcli: %s", err.Error()+":"+string(output))
+	}
+	lines := bufio.NewScanner(strings.NewReader(string(output)))
+	for lines.Scan() {
+		line := lines.Text()
+		parts := strings.Split(line, ",")
+		if len(parts) == 2 {
+			ssid := parts[0]
+			signal := parts[1]
+			if ssid != "" {
+				wifiList = append(wifiList, [2]string{ssid, signal})
+			}
+		}
+	}
+	return wifiList, nil
 }

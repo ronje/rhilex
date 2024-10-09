@@ -23,59 +23,24 @@ import (
 
 /*
 *
-* 设置音量
-*
- */
-func SetVolume(c *gin.Context, ruleEngine typex.Rhilex) {
-	if runtime.GOOS != "linux" {
-		c.JSON(common.HTTP_OK, common.Error("OS Not Support:"+runtime.GOOS))
-		return
-	}
-	type Form struct {
-		Volume int `json:"volume"`
-	}
-	DtoCfg := Form{}
-	if err0 := c.ShouldBindJSON(&DtoCfg); err0 != nil {
-		c.JSON(common.HTTP_OK, common.Error400(err0))
-		return
-	}
-	v, err := ossupport.SetVolume(DtoCfg.Volume)
-	if err != nil {
-		c.JSON(common.HTTP_OK, common.Error400(err))
-		return
-	}
-	c.JSON(common.HTTP_OK, common.OkWithData(v))
-
-}
-
-/*
-*
-* 获取音量的值
-*
- */
-func GetVolume(c *gin.Context, ruleEngine typex.Rhilex) {
-	if runtime.GOOS != "linux" {
-		c.JSON(common.HTTP_OK, common.Error("OS Not Support:"+runtime.GOOS))
-		return
-	}
-	v, err := ossupport.GetVolume()
-	if err != nil {
-		c.JSON(common.HTTP_OK, common.Error400(err))
-		return
-	}
-	if v == "" {
-		c.JSON(common.HTTP_OK, common.Error("Volume get failed, please check system"))
-		return
-	}
-	c.JSON(common.HTTP_OK, common.OkWithData(map[string]string{
-		"volume": v,
-	}))
-}
-
-/*
-*
 * WIFI
 *
+ */
+type WifiConfigVo struct {
+	Type        string `json:"type"`      // 类型: ETH | WIFI
+	Interface   string `json:"interface"` // eth1 eth0
+	Address     string `json:"address"`
+	Netmask     string `json:"netmask"`
+	Gateway     string `json:"gateway"`
+	DHCPEnabled *bool  `json:"dhcp_enabled"`
+	SSID        string `json:"ssid"`
+	Password    string `json:"password"`
+	Security    string `json:"security"`
+}
+
+/**
+ * 获取WIFI配置
+ *
  */
 func GetWifi(c *gin.Context, ruleEngine typex.Rhilex) {
 	iface, _ := c.GetQuery("iface")
@@ -84,22 +49,25 @@ func GetWifi(c *gin.Context, ruleEngine typex.Rhilex) {
 		c.JSON(common.HTTP_OK, common.Error400(err))
 		return
 	}
-	Cfg := ossupport.WlanConfig{
-		Wlan0: ossupport.WLANInterface{
-			Interface: MWifiConfig.Interface,
-			SSID:      MWifiConfig.SSID,
-			Password:  MWifiConfig.Password,
-			Security:  MWifiConfig.Security,
-		},
+	vo := WifiConfigVo{
+		Type:        MWifiConfig.Type,
+		Interface:   MWifiConfig.Interface,
+		Address:     MWifiConfig.Address,
+		Netmask:     MWifiConfig.Netmask,
+		Gateway:     MWifiConfig.Gateway,
+		DHCPEnabled: MWifiConfig.DHCPEnabled,
+		SSID:        MWifiConfig.SSID,
+		Password:    MWifiConfig.Password,
+		Security:    MWifiConfig.Security,
 	}
-	c.JSON(common.HTTP_OK, common.OkWithData(Cfg))
+	c.JSON(common.HTTP_OK, common.OkWithData(vo))
 
 }
 
 /*
 *
 *
-*通过nmcli配置WIFI
+*配置WIFI
  */
 func SetWifi(c *gin.Context, ruleEngine typex.Rhilex) {
 	if runtime.GOOS != "linux" {
@@ -121,10 +89,6 @@ func SetWifi(c *gin.Context, ruleEngine typex.Rhilex) {
 	if !utils.SContains([]string{"wpa2-psk", "wpa3-psk"}, DtoCfg.Security) {
 		c.JSON(common.HTTP_OK,
 			common.Error(("Only support 2 valid security algorithm:wpa2-psk,wpa3-psk")))
-		return
-	}
-	if !utils.SContains([]string{"wlan0"}, DtoCfg.Interface) {
-		c.JSON(common.HTTP_OK, common.Error(("Only support wlan0")))
 		return
 	}
 
@@ -167,16 +131,6 @@ func SetWifi(c *gin.Context, ruleEngine typex.Rhilex) {
 	}
 END:
 	c.JSON(common.HTTP_OK, common.Error("Unsupported Product:"+typex.DefaultVersionInfo.Product))
-
-}
-
-/*
-*
-* 生成最新的ETC配置
-*
- */
-func ApplyNewestEtcEthConfig() error {
-	return nil
 
 }
 

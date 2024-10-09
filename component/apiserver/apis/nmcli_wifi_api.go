@@ -22,8 +22,10 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/hootrhino/rhilex/archsupport/haas506"
+	"github.com/hootrhino/rhilex/archsupport/rhilexg1"
+	"github.com/hootrhino/rhilex/archsupport/rhilexpro1"
 	common "github.com/hootrhino/rhilex/component/apiserver/common"
-	"github.com/hootrhino/rhilex/ossupport"
 	"github.com/hootrhino/rhilex/typex"
 )
 
@@ -48,91 +50,57 @@ func isWiFiInterface(interfaceName string) bool {
 *
  */
 
-func ScanWiFiSignalWithNmcli(c *gin.Context, ruleEngine typex.Rhilex) {
-	interfaces, err := ossupport.GetAvailableInterfaces()
-	if err != nil {
-		c.JSON(common.HTTP_OK, common.Error400(err))
-		return
-	}
-	SupportWifi := false
-	for _, IFace := range interfaces {
-		if isWiFiInterface(IFace.Name) {
-			SupportWifi = true
-			break
-		}
-	}
-	if !SupportWifi {
-		c.JSON(common.HTTP_OK, common.Error("Device not support Wifi"))
+func ScanWIFIList(c *gin.Context, ruleEngine typex.Rhilex) {
+	iface, _ := c.GetQuery("iface")
+	if !isWiFiInterface(iface) {
+		c.JSON(common.HTTP_OK, common.Error("invalid wlan interface"))
 		return
 	}
 	wLanList := [][2]string{}
 	finished := make(chan bool)
-	var errSetting error
+	var errSetWifi error
 	go func() {
-		errSetting = ossupport.ScanWlanList()
-		if errSetting != nil {
+		if typex.DefaultVersionInfo.Product == "RHILEXPRO1" {
+			wLanList, errSetWifi = rhilexpro1.ScanWlanList(iface)
+			if errSetWifi != nil {
+				c.JSON(common.HTTP_OK, common.Error400(errSetWifi))
+				return
+			}
+			goto END
+		}
+		if typex.DefaultVersionInfo.Product == "HAAS506LD1" {
+			wLanList, errSetWifi = haas506.ScanWlanList(iface)
+			if errSetWifi != nil {
+				c.JSON(common.HTTP_OK, common.Error400(errSetWifi))
+				return
+			}
+			goto END
+		}
+		if typex.DefaultVersionInfo.Product == "RHILEXG1" {
+			wLanList, errSetWifi = rhilexg1.ScanWlanList(iface)
+			if errSetWifi != nil {
+				c.JSON(common.HTTP_OK, common.Error400(errSetWifi))
+				return
+			}
+			goto END
+		}
+		if errSetWifi != nil {
+			finished <- true
 			return
 		}
-		wLanList, errSetting = ossupport.GetWlanListSignal()
-		if errSetting != nil {
-			return
-		}
+	END:
 		finished <- true
 	}()
 	select {
-	case <-time.After(6 * time.Second):
+	case <-time.After(10 * time.Second):
 		errReturn := fmt.Errorf("scan WIFI timeout")
 		c.JSON(common.HTTP_OK, common.Error400(errReturn))
 		return
 	case <-finished:
-		if errSetting != nil {
-			c.JSON(common.HTTP_OK, common.Error400(errSetting))
+		if errSetWifi != nil {
+			c.JSON(common.HTTP_OK, common.Error400(errSetWifi))
 		} else {
 			c.JSON(common.HTTP_OK, common.OkWithData(wLanList))
 		}
 	}
-}
-
-/*
-*
-* 扫描WIFI
-*
- */
-func ScanWIFIWithNmcli(c *gin.Context, ruleEngine typex.Rhilex) {
-	interfaces, err := ossupport.GetAvailableInterfaces()
-	if err != nil {
-		c.JSON(common.HTTP_OK, common.Error400(err))
-		return
-	}
-	SupportWifi := false
-	for _, IFace := range interfaces {
-		if isWiFiInterface(IFace.Name) {
-			SupportWifi = true
-			break
-		}
-	}
-	if !SupportWifi {
-		c.JSON(common.HTTP_OK, common.Error("Device not support Wifi"))
-		return
-	}
-	wLanList, err := ossupport.GetWlanListSignal()
-	if err != nil {
-		c.JSON(common.HTTP_OK, common.Error400(err))
-		return
-	}
-	c.JSON(common.HTTP_OK, common.OkWithData(wLanList))
-}
-
-/*
-*
-* 刷新DNS, 暂且认为是ubuntu
-*
- */
-func RefreshDNS(c *gin.Context, ruleEngine typex.Rhilex) {
-	err := ossupport.ReloadDNS()
-	if err != nil {
-		c.JSON(common.HTTP_OK, common.Error400(err))
-		return
-	}
-	c.JSON(common.HTTP_OK, common.Ok())
 }

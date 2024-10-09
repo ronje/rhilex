@@ -22,9 +22,9 @@ func GetSysDevTree() archsupport.DeviceTree {
 		Network: []archsupport.DeviceNode{
 			{Name: "eth0", Type: "ethernet", Status: 1},
 		},
-		Wlan:       []archsupport.DeviceNode{},
-		MNet4g:     []archsupport.DeviceNode{},
-		MNet5g:     []archsupport.DeviceNode{},
-		SoftRouter: []archsupport.DeviceNode{},
+		Wlan:   []archsupport.DeviceNode{},
+		MNet4g: []archsupport.DeviceNode{},
+		MNet5g: []archsupport.DeviceNode{},
+		CanBus: []archsupport.DeviceNode{},
 	}
 }

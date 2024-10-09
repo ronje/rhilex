@@ -29,12 +29,6 @@ func LoadSystemSettingsAPI() {
 		iFacesApi.GET(("/uarts"), server.AddRoute(GetUartList))
 		iFacesApi.GET(("/netStatus"), server.AddRoute(GetNetworkStatus))
 	}
-	settingsApi := server.RouteGroup(server.ContextUrl("/settings"))
-	{
-		// volume
-		settingsApi.GET("/volume", server.AddRoute(GetVolume))
-		settingsApi.POST("/volume", server.AddRoute(SetVolume))
-	}
 	// ethernet
 	ethApi := server.RouteGroup(server.ContextUrl("/settings"))
 	{
@@ -47,9 +41,7 @@ func LoadSystemSettingsAPI() {
 	{
 		wifiApi.GET("/wifi", server.AddRoute(GetWifi))
 		wifiApi.POST("/wifi", server.AddRoute(SetWifi))
-		wifiApi.GET("/wifi/scan", server.AddRoute(ScanWIFIWithNmcli))
-		wifiApi.GET("/wifi/scanSignal", server.AddRoute(ScanWiFiSignalWithNmcli))
-		wifiApi.GET("/wifi/refreshDNS", server.AddRoute(RefreshDNS))
+		wifiApi.GET("/wifi/scanSignal", server.AddRoute(ScanWIFIList))
 	}
 	// time
 	timesApi := server.RouteGroup(server.ContextUrl("/settings"))
