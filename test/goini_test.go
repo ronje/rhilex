@@ -20,7 +20,7 @@ func Test_map_ini_file(t *testing.T) {
 
 // go test -timeout 30s -run ^TestParse_EtcOsRelease github.com/hootrhino/rhilex/test -v -count=1
 func TestParse_EtcOsRelease(t *testing.T) {
-	t.Log(CatOsRelease())
+	t.Log(__CatOsRelease())
 }
 
 /*
@@ -28,7 +28,7 @@ func TestParse_EtcOsRelease(t *testing.T) {
 * Linux: cat /etc/os-release
 *
  */
-func CatOsRelease() (map[string]string, error) {
+func __CatOsRelease() (map[string]string, error) {
 	returnMap := map[string]string{}
 	cfg, err := ini.ShadowLoad("./data/os-release.conf")
 	if err != nil {

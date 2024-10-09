@@ -34,7 +34,6 @@ func LoadSystemSettingsAPI() {
 	{
 		ethApi.POST("/eth", server.AddRoute(SetEthNetwork))
 		ethApi.GET("/eth", server.AddRoute(GetEthNetwork))
-		ethApi.GET("/connection", server.AddRoute(GetCurrentNetConnection))
 	}
 	// wifi
 	wifiApi := server.RouteGroup(server.ContextUrl("/settings"))
