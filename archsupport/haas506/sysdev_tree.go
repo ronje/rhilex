@@ -20,19 +20,21 @@ import "github.com/hootrhino/rhilex/archsupport"
 func GetSysDevTree() archsupport.DeviceTree {
 	return archsupport.DeviceTree{
 		Network: []archsupport.DeviceNode{
-			{Name: "eth0", Type: "ethernet", Status: 1},
-			{Name: "eth1", Type: "ethernet", Status: 1},
+			{Name: "eth0", Type: archsupport.ETHNET, Status: 1},
+			{Name: "eth1", Type: archsupport.ETHNET, Status: 1},
 		},
 		Wlan: []archsupport.DeviceNode{
-			{Name: "wlan0", Type: "wlan", Status: 1},
+			{Name: "wlan0", Type: archsupport.WLAN, Status: 1},
 		},
 		MNet4g: []archsupport.DeviceNode{
-			{Name: "usb1", Type: "nm4g", Status: 1},
+			{Name: "usb2", Type: archsupport.NM4G, Status: 1},
 		},
-		MNet5g: []archsupport.DeviceNode{},
+		MNet5g: []archsupport.DeviceNode{
+			{Name: "usb1", Type: archsupport.NM5G, Status: 1},
+		},
 		CanBus: []archsupport.DeviceNode{
-			{Name: "can1", Type: "can", Status: 1},
-			{Name: "can1", Type: "can", Status: 1},
+			{Name: "can1", Type: archsupport.CAN, Status: 1},
+			{Name: "can2", Type: archsupport.CAN, Status: 1},
 		},
 	}
 }

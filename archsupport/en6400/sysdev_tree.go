@@ -20,7 +20,7 @@ import "github.com/hootrhino/rhilex/archsupport"
 func GetSysDevTree() archsupport.DeviceTree {
 	return archsupport.DeviceTree{
 		Network: []archsupport.DeviceNode{
-			{Name: "eth0", Type: "ethernet", Status: 1},
+			{Name: "eth0", Type: archsupport.ETHNET, Status: 1},
 		},
 		Wlan:   []archsupport.DeviceNode{},
 		MNet4g: []archsupport.DeviceNode{},

@@ -29,12 +29,7 @@ func GetSysDevTree() archsupport.DeviceTree {
 		MNet4g: []archsupport.DeviceNode{
 			{Name: "usb0", Type: archsupport.NM4G, Status: 1},
 		},
-		MNet5g: []archsupport.DeviceNode{
-			{Name: "usb1", Type: archsupport.NM5G, Status: 1},
-		},
-		CanBus: []archsupport.DeviceNode{
-			{Name: "can1", Type: archsupport.CAN, Status: 1},
-			{Name: "can2", Type: archsupport.CAN, Status: 1},
-		},
+		MNet5g: []archsupport.DeviceNode{},
+		CanBus: []archsupport.DeviceNode{},
 	}
 }
