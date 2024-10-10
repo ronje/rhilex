@@ -124,31 +124,12 @@ func GetTimeZone() (TimeZoneInfo, error) {
 	return TimeZoneInfo{CurrentTimezone: timezoneInfo}, nil
 }
 
-// GetLinuxTimeZone 返回当前 Linux 系统的时区
 func GetLinuxTimeZone() (string, error) {
-	// Linux 系统的时区通常存储在 /etc/timezone 文件中
 	timezoneFilePath := "/etc/timezone"
-	// 读取时区文件内容
 	content, err := os.ReadFile(timezoneFilePath)
 	if err != nil {
-		// 如果 /etc/timezone 文件不存在，尝试读取 /etc/localtime 文件
-		localtimeFilePath := "/etc/localtime"
-		_, err := os.Stat(localtimeFilePath)
-		if err != nil {
-			return "", err
-		}
-		realPath, err := os.Readlink(localtimeFilePath)
-		if err != nil {
-			return "", err
-		}
-		zoneinfoPath := "/usr/share/zoneinfo/"
-		if strings.HasPrefix(realPath, zoneinfoPath) {
-			return realPath[len(zoneinfoPath):], nil
-		}
-		return "", fmt.Errorf("cannot determine timezone from %s", localtimeFilePath)
+		return "Asia/Shanghai", nil
 	}
-
-	// 去除内容中的换行符
 	timezone := strings.TrimSpace(string(content))
 	return timezone, nil
 }

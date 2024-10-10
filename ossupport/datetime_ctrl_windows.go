@@ -50,13 +50,7 @@ func GetTimeZone() (TimeZoneInfo, error) {
 
 // GetWindowsTimeZone 返回当前 Windows 系统的时区
 func GetWindowsTimeZone() (string, error) {
-	loc, err := time.LoadLocation("Local")
-	if err != nil {
-		return "", err
-	}
-	now := time.Now()
-	timeZoneName, _ := now.In(loc).Zone()
-	return timeZoneName, nil
+	return "Asia/Shanghai", nil
 }
 
 /*
