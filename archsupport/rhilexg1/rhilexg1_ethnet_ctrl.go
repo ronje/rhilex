@@ -18,9 +18,28 @@ package rhilexg1
 import (
 	"fmt"
 	"html/template"
+	"net"
 	"os"
 	"os/exec"
 )
+
+// getEthList returns a list of Ethernet (wired) interfaces.
+func getEthList() ([]net.Interface, error) {
+	ifaces, err := net.Interfaces()
+	if err != nil {
+		return nil, err
+	}
+
+	var ethIfaces []net.Interface
+	for _, iface := range ifaces {
+		// Skip the interface if it is a wireless interface
+		if !isWirelessInterface(iface.Name) {
+			ethIfaces = append(ethIfaces, iface)
+		}
+	}
+
+	return ethIfaces, nil
+}
 
 type NetworkInterfaceConfig struct {
 	Interface   string

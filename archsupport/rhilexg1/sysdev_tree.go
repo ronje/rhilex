@@ -18,14 +18,19 @@ package rhilexg1
 import "github.com/hootrhino/rhilex/archsupport"
 
 func GetSysDevTree() archsupport.DeviceTree {
+	wlanList, _ := getWlanList()
+	Wlans := []archsupport.DeviceNode{}
+	for _, wlan := range wlanList {
+		Wlans = append(Wlans, archsupport.DeviceNode{Name: wlan.Name, Type: archsupport.WLAN, Status: 1})
+	}
+	ethList, _ := getEthList()
+	eths := []archsupport.DeviceNode{}
+	for _, eth := range ethList {
+		eths = append(eths, archsupport.DeviceNode{Name: eth.Name, Type: archsupport.ETHNET, Status: 1})
+	}
 	return archsupport.DeviceTree{
-		Network: []archsupport.DeviceNode{
-			{Name: "eth0", Type: archsupport.ETHNET, Status: 1},
-			{Name: "eth1", Type: archsupport.ETHNET, Status: 1},
-		},
-		Wlan: []archsupport.DeviceNode{
-			{Name: "wlan0", Type: archsupport.WLAN, Status: 1},
-		},
+		Network: eths,
+		Wlan:    Wlans,
 		MNet4g: []archsupport.DeviceNode{
 			{Name: "usb0", Type: archsupport.NM4G, Status: 1},
 		},
