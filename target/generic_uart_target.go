@@ -45,8 +45,8 @@ type GenericUartCommonConfig struct {
 }
 
 type GenericUartMainConfig struct {
-	GenericUartCommonConfig GenericUartCommonConfig
-	UartConfig              common.UartConfig
+	GenericUartCommonConfig GenericUartCommonConfig `json:"commonConfig"`
+	UartConfig              common.UartConfig       `json:"uartConfig"`
 }
 type GenericUart struct {
 	typex.XStatus
