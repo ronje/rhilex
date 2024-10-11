@@ -23,15 +23,15 @@ import (
 
 	serial "github.com/hootrhino/goserial"
 
+	"github.com/hootrhino/rhilex/common"
 	"github.com/hootrhino/rhilex/component/lostcache"
-	"github.com/hootrhino/rhilex/component/uartctrl"
 	"github.com/hootrhino/rhilex/glogger"
 	"github.com/hootrhino/rhilex/typex"
 	"github.com/hootrhino/rhilex/utils"
 )
 
-type GenericUartMainConfig struct {
-	// 通用配置，包含AllowPing、DataMode、PingPacket、Timeout等
+// 通用配置，包含AllowPing、DataMode、PingPacket、Timeout等
+type GenericUartCommonConfig struct {
 	// 是否允许Ping操作
 	AllowPing *bool `json:"allowPing" validate:"required"`
 	// 数据模式，RAW_STRING|HEX_STRING
@@ -40,15 +40,16 @@ type GenericUartMainConfig struct {
 	PingPacket string `json:"pingPacket" validate:"required"`
 	// 请求超时时间，单位为秒
 	Timeout *int `json:"timeout" validate:"required"`
-	// 端口UUID，用于识别特定的串口设备
-	PortUuid string `json:"portUuid" validate:"required"`
 	// 离线缓存
 	CacheOfflineData *bool `json:"cacheOfflineData" title:"离线缓存"`
 }
 
+type GenericUartMainConfig struct {
+	GenericUartCommonConfig GenericUartCommonConfig
+	UartConfig              common.UartConfig
+}
 type GenericUart struct {
 	typex.XStatus
-	uartConfig uartctrl.UartConfig
 	status     typex.SourceState
 	locker     sync.Mutex
 	serialPort serial.Port
@@ -59,16 +60,26 @@ func NewGenericUart(e typex.Rhilex) typex.XTarget {
 	mdev := new(GenericUart)
 	mdev.RuleEngine = e
 	mdev.mainConfig = GenericUartMainConfig{
-		PortUuid:         "/dev/ttyS1",
-		DataMode:         "RAW_STRING",
-		PingPacket:       "RHILEX",
-		AllowPing:        new(bool),
-		CacheOfflineData: new(bool),
-		Timeout: func() *int {
-			b := 3000
-			return &b
-		}(),
+		GenericUartCommonConfig: GenericUartCommonConfig{
+			DataMode:         "RAW_STRING",
+			PingPacket:       "RHILEX",
+			AllowPing:        new(bool),
+			CacheOfflineData: new(bool),
+			Timeout: func() *int {
+				b := 3000
+				return &b
+			}(),
+		},
+		UartConfig: common.UartConfig{
+			Timeout:  3000,
+			Uart:     "/dev/ttyS1",
+			BaudRate: 9600,
+			DataBits: 8,
+			Parity:   "N",
+			StopBits: 1,
+		},
 	}
+
 	mdev.locker = sync.Mutex{}
 	mdev.status = typex.SOURCE_DOWN
 	return mdev
@@ -77,7 +88,7 @@ func NewGenericUart(e typex.Rhilex) typex.XTarget {
 func (mdev *GenericUart) Init(outEndId string, configMap map[string]interface{}) error {
 	mdev.PointId = outEndId
 	lostcache.CreateLostDataTable(outEndId)
-	if err := utils.BindSourceConfig(configMap, &mdev.mainConfig); err != nil {
+	if err := utils.BindSourceConfig(configMap, &mdev.mainConfig.GenericUartCommonConfig); err != nil {
 		return err
 	}
 	return nil
@@ -85,37 +96,20 @@ func (mdev *GenericUart) Init(outEndId string, configMap map[string]interface{})
 func (mdev *GenericUart) Start(cctx typex.CCTX) error {
 	mdev.Ctx = cctx.Ctx
 	mdev.CancelCTX = cctx.CancelCTX
-	uartPort, err := uartctrl.GetUart(mdev.mainConfig.PortUuid)
-	if err != nil {
-		return err
-	}
-	if uartPort.Busy {
-		return fmt.Errorf("mdev is busying now, Occupied By:%s", uartPort.OccupyBy)
-	}
-	switch tCfg := uartPort.Config.(type) {
-	case uartctrl.UartConfig:
-		{
-			mdev.uartConfig = tCfg
-		}
-	default:
-		{
-			return fmt.Errorf("Invalid config:%s", uartPort.Config)
-		}
-	}
 	config := serial.Config{
-		Address:  mdev.uartConfig.Uart,
-		BaudRate: mdev.uartConfig.BaudRate,
-		DataBits: mdev.uartConfig.DataBits,
-		Parity:   mdev.uartConfig.Parity,
-		StopBits: mdev.uartConfig.StopBits,
-		Timeout:  time.Duration(mdev.uartConfig.Timeout) * time.Millisecond,
+		Address:  mdev.mainConfig.UartConfig.Uart,
+		BaudRate: mdev.mainConfig.UartConfig.BaudRate,
+		DataBits: mdev.mainConfig.UartConfig.DataBits,
+		Parity:   mdev.mainConfig.UartConfig.Parity,
+		StopBits: mdev.mainConfig.UartConfig.StopBits,
+		Timeout:  time.Duration(mdev.mainConfig.UartConfig.Timeout) * time.Millisecond,
 	}
 	serialPort, err := serial.Open(&config)
 	if err != nil {
 		glogger.GLogger.Error(err)
 		return err
 	}
-	if *mdev.mainConfig.AllowPing {
+	if *mdev.mainConfig.GenericUartCommonConfig.AllowPing {
 		go func(serialPort serial.Port) {
 			ticker := time.NewTicker(time.Duration(time.Second * 5))
 			defer ticker.Stop()
@@ -126,7 +120,7 @@ func (mdev *GenericUart) Start(cctx typex.CCTX) error {
 				default:
 				}
 				if mdev.serialPort != nil {
-					_, err := mdev.serialPort.Write([]byte(mdev.mainConfig.PingPacket))
+					_, err := mdev.serialPort.Write([]byte(mdev.mainConfig.GenericUartCommonConfig.PingPacket))
 					if err != nil {
 						glogger.GLogger.Error(err)
 					}
@@ -138,7 +132,7 @@ func (mdev *GenericUart) Start(cctx typex.CCTX) error {
 	mdev.serialPort = serialPort
 	mdev.status = typex.SOURCE_UP
 	// 补发数据
-	if *mdev.mainConfig.CacheOfflineData {
+	if *mdev.mainConfig.GenericUartCommonConfig.CacheOfflineData {
 		if CacheData, err1 := lostcache.GetLostCacheData(mdev.PointId); err1 != nil {
 			glogger.GLogger.Error(err1)
 		} else {
@@ -150,7 +144,7 @@ func (mdev *GenericUart) Start(cctx typex.CCTX) error {
 			}
 		}
 	}
-	glogger.GLogger.Info("GenericUart started:", mdev.uartConfig.Uart)
+	glogger.GLogger.Info("GenericUart started:", mdev.mainConfig.UartConfig.Uart)
 	return nil
 }
 
@@ -176,7 +170,7 @@ func (mdev *GenericUart) To(data interface{}) (interface{}, error) {
 		switch T := data.(type) {
 		case string:
 			_, err := mdev.serialPort.Write([]byte(T))
-			if *mdev.mainConfig.CacheOfflineData {
+			if *mdev.mainConfig.GenericUartCommonConfig.CacheOfflineData {
 				lostcache.SaveLostCacheData(mdev.PointId, lostcache.CacheDataDto{
 					TargetId: mdev.PointId,
 					Data:     T,
@@ -186,11 +180,11 @@ func (mdev *GenericUart) To(data interface{}) (interface{}, error) {
 		}
 		return 0, fmt.Errorf("serial Port invalid")
 	}
-	if mdev.mainConfig.DataMode == "RAW_STRING" {
+	if mdev.mainConfig.GenericUartCommonConfig.DataMode == "RAW_STRING" {
 		switch T := data.(type) {
 		case string:
 			_, err := mdev.serialPort.Write([]byte(T))
-			if *mdev.mainConfig.CacheOfflineData {
+			if *mdev.mainConfig.GenericUartCommonConfig.CacheOfflineData {
 				lostcache.SaveLostCacheData(mdev.PointId, lostcache.CacheDataDto{
 					TargetId: mdev.PointId,
 					Data:     T,
@@ -199,12 +193,12 @@ func (mdev *GenericUart) To(data interface{}) (interface{}, error) {
 			return nil, err
 		}
 	}
-	if mdev.mainConfig.DataMode == "HEX_STRING" {
+	if mdev.mainConfig.GenericUartCommonConfig.DataMode == "HEX_STRING" {
 		switch S := data.(type) {
 		case string:
 			Hex, err := hex.DecodeString(S)
 			if err != nil {
-				if *mdev.mainConfig.CacheOfflineData {
+				if *mdev.mainConfig.GenericUartCommonConfig.CacheOfflineData {
 					lostcache.SaveLostCacheData(mdev.PointId, lostcache.CacheDataDto{
 						TargetId: mdev.PointId,
 						Data:     S,

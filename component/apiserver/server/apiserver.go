@@ -202,8 +202,6 @@ func (s *RhilexApiServer) InitializeProduct() {
 *
  */
 func initStaticModel() {
-	// 初始化硬件接口参数
-	service.InitUartConfig()
 	// 配置一个默认分组
 	service.InitGenericGroup(&model.MGenericGroup{
 		UUID:   "DROOT",

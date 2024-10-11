@@ -30,7 +30,6 @@ import (
 	"github.com/hootrhino/rhilex/common"
 	intercache "github.com/hootrhino/rhilex/component/intercache"
 	"github.com/hootrhino/rhilex/component/interdb"
-	"github.com/hootrhino/rhilex/component/uartctrl"
 
 	modbus "github.com/hootrhino/gomodbus"
 	core "github.com/hootrhino/rhilex/config"
@@ -43,8 +42,6 @@ import (
 
 // 这是个通用Modbus采集器, 主要用来在通用场景下采集数据，因此需要配合规则引擎来使用
 //
-// Modbus 采集到的数据如下, LUA 脚本可做解析, 示例脚本可参照 generic_modbus_parse.lua
-//
 //	{
 //	    "d1":{
 //	        "tag":"d1",
@@ -54,14 +51,6 @@ import (
 //	        "quantity":2,
 //	        "value":"..."
 //	    },
-//	    "d2":{
-//	        "tag":"d2",
-//	        "function":3,
-//	        "slaverId":2,
-//	        "address":0,
-//	        "quantity":2,
-//	        "value":"..."
-//	    }
 //	}
 type ModbusMasterCommonConfig struct {
 	Mode           string `json:"mode" validate:"required"`
@@ -73,7 +62,7 @@ type ModbusMasterCommonConfig struct {
 type ModbusMasterConfig struct {
 	CommonConfig ModbusMasterCommonConfig `json:"commonConfig" validate:"required"`
 	HostConfig   common.HostConfig        `json:"hostConfig"`
-	PortUuid     string                   `json:"portUuid"`
+	UartConfig   common.UartConfig        `json:"uartConfig"`
 }
 
 type ModbusMasterGroupedTag struct {
@@ -106,7 +95,6 @@ type GenericModbusMaster struct {
 	//
 	mainConfig     ModbusMasterConfig
 	retryTimes     int
-	uartConfig     uartctrl.UartConfig
 	Registers      map[string]*common.RegisterRW
 	RegisterGroups []*ModbusMasterGroupedTag
 }
@@ -135,8 +123,19 @@ func NewGenericModbusMaster(e typex.Rhilex) typex.XDevice {
 			}(),
 			MaxRegNum: 32,
 		},
-		PortUuid:   "/dev/ttyS0",
-		HostConfig: common.HostConfig{Host: "127.0.0.1", Port: 502, Timeout: 3000},
+		HostConfig: common.HostConfig{
+			Host:    "127.0.0.1",
+			Port:    502,
+			Timeout: 3000,
+		},
+		UartConfig: common.UartConfig{
+			Timeout:  3000,
+			Uart:     "/dev/ttyS1",
+			BaudRate: 9600,
+			DataBits: 8,
+			Parity:   "N",
+			StopBits: 1,
+		},
 	}
 	mdev.Registers = map[string]*common.RegisterRW{}
 	mdev.Busy = false
@@ -203,25 +202,7 @@ func (mdev *GenericModbusMaster) Init(devId string, configMap map[string]interfa
 			glogger.GLogger.Infof("RegisterGroups%v %v", i, v)
 		}
 	}
-	if mdev.mainConfig.CommonConfig.Mode == "UART" {
-		uartPort, err := uartctrl.GetUart(mdev.mainConfig.PortUuid)
-		if err != nil {
-			return err
-		}
-		if uartPort.Busy {
-			return fmt.Errorf("UART is busying now, Occupied By:%s", uartPort.OccupyBy)
-		}
-		switch tCfg := uartPort.Config.(type) {
-		case uartctrl.UartConfig:
-			{
-				mdev.uartConfig = tCfg
-			}
-		default:
-			{
-				return fmt.Errorf("Invalid config:%s", uartPort.Config)
-			}
-		}
-	}
+
 	return nil
 }
 
@@ -289,21 +270,12 @@ func (mdev *GenericModbusMaster) Start(cctx typex.CCTX) error {
 	mdev.CancelCTX = cctx.CancelCTX
 	mdev.retryTimes = 0
 	if mdev.mainConfig.CommonConfig.Mode == "UART" {
-		uartPort, err := uartctrl.GetUart(mdev.mainConfig.PortUuid)
-		if err != nil {
-			return err
-		}
-		if uartPort.Busy {
-			return fmt.Errorf("UART is busying now, Occupied By:%s", uartPort.OccupyBy)
-		}
-
-		mdev.rtuHandler = modbus.NewRTUClientHandler(uartPort.Name)
-		mdev.rtuHandler.BaudRate = mdev.uartConfig.BaudRate
-		mdev.rtuHandler.DataBits = mdev.uartConfig.DataBits
-		mdev.rtuHandler.Parity = mdev.uartConfig.Parity
-		mdev.rtuHandler.StopBits = mdev.uartConfig.StopBits
-		// timeout 最大不能超过20, 不然无意义
-		mdev.rtuHandler.Timeout = time.Duration(mdev.uartConfig.Timeout) * time.Millisecond
+		mdev.rtuHandler = modbus.NewRTUClientHandler(mdev.mainConfig.UartConfig.Uart)
+		mdev.rtuHandler.BaudRate = mdev.mainConfig.UartConfig.BaudRate
+		mdev.rtuHandler.DataBits = mdev.mainConfig.UartConfig.DataBits
+		mdev.rtuHandler.Parity = mdev.mainConfig.UartConfig.Parity
+		mdev.rtuHandler.StopBits = mdev.mainConfig.UartConfig.StopBits
+		mdev.rtuHandler.Timeout = time.Duration(mdev.mainConfig.UartConfig.Timeout) * time.Millisecond
 		if core.GlobalConfig.AppDebugMode {
 			mdev.rtuHandler.Logger = golog.New(glogger.GLogger.Writer(),
 				"Modbus RTU Mode: "+mdev.PointId+": ", golog.LstdFlags)
@@ -312,11 +284,6 @@ func (mdev *GenericModbusMaster) Start(cctx typex.CCTX) error {
 		if err := mdev.rtuHandler.Connect(); err != nil {
 			return err
 		}
-		uartctrl.SetInterfaceBusy(mdev.mainConfig.PortUuid, uartctrl.UartOccupy{
-			UUID: mdev.PointId,
-			Type: "DEVICE",
-			Name: mdev.Details().Name,
-		})
 		mdev.Client = modbus.NewClient(mdev.rtuHandler)
 	}
 	if mdev.mainConfig.CommonConfig.Mode == "TCP" {
@@ -465,7 +432,6 @@ func (mdev *GenericModbusMaster) Stop() {
 		mdev.CancelCTX()
 	}
 	if mdev.mainConfig.CommonConfig.Mode == "UART" {
-		uartctrl.FreeInterfaceBusy(mdev.mainConfig.PortUuid)
 		if mdev.rtuHandler != nil {
 			mdev.rtuHandler.Close()
 		}

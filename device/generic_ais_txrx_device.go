@@ -14,7 +14,6 @@ import (
 	"github.com/adrianmo/go-nmea"
 	aislib "github.com/hootrhino/go-ais"
 	"github.com/hootrhino/rhilex/common"
-	"github.com/hootrhino/rhilex/component/uartctrl"
 
 	serial "github.com/hootrhino/goserial"
 	"github.com/hootrhino/rhilex/glogger"
@@ -35,7 +34,7 @@ type _AISCommonConfig struct {
 type _AISDeviceMasterConfig struct {
 	CommonConfig _AISCommonConfig  `json:"commonConfig" validate:"required"`
 	HostConfig   common.HostConfig `json:"hostConfig"`
-	PortUuid     string            `json:"portUuid"`
+	UartConfig   common.UartConfig `json:"uartConfig"`
 }
 type AISDeviceMaster struct {
 	typex.XStatus
@@ -44,8 +43,6 @@ type AISDeviceMaster struct {
 	RuleEngine  typex.Rhilex
 	tcpListener net.Listener // TCP 接收端
 	serialPort  serial.Port
-	uartConfig  uartctrl.UartConfig
-
 	// session
 	DevicesSessionMap map[string]*__AISDeviceSession
 }
@@ -84,26 +81,6 @@ func (aism *AISDeviceMaster) Init(devId string, configMap map[string]interface{}
 		return errors.New("unsupported mode, only can be one of 'TCP' or 'RTU'")
 	}
 
-	if aism.mainConfig.CommonConfig.Mode == "UART" {
-		uartPort, err := uartctrl.GetUart(aism.mainConfig.PortUuid)
-		if err != nil {
-			return err
-		}
-		if uartPort.Busy {
-			return fmt.Errorf("UART is busying now, Occupied By:%s", uartPort.OccupyBy)
-		}
-		switch tCfg := uartPort.Config.(type) {
-		case uartctrl.UartConfig:
-			{
-				aism.uartConfig = tCfg
-			}
-		default:
-			{
-				return fmt.Errorf("Invalid config:%s", uartPort.Config)
-			}
-		}
-	}
-
 	return nil
 }
 
@@ -128,12 +105,12 @@ func (aism *AISDeviceMaster) Start(cctx typex.CCTX) error {
 	// 串口收发卡
 	if aism.mainConfig.CommonConfig.Mode == "UART" {
 		config := serial.Config{
-			Address:  aism.uartConfig.Uart,
-			BaudRate: aism.uartConfig.BaudRate,
-			DataBits: aism.uartConfig.DataBits,
-			Parity:   aism.uartConfig.Parity,
-			StopBits: aism.uartConfig.StopBits,
-			Timeout:  time.Duration(aism.uartConfig.Timeout) * time.Millisecond,
+			Address:  aism.mainConfig.UartConfig.Uart,
+			BaudRate: aism.mainConfig.UartConfig.BaudRate,
+			DataBits: aism.mainConfig.UartConfig.DataBits,
+			Parity:   aism.mainConfig.UartConfig.Parity,
+			StopBits: aism.mainConfig.UartConfig.StopBits,
+			Timeout:  time.Duration(aism.mainConfig.UartConfig.Timeout) * time.Millisecond,
 		}
 		var err error
 		aism.serialPort, err = serial.Open(&config)
@@ -161,7 +138,7 @@ func (aism *AISDeviceMaster) Start(cctx typex.CCTX) error {
 				oneByte := [1]byte{}
 				readyStatus := false // 超时也是就绪状态
 				ctx1, cancel1 := context.WithTimeout(aism.Ctx,
-					time.Duration(aism.uartConfig.Timeout)*time.Millisecond)
+					time.Duration(aism.mainConfig.UartConfig.Timeout)*time.Millisecond)
 				defer cancel1()
 				for {
 					select {
@@ -169,7 +146,7 @@ func (aism *AISDeviceMaster) Start(cctx typex.CCTX) error {
 					case <-ctx1.Done():
 						{
 							if !readyStatus {
-								glogger.GLogger.Warnf("serialPort %s Read timeout", aism.uartConfig.Uart)
+								glogger.GLogger.Warnf("serialPort %s Read timeout", aism.mainConfig.UartConfig.Uart)
 							}
 							break
 						}
@@ -185,7 +162,7 @@ func (aism *AISDeviceMaster) Start(cctx typex.CCTX) error {
 						}
 						readyStatus = false
 						aism.status = typex.DEV_DOWN
-						glogger.GLogger.Errorf("serialPort %s Read error", aism.uartConfig.Uart)
+						glogger.GLogger.Errorf("serialPort %s Read error", aism.mainConfig.UartConfig.Uart)
 						return
 					}
 					if oneByte[0] == '\r' {
@@ -264,11 +241,6 @@ func (aism *AISDeviceMaster) Start(cctx typex.CCTX) error {
 				}
 			}
 		}()
-		uartctrl.SetInterfaceBusy(aism.mainConfig.PortUuid, uartctrl.UartOccupy{
-			UUID: aism.PointId,
-			Type: "DEVICE",
-			Name: aism.Details().Name,
-		})
 		aism.status = typex.DEV_UP
 		return nil
 	}
@@ -305,7 +277,6 @@ func (aism *AISDeviceMaster) Stop() {
 		if aism.serialPort != nil {
 			aism.serialPort.Close()
 		}
-		uartctrl.FreeInterfaceBusy(aism.mainConfig.PortUuid)
 	}
 }
 

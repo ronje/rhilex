@@ -12,7 +12,7 @@ import (
 	"time"
 
 	serial "github.com/hootrhino/goserial"
-	"github.com/hootrhino/rhilex/component/uartctrl"
+	"github.com/hootrhino/rhilex/common"
 	"github.com/hootrhino/rhilex/glogger"
 	"github.com/hootrhino/rhilex/typex"
 	"github.com/hootrhino/rhilex/utils"
@@ -29,13 +29,12 @@ type _UartRwConfig struct {
 type _UartMainConfig struct {
 	CommonConfig _UartCommonConfig `json:"commonConfig" validate:"required"`
 	RwConfig     _UartRwConfig     `json:"rwConfig" validate:"required"`
-	PortUuid     string            `json:"portUuid" validate:"required"`
+	UartConfig   common.UartConfig `json:"uartConfig"`
 }
 
 type genericUartDevice struct {
 	typex.XStatus
 	serialPort serial.Port
-	uartConfig uartctrl.UartConfig
 	status     typex.DeviceState
 	RuleEngine typex.Rhilex
 	mainConfig _UartMainConfig
@@ -62,6 +61,14 @@ func NewGenericUartDevice(e typex.Rhilex) typex.XDevice {
 			ReadFormat: "HEX",
 			Tag:        "uart",
 		},
+		UartConfig: common.UartConfig{
+			Timeout:  3000,
+			Uart:     "/dev/ttyS1",
+			BaudRate: 9600,
+			DataBits: 8,
+			Parity:   "N",
+			StopBits: 1,
+		},
 	}
 	uart.RuleEngine = e
 	return uart
@@ -87,23 +94,6 @@ func (uart *genericUartDevice) Init(devId string, configMap map[string]interface
 		glogger.GLogger.Error(errA)
 		return errA
 	}
-	uartPort, errGetUart := uartctrl.GetUart(uart.mainConfig.PortUuid)
-	if errGetUart != nil {
-		return errGetUart
-	}
-	if uartPort.Busy {
-		return fmt.Errorf("UART is busying now, Occupied By:%s", uartPort.OccupyBy)
-	}
-	switch tCfg := uartPort.Config.(type) {
-	case uartctrl.UartConfig:
-		{
-			uart.uartConfig = tCfg
-		}
-	default:
-		{
-			return fmt.Errorf("Invalid config:%s", uartPort.Config)
-		}
-	}
 	return nil
 }
 
@@ -113,13 +103,12 @@ func (uart *genericUartDevice) Start(cctx typex.CCTX) error {
 	uart.CancelCTX = cctx.CancelCTX
 
 	config := serial.Config{
-		Address:  uart.uartConfig.Uart,
-		BaudRate: uart.uartConfig.BaudRate,
-		DataBits: uart.uartConfig.DataBits,
-		Parity:   uart.uartConfig.Parity,
-		StopBits: uart.uartConfig.StopBits,
-		// 固定写法，表示串口最小一个包耗时，一般50毫秒足够
-		Timeout: time.Duration(uart.mainConfig.RwConfig.TimeSlice) * time.Millisecond,
+		Address:  uart.mainConfig.UartConfig.Uart,
+		BaudRate: uart.mainConfig.UartConfig.BaudRate,
+		DataBits: uart.mainConfig.UartConfig.DataBits,
+		Parity:   uart.mainConfig.UartConfig.Parity,
+		StopBits: uart.mainConfig.UartConfig.StopBits,
+		Timeout:  time.Duration(uart.mainConfig.UartConfig.Timeout) * time.Millisecond,
 	}
 	serialPort, err := serial.Open(&config)
 	if err != nil {
@@ -127,12 +116,6 @@ func (uart *genericUartDevice) Start(cctx typex.CCTX) error {
 		return err
 	}
 
-	uartctrl.SetInterfaceBusy(uart.mainConfig.PortUuid,
-		uartctrl.UartOccupy{
-			UUID: uart.PointId,
-			Type: "DEVICE",
-			Name: uart.Details().Name,
-		})
 	uart.serialPort = serialPort
 	if !*uart.mainConfig.CommonConfig.AutoRequest {
 		uart.status = typex.DEV_UP
@@ -242,7 +225,6 @@ func (uart *genericUartDevice) Stop() {
 	}
 	if uart.serialPort != nil {
 		uart.serialPort.Close()
-		uartctrl.FreeInterfaceBusy(uart.mainConfig.PortUuid)
 	}
 
 }

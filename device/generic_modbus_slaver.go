@@ -28,7 +28,6 @@ import (
 	serial "github.com/hootrhino/goserial"
 	"github.com/hootrhino/rhilex/common"
 	"github.com/hootrhino/rhilex/component/intercache"
-	"github.com/hootrhino/rhilex/component/uartctrl"
 	"github.com/hootrhino/rhilex/glogger"
 	"github.com/hootrhino/rhilex/typex"
 	"github.com/hootrhino/rhilex/utils"
@@ -42,14 +41,13 @@ type ModbusSlaverCommonConfig struct {
 type ModbusSlaverConfig struct {
 	CommonConfig ModbusSlaverCommonConfig `json:"commonConfig" validate:"required"`
 	HostConfig   common.HostConfig        `json:"hostConfig"`
-	PortUuid     string                   `json:"portUuid"`
+	UartConfig   common.UartConfig        `json:"uartConfig"`
 }
 
 type ModbusSlaver struct {
 	typex.XStatus
 	status           typex.DeviceState
 	mainConfig       ModbusSlaverConfig
-	uartConfig       uartctrl.UartConfig
 	registers        map[string]*common.RegisterRW
 	server           *mbserver.Server
 	HoldingRegisters []uint16 // [5] = WriteSingleCoil
@@ -63,8 +61,19 @@ func NewGenericModbusSlaver(e typex.Rhilex) typex.XDevice {
 	mdev.RuleEngine = e
 	mdev.mainConfig = ModbusSlaverConfig{
 		CommonConfig: ModbusSlaverCommonConfig{Mode: "TCP", MaxRegisters: 64, SlaverId: 1},
-		PortUuid:     "/dev/ttyS0",
-		HostConfig:   common.HostConfig{Host: "0.0.0.0", Port: 1502, Timeout: 3000},
+		HostConfig: common.HostConfig{
+			Host:    "0.0.0.0",
+			Port:    1502,
+			Timeout: 3000,
+		},
+		UartConfig: common.UartConfig{
+			Timeout:  3000,
+			Uart:     "/dev/ttyS1",
+			BaudRate: 9600,
+			DataBits: 8,
+			Parity:   "N",
+			StopBits: 1,
+		},
 	}
 
 	mdev.registers = map[string]*common.RegisterRW{}
@@ -114,22 +123,6 @@ func (mdev *ModbusSlaver) Init(devId string, configMap map[string]interface{}) e
 			LastFetchTime: LastFetchTime,
 			Value:         "0",
 		})
-	}
-
-	if mdev.mainConfig.CommonConfig.Mode == "UART" {
-		uartPort, err := uartctrl.GetUart(mdev.mainConfig.PortUuid)
-		if err != nil {
-			return err
-		}
-		if uartPort.Busy {
-			return fmt.Errorf("UART is busying now, Occupied By:%s", uartPort.OccupyBy)
-		}
-		switch tCfg := uartPort.Config.(type) {
-		case uartctrl.UartConfig:
-			mdev.uartConfig = tCfg
-		default:
-			return fmt.Errorf("Invalid config:%s", uartPort.Config)
-		}
 	}
 	return nil
 }
@@ -222,20 +215,13 @@ func (mdev *ModbusSlaver) Start(cctx typex.CCTX) error {
 		// 15 16暂时不支持
 	})
 	if mdev.mainConfig.CommonConfig.Mode == "UART" {
-		uartPort, err := uartctrl.GetUart(mdev.mainConfig.PortUuid)
-		if err != nil {
-			return err
-		}
-		if uartPort.Busy {
-			return fmt.Errorf("UART is busying now, Occupied By:%s", uartPort.OccupyBy)
-		}
 		err1 := mdev.server.ListenRTU(&serial.Config{
-			Address:  mdev.uartConfig.Uart,
-			BaudRate: mdev.uartConfig.BaudRate,
-			DataBits: mdev.uartConfig.DataBits,
-			Parity:   mdev.uartConfig.Parity,
-			StopBits: mdev.uartConfig.StopBits,
-			Timeout:  time.Duration(mdev.uartConfig.Timeout) * (time.Millisecond),
+			Address:  mdev.mainConfig.UartConfig.Uart,
+			BaudRate: mdev.mainConfig.UartConfig.BaudRate,
+			DataBits: mdev.mainConfig.UartConfig.DataBits,
+			Parity:   mdev.mainConfig.UartConfig.Parity,
+			StopBits: mdev.mainConfig.UartConfig.StopBits,
+			Timeout:  time.Duration(mdev.mainConfig.UartConfig.Timeout) * (time.Millisecond),
 		})
 		if err1 != nil {
 			return err1
@@ -277,9 +263,6 @@ func (mdev *ModbusSlaver) Stop() {
 	}
 	if mdev.server != nil {
 		mdev.server.Close()
-	}
-	if mdev.mainConfig.CommonConfig.Mode == "UART" {
-		uartctrl.FreeInterfaceBusy(mdev.mainConfig.PortUuid)
 	}
 	intercache.UnRegisterSlot(mdev.PointId) // 卸载点位表
 }

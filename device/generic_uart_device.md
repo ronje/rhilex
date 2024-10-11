@@ -13,8 +13,7 @@
             "timeSlice": 50,
             "autoRequest": true,
             "readFormat": "HEX"
-        },
-        "portUuid": "COM3"
+        }
     },
     "description": "GENERIC_UART_RW"
 }

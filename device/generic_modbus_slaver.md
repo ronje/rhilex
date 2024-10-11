@@ -45,8 +45,7 @@ TCP模式
     "config": {
         "commonConfig": {
             "mode": "UART"
-        },
-        "portUuid": "/dev/ttyS1"
+        }
     }
 }
 ```

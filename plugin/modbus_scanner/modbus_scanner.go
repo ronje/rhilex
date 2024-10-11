@@ -43,6 +43,9 @@ func NewModbusScanner() *modbusScanner {
 }
 
 func (ms *modbusScanner) Init(config *ini.Section) error {
+	ctx, cancel := context.WithCancel(context.Background())
+	ms.cancel = cancel
+	ms.ctx = ctx
 	return nil
 }
 
@@ -50,6 +53,7 @@ func (ms *modbusScanner) Start(typex.Rhilex) error {
 	return nil
 }
 func (ms *modbusScanner) Stop() error {
+	ms.cancel()
 	return nil
 }
 

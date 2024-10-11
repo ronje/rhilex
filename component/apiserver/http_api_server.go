@@ -8,7 +8,6 @@ import (
 	"github.com/hootrhino/rhilex/component/crontask"
 	dataschema "github.com/hootrhino/rhilex/component/dataschema"
 	"github.com/hootrhino/rhilex/component/internotify"
-	"github.com/hootrhino/rhilex/component/uartctrl"
 	"github.com/shirou/gopsutil/cpu"
 
 	"github.com/hootrhino/rhilex/component/apiserver/apis"
@@ -53,12 +52,6 @@ func NewHttpApiServer(ruleEngine typex.Rhilex) *ApiServerPlugin {
  */
 func initRhilex(engine typex.Rhilex) {
 	go GetCpuUsage()
-	/*
-	*
-	* 加载Port
-	*
-	 */
-	loadAllPortConfig()
 	//
 	// Load inend from sqlite
 	//
@@ -120,43 +113,6 @@ func initRhilex(engine typex.Rhilex) {
 		}
 	}
 
-}
-
-/*
-*
-* 从数据库拿端口配置
-*
- */
-func loadAllPortConfig() {
-	MUarts, err := service.AllUart()
-	if err != nil {
-		glogger.GLogger.Fatal(err)
-		return
-	}
-	for _, MUart := range MUarts {
-		Port := uartctrl.SystemUart{
-			UUID:        MUart.UUID,
-			Name:        MUart.Name,
-			Type:        MUart.Type,
-			Alias:       MUart.Alias,
-			Description: MUart.Description,
-		}
-		// 串口
-		if MUart.Type == "UART" {
-			config := uartctrl.UartConfig{}
-			if err := utils.BindSourceConfig(MUart.GetConfig(), &config); err != nil {
-				glogger.GLogger.Error(err)
-				continue
-			}
-			Port.Config = config
-			uartctrl.SetUart(Port)
-		}
-		// 未知接口参数为空，以后扩展，比如FD
-		if MUart.Type != "UART" {
-			Port.Config = "NULL"
-			uartctrl.SetUart(Port)
-		}
-	}
 }
 
 func (hs *ApiServerPlugin) Init(config *ini.Section) error {
@@ -236,8 +192,6 @@ func (hs *ApiServerPlugin) LoadRoute() {
 	apis.InitGroupRoute()
 	// 用户LUA代码段管理
 	apis.InitUserLuaRoute()
-	// 硬件接口API
-	apis.InitHwIfaceRoute()
 	// System Permission
 	apis.InitSysMenuPermissionRoute()
 	// System Settings
@@ -284,7 +238,7 @@ func (hs *ApiServerPlugin) Stop() error {
 func (hs *ApiServerPlugin) PluginMetaInfo() typex.XPluginMetaInfo {
 	return typex.XPluginMetaInfo{
 		UUID:        hs.uuid,
-		Name:        "Api Server",
+		Name:        "RHILEX HTTP RESTFul Api Server",
 		Version:     "v1.0.0",
 		Description: "RHILEX HTTP RESTFul Api Server",
 	}

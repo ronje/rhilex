@@ -17,13 +17,11 @@ package device
 
 import (
 	"errors"
-	"fmt"
 	"time"
 
 	"github.com/hootrhino/rhilex/common"
 	"github.com/hootrhino/rhilex/component/intercache"
 	"github.com/hootrhino/rhilex/component/interdb"
-	"github.com/hootrhino/rhilex/component/uartctrl"
 	mbus_device "github.com/hootrhino/rhilex/device/mbus"
 	"github.com/hootrhino/rhilex/glogger"
 	"github.com/hootrhino/rhilex/typex"
@@ -38,12 +36,12 @@ type MBusMasterGatewayCommonConfig struct {
 
 type MBusConfig struct {
 	HostConfig common.HostConfig `json:"hostConfig"`
-	PortUuid   string            `json:"portUuid"`
 }
 
 type MBusMasterGatewayMainConfig struct {
 	CommonConfig MBusMasterGatewayCommonConfig `json:"commonConfig"`
 	MBusConfig   MBusConfig                    `json:"MBusConfig"`
+	UartConfig   common.UartConfig             `json:"uartConfig"`
 }
 
 /**
@@ -54,7 +52,6 @@ type MBusMasterGatewayMainConfig struct {
 type MBusMasterGateway struct {
 	typex.XStatus
 	status         typex.DeviceState
-	uartConfig     uartctrl.UartConfig
 	mainConfig     MBusMasterGatewayMainConfig
 	MBusDataPoints map[string]mbus_device.MBusDataPoint
 }
@@ -62,7 +59,6 @@ type MBusMasterGateway struct {
 func NewMBusMasterGateway(e typex.Rhilex) typex.XDevice {
 	gw := new(MBusMasterGateway)
 	gw.RuleEngine = e
-	gw.uartConfig = uartctrl.UartConfig{}
 	gw.mainConfig = MBusMasterGatewayMainConfig{
 		CommonConfig: MBusMasterGatewayCommonConfig{
 			Mode: "UART",
@@ -76,11 +72,18 @@ func NewMBusMasterGateway(e typex.Rhilex) typex.XDevice {
 			}(),
 		},
 		MBusConfig: MBusConfig{
-			PortUuid: "COM1",
 			HostConfig: common.HostConfig{
 				Host: "127.0.0.1",
 				Port: 10065,
 			},
+		},
+		UartConfig: common.UartConfig{
+			Timeout:  3000,
+			Uart:     "/dev/ttyS1",
+			BaudRate: 9600,
+			DataBits: 8,
+			Parity:   "N",
+			StopBits: 1,
 		},
 	}
 	gw.MBusDataPoints = map[string]mbus_device.MBusDataPoint{}
@@ -126,25 +129,6 @@ func (gw *MBusMasterGateway) Init(devId string, configMap map[string]interface{}
 			Value:         "",
 			ErrMsg:        "Loading",
 		})
-	}
-	if gw.mainConfig.CommonConfig.Mode == "UART" {
-		uartPort, err := uartctrl.GetUart(gw.mainConfig.MBusConfig.PortUuid)
-		if err != nil {
-			return err
-		}
-		if uartPort.Busy {
-			return fmt.Errorf("UART is busying now, Occupied By:%s", uartPort.OccupyBy)
-		}
-		switch tCfg := uartPort.Config.(type) {
-		case uartctrl.UartConfig:
-			{
-				gw.uartConfig = tCfg
-			}
-		default:
-			{
-				return fmt.Errorf("Invalid config:%s", uartPort.Config)
-			}
-		}
 	}
 	return nil
 }

@@ -10,8 +10,7 @@
     "config": {
         "commonConfig": {
             "timeout": 50
-        },
-        "portUuid": "COM4"
+        }
     },
     "description": "GENERIC_UART"
 }

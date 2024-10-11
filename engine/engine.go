@@ -37,7 +37,6 @@ import (
 	"github.com/hootrhino/rhilex/component/ruleengine"
 	supervisor "github.com/hootrhino/rhilex/component/supervisor"
 	transceiver "github.com/hootrhino/rhilex/component/transceiver/manager"
-	"github.com/hootrhino/rhilex/component/uartctrl"
 	core "github.com/hootrhino/rhilex/config"
 	"github.com/hootrhino/rhilex/device"
 	"github.com/hootrhino/rhilex/glogger"
@@ -104,8 +103,6 @@ func InitRuleEngine(config typex.RhilexConfig) typex.Rhilex {
 	intercache.InitGlobalValueRegistry(__DefaultRuleEngine)
 	// Internal Bus
 	internotify.InitInternalEventBus(__DefaultRuleEngine, core.GlobalConfig.MaxQueueSize)
-	// Load hardware Port Manager
-	uartctrl.InitUartsManager(__DefaultRuleEngine)
 	// Internal Metric
 	intermetric.InitInternalMetric(__DefaultRuleEngine)
 	// lua applet manager
