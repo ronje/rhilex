@@ -20,11 +20,50 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strings"
+
+	"github.com/hootrhino/rhilex/typex"
+	"github.com/hootrhino/rhilex/utils"
+	"go.bug.st/serial"
 )
 
-// GetPortsList: 获取系统中所有可用的串口设备
-func GetPortsList() ([]string, error) {
+/**
+ * 兼容获取Windows和Linux系统的串口
+ *
+ */
+func GetOsPort() []string {
+	var ports []string
+	if runtime.GOOS == "linux" {
+		ports, _ = GetLinuxPortsList()
+	} else {
+		ports, _ = serial.GetPortsList()
+	}
+	List := []string{}
+	for _, port := range ports {
+		if typex.DefaultVersionInfo.Product == "RHILEXG1" {
+			// RHILEXG1的下列串口被系统占用
+			if utils.SContains([]string{
+				"/dev/ttyS0",
+				"/dev/ttyS3",
+				"/dev/ttyS4",   // Linux System
+				"/dev/ttyS5",   // Linux System
+				"/dev/ttyS6",   // Linux System
+				"/dev/ttyS7",   // Linux System
+				"/dev/ttyUSB0", // 4G
+				"/dev/ttyUSB1", // 4G
+				"/dev/ttyUSB2", // 4G
+			}, port) {
+				continue
+			}
+		}
+		List = append(List, port)
+	}
+	return List
+}
+
+// GetLinuxPortsList: 获取系统中所有可用的串口设备
+func GetLinuxPortsList() ([]string, error) {
 	var availablePorts []string
 	serialFile := "/proc/tty/driver/serial"
 	if _, err := os.Stat(serialFile); os.IsNotExist(err) {
