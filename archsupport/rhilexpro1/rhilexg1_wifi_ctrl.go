@@ -113,7 +113,6 @@ iw dev %s scan | awk '
 ' | sort
 `
 	cmd := exec.Command("sh", "-c", fmt.Sprintf(shell, WFace))
-	fmt.Println("ScanWlanList == ", cmd.String())
 	output, err := cmd.Output()
 	if err != nil {
 		return nil, fmt.Errorf("Error executing nmcli: %s", err.Error()+":"+string(output))

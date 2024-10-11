@@ -73,7 +73,6 @@ func SetWifi(iface, ssid, psk string, timeout time.Duration) error {
 	defer cancel()
 	// {
 	// 	cmd := exec.CommandContext(ctx, "pkill", "wpa_supplicant")
-	// 	fmt.Println(cmd.String())
 	// 	if err := cmd.Run(); err != nil {
 	// 		return fmt.Errorf("failed to terminate wpa_supplicant: %v", err)
 	// 	}
@@ -81,7 +80,6 @@ func SetWifi(iface, ssid, psk string, timeout time.Duration) error {
 	{
 
 		cmd := exec.CommandContext(ctx, "wpa_supplicant", "-B", "-i", iface, "-c", configFilePath)
-		fmt.Println(cmd.String())
 		if err := cmd.Start(); err != nil {
 			return fmt.Errorf("failed to start wpa_supplicant: %v", err)
 		}
@@ -89,7 +87,7 @@ func SetWifi(iface, ssid, psk string, timeout time.Duration) error {
 	{
 
 		cmd := exec.CommandContext(ctx, "udhcpc", "-i", iface)
-		fmt.Println(cmd.String())
+		n(cmd.String())
 		if err := cmd.Start(); err != nil {
 			return fmt.Errorf("failed to start wpa_supplicant: %v", err)
 		}
@@ -117,7 +115,6 @@ iw dev %s scan | awk '
 ' | sort
 `
 	cmd := exec.Command("sh", "-c", fmt.Sprintf(shell, WFace))
-	fmt.Println("ScanWlanList == ", cmd.String())
 	output, err := cmd.Output()
 	if err != nil {
 		return nil, fmt.Errorf("Error executing nmcli: %s", err.Error()+":"+string(output))
