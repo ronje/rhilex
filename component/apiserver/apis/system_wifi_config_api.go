@@ -43,6 +43,28 @@ type WifiConfigVo struct {
 }
 
 /**
+ * 获取网卡配置表
+ *
+ */
+func AllWlanNetwork(c *gin.Context, ruleEngine typex.Rhilex) {
+	MNetworkConfigs, err := service.AllWlanConfig()
+	if err != nil {
+		c.JSON(common.HTTP_OK, common.Error400(err))
+		return
+	}
+	NetworkConfigVos := []WifiConfigVo{}
+	for _, MWifiConfig := range MNetworkConfigs {
+		NetworkConfigVos = append(NetworkConfigVos, WifiConfigVo{
+			Interface: MWifiConfig.Interface,
+			SSID:      MWifiConfig.SSID,
+			Password:  MWifiConfig.Password,
+			Security:  MWifiConfig.Security,
+		})
+	}
+	c.JSON(common.HTTP_OK, common.OkWithData(NetworkConfigVos))
+}
+
+/**
  * 获取WIFI配置
  *
  */

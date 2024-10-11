@@ -33,12 +33,14 @@ func LoadSystemSettingsAPI() {
 	{
 		ethApi.POST("/eth", server.AddRoute(SetEthNetwork))
 		ethApi.GET("/eth", server.AddRoute(GetEthNetwork))
+		ethApi.GET("/eths", server.AddRoute(AllEthNetwork))
 	}
 	// wifi
 	wifiApi := server.RouteGroup(server.ContextUrl("/settings"))
 	{
 		wifiApi.GET("/wifi", server.AddRoute(GetWifi))
 		wifiApi.POST("/wifi", server.AddRoute(SetWifi))
+		wifiApi.GET("/wifis", server.AddRoute(AllWlanNetwork))
 		wifiApi.GET("/wifi/scanSignal", server.AddRoute(ScanWIFIList))
 	}
 	// time

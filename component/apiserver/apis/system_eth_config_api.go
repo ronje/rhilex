@@ -32,12 +32,12 @@ import (
 )
 
 type NetworkConfigVo struct {
-	Interface   string
-	Address     string
-	Netmask     string
-	Gateway     string
-	DNS         []string
-	DHCPEnabled *bool
+	Interface   string   `json:"interface"`
+	Address     string   `json:"address"`
+	Netmask     string   `json:"netmask"`
+	Gateway     string   `json:"gateway"`
+	DNS         []string `json:"dns"`
+	DHCPEnabled *bool    `json:"dhcp_enabled"`
 }
 
 /*
@@ -57,10 +57,33 @@ func GetEthNetwork(c *gin.Context, ruleEngine typex.Rhilex) {
 		Address:     MNetworkConfig.Address,
 		Netmask:     MNetworkConfig.Netmask,
 		Gateway:     MNetworkConfig.Gateway,
-		DNS:         MNetworkConfig.DNS,
+		DNS:         []string{"8.8.8.8", "114.114.114.114"},
 		DHCPEnabled: MNetworkConfig.DHCPEnabled,
 	}))
+}
 
+/**
+ * 获取网卡配置表
+ *
+ */
+func AllEthNetwork(c *gin.Context, ruleEngine typex.Rhilex) {
+	MNetworkConfigs, err := service.AllEthConfig()
+	if err != nil {
+		c.JSON(common.HTTP_OK, common.Error400(err))
+		return
+	}
+	NetworkConfigVos := []NetworkConfigVo{}
+	for _, MNetworkConfig := range MNetworkConfigs {
+		NetworkConfigVos = append(NetworkConfigVos, NetworkConfigVo{
+			Interface:   MNetworkConfig.Interface,
+			Address:     MNetworkConfig.Address,
+			Netmask:     MNetworkConfig.Netmask,
+			Gateway:     MNetworkConfig.Gateway,
+			DNS:         []string{"8.8.8.8", "114.114.114.114"},
+			DHCPEnabled: MNetworkConfig.DHCPEnabled,
+		})
+	}
+	c.JSON(common.HTTP_OK, common.OkWithData(NetworkConfigVos))
 }
 
 /*
@@ -73,15 +96,8 @@ func SetEthNetwork(c *gin.Context, ruleEngine typex.Rhilex) {
 		c.JSON(common.HTTP_OK, common.Error("OS Not Support:"+runtime.GOOS))
 		return
 	}
-	type Form struct {
-		Interface   string   `json:"interface"` // eth1 eth0
-		Address     string   `json:"address"`
-		Netmask     string   `json:"netmask"`
-		Gateway     string   `json:"gateway"`
-		DNS         []string `json:"dns"`
-		DHCPEnabled bool     `json:"dhcp_enabled"`
-	}
-	DtoCfg := Form{}
+
+	DtoCfg := NetworkConfigVo{}
 	if err0 := c.ShouldBindJSON(&DtoCfg); err0 != nil {
 		c.JSON(common.HTTP_OK, common.Error400(err0))
 		return
@@ -111,13 +127,13 @@ func SetEthNetwork(c *gin.Context, ruleEngine typex.Rhilex) {
 	}
 
 	MNetCfg := model.MNetworkConfig{
-		Type:        "ETH",
+		Type:        "ETHNET",
 		Interface:   DtoCfg.Interface,
 		Address:     DtoCfg.Address,
 		Netmask:     DtoCfg.Netmask,
 		Gateway:     DtoCfg.Gateway,
 		DNS:         DtoCfg.DNS,
-		DHCPEnabled: &DtoCfg.DHCPEnabled,
+		DHCPEnabled: DtoCfg.DHCPEnabled,
 	}
 	if err := service.UpdateEthConfig(MNetCfg); err != nil {
 		if err != nil {
