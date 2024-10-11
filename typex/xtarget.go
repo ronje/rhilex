@@ -15,14 +15,15 @@ func (i TargetType) String() string {
 const (
 	MONGO_SINGLE          TargetType = "MONGO_SINGLE"          // To MongoDB
 	MQTT_TARGET           TargetType = "MQTT"                  // To Mqtt Server
-	NATS_TARGET           TargetType = "NATS"                  // To Nats.io
 	HTTP_TARGET           TargetType = "HTTP"                  // To Http Target
 	TDENGINE_TARGET       TargetType = "TDENGINE"              // To TDENGINE
 	GRPC_CODEC_TARGET     TargetType = "GRPC_CODEC_TARGET"     // To GRPC Target
+	RHILEX_GRPC_TARGET    TargetType = "RHILEX_GRPC_TARGET"    // To GRPC Target
 	UDP_TARGET            TargetType = "UDP_TARGET"            // To UDP Server
 	GENERIC_UART_TARGET   TargetType = "GENERIC_UART_TARGET"   // To GENERIC_UART_TARGET DTU
 	TCP_TRANSPORT         TargetType = "TCP_TRANSPORT"         // To TCP Transport
 	SEMTECH_UDP_FORWARDER TargetType = "SEMTECH_UDP_FORWARDER" // To Chirp stack UDP
+	GREPTIME_DATABASE     TargetType = "GREPTIME_DATABASE"     // To GREPTIME DATABASE
 )
 
 // Stream from source and to target

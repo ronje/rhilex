@@ -2,16 +2,22 @@ package apis
 
 import (
 	"fmt"
+	"os"
 	"runtime"
 	"strconv"
 	"time"
 
-	archsupport "github.com/hootrhino/rhilex/bspsupport"
-	"github.com/hootrhino/rhilex/component/appstack"
-	"github.com/hootrhino/rhilex/component/intermetric"
+	archsupport "github.com/hootrhino/rhilex/archsupport"
+	"github.com/hootrhino/rhilex/archsupport/en6400"
+	"github.com/hootrhino/rhilex/archsupport/haas506"
+	"github.com/hootrhino/rhilex/archsupport/rhilexg1"
+	"github.com/hootrhino/rhilex/archsupport/rhilexpro1"
 	common "github.com/hootrhino/rhilex/component/apiserver/common"
+	"github.com/hootrhino/rhilex/component/apiserver/server"
 	"github.com/hootrhino/rhilex/component/apiserver/service"
-	"github.com/hootrhino/rhilex/component/trailer"
+	"github.com/hootrhino/rhilex/component/applet"
+	"github.com/hootrhino/rhilex/component/intermetric"
+	core "github.com/hootrhino/rhilex/config"
 	"github.com/hootrhino/rhilex/glogger"
 	"github.com/hootrhino/rhilex/ossupport"
 	"github.com/hootrhino/rhilex/utils"
@@ -22,6 +28,31 @@ import (
 	"github.com/shirou/gopsutil/v3/cpu"
 	"github.com/shirou/gopsutil/v3/disk"
 )
+
+func InitSystemRoute() {
+	osApi := server.RouteGroup(server.ContextUrl("/os"))
+	{
+		osApi.GET(("/osRelease"), server.AddRoute(CatOsRelease))
+		osApi.GET(("/system"), server.AddRoute(System))
+		osApi.GET(("/startedAt"), server.AddRoute(StartedAt))
+		osApi.GET(("/getVideos"), server.AddRoute(GetVideos))
+		osApi.GET(("/getGpuInfo"), server.AddRoute(GetGpuInfo))
+		osApi.GET(("/sysConfig"), server.AddRoute(GetSysConfig))
+		osApi.POST(("/resetInterMetric"), server.AddRoute(ResetInterMetric))
+	}
+	systemApi := server.RouteGroup(server.ContextUrl("/"))
+	{
+		systemApi.GET(("/ping"), server.AddRoute(Ping))
+	}
+	server.DefaultApiServer.Route().
+		GET(server.ContextUrl("statistics"), server.AddRoute(Statistics))
+	server.DefaultApiServer.Route().
+		POST(server.ContextUrl("login"), server.AddRoute(Login))
+	server.DefaultApiServer.Route().
+		GET(server.ContextUrl("info"), server.AddRoute(Info))
+	server.DefaultApiServer.Route().
+		POST(server.ContextUrl("validateRule"), server.AddRoute(ValidateLuaSyntax))
+}
 
 // 启动时间
 var __StartedAt = time.Unix(time.Now().Unix(), 0).Format("2006-01-02 15:04:05")
@@ -54,7 +85,6 @@ func source_count(e typex.Rhilex) map[string]int {
 	allRule := e.AllRules()
 	plugins := e.AllPlugins()
 	devices := e.AllDevices()
-	goods := trailer.AllGoods()
 	var c1, c2, c3, c4, c5, c6 int
 	allInEnd.Range(func(key, value interface{}) bool {
 		c1 += 1
@@ -76,10 +106,6 @@ func source_count(e typex.Rhilex) map[string]int {
 		c5 += 1
 		return true
 	})
-	goods.Range(func(key, value interface{}) bool {
-		c6 += 1
-		return true
-	})
 	return map[string]int{
 		"inends":  c1,
 		"outends": c2,
@@ -87,7 +113,7 @@ func source_count(e typex.Rhilex) map[string]int {
 		"plugins": c4,
 		"devices": c5,
 		"goods":   c6,
-		"apps":    appstack.AppCount(),
+		"apps":    applet.AppCount(),
 	}
 }
 
@@ -141,12 +167,6 @@ func SnapshotDump(c *gin.Context, ruleEngine typex.Rhilex) {
 	c.Writer.Flush()
 }
 
-// Get all Drivers
-func Drivers(c *gin.Context, ruleEngine typex.Rhilex) {
-	data := []interface{}{}
-	c.JSON(common.HTTP_OK, common.OkWithData(data))
-}
-
 // Get statistics data
 func Statistics(c *gin.Context, ruleEngine typex.Rhilex) {
 	c.JSON(common.HTTP_OK, common.OkWithData(intermetric.GetMetric()))
@@ -189,22 +209,7 @@ func SourceCount(c *gin.Context, ruleEngine typex.Rhilex) {
 *
  */
 func GetUartList(c *gin.Context, ruleEngine typex.Rhilex) {
-	
 	c.JSON(common.HTTP_OK, common.OkWithData(service.GetOsPort()))
-}
-
-/*
-*
-* 本地网卡
-*
- */
-func GetNetInterfaces(c *gin.Context, ruleEngine typex.Rhilex) {
-	interfaces, err := ossupport.GetAvailableInterfaces()
-	if err != nil {
-		c.JSON(common.HTTP_OK, common.Error400(err))
-	} else {
-		c.JSON(common.HTTP_OK, common.OkWithData(interfaces))
-	}
 }
 
 /*
@@ -285,5 +290,31 @@ func GetGpuInfo(c *gin.Context, ruleEngine typex.Rhilex) {
 *
  */
 func GetDeviceCtrlTree(c *gin.Context, ruleEngine typex.Rhilex) {
-	c.JSON(common.HTTP_OK, common.OkWithData(archsupport.GetDeviceCtrlTree()))
+	env := os.Getenv("ARCHSUPPORT")
+	if env == "RHILEXG1" {
+		c.JSON(common.HTTP_OK, common.OkWithData(rhilexg1.GetSysDevTree()))
+		return
+	}
+	if env == "RHILEXPRO1" {
+		c.JSON(common.HTTP_OK, common.OkWithData(rhilexpro1.GetSysDevTree()))
+		return
+	}
+	if env == "EN6400" {
+		c.JSON(common.HTTP_OK, common.OkWithData(en6400.GetSysDevTree()))
+		return
+	}
+
+	if env == "HAAS506LD1" {
+		c.JSON(common.HTTP_OK, common.OkWithData(haas506.GetSysDevTree()))
+		return
+	}
+	c.JSON(common.HTTP_OK, common.OkWithData(archsupport.DefaultDeviceTree()))
+}
+
+/**
+ * 系统配置
+ *
+ */
+func GetSysConfig(c *gin.Context, ruleEngine typex.Rhilex) {
+	c.JSON(common.HTTP_OK, common.OkWithData(core.GlobalConfig))
 }

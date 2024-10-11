@@ -16,11 +16,17 @@
 package service
 
 import (
+	"bufio"
 	"encoding/json"
+	"fmt"
+	"os"
+	"path/filepath"
+	"runtime"
+	"strings"
 
 	"github.com/hootrhino/rhilex/component/apiserver/model"
-	"github.com/hootrhino/rhilex/component/hwportmanager"
 	"github.com/hootrhino/rhilex/component/interdb"
+	"github.com/hootrhino/rhilex/component/uartctrl"
 	"github.com/hootrhino/rhilex/typex"
 	"github.com/hootrhino/rhilex/utils"
 	"go.bug.st/serial"
@@ -35,7 +41,7 @@ type UartConfigDto struct {
 	Parity   string
 	StopBits int
 }
-type HwPortDto struct {
+type UartDto struct {
 	UUID     string
 	Name     string        // 接口名称
 	Type     string        // 接口类型, UART(串口),USB(USB),FD(通用文件句柄)
@@ -58,36 +64,36 @@ func (u UartConfigDto) JsonString() string {
 * 所有的接口列表配置
 *
  */
-func AllHwPort() ([]model.MHwPort, error) {
-	ports := []model.MHwPort{}
+func AllUart() ([]model.MUart, error) {
+	ports := []model.MUart{}
 	return ports, interdb.DB().
-		Model(&model.MHwPort{}).Find(&ports).Error
+		Model(&model.MUart{}).Find(&ports).Error
 }
 
 /*
 *
-* 配置WIFI HwPort
+* 配置WIFI Uart
 *
  */
-func UpdateHwPortConfig(MHwPort model.MHwPort) error {
-	Model := model.MHwPort{}
+func UpdateUartConfig(MUart model.MUart) error {
+	Model := model.MUart{}
 	return interdb.DB().
 		Model(Model).
-		Where("uuid=?", MHwPort.UUID).
-		Updates(MHwPort).Error
+		Where("uuid=?", MUart.UUID).
+		Updates(MUart).Error
 }
 
 /*
 *
-* 获取HwPort的配置信息
+* 获取Uart的配置信息
 *
  */
-func GetHwPortConfig(uuid string) (model.MHwPort, error) {
-	MHwPort := model.MHwPort{}
+func GetUartConfig(uuid string) (model.MUart, error) {
+	MUart := model.MUart{}
 	err := interdb.DB().
 		Where("uuid=?", uuid).
-		Find(&MHwPort).Error
-	return MHwPort, err
+		Find(&MUart).Error
+	return MUart, err
 }
 
 /*
@@ -95,22 +101,39 @@ func GetHwPortConfig(uuid string) (model.MHwPort, error) {
 * 扫描
 *
  */
-func ReScanHwPortConfig() error {
+func ReScanUartConfig() error {
 	ClearNullPort()
 	for _, portName := range GetOsPort() {
 		count := int64(-1)
-		interdb.DB().Model(model.MHwPort{}).Where("name=?", portName).Count(&count)
+		interdb.DB().Model(model.MUart{}).Where("name=?", portName).Count(&count)
 		if count > 0 {
 			continue
 		}
-		NewPort := model.MHwPort{
+		NewPort := model.MUart{
 			UUID: portName,
 			Name: portName,
 			Type: "UART",
 			Alias: func() string {
+				if portName == "/dev/ttyS1" {
+					return "RS458-1"
+				}
+				if portName == "/dev/ttyS2" {
+					return "RS458-2"
+				}
 				return portName
 			}(),
-			Description: portName,
+			Description: func() string {
+				// Alias Ext
+				if typex.DefaultVersionInfo.Product == "RHILEXG1" {
+					if portName == "/dev/ttyS1" {
+						return "RS458-1"
+					}
+					if portName == "/dev/ttyS2" {
+						return "RS458-2"
+					}
+				}
+				return portName
+			}(),
 		}
 		uartCfg := UartConfigDto{
 			Timeout:  3000,
@@ -127,14 +150,20 @@ func ReScanHwPortConfig() error {
 		if err1 != nil {
 			return err1
 		}
-		hwportmanager.SetHwPort(hwportmanager.SystemHwPort{
+		uartctrl.SetUart(uartctrl.SystemUart{
 			UUID: portName,
 			Name: portName,
 			Type: "UART",
 			Alias: func() string {
+				if portName == "/dev/ttyS1" {
+					return "RS458-1"
+				}
+				if portName == "/dev/ttyS2" {
+					return "RS458-2"
+				}
 				return portName
 			}(),
-			Config: hwportmanager.UartConfig{
+			Config: uartctrl.UartConfig{
 				Timeout:  3000,
 				Uart:     portName,
 				BaudRate: 9600,
@@ -142,7 +171,18 @@ func ReScanHwPortConfig() error {
 				Parity:   "N",
 				StopBits: 1,
 			},
-			Description: portName,
+			Description: func() string {
+				// Alias Ext
+				if typex.DefaultVersionInfo.Product == "RHILEXG1" {
+					if portName == "/dev/ttyS1" {
+						return "RS458-1"
+					}
+					if portName == "/dev/ttyS2" {
+						return "RS458-2"
+					}
+				}
+				return portName
+			}(),
 		})
 	}
 	return nil
@@ -154,7 +194,7 @@ func ReScanHwPortConfig() error {
 *
  */
 func ClearNullPort() {
-	DbPorts, _ := AllHwPort()
+	DbPorts, _ := AllUart()
 	OsPorts := GetOsPort()
 	TotalPort := []string{}
 	for _, DbPort := range DbPorts {
@@ -162,8 +202,8 @@ func ClearNullPort() {
 	}
 	// 清除缓存里面的数据
 	for _, portName := range complement(TotalPort, OsPorts) {
-		hwportmanager.RemovePort(portName)
-		interdb.DB().Model(model.MHwPort{}).Where("name=?", portName).Delete(model.MHwPort{})
+		uartctrl.RemovePort(portName)
+		interdb.DB().Model(model.MUart{}).Where("name=?", portName).Delete(model.MUart{})
 	}
 }
 
@@ -188,12 +228,12 @@ func complement(a, b []string) []string {
 * 重置
 *
  */
-func ResetHwPortConfig() error {
+func ResetUartConfig() error {
 	DbTx := interdb.DB()
 	errDbTx := DbTx.Transaction(func(tx *gorm.DB) error {
 		err0 := tx.Session(&gorm.Session{
 			AllowGlobalUpdate: true,
-		}).Delete(&model.MHwPort{}).Error
+		}).Delete(&model.MUart{}).Error
 		if err0 != nil {
 			return err0
 		}
@@ -202,7 +242,7 @@ func ResetHwPortConfig() error {
 	if errDbTx != nil {
 		return errDbTx
 	}
-	return InitHwPortConfig()
+	return InitUartConfig()
 }
 
 /*
@@ -210,17 +250,36 @@ func ResetHwPortConfig() error {
 * 初始化网卡配置参数
 *
  */
-func InitHwPortConfig() error {
+func InitUartConfig() error {
 	for _, portName := range GetOsPort() {
-		Port := model.MHwPort{
+		Port := model.MUart{
 			UUID: portName,
 			Name: portName,
 			Type: "UART",
 			Alias: func() string {
 				// Alias Ext
+				if typex.DefaultVersionInfo.Product == "RHILEXG1" {
+					if portName == "/dev/ttyS1" {
+						return "RS458-1"
+					}
+					if portName == "/dev/ttyS2" {
+						return "RS458-2"
+					}
+				}
 				return portName
 			}(),
-			Description: portName,
+			Description: func() string {
+				// Alias Ext
+				if typex.DefaultVersionInfo.Product == "RHILEXG1" {
+					if portName == "/dev/ttyS1" {
+						return "RS458-1"
+					}
+					if portName == "/dev/ttyS2" {
+						return "RS458-2"
+					}
+				}
+				return portName
+			}(),
 		}
 		uartCfg := UartConfigDto{
 			Timeout:  3000,
@@ -248,7 +307,11 @@ func InitHwPortConfig() error {
  */
 func GetOsPort() []string {
 	var ports []string
-	ports, _ = serial.GetPortsList()
+	if runtime.GOOS == "linux" {
+		ports, _ = GetPortsList()
+	} else {
+		ports, _ = serial.GetPortsList()
+	}
 	List := []string{}
 	for _, port := range ports {
 		if typex.DefaultVersionInfo.Product == "RHILEXG1" {
@@ -270,4 +333,56 @@ func GetOsPort() []string {
 		List = append(List, port)
 	}
 	return List
+}
+
+// GetPortsList: 获取系统中所有可用的串口设备
+func GetPortsList() ([]string, error) {
+	var availablePorts []string
+	serialFile := "/proc/tty/driver/serial"
+	if _, err := os.Stat(serialFile); os.IsNotExist(err) {
+		fmt.Printf("%s does not exist, skipping this check.\n", serialFile)
+	} else {
+		file, err := os.Open(serialFile)
+		if err != nil {
+			return nil, fmt.Errorf("failed to open %s: %v", serialFile, err)
+		}
+		defer file.Close()
+		scanner := bufio.NewScanner(file)
+		for scanner.Scan() {
+			line := scanner.Text()
+			fields := strings.Fields(line)
+			if len(fields) > 1 && strings.HasPrefix(fields[0], "0:") ||
+				strings.HasPrefix(fields[0], "1:") || strings.HasPrefix(fields[0], "2:") {
+				index := strings.TrimSuffix(fields[0], ":")
+				uartType := fields[1]
+				if uartType != "unknown" {
+					device := fmt.Sprintf("/dev/ttyS%s", index)
+					availablePorts = append(availablePorts, device)
+				}
+			}
+		}
+		if err := scanner.Err(); err != nil {
+			return nil, fmt.Errorf("error reading file: %v", err)
+		}
+	}
+	devDir := "/dev/"
+	files, err := os.ReadDir(devDir)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read %s directory: %v", devDir, err)
+	}
+
+	for _, file := range files {
+		if file.IsDir() {
+			continue
+		}
+		name := file.Name()
+		// 检查是否是 ttyS*、ttyUSB* 或 tty485_*
+		if strings.HasPrefix(name, "ttyS") ||
+			strings.HasPrefix(name, "ttyUSB") ||
+			strings.HasPrefix(name, "tty232") ||
+			strings.HasPrefix(name, "tty485") {
+			availablePorts = append(availablePorts, filepath.Join(devDir, name))
+		}
+	}
+	return availablePorts, nil
 }

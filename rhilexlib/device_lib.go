@@ -19,7 +19,7 @@ import (
 
 var deviceReadBuffer []byte = make([]byte, common.T_4KB)
 
-func ReadDevice(rx typex.Rhilex, uuid string) func(L *lua.LState) int {
+func ReadDevice(rx typex.Rhilex, uuid string) func(*lua.LState) int {
 	return func(l *lua.LState) int {
 		devUUID := l.ToString(2)
 		cmd := l.ToString(3)
@@ -56,7 +56,7 @@ func ReadDevice(rx typex.Rhilex, uuid string) func(L *lua.LState) int {
 * 写数据
 *
  */
-func WriteDevice(rx typex.Rhilex, uuid string) func(L *lua.LState) int {
+func WriteDevice(rx typex.Rhilex, uuid string) func(*lua.LState) int {
 	return func(l *lua.LState) int {
 		// write(uuid,cmd,data)
 		devUUID := l.ToString(2)
@@ -93,7 +93,7 @@ func WriteDevice(rx typex.Rhilex, uuid string) func(L *lua.LState) int {
 * return Hex String
 *
  */
-func CtrlDevice(rx typex.Rhilex, uuid string) func(L *lua.LState) int {
+func CtrlDevice(rx typex.Rhilex, uuid string) func(*lua.LState) int {
 	return func(l *lua.LState) int {
 		// write(uuid,cmd,data)
 		devUUID := l.ToString(2)

@@ -28,9 +28,9 @@ import (
 	"time"
 
 	"github.com/hootrhino/rhilex/common"
-	"github.com/hootrhino/rhilex/component/hwportmanager"
 	intercache "github.com/hootrhino/rhilex/component/intercache"
 	"github.com/hootrhino/rhilex/component/interdb"
+	"github.com/hootrhino/rhilex/component/uartctrl"
 
 	modbus "github.com/hootrhino/gomodbus"
 	core "github.com/hootrhino/rhilex/config"
@@ -106,7 +106,7 @@ type GenericModbusMaster struct {
 	//
 	mainConfig     ModbusMasterConfig
 	retryTimes     int
-	hwPortConfig   hwportmanager.UartConfig
+	uartConfig     uartctrl.UartConfig
 	Registers      map[string]*common.RegisterRW
 	RegisterGroups []*ModbusMasterGroupedTag
 }
@@ -162,9 +162,10 @@ func (mdev *GenericModbusMaster) Init(devId string, configMap map[string]interfa
 	if modbusPointLoadErr != nil {
 		return modbusPointLoadErr
 	}
+	LastFetchTime := uint64(time.Now().UnixMilli())
 	for _, ModbusPoint := range ModbusPointList {
 		// 频率不能太快
-		if ModbusPoint.Frequency < 50 {
+		if ModbusPoint.Frequency < 1 {
 			return errors.New("'frequency' must grate than 50 millisecond")
 		}
 		mdev.Registers[ModbusPoint.UUID] = &common.RegisterRW{
@@ -180,13 +181,12 @@ func (mdev *GenericModbusMaster) Init(devId string, configMap map[string]interfa
 			DataOrder: ModbusPoint.DataOrder,
 			Weight:    ModbusPoint.Weight,
 		}
-		LastFetchTime := uint64(time.Now().UnixMilli())
 		intercache.SetValue(mdev.PointId, ModbusPoint.UUID, intercache.CacheValue{
 			UUID:          ModbusPoint.UUID,
 			Status:        0,
 			LastFetchTime: LastFetchTime,
 			Value:         "",
-			ErrMsg:        "Device Loading",
+			ErrMsg:        "Loading",
 		})
 	}
 
@@ -204,21 +204,21 @@ func (mdev *GenericModbusMaster) Init(devId string, configMap map[string]interfa
 		}
 	}
 	if mdev.mainConfig.CommonConfig.Mode == "UART" {
-		hwPort, err := hwportmanager.GetHwPort(mdev.mainConfig.PortUuid)
+		uartPort, err := uartctrl.GetUart(mdev.mainConfig.PortUuid)
 		if err != nil {
 			return err
 		}
-		if hwPort.Busy {
-			return fmt.Errorf("UART is busying now, Occupied By:%s", hwPort.OccupyBy)
+		if uartPort.Busy {
+			return fmt.Errorf("UART is busying now, Occupied By:%s", uartPort.OccupyBy)
 		}
-		switch tCfg := hwPort.Config.(type) {
-		case hwportmanager.UartConfig:
+		switch tCfg := uartPort.Config.(type) {
+		case uartctrl.UartConfig:
 			{
-				mdev.hwPortConfig = tCfg
+				mdev.uartConfig = tCfg
 			}
 		default:
 			{
-				return fmt.Errorf("Invalid config:%s", hwPort.Config)
+				return fmt.Errorf("Invalid config:%s", uartPort.Config)
 			}
 		}
 	}
@@ -289,21 +289,21 @@ func (mdev *GenericModbusMaster) Start(cctx typex.CCTX) error {
 	mdev.CancelCTX = cctx.CancelCTX
 	mdev.retryTimes = 0
 	if mdev.mainConfig.CommonConfig.Mode == "UART" {
-		hwPort, err := hwportmanager.GetHwPort(mdev.mainConfig.PortUuid)
+		uartPort, err := uartctrl.GetUart(mdev.mainConfig.PortUuid)
 		if err != nil {
 			return err
 		}
-		if hwPort.Busy {
-			return fmt.Errorf("UART is busying now, Occupied By:%s", hwPort.OccupyBy)
+		if uartPort.Busy {
+			return fmt.Errorf("UART is busying now, Occupied By:%s", uartPort.OccupyBy)
 		}
 
-		mdev.rtuHandler = modbus.NewRTUClientHandler(hwPort.Name)
-		mdev.rtuHandler.BaudRate = mdev.hwPortConfig.BaudRate
-		mdev.rtuHandler.DataBits = mdev.hwPortConfig.DataBits
-		mdev.rtuHandler.Parity = mdev.hwPortConfig.Parity
-		mdev.rtuHandler.StopBits = mdev.hwPortConfig.StopBits
+		mdev.rtuHandler = modbus.NewRTUClientHandler(uartPort.Name)
+		mdev.rtuHandler.BaudRate = mdev.uartConfig.BaudRate
+		mdev.rtuHandler.DataBits = mdev.uartConfig.DataBits
+		mdev.rtuHandler.Parity = mdev.uartConfig.Parity
+		mdev.rtuHandler.StopBits = mdev.uartConfig.StopBits
 		// timeout 最大不能超过20, 不然无意义
-		mdev.rtuHandler.Timeout = time.Duration(mdev.hwPortConfig.Timeout) * time.Millisecond
+		mdev.rtuHandler.Timeout = time.Duration(mdev.uartConfig.Timeout) * time.Millisecond
 		if core.GlobalConfig.AppDebugMode {
 			mdev.rtuHandler.Logger = golog.New(glogger.GLogger.Writer(),
 				"Modbus RTU Mode: "+mdev.PointId+": ", golog.LstdFlags)
@@ -312,7 +312,7 @@ func (mdev *GenericModbusMaster) Start(cctx typex.CCTX) error {
 		if err := mdev.rtuHandler.Connect(); err != nil {
 			return err
 		}
-		hwportmanager.SetInterfaceBusy(mdev.mainConfig.PortUuid, hwportmanager.HwPortOccupy{
+		uartctrl.SetInterfaceBusy(mdev.mainConfig.PortUuid, uartctrl.UartOccupy{
 			UUID: mdev.PointId,
 			Type: "DEVICE",
 			Name: mdev.Details().Name,
@@ -352,29 +352,16 @@ func (mdev *GenericModbusMaster) Start(cctx typex.CCTX) error {
 				if mdev.mainConfig.CommonConfig.Mode == "TCP" {
 					ReadRegisterValues = mdev.TCPRead()
 				}
-				if len(ReadRegisterValues) < 1 {
-					time.Sleep(50 * time.Second)
-					continue
-				}
-				if !*mdev.mainConfig.CommonConfig.BatchRequest {
-
-					for _, ReadRegisterValue := range ReadRegisterValues {
-						if bytes, errMarshal := json.Marshal(ReadRegisterValue); errMarshal != nil {
+				if *mdev.mainConfig.CommonConfig.BatchRequest {
+					if len(ReadRegisterValues) > 0 {
+						if bytes, errMarshal := json.Marshal(ReadRegisterValues); errMarshal != nil {
 							mdev.retryTimes++
 							glogger.GLogger.Error(errMarshal)
 						} else {
 							mdev.RuleEngine.WorkDevice(mdev.Details(), string(bytes))
 						}
 					}
-				} else {
-					if bytes, errMarshal := json.Marshal(ReadRegisterValues); errMarshal != nil {
-						mdev.retryTimes++
-						glogger.GLogger.Error(errMarshal)
-					} else {
-						mdev.RuleEngine.WorkDevice(mdev.Details(), string(bytes))
-					}
 				}
-
 			}
 
 		}(mdev.Ctx)
@@ -446,7 +433,6 @@ func (mdev *GenericModbusMaster) OnWrite(cmd []byte, data []byte) (int, error) {
 		}
 		// 16
 		if r.Function == common.WRITE_MULTIPLE_HOLDING_REGISTERS {
-
 			_, err := mdev.Client.WriteMultipleRegisters(r.Address,
 				uint16(len(r.Values))/2, maybePrependZero(r.Values))
 			if err != nil {
@@ -479,7 +465,7 @@ func (mdev *GenericModbusMaster) Stop() {
 		mdev.CancelCTX()
 	}
 	if mdev.mainConfig.CommonConfig.Mode == "UART" {
-		hwportmanager.FreeInterfaceBusy(mdev.mainConfig.PortUuid)
+		uartctrl.FreeInterfaceBusy(mdev.mainConfig.PortUuid)
 		if mdev.rtuHandler != nil {
 			mdev.rtuHandler.Close()
 		}
@@ -574,7 +560,8 @@ func (mdev *GenericModbusMaster) modbusSingleRead() []ReadRegisterValue {
 			}
 			// ValidData := [4]byte{0, 0, 0, 0}
 			copy(__modbusReadResult[:], results[:])
-			Value := utils.ParseModbusValue(r.DataType, r.DataOrder, float32(r.Weight), __modbusReadResult)
+
+			Value := utils.ParseModbusValue(len(results), r.DataType, r.DataOrder, float32(r.Weight), __modbusReadResult)
 			Reg := ReadRegisterValue{
 				Tag:           r.Tag,
 				SlaverId:      r.SlaverId,
@@ -590,6 +577,14 @@ func (mdev *GenericModbusMaster) modbusSingleRead() []ReadRegisterValue {
 				LastFetchTime: lastTimes,
 				ErrMsg:        "",
 			})
+			if !*mdev.mainConfig.CommonConfig.BatchRequest {
+				if bytes, errMarshal := json.Marshal(Reg); errMarshal != nil {
+					glogger.GLogger.Error(errMarshal)
+				} else {
+					mdev.RuleEngine.WorkDevice(mdev.Details(), string(bytes))
+				}
+			}
+
 		}
 		// 2 字节
 		if r.Function == common.READ_DISCRETE_INPUT {
@@ -610,7 +605,7 @@ func (mdev *GenericModbusMaster) modbusSingleRead() []ReadRegisterValue {
 			}
 			// ValidData := [4]byte{0, 0, 0, 0}
 			copy(__modbusReadResult[:], results[:])
-			Value := utils.ParseModbusValue(r.DataType, r.DataOrder, float32(r.Weight), __modbusReadResult)
+			Value := utils.ParseModbusValue(len(results), r.DataType, r.DataOrder, float32(r.Weight), __modbusReadResult)
 			Reg := ReadRegisterValue{
 				Tag:           r.Tag,
 				SlaverId:      r.SlaverId,
@@ -626,6 +621,13 @@ func (mdev *GenericModbusMaster) modbusSingleRead() []ReadRegisterValue {
 				LastFetchTime: lastTimes,
 				ErrMsg:        "",
 			})
+			if !*mdev.mainConfig.CommonConfig.BatchRequest {
+				if bytes, errMarshal := json.Marshal(Reg); errMarshal != nil {
+					glogger.GLogger.Error(errMarshal)
+				} else {
+					mdev.RuleEngine.WorkDevice(mdev.Details(), string(bytes))
+				}
+			}
 		}
 		// 2 字节
 		//
@@ -647,7 +649,7 @@ func (mdev *GenericModbusMaster) modbusSingleRead() []ReadRegisterValue {
 			}
 			// ValidData := [4]byte{0, 0, 0, 0}
 			copy(__modbusReadResult[:], results[:])
-			Value := utils.ParseModbusValue(r.DataType, r.DataOrder, float32(r.Weight), __modbusReadResult)
+			Value := utils.ParseModbusValue(len(results), r.DataType, r.DataOrder, float32(r.Weight), __modbusReadResult)
 
 			Reg := ReadRegisterValue{
 				Tag:           r.Tag,
@@ -664,7 +666,13 @@ func (mdev *GenericModbusMaster) modbusSingleRead() []ReadRegisterValue {
 				LastFetchTime: lastTimes,
 				ErrMsg:        "",
 			})
-
+			if !*mdev.mainConfig.CommonConfig.BatchRequest {
+				if bytes, errMarshal := json.Marshal(Reg); errMarshal != nil {
+					glogger.GLogger.Error(errMarshal)
+				} else {
+					mdev.RuleEngine.WorkDevice(mdev.Details(), string(bytes))
+				}
+			}
 		}
 		// 2 字节
 		if r.Function == common.READ_INPUT_REGISTERS {
@@ -685,7 +693,7 @@ func (mdev *GenericModbusMaster) modbusSingleRead() []ReadRegisterValue {
 			}
 			// ValidData := [4]byte{0, 0, 0, 0}
 			copy(__modbusReadResult[:], results[:])
-			Value := utils.ParseModbusValue(r.DataType, r.DataOrder, float32(r.Weight), __modbusReadResult)
+			Value := utils.ParseModbusValue(len(results), r.DataType, r.DataOrder, float32(r.Weight), __modbusReadResult)
 			Reg := ReadRegisterValue{
 				Tag:           r.Tag,
 				SlaverId:      r.SlaverId,
@@ -701,6 +709,13 @@ func (mdev *GenericModbusMaster) modbusSingleRead() []ReadRegisterValue {
 				LastFetchTime: lastTimes,
 				ErrMsg:        "",
 			})
+			if !*mdev.mainConfig.CommonConfig.BatchRequest {
+				if bytes, errMarshal := json.Marshal(Reg); errMarshal != nil {
+					glogger.GLogger.Error(errMarshal)
+				} else {
+					mdev.RuleEngine.WorkDevice(mdev.Details(), string(bytes))
+				}
+			}
 		}
 		time.Sleep(time.Duration(r.Frequency) * time.Millisecond)
 	}
@@ -746,6 +761,13 @@ func (mdev *GenericModbusMaster) modbusGroupRead() []ReadRegisterValue {
 					LastFetchTime: uint64(ts),
 					ErrMsg:        "",
 				})
+				if !*mdev.mainConfig.CommonConfig.BatchRequest {
+					if bytes, errMarshal := json.Marshal(jsonVal); errMarshal != nil {
+						glogger.GLogger.Error(errMarshal)
+					} else {
+						mdev.RuleEngine.WorkDevice(mdev.Details(), string(bytes))
+					}
+				}
 			}
 		}
 		if group.Function == common.READ_DISCRETE_INPUT {
@@ -777,10 +799,17 @@ func (mdev *GenericModbusMaster) modbusGroupRead() []ReadRegisterValue {
 					LastFetchTime: uint64(ts),
 					ErrMsg:        "",
 				})
+				if !*mdev.mainConfig.CommonConfig.BatchRequest {
+					if bytes, errMarshal := json.Marshal(jsonVal); errMarshal != nil {
+						glogger.GLogger.Error(errMarshal)
+					} else {
+						mdev.RuleEngine.WorkDevice(mdev.Details(), string(bytes))
+					}
+				}
 			}
 		}
 		if group.Function == common.READ_HOLDING_REGISTERS {
-			buf, err := mdev.Client.ReadHoldingRegisters(group.Address, group.Quantity)
+			results, err := mdev.Client.ReadHoldingRegisters(group.Address, group.Quantity)
 			if err != nil {
 				glogger.GLogger.Error(err)
 				mdev.retryTimes++
@@ -789,15 +818,15 @@ func (mdev *GenericModbusMaster) modbusGroupRead() []ReadRegisterValue {
 			for uuid, r := range group.Registers {
 				offsetByte := (r.Address - group.Address) * 2
 				offsetByteEnd := offsetByte + r.Quantity*2
-				copy(__modbusReadResult[:], buf[offsetByte:offsetByteEnd])
-				value := utils.ParseModbusValue(r.DataType, r.DataOrder, float32(r.Weight), __modbusReadResult)
+				copy(__modbusReadResult[:], results[offsetByte:offsetByteEnd])
+				Value := utils.ParseModbusValue(len(results), r.DataType, r.DataOrder, float32(r.Weight), __modbusReadResult)
 
 				ts := time.Now().UnixMilli()
 				jsonVal := ReadRegisterValue{
 					Tag:           r.Tag,
 					SlaverId:      r.SlaverId,
 					Alias:         r.Alias,
-					Value:         value,
+					Value:         Value,
 					LastFetchTime: uint64(ts),
 				}
 				jsonValueGroups = append(jsonValueGroups, jsonVal)
@@ -805,14 +834,21 @@ func (mdev *GenericModbusMaster) modbusGroupRead() []ReadRegisterValue {
 				intercache.SetValue(mdev.PointId, uuid, intercache.CacheValue{
 					UUID:          uuid,
 					Status:        0,
-					Value:         value,
+					Value:         Value,
 					LastFetchTime: uint64(ts),
 					ErrMsg:        "",
 				})
+				if !*mdev.mainConfig.CommonConfig.BatchRequest {
+					if bytes, errMarshal := json.Marshal(jsonVal); errMarshal != nil {
+						glogger.GLogger.Error(errMarshal)
+					} else {
+						mdev.RuleEngine.WorkDevice(mdev.Details(), string(bytes))
+					}
+				}
 			}
 		}
 		if group.Function == common.READ_INPUT_REGISTERS {
-			buf, err := mdev.Client.ReadHoldingRegisters(group.Address, group.Quantity)
+			results, err := mdev.Client.ReadHoldingRegisters(group.Address, group.Quantity)
 			if err != nil {
 				glogger.GLogger.Error(err)
 				mdev.retryTimes++
@@ -821,15 +857,15 @@ func (mdev *GenericModbusMaster) modbusGroupRead() []ReadRegisterValue {
 			for uuid, r := range group.Registers {
 				offsetByte := (r.Address - group.Address) * 2
 				offsetByteEnd := offsetByte + r.Quantity*2
-				copy(__modbusReadResult[:], buf[offsetByte:offsetByteEnd])
-				value := utils.ParseModbusValue(r.DataType, r.DataOrder, float32(r.Weight), __modbusReadResult)
+				copy(__modbusReadResult[:], results[offsetByte:offsetByteEnd])
+				Value := utils.ParseModbusValue(len(results), r.DataType, r.DataOrder, float32(r.Weight), __modbusReadResult)
 
 				ts := time.Now().UnixMilli()
 				jsonVal := ReadRegisterValue{
 					Tag:           r.Tag,
 					SlaverId:      r.SlaverId,
 					Alias:         r.Alias,
-					Value:         value,
+					Value:         Value,
 					LastFetchTime: uint64(ts),
 				}
 				jsonValueGroups = append(jsonValueGroups, jsonVal)
@@ -837,10 +873,17 @@ func (mdev *GenericModbusMaster) modbusGroupRead() []ReadRegisterValue {
 				intercache.SetValue(mdev.PointId, uuid, intercache.CacheValue{
 					UUID:          uuid,
 					Status:        0,
-					Value:         value,
+					Value:         Value,
 					LastFetchTime: uint64(ts),
 					ErrMsg:        "",
 				})
+				if !*mdev.mainConfig.CommonConfig.BatchRequest {
+					if bytes, errMarshal := json.Marshal(jsonVal); errMarshal != nil {
+						glogger.GLogger.Error(errMarshal)
+					} else {
+						mdev.RuleEngine.WorkDevice(mdev.Details(), string(bytes))
+					}
+				}
 			}
 		}
 

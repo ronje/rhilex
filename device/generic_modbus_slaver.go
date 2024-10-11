@@ -17,14 +17,18 @@ package device
 
 import (
 	"encoding/binary"
+	"encoding/hex"
+	"encoding/json"
 	"fmt"
+	"strconv"
+	"strings"
 	"time"
 
 	mbserver "github.com/hootrhino/gomodbus-server"
 	serial "github.com/hootrhino/goserial"
 	"github.com/hootrhino/rhilex/common"
-	"github.com/hootrhino/rhilex/component/hwportmanager"
 	"github.com/hootrhino/rhilex/component/intercache"
+	"github.com/hootrhino/rhilex/component/uartctrl"
 	"github.com/hootrhino/rhilex/glogger"
 	"github.com/hootrhino/rhilex/typex"
 	"github.com/hootrhino/rhilex/utils"
@@ -33,6 +37,7 @@ import (
 type ModbusSlaverCommonConfig struct {
 	Mode         string `json:"mode" validate:"required"` // UART | TCP
 	MaxRegisters int    `json:"maxRegisters" validate:"required"`
+	SlaverId     int16  `json:"slaverId" validate:"required"`
 }
 type ModbusSlaverConfig struct {
 	CommonConfig ModbusSlaverCommonConfig `json:"commonConfig" validate:"required"`
@@ -44,7 +49,7 @@ type ModbusSlaver struct {
 	typex.XStatus
 	status           typex.DeviceState
 	mainConfig       ModbusSlaverConfig
-	hwPortConfig     hwportmanager.UartConfig
+	uartConfig       uartctrl.UartConfig
 	registers        map[string]*common.RegisterRW
 	server           *mbserver.Server
 	HoldingRegisters []uint16 // [5] = WriteSingleCoil
@@ -57,7 +62,7 @@ func NewGenericModbusSlaver(e typex.Rhilex) typex.XDevice {
 	mdev := new(ModbusSlaver)
 	mdev.RuleEngine = e
 	mdev.mainConfig = ModbusSlaverConfig{
-		CommonConfig: ModbusSlaverCommonConfig{Mode: "TCP", MaxRegisters: 64},
+		CommonConfig: ModbusSlaverCommonConfig{Mode: "TCP", MaxRegisters: 64, SlaverId: 1},
 		PortUuid:     "/dev/ttyS0",
 		HostConfig:   common.HostConfig{Host: "0.0.0.0", Port: 1502, Timeout: 3000},
 	}
@@ -112,23 +117,37 @@ func (mdev *ModbusSlaver) Init(devId string, configMap map[string]interface{}) e
 	}
 
 	if mdev.mainConfig.CommonConfig.Mode == "UART" {
-		hwPort, err := hwportmanager.GetHwPort(mdev.mainConfig.PortUuid)
+		uartPort, err := uartctrl.GetUart(mdev.mainConfig.PortUuid)
 		if err != nil {
 			return err
 		}
-		if hwPort.Busy {
-			return fmt.Errorf("UART is busying now, Occupied By:%s", hwPort.OccupyBy)
+		if uartPort.Busy {
+			return fmt.Errorf("UART is busying now, Occupied By:%s", uartPort.OccupyBy)
 		}
-		switch tCfg := hwPort.Config.(type) {
-		case hwportmanager.UartConfig:
-			mdev.hwPortConfig = tCfg
+		switch tCfg := uartPort.Config.(type) {
+		case uartctrl.UartConfig:
+			mdev.uartConfig = tCfg
 		default:
-			return fmt.Errorf("Invalid config:%s", hwPort.Config)
+			return fmt.Errorf("Invalid config:%s", uartPort.Config)
 		}
 	}
 	return nil
 }
 
+type modbusSlaverValue struct {
+	Register      int16  `json:"register"`
+	SlaverId      byte   `json:"slaverId"`
+	LastFetchTime uint64 `json:"lastFetchTime"`
+	Value         string `json:"value"`
+}
+
+func (O modbusSlaverValue) String() string {
+	bytes, _ := json.Marshal(O)
+	return string(bytes)
+}
+func uint16ToBytes(value uint16) []byte {
+	return []byte{byte(value >> 8), byte(value)}
+}
 func (mdev *ModbusSlaver) Start(cctx typex.CCTX) error {
 	mdev.Ctx = cctx.Ctx
 	mdev.CancelCTX = cctx.CancelCTX
@@ -146,6 +165,7 @@ func (mdev *ModbusSlaver) Start(cctx typex.CCTX) error {
 	mdev.server.SetOnRequest(func(s *mbserver.Server, frame mbserver.Framer) {
 		FunCode := frame.GetFunction()
 		register, numRegs, endRegister := getRegisterAddressAndNumber(frame)
+		glogger.GLogger.Debug("Modbus OnRequest: ", register, numRegs, endRegister)
 		if register > mdev.mainConfig.CommonConfig.MaxRegisters {
 			glogger.GLogger.Error("exceed MaxRegisters:", register, numRegs, endRegister)
 			return
@@ -157,12 +177,27 @@ func (mdev *ModbusSlaver) Start(cctx typex.CCTX) error {
 			CacheValue := intercache.CacheValue{
 				UUID:          UUID,
 				LastFetchTime: LastFetchTime,
-				Value:         "0", // 更新后的值
+				Value:         "0",
 			}
 			if LastValue == 0xFF {
 				CacheValue.Value = "1"
 			}
 			intercache.SetValue(mdev.PointId, UUID, CacheValue)
+			if bytes, errMarshal := json.Marshal(modbusSlaverValue{
+				Register:      int16(register),
+				SlaverId:      byte(mdev.mainConfig.CommonConfig.SlaverId),
+				LastFetchTime: LastFetchTime,
+				Value: func() string {
+					if CacheValue.Value == "1" {
+						return "1"
+					}
+					return "0"
+				}(),
+			}); errMarshal != nil {
+				glogger.GLogger.Error(errMarshal)
+			} else {
+				mdev.RuleEngine.WorkDevice(mdev.Details(), string(bytes))
+			}
 		}
 		if FunCode == 6 { // 更新HoldingRegisters
 			LastFetchTime := uint64(time.Now().UnixMilli())
@@ -171,26 +206,36 @@ func (mdev *ModbusSlaver) Start(cctx typex.CCTX) error {
 			intercache.SetValue(mdev.PointId, UUID, intercache.CacheValue{
 				UUID:          UUID,
 				LastFetchTime: LastFetchTime,
-				Value:         fmt.Sprintf("0x%04X", LastValue), // 更新后的值
+				Value:         hex.EncodeToString(uint16ToBytes(LastValue)),
 			})
+			if bytes, errMarshal := json.Marshal(modbusSlaverValue{
+				Register:      int16(register),
+				SlaverId:      byte(mdev.mainConfig.CommonConfig.SlaverId),
+				LastFetchTime: LastFetchTime,
+				Value:         hex.EncodeToString(uint16ToBytes(LastValue)),
+			}); errMarshal != nil {
+				glogger.GLogger.Error(errMarshal)
+			} else {
+				mdev.RuleEngine.WorkDevice(mdev.Details(), string(bytes))
+			}
 		}
 		// 15 16暂时不支持
 	})
 	if mdev.mainConfig.CommonConfig.Mode == "UART" {
-		hwPort, err := hwportmanager.GetHwPort(mdev.mainConfig.PortUuid)
+		uartPort, err := uartctrl.GetUart(mdev.mainConfig.PortUuid)
 		if err != nil {
 			return err
 		}
-		if hwPort.Busy {
-			return fmt.Errorf("UART is busying now, Occupied By:%s", hwPort.OccupyBy)
+		if uartPort.Busy {
+			return fmt.Errorf("UART is busying now, Occupied By:%s", uartPort.OccupyBy)
 		}
 		err1 := mdev.server.ListenRTU(&serial.Config{
-			Address:  mdev.hwPortConfig.Uart,
-			BaudRate: mdev.hwPortConfig.BaudRate,
-			DataBits: mdev.hwPortConfig.DataBits,
-			Parity:   mdev.hwPortConfig.Parity,
-			StopBits: mdev.hwPortConfig.StopBits,
-			Timeout:  time.Duration(mdev.hwPortConfig.Timeout) * (time.Millisecond),
+			Address:  mdev.uartConfig.Uart,
+			BaudRate: mdev.uartConfig.BaudRate,
+			DataBits: mdev.uartConfig.DataBits,
+			Parity:   mdev.uartConfig.Parity,
+			StopBits: mdev.uartConfig.StopBits,
+			Timeout:  time.Duration(mdev.uartConfig.Timeout) * (time.Millisecond),
 		})
 		if err1 != nil {
 			return err1
@@ -225,18 +270,6 @@ func getRegisterAddressAndNumber(frame mbserver.Framer) (int, int, int) {
 	return register, numRegs, endRegister
 }
 
-/*
-*
-* 提取Modbus报文数据
-*
- */
-func getRegisterAddressAndValue(frame mbserver.Framer) (int, uint16) {
-	data := frame.GetData()
-	register := int(binary.BigEndian.Uint16(data[0:2]))
-	value := binary.BigEndian.Uint16(data[2:4])
-	return register, value
-}
-
 func (mdev *ModbusSlaver) Stop() {
 	mdev.status = typex.DEV_DOWN
 	if mdev.CancelCTX != nil {
@@ -246,7 +279,7 @@ func (mdev *ModbusSlaver) Stop() {
 		mdev.server.Close()
 	}
 	if mdev.mainConfig.CommonConfig.Mode == "UART" {
-		hwportmanager.FreeInterfaceBusy(mdev.mainConfig.PortUuid)
+		uartctrl.FreeInterfaceBusy(mdev.mainConfig.PortUuid)
 	}
 	intercache.UnRegisterSlot(mdev.PointId) // 卸载点位表
 }
@@ -263,8 +296,128 @@ func (mdev *ModbusSlaver) OnDCACall(UUID string, Command string, Args interface{
 	return typex.DCAResult{}
 }
 
+/*
+*
+*
+解析逗号分隔的字符串，并返回第一个元素为int，第二个元素为uint16
+*
+*/
+func parseCommaSeparatedValues(s string) (int, uint16, error) {
+	parts := strings.Split(s, ",")
+	if len(parts) != 2 {
+		return 0, 0, fmt.Errorf("invalid format")
+	}
+
+	firstPart, err := strconv.Atoi(parts[0])
+	if err != nil {
+		return 0, 0, fmt.Errorf("invalid address: %v", err)
+	}
+
+	secondPart, err := strconv.ParseUint(parts[1], 10, 16)
+	if err != nil {
+		return 0, 0, fmt.Errorf("invalid value: %v", err)
+	}
+	return firstPart, uint16(secondPart), nil
+}
+
+/*
+*
+* 写入线圈
+*
+ */
+func (mdev *ModbusSlaver) f5(addr int, value uint16) error {
+	if addr > mdev.mainConfig.CommonConfig.MaxRegisters {
+		return fmt.Errorf("Address Exceed MaxRegisters")
+	}
+	LastFetchTime := uint64(time.Now().UnixMilli())
+	UUID := fmt.Sprintf("%s_Coils:%d", mdev.PointId, addr)
+	CacheValue := intercache.CacheValue{
+		UUID:          UUID,
+		LastFetchTime: LastFetchTime,
+		Value:         fmt.Sprintf("%d", value),
+	}
+	if value == 0 {
+		mdev.Coils[addr] = 0
+		CacheValue.Value = "0"
+		intercache.SetValue(mdev.PointId, UUID, CacheValue)
+		if bytes, errMarshal := json.Marshal(modbusSlaverValue{
+			Register:      int16(addr),
+			SlaverId:      byte(mdev.mainConfig.CommonConfig.SlaverId),
+			LastFetchTime: LastFetchTime,
+			Value:         "0",
+		}); errMarshal != nil {
+			glogger.GLogger.Error(errMarshal)
+		} else {
+			mdev.RuleEngine.WorkDevice(mdev.Details(), string(bytes))
+		}
+	}
+	if value == 1 {
+		mdev.Coils[addr] = 1
+		CacheValue.Value = "1"
+		intercache.SetValue(mdev.PointId, UUID, CacheValue)
+		if bytes, errMarshal := json.Marshal(modbusSlaverValue{
+			Register:      int16(addr),
+			SlaverId:      byte(mdev.mainConfig.CommonConfig.SlaverId),
+			LastFetchTime: LastFetchTime,
+			Value:         "1",
+		}); errMarshal != nil {
+			glogger.GLogger.Error(errMarshal)
+		} else {
+			mdev.RuleEngine.WorkDevice(mdev.Details(), string(bytes))
+		}
+	}
+	return nil
+}
+
+/*
+*
+* 写入保持寄存器
+*
+ */
+func (mdev *ModbusSlaver) f6(addr int, value uint16) error {
+	if addr > mdev.mainConfig.CommonConfig.MaxRegisters {
+		return fmt.Errorf("Address Exceed MaxRegisters")
+	}
+	mdev.HoldingRegisters[addr] = value
+	LastFetchTime := uint64(time.Now().UnixMilli())
+	UUID := fmt.Sprintf("%s_HoldingRegisters:%d", mdev.PointId, addr)
+	CacheValue := intercache.CacheValue{
+		UUID:          UUID,
+		LastFetchTime: LastFetchTime,
+		Value:         hex.EncodeToString(uint16ToBytes(value)),
+	}
+	intercache.SetValue(mdev.PointId, UUID, CacheValue)
+	if bytes, errMarshal := json.Marshal(modbusSlaverValue{
+		Register:      int16(addr),
+		SlaverId:      byte(mdev.mainConfig.CommonConfig.SlaverId),
+		LastFetchTime: LastFetchTime,
+		Value:         hex.EncodeToString(uint16ToBytes(value)),
+	}); errMarshal != nil {
+		glogger.GLogger.Error(errMarshal)
+	} else {
+		mdev.RuleEngine.WorkDevice(mdev.Details(), string(bytes))
+	}
+	return nil
+}
 func (mdev *ModbusSlaver) OnCtrl(cmd []byte, args []byte) ([]byte, error) {
-	return []byte{}, nil
+	glogger.GLogger.Debug(string(cmd), " ==== ", string(args))
+	addr, value, err := parseCommaSeparatedValues(string(args))
+	if err != nil {
+		return nil, err
+	}
+	if string(cmd) == "CTRL_F5" {
+		err1 := mdev.f5(addr, value)
+		if err1 != nil {
+			return nil, err1
+		}
+	}
+	if string(cmd) == "CTRL_F6" {
+		err2 := mdev.f6(addr, value)
+		if err2 != nil {
+			return nil, err2
+		}
+	}
+	return nil, nil
 }
 
 func (mdev *ModbusSlaver) OnRead(cmd []byte, data []byte) (int, error) {

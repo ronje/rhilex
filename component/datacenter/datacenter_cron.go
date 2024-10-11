@@ -31,7 +31,7 @@ import (
 // - `-n hour`：表示当前日期减去n小时
 // - `-n minute`：表示当前日期减去n分钟
 // - `-n second`：表示当前日期减去n秒
-func StartDataCenterCron() {
+func StartClearDataCenterCron() {
 	for {
 		select {
 		case <-typex.GCTX.Done():

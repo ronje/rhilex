@@ -25,6 +25,7 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	common "github.com/hootrhino/rhilex/component/apiserver/common"
@@ -32,6 +33,7 @@ import (
 	"github.com/hootrhino/rhilex/glogger"
 	"github.com/hootrhino/rhilex/ossupport"
 	"github.com/hootrhino/rhilex/typex"
+	"github.com/hootrhino/rhilex/utils"
 )
 
 /*
@@ -74,46 +76,66 @@ func UpgradeFirmWare(c *gin.Context, ruleEngine typex.Rhilex) {
 		c.JSON(common.HTTP_OK, common.Error("Not support windows!"))
 		return
 	}
+	file, errOpenFile := os.Create(ossupport.UpgradeLogPath)
+	if errOpenFile != nil {
+		glogger.GLogger.Error(errOpenFile)
+		c.JSON(common.HTTP_OK, common.Error(errOpenFile.Error()))
+		return
+	}
+	defer file.Close()
+	os.Stdout = file
+	os.Stderr = file
+
+	utils.CLog("[RHILEX UPGRADE] Current Version: %s", typex.MainVersion)
 	uploadPath := "./upload/Firmware/" // 固定路径
 	tempPath := uploadPath + "temp001" // 固定路径
 	Firmware := "Firmware.zip"         // 固定路径
-	err := os.MkdirAll(tempPath, os.ModePerm)
-	if err != nil {
-		c.JSON(common.HTTP_OK, common.Error400(err))
+	errMkdirAll := os.MkdirAll(tempPath, os.ModePerm)
+	if errMkdirAll != nil {
+		utils.CLog("[RHILEX UPGRADE] %s", errMkdirAll.Error())
+		c.JSON(common.HTTP_OK, common.Error400(errMkdirAll))
 		return
 	}
 	// 提前解压文件
-	if err := trailer.Unzip(uploadPath+Firmware, tempPath); err != nil {
-		c.JSON(common.HTTP_OK, common.Error400(err))
+	if errUnzip := trailer.Unzip(uploadPath+Firmware, tempPath); errUnzip != nil {
+		utils.CLog("[RHILEX UPGRADE] %s", errUnzip.Error())
+		c.JSON(common.HTTP_OK, common.Error400(errUnzip))
 		return
 	}
 	// 检查 /tmp/temp001/rhilex 的Md5
-	md51, err1 := sumMD5(tempPath + "/rhilex")
-	if err1 != nil {
-		c.JSON(common.HTTP_OK, common.Error400(err1))
+	md51, errSumMD5 := sumMD5(tempPath + "/rhilex")
+	if errSumMD5 != nil {
+		utils.CLog("[RHILEX UPGRADE] %s", errSumMD5.Error())
+		c.JSON(common.HTTP_OK, common.Error400(errSumMD5))
 		return
 	}
 	errCheckFileType := CheckFileType(tempPath + "/rhilex")
 	if errCheckFileType != nil {
+		utils.CLog("[RHILEX UPGRADE] %s", errCheckFileType.Error())
 		c.JSON(common.HTTP_OK, common.Error400(errCheckFileType))
 		return
 	}
 	// 从解压后的目录提取Md5
-	readBytes, err2 := os.ReadFile(tempPath + "/md5.sum")
-	if err2 != nil {
-		c.JSON(common.HTTP_OK, common.Error400(err2))
+	readBytes, errReadFile := os.ReadFile(tempPath + "/md5.sum")
+	if errReadFile != nil {
+		utils.CLog("[RHILEX UPGRADE] %s", errReadFile.Error())
+		c.JSON(common.HTTP_OK, common.Error400(errReadFile))
 		return
 	}
-	glogger.GLogger.Debugf("Compare MD5:[%s]~[%s]", md51, string(readBytes))
+	glogger.GLogger.Infof("Compare MD5:[%s]~[%s]", md51, string(readBytes))
+	utils.CLog("[RHILEX UPGRADE] Compare MD5:[%s]~[%s]", md51, string(readBytes))
 	if md51 != string(readBytes) {
+		utils.CLog("[RHILEX UPGRADE] %s", "Invalid sum md5!")
 		c.JSON(common.HTTP_OK, common.Error("Invalid sum md5!"))
 		return
 	}
-	if err3 := os.RemoveAll(tempPath); err3 != nil {
-		c.JSON(common.HTTP_OK, common.Error400(err3))
+	if errRemoveAll := os.RemoveAll(tempPath); errRemoveAll != nil {
+		utils.CLog("[RHILEX UPGRADE] %s", errRemoveAll.Error())
+		c.JSON(common.HTTP_OK, common.Error400(errRemoveAll))
 		return
 	}
 	c.JSON(common.HTTP_OK, common.Ok())
+	time.Sleep(1 * time.Second)
 	ossupport.StartUpgradeProcess()
 
 }

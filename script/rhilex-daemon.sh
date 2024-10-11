@@ -71,7 +71,9 @@ start() {
         exit 0
     fi
     cd $WORKING_DIRECTORY
-    daemon
+    daemon &
+    log INFO "rhilex daemon started."
+    exit 0
 }
 
 stop() {
@@ -141,7 +143,12 @@ case "\$1" in
         status
     ;;
     *)
-        log ERROR "Usage: \$0 {start|restart|stop|status}"
+        log INFO "Usage: \$0 {start|restart|stop|status}"
+        log INFO "You must specify one of the following options:"
+        log INFO "    \$0 start    - Start the service"
+        log INFO "    \$0 restart  - Restart the service"
+        log INFO "    \$0 stop     - Stop the service"
+        log INFO "    \$0 status   - Check the status of the service"
         exit 1
     ;;
 esac
@@ -237,7 +244,12 @@ case "$1" in
         status
     ;;
     *)
-        log ERROR "Usage: $0 {install|start|restart|stop|uninstall|status}"
+        log INFO "Usage: $0 {start|restart|stop|status}"
+        log INFO "You must specify one of the following options:"
+        log INFO "    $0 start    - Start the service"
+        log INFO "    $0 restart  - Restart the service"
+        log INFO "    $0 stop     - Stop the service"
+        log INFO "    $0 status   - Check the status of the service"
         exit 1
     ;;
 esac

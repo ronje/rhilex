@@ -7,7 +7,7 @@ import (
 )
 
 // 数据推送到Tdengine
-func DataToTdEngine(rx typex.Rhilex, uuid string) func(L *lua.LState) int {
+func DataToTdEngine(rx typex.Rhilex, uuid string) func(*lua.LState) int {
 	return func(l *lua.LState) int {
 		id := l.ToString(2)
 		//

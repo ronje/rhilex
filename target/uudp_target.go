@@ -16,23 +16,29 @@
 package target
 
 import (
-	"encoding/json"
 	"fmt"
 	"net"
 	"time"
 
+	"github.com/hootrhino/rhilex/component/lostcache"
 	"github.com/hootrhino/rhilex/glogger"
 	"github.com/hootrhino/rhilex/typex"
 	"github.com/hootrhino/rhilex/utils"
 )
 
-type _UdpMainConfig struct {
-	AllowPing  *bool  `json:"allowPing"`
-	DataMode   string `json:"dataMode"`
-	Host       string `json:"host"`
-	PingPacket string `json:"pingPacket"`
-	Port       int    `json:"port"`
-	Timeout    int    `json:"timeout"`
+/**
+ * UDP
+ *
+ */
+
+type UdpHostConfig struct {
+	AllowPing        *bool  `json:"allowPing" validate:"required"`
+	CacheOfflineData *bool  `json:"cacheOfflineData" validate:"required"`
+	Host             string `json:"host" validate:"required"`
+	Port             int    `json:"port" validate:"required"`
+	Timeout          int    `json:"timeout" validate:"required"`
+	DataMode         string `json:"dataMode" validate:"required"`
+	PingPacket       string `json:"pingPacket" validate:"required"`
 }
 
 /*
@@ -42,21 +48,21 @@ type _UdpMainConfig struct {
  */
 type UUdpTarget struct {
 	typex.XStatus
-	mainConfig _UdpMainConfig
+	mainConfig UdpHostConfig
 	status     typex.SourceState
 }
 
 func NewUUdpTarget(e typex.Rhilex) typex.XTarget {
 	ut := new(UUdpTarget)
 	ut.RuleEngine = e
-	ut.mainConfig = _UdpMainConfig{
-		DataMode:   "RAW_STRING",
-		Timeout:    3000,
-		PingPacket: "rhilex\r\n",
-		AllowPing: func() *bool {
-			b := true
-			return &b
-		}(),
+	ut.mainConfig = UdpHostConfig{
+		Host:             "127.0.0.1",
+		Port:             6502,
+		DataMode:         "RAW_STRING",
+		PingPacket:       "rhilex\r\n",
+		Timeout:          3000,
+		AllowPing:        new(bool),
+		CacheOfflineData: new(bool),
 	}
 	ut.status = typex.SOURCE_DOWN
 	return ut
@@ -64,6 +70,7 @@ func NewUUdpTarget(e typex.Rhilex) typex.XTarget {
 
 func (ut *UUdpTarget) Init(outEndId string, configMap map[string]interface{}) error {
 	ut.PointId = outEndId
+	lostcache.CreateLostDataTable(outEndId)
 	if err := utils.BindSourceConfig(configMap, &ut.mainConfig); err != nil {
 		return err
 	}
@@ -96,6 +103,20 @@ func (ut *UUdpTarget) Start(cctx typex.CCTX) error {
 		}(ut)
 	}
 	ut.status = typex.SOURCE_UP
+	// 补发数据
+	if *ut.mainConfig.CacheOfflineData {
+		if CacheData, err1 := lostcache.GetLostCacheData(ut.PointId); err1 != nil {
+			glogger.GLogger.Error(err1)
+		} else {
+			for _, data := range CacheData {
+				ut.To(data.Data)
+				{
+					lostcache.DeleteLostCacheData(ut.PointId, data.ID)
+				}
+			}
+		}
+	}
+
 	glogger.GLogger.Info("UUdpTarget started")
 	return nil
 }
@@ -109,16 +130,6 @@ func (ut *UUdpTarget) Status() typex.SourceState {
 
 }
 
-type UdpOutEndTargetOutputData struct {
-	Label string `json:"label"`
-	Body  string `json:"body"`
-}
-
-func (O UdpOutEndTargetOutputData) String() string {
-	bytes, _ := json.Marshal(O)
-	return string(bytes)
-}
-
 func (ut *UUdpTarget) To(data interface{}) (interface{}, error) {
 	socket, err := net.DialUDP("udp", nil, &net.UDPAddr{
 		IP:   net.ParseIP(ut.mainConfig.Host),
@@ -128,22 +139,25 @@ func (ut *UUdpTarget) To(data interface{}) (interface{}, error) {
 		return 0, err
 	}
 	defer socket.Close()
-	switch s := data.(type) {
+	switch T := data.(type) {
 	case string:
-		outputData := UdpOutEndTargetOutputData{
-			Label: ut.mainConfig.PingPacket,
-			Body:  s,
-		}
+
 		socket.SetReadDeadline(
 			time.Now().Add((time.Duration(ut.mainConfig.Timeout) *
 				time.Millisecond)),
 		)
-		_, err0 := socket.Write([]byte(outputData.String() + "\r\n"))
+		_, err0 := socket.Write([]byte(T + "\r\n"))
 		socket.SetReadDeadline(time.Time{})
 		if err0 != nil {
+			if *ut.mainConfig.CacheOfflineData {
+				lostcache.SaveLostCacheData(ut.PointId, lostcache.CacheDataDto{
+					TargetId: ut.PointId,
+					Data:     T,
+				})
+			}
 			return 0, err0
 		}
-		return len(s), nil
+		return 0, nil
 	default:
 		return 0, fmt.Errorf("only support string format")
 	}

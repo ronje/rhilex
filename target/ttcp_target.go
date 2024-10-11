@@ -16,28 +16,34 @@
 package target
 
 import (
-	"encoding/json"
 	"fmt"
 	"net"
 	"time"
 
+	"github.com/hootrhino/rhilex/component/lostcache"
 	"github.com/hootrhino/rhilex/glogger"
 	"github.com/hootrhino/rhilex/typex"
 	"github.com/hootrhino/rhilex/utils"
 )
 
-type _TcpMainConfig struct {
-	AllowPing  *bool  `json:"allowPing"`
-	DataMode   string `json:"dataMode"`
-	Host       string `json:"host"`
-	PingPacket string `json:"pingPacket"`
-	Port       int    `json:"port"`
-	Timeout    int    `json:"timeout"`
+/**
+ * TCP
+ *
+ */
+type TcpHostConfig struct {
+	AllowPing        *bool  `json:"allowPing" validate:"required"`
+	CacheOfflineData *bool  `json:"cacheOfflineData" validate:"required"`
+	Host             string `json:"host" validate:"required"`
+	Port             int    `json:"port" validate:"required"`
+	Timeout          int    `json:"timeout" validate:"required"`
+	DataMode         string `json:"dataMode" validate:"required"`
+	PingPacket       string `json:"pingPacket" validate:"required"`
 }
+
 type TTcpTarget struct {
 	typex.XStatus
 	client     *net.TCPConn
-	mainConfig _TcpMainConfig
+	mainConfig TcpHostConfig
 	status     typex.SourceState
 }
 
@@ -49,13 +55,14 @@ type TTcpTarget struct {
 func NewTTcpTarget(e typex.Rhilex) typex.XTarget {
 	ht := new(TTcpTarget)
 	ht.RuleEngine = e
-	ht.mainConfig = _TcpMainConfig{
-		PingPacket: "rhilex",
-		Timeout:    3000,
-		AllowPing: func() *bool {
-			b := true
-			return &b
-		}(),
+	ht.mainConfig = TcpHostConfig{
+		Host:             "127.0.0.1",
+		Port:             6502,
+		DataMode:         "RAW_STRING",
+		PingPacket:       "rhilex\r\n",
+		Timeout:          3000,
+		AllowPing:        new(bool),
+		CacheOfflineData: new(bool),
 	}
 	ht.status = typex.SOURCE_DOWN
 	return ht
@@ -63,6 +70,7 @@ func NewTTcpTarget(e typex.Rhilex) typex.XTarget {
 
 func (ht *TTcpTarget) Init(outEndId string, configMap map[string]interface{}) error {
 	ht.PointId = outEndId
+	lostcache.CreateLostDataTable(outEndId)
 	if err := utils.BindSourceConfig(configMap, &ht.mainConfig); err != nil {
 		return err
 	}
@@ -109,6 +117,20 @@ func (ht *TTcpTarget) Start(cctx typex.CCTX) error {
 		}(ht)
 	}
 	ht.status = typex.SOURCE_UP
+	// 补发数据
+	if *ht.mainConfig.CacheOfflineData {
+		if CacheData, err1 := lostcache.GetLostCacheData(ht.PointId); err1 != nil {
+			glogger.GLogger.Error(err1)
+		} else {
+			for _, data := range CacheData {
+				ht.To(data.Data)
+				{
+					lostcache.DeleteLostCacheData(ht.PointId, data.ID)
+				}
+			}
+		}
+	}
+
 	glogger.GLogger.Info("TTcpTarget  success connect to:", host)
 	return nil
 }
@@ -124,16 +146,6 @@ func (ht *TTcpTarget) Status() typex.SourceState {
 	return ht.status
 }
 
-type TcpOutEndTargetOutputData struct {
-	Label string `json:"label"`
-	Body  string `json:"body"`
-}
-
-func (O TcpOutEndTargetOutputData) String() string {
-	bytes, _ := json.Marshal(O)
-	return string(bytes)
-}
-
 /*
 *
 * 透传模式：字符串和十六进制
@@ -141,22 +153,24 @@ func (O TcpOutEndTargetOutputData) String() string {
  */
 func (ht *TTcpTarget) To(data interface{}) (interface{}, error) {
 	if ht.client != nil {
-		switch s := data.(type) {
+		switch T := data.(type) {
 		case string:
 			ht.client.SetReadDeadline(
 				time.Now().Add((time.Duration(ht.mainConfig.Timeout) *
 					time.Millisecond)),
 			)
-			outputData := TcpOutEndTargetOutputData{
-				Label: ht.mainConfig.PingPacket,
-				Body:  s,
-			}
-			_, err0 := ht.client.Write([]byte(outputData.String() + "\r\n"))
+			_, err0 := ht.client.Write([]byte(T + "\r\n"))
 			ht.client.SetReadDeadline(time.Time{})
 			if err0 != nil {
+				if *ht.mainConfig.CacheOfflineData {
+					lostcache.SaveLostCacheData(ht.PointId, lostcache.CacheDataDto{
+						TargetId: ht.PointId,
+						Data:     T,
+					})
+				}
 				return 0, err0
 			}
-			return len(s), nil
+			return 0, nil
 		default:
 			return 0, fmt.Errorf("only support string format")
 		}

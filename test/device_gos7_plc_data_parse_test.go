@@ -2,6 +2,7 @@ package test
 
 import (
 	"context"
+	"fmt"
 	"testing"
 	"time"
 
@@ -66,16 +67,15 @@ func Test_S7_PLC_Parse(t *testing.T) {
 	}
 	defer conn.Close()
 	client := rhilexrpc.NewRhilexRpcClient(conn)
-
-	resp, err := client.Work(context.Background(), &rhilexrpc.Data{
-		Value: string([]byte{
-			1, 2, 3, 4, 5, 6, 7, 8, 9,
-			10, 11, 12, 13, 14, 15, 16}),
-	})
-	if err != nil {
-		glogger.GLogger.Errorf("grpc.Dial err: %v", err)
+	for i := 0; i < 10; i++ {
+		resp, err := client.Request(context.Background(), &rhilexrpc.RpcRequest{
+			Value: fmt.Sprintf(`{"co2":10,"hum":30,"lex":22,"temp":100,"idx":%d}`, i),
+		})
+		if err != nil {
+			glogger.GLogger.Errorf("grpc.Dial err: %v", err)
+		}
+		glogger.GLogger.Infof("rhilex Rpc Call Result ====>>: %v", resp.GetMessage())
 	}
-	glogger.GLogger.Infof("rhilex Rpc Call Result ====>>: %v", resp.GetMessage())
 
 	time.Sleep(1 * time.Second)
 	engine.Stop()

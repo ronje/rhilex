@@ -21,52 +21,6 @@ import (
 	"math"
 )
 
-func ParseBinaryValue(DataBlockType string, DataBlockOrder string,
-	Weight float32, byteSlice [256]byte) string {
-
-	if DataBlockType == "UTF8" {
-		acc := 0
-		for _, v := range byteSlice {
-			if v != 0 {
-				acc++
-			} else {
-				continue
-			}
-		}
-		if acc == 0 {
-			return ""
-		}
-		if DataBlockOrder == "BIG_ENDIAN" {
-			return string(byteSlice[:acc])
-		}
-		if DataBlockOrder == "LITTLE_ENDIAN" {
-			return stringReverse(string(byteSlice[:acc]))
-		}
-	}
-
-	if DataBlockType == "RAW" {
-		acc := 0
-		for _, v := range byteSlice {
-			if v != 0 {
-				acc++
-			} else {
-				continue
-			}
-		}
-		if acc == 0 {
-			return ""
-		}
-		return hex.EncodeToString(byteSlice[:acc])
-	}
-
-	if DataBlockType == "BYTE" {
-
-		return fmt.Sprintf("%d", byteSlice[0])
-	}
-
-	return ""
-}
-
 /*
 *
 *解析西门子的值 无符号
@@ -196,7 +150,7 @@ func HandleZeroValue[V int16 | int32 | int64 | float32 | float64](v *V) *V {
 注意：如果想解析值，必须不能超过4字节，目前常见的数一般都是4字节，也许后期会有8字节，但是目前暂时不支持
 *
 */
-func ParseModbusValue(DataBlockType string, DataBlockOrder string,
+func ParseModbusValue(dataLen int, DataBlockType string, DataBlockOrder string,
 	Weight float32, byteSlice [256]byte) string {
 	// binary
 	if DataBlockType == "UTF8" {
@@ -218,24 +172,12 @@ func ParseModbusValue(DataBlockType string, DataBlockOrder string,
 			return stringReverse(string(byteSlice[:acc]))
 		}
 	}
-
+	// TODO: RAW 类型需要扩展
 	if DataBlockType == "RAW" {
-		acc := 0
-		for _, v := range byteSlice {
-			if v != 0 {
-				acc++
-			} else {
-				continue
-			}
-		}
-		if acc == 0 {
-			return ""
-		}
-		return hex.EncodeToString(byteSlice[:acc])
+		return hex.EncodeToString(byteSlice[:dataLen])
 	}
 
 	if DataBlockType == "BYTE" {
-
 		return fmt.Sprintf("%d", byteSlice[0])
 	}
 	// signed

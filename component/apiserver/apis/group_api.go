@@ -6,10 +6,24 @@ import (
 	"github.com/gin-gonic/gin"
 	common "github.com/hootrhino/rhilex/component/apiserver/common"
 	"github.com/hootrhino/rhilex/component/apiserver/model"
+	"github.com/hootrhino/rhilex/component/apiserver/server"
 	"github.com/hootrhino/rhilex/component/apiserver/service"
 	"github.com/hootrhino/rhilex/typex"
 	"github.com/hootrhino/rhilex/utils"
 )
+
+func InitGroupRoute() {
+	groupApi := server.RouteGroup(server.ContextUrl("/group"))
+	{
+		groupApi.POST("/create", server.AddRoute(CreateGroup))
+		groupApi.PUT("/update", server.AddRoute(UpdateGroup))
+		groupApi.GET("/list", server.AddRoute(ListGroup))
+		groupApi.GET("/detail", server.AddRoute(GroupDetail))
+		groupApi.POST("/bind", server.AddRoute(BindResource))
+		groupApi.PUT("/unbind", server.AddRoute(UnBindResource))
+		groupApi.DELETE("/del", server.AddRoute(DeleteGroup))
+	}
+}
 
 type MGenericGroupVo struct {
 	UUID   string `json:"uuid" validate:"required"` // 名称

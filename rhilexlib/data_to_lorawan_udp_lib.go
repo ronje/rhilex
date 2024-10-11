@@ -14,7 +14,7 @@ import (
 * Data To LoraWan UDP 1700
 *
  */
-func DataToSemtechUdp(rx typex.Rhilex, uuid string) func(L *lua.LState) int {
+func DataToSemtechUdp(rx typex.Rhilex, uuid string) func(*lua.LState) int {
 	return func(l *lua.LState) int {
 		id := l.ToString(2)
 		data := l.ToString(3)

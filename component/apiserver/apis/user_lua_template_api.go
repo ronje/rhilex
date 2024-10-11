@@ -2,15 +2,30 @@ package apis
 
 import (
 	"github.com/gin-gonic/gin"
-	"github.com/hootrhino/rhilex/component/interdb"
 	common "github.com/hootrhino/rhilex/component/apiserver/common"
 	"github.com/hootrhino/rhilex/component/apiserver/dto"
 	"github.com/hootrhino/rhilex/component/apiserver/model"
+	"github.com/hootrhino/rhilex/component/apiserver/server"
 	"github.com/hootrhino/rhilex/component/apiserver/service"
+	"github.com/hootrhino/rhilex/component/interdb"
 	"github.com/hootrhino/rhilex/typex"
 	"github.com/hootrhino/rhilex/utils"
 	"gorm.io/gorm"
 )
+
+func InitUserLuaRoute() {
+	userLuaApi := server.RouteGroup(server.ContextUrl("/userlua"))
+	{
+		userLuaApi.POST("/create", server.AddRoute(CreateUserLuaTemplate))
+		userLuaApi.PUT("/update", server.AddRoute(UpdateUserLuaTemplate))
+		userLuaApi.GET("/listByGroup", server.AddRoute(ListUserLuaTemplateByGroup))
+		userLuaApi.GET("/detail", server.AddRoute(UserLuaTemplateDetail))
+		userLuaApi.GET("/group", server.AddRoute(ListUserLuaTemplateGroup))
+		userLuaApi.DELETE("/del", server.AddRoute(DeleteUserLuaTemplate))
+		userLuaApi.GET("/search", server.AddRoute(SearchUserLuaTemplateGroup))
+	}
+
+}
 
 type UserLuaTemplateVo struct {
 	Gid       string                     `json:"gid,omitempty"`  // 分组ID

@@ -5,7 +5,7 @@ package typex
 
 import "github.com/hootrhino/rhilex/utils"
 
-var MainVersion string
+var MainVersion string = "0.0.0-developing"
 
 type VersionInfo struct {
 	ReleaseTime string
@@ -25,11 +25,11 @@ var License = utils.LocalLicense{
 }
 
 var DefaultVersionInfo = VersionInfo{
-	Product:        "COMMON",
-	ReleaseTime: "2024-08-11 17:43:30",
+	Product:     "COMMON",
+	ReleaseTime: "2024-10-11 14:33:56",
 }
 var Banner = `
- **  Welcome to RHILEX framework world <'_'>     -.
-**   Version: v0.7.2-bb0d7b051d3593c             -.
- **  More information: https://www.hootrhino.com  -.
+  <<  RHILEX System.©                              -·
+<<·   Version: v0.7.3-d60f5301             -·
+  <<  More information: https://www.hootrhino.com  -·
 `

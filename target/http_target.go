@@ -16,13 +16,13 @@
 package target
 
 import (
-	"encoding/json"
 	"fmt"
 	"net"
 	"net/http"
 	"net/url"
 	"time"
 
+	"github.com/hootrhino/rhilex/component/lostcache"
 	"github.com/hootrhino/rhilex/glogger"
 	"github.com/hootrhino/rhilex/typex"
 	"github.com/hootrhino/rhilex/utils"
@@ -34,6 +34,8 @@ type HTTPTargetConfig struct {
 	AllowPing  *bool             `json:"allowPing"`
 	PingPacket string            `json:"pingPacket"`
 	Timeout    int               `json:"timeout"`
+	// 离线缓存
+	CacheOfflineData *bool `json:"cacheOfflineData" title:"离线缓存"`
 }
 type HTTPTarget struct {
 	typex.XStatus
@@ -46,12 +48,12 @@ func NewHTTPTarget(e typex.Rhilex) typex.XTarget {
 	ht := new(HTTPTarget)
 	ht.RuleEngine = e
 	ht.mainConfig = HTTPTargetConfig{
-		PingPacket: "rhilex",
-		Timeout:    3000,
-		AllowPing: func() *bool {
-			b := true
-			return &b
-		}(),
+		Url:              "http://127.0.0.1",
+		PingPacket:       "rhilex",
+		Timeout:          3000,
+		AllowPing:        new(bool),
+		Headers:          map[string]string{},
+		CacheOfflineData: new(bool),
 	}
 	ht.status = typex.SOURCE_DOWN
 	return ht
@@ -59,7 +61,7 @@ func NewHTTPTarget(e typex.Rhilex) typex.XTarget {
 
 func (ht *HTTPTarget) Init(outEndId string, configMap map[string]interface{}) error {
 	ht.PointId = outEndId
-
+	lostcache.CreateLostDataTable(outEndId)
 	if err := utils.BindSourceConfig(configMap, &ht.mainConfig); err != nil {
 		return err
 	}
@@ -91,6 +93,19 @@ func (ht *HTTPTarget) Start(cctx typex.CCTX) error {
 			}
 		}(ht)
 	}
+	// 补发数据
+	if *ht.mainConfig.CacheOfflineData {
+		if CacheData, err1 := lostcache.GetLostCacheData(ht.PointId); err1 != nil {
+			glogger.GLogger.Error(err1)
+		} else {
+			for _, data := range CacheData {
+				ht.To(data.Data)
+				{
+					lostcache.DeleteLostCacheData(ht.PointId, data.ID)
+				}
+			}
+		}
+	}
 	glogger.GLogger.Info("HTTP Target started")
 	return nil
 }
@@ -104,26 +119,19 @@ func (ht *HTTPTarget) Status() typex.SourceState {
 
 }
 
-type HTTPTargetOutputData struct {
-	Label string `json:"label"`
-	Body  string `json:"body"`
-}
-
-func (O HTTPTargetOutputData) String() string {
-	bytes, _ := json.Marshal(O)
-	return string(bytes)
-}
 func (ht *HTTPTarget) To(data interface{}) (interface{}, error) {
 	switch T := data.(type) {
 	case string:
-		outputData := HTTPTargetOutputData{
-			Label: ht.mainConfig.PingPacket,
-			Body:  T,
-		}
-		_, err := utils.Post(ht.client, outputData.String(),
-			ht.mainConfig.Url, ht.mainConfig.Headers)
+
+		_, err := utils.Post(ht.client, T, ht.mainConfig.Url, ht.mainConfig.Headers)
 		if err != nil {
 			glogger.GLogger.Error(err)
+			if *ht.mainConfig.CacheOfflineData {
+				lostcache.SaveLostCacheData(ht.PointId, lostcache.CacheDataDto{
+					TargetId: ht.PointId,
+					Data:     T,
+				})
+			}
 			return nil, err
 		}
 	}

@@ -26,14 +26,6 @@ import (
 *
  */
 func InsertInternalNotify(m model.MInternalNotify) error {
-	var count int64
-	interdb.DB().Model(&m).Count(&count)
-	// 超过100条记录就清空
-	if count > 1000 {
-		if err := ClearInternalNotifies(); err != nil {
-			return err
-		}
-	}
 	return interdb.DB().Model(&m).Save(&m).Error
 }
 

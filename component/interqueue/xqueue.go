@@ -61,7 +61,7 @@ func InitXQueue(rhilex typex.Rhilex, maxQueueSize int) *XQueue {
 func StartXQueue() {
 	// InQueue
 	go func(ctx context.Context, DefaultXQueue *XQueue) {
-		glogger.GLogger.Info("Start XQueue->InQueue")
+		glogger.GLogger.Info("Start XQueue: InQueue")
 		for {
 			for _, Queue := range DefaultXQueue.InQueue {
 				select {
@@ -77,14 +77,16 @@ func StartXQueue() {
 	}(typex.GCTX, DefaultXQueue)
 	// DeviceQueue
 	go func(ctx context.Context, DefaultXQueue *XQueue) {
-		glogger.GLogger.Info("Start XQueue->DeviceQueue")
+		glogger.GLogger.Info("Start XQueue: DeviceQueue")
 		for {
 			for _, Queue := range DefaultXQueue.DeviceQueue {
 				select {
 				case <-ctx.Done():
 					return
 				case Data := <-Queue:
-					Data.E.RunDeviceCallbacks(Data.D, Data.Data)
+					if Data.E != nil {
+						Data.E.RunDeviceCallbacks(Data.D, Data.Data)
+					}
 				case <-time.After(4 * time.Millisecond):
 					continue
 				}
@@ -93,7 +95,7 @@ func StartXQueue() {
 	}(typex.GCTX, DefaultXQueue)
 	// OutQueue
 	go func(ctx context.Context, DefaultXQueue *XQueue) {
-		glogger.GLogger.Info("Start XQueue->OutQueue")
+		glogger.GLogger.Info("Start XQueue: OutQueue")
 		for {
 			for _, Queue := range DefaultXQueue.OutQueue {
 				select {

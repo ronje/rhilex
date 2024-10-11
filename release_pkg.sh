@@ -2,7 +2,7 @@
 set -e
 APP=rhilex
 RESPOSITORY="https://github.com/hootrhino"
-ARCHS=("arm64linux" "arm32linux" "x64linux" "windows")
+ARCHS=("arm32linux" "arm64linux" "riscv64linux" "x64linux" "windows")
 
 create_pkg() {
     local target=$1
@@ -23,7 +23,7 @@ create_pkg() {
         mv ./${APP}-$target.exe ./${APP}.exe
         calculate_and_save_md5 ./${APP}.exe
     fi
-    echo "Create package: $pkg_name"
+    echo "[*] Create package: $pkg_name"
     zip -j "$release_dir/$pkg_name" $files_to_include_all
 }
 
@@ -31,7 +31,7 @@ make_zip() {
     if [ -n $1 ]; then
         create_pkg $1
     else
-        echo "Should have release target."
+        echo "[!] Should have release target."
         exit 1
     fi
 
@@ -52,12 +52,8 @@ build_arm32linux() {
     make arm32
 }
 
-build_mips64linux() {
-    make mips64
-}
-
-build_mips32linux() {
-    make mips32
+build_riscv64_linux() {
+    make riscv64
 }
 
 cross_compile() {
@@ -72,73 +68,83 @@ cross_compile() {
         if [[ "${arch}" == "windows" ]]; then
             build_windows $arch
             make_zip $arch
-            echo -e "\033[33m [√] Compile target => ["$arch"] Ok. \033[0m"
+            echo -e "\033[33m [v] Compile target => ["$arch"] Ok. \033[0m"
         fi
         if [[ "${arch}" == "x86linux" ]]; then
             build_x86linux $arch
             make_zip $arch
-            echo -e "\033[33m [√] Compile target => ["$arch"] Ok. \033[0m"
+            echo -e "\033[33m [v] Compile target => ["$arch"] Ok. \033[0m"
         fi
         if [[ "${arch}" == "x64linux" ]]; then
             build_x64linux $arch
             make_zip $arch
-            echo -e "\033[33m [√] Compile target => ["$arch"] Ok. \033[0m"
+            echo -e "\033[33m [v] Compile target => ["$arch"] Ok. \033[0m"
 
         fi
         if [[ "${arch}" == "arm64linux" ]]; then
             # sudo apt install gcc-arm-linux-gnueabi -y
             build_arm64linux $arch
             make_zip $arch
-            echo -e "\033[33m [√] Compile target => ["$arch"] Ok. \033[0m"
+            echo -e "\033[33m [v] Compile target => ["$arch"] Ok. \033[0m"
 
         fi
         if [[ "${arch}" == "arm32linux" ]]; then
             # sudo apt install gcc-arm-linux-gnueabi -y
             build_arm32linux $arch
             make_zip $arch
-            echo -e "\033[33m [√] Compile target => ["$arch"] Ok. \033[0m"
+            echo -e "\033[33m [v] Compile target => ["$arch"] Ok. \033[0m"
+        fi
+        if [[ "${arch}" == "riscv64linux" ]]; then
+            # sudo apt install g++-riscv64-linux-gnu gcc-riscv64-linux-gnu -y
+            build_riscv64_linux $arch
+            make_zip $arch
+            echo -e "\033[33m [v] Compile target => ["$arch"] Ok. \033[0m"
         fi
     done
 }
 
 calculate_and_save_md5() {
     if [ $# -ne 1 ]; then
-        echo "Usage: $0 <file_path>"
+        echo "[*] Usage: $0 <file_path>"
         exit 1
     fi
     local file_path="$1"
     local md5_hash
     if [ ! -f "$file_path" ]; then
-        echo "File not found: $file_path"
+        echo "[!] File not found: $file_path"
         return 1
     fi
     md5_hash=$(md5sum "$file_path" | awk '{print $1}')
     echo -n "$md5_hash" > md5.sum
 }
 
-fetch_dashboard() {
-    local owner="hootrhino"
-    local repo="rhilex-web"
-    if [ -f "www.zip" ]; then
-        echo "[!] www.zip already exists. No need to download."
-        exit 0
-    fi
-    local tag=$(curl -s "https://api.github.com/repos/$owner/$repo/releases/latest" | jq -r .tag_name)
-    local zip_url=$(curl -s "https://api.github.com/repos/$owner/$repo/releases/latest" | jq -r '.assets[] | select(.name == "www.zip") | .browser_download_url')
-    if [ -z "$zip_url" ]; then
-        echo "[x] Error: www.zip not found in the release assets."
-        exit 1
-    fi
-    curl -L -o www.zip "$zip_url"
-    echo "[√] Download complete. Tag: $tag"
-    unzip -o www.zip -d /plugin/apiserver/server/www/
-    echo "[√] Extraction complete. www.zip contents have been overwritten to /plugin/apiserver/server/www/."
-}
-
 gen_changelog() {
-    echo -e "[.]Version Change log:"
+    echo -e "[*] Version Change log:"
     log=$(git log --oneline --pretty=format:" \033[0;31m[*]\033[0m%s\n" $(git describe --abbrev=0 --tags).. | cat)
     echo -e $log
+}
+
+uoload_to_file_server(){
+    BASIC_AUTH="rhilex-file-server-admin:rhilex-file-server-admin_secret"
+    VERSION="$(git describe --tags $(git rev-list --tags --max-count=1))"
+    cd _release
+    UPLOAD_URL="http://112.5.155.64:10120/${VERSION}/"
+    ZIP_FILES=$(find . -maxdepth 1 -type f -name "rhilex*.zip")
+    if [ -z "$ZIP_FILES" ]; then
+        echo "[!] No .zip files found in the current directory."
+        exit 1
+    fi
+    for FILE in $ZIP_FILES; do
+        upload_path=$(echo "$FILE" | sed 's|^./||')
+        echo "[*] Uploading [$FILE] to [${UPLOAD_URL}${upload_path}]"
+        curl -T "$FILE" "${UPLOAD_URL}${upload_path}" --user $BASIC_AUTH
+        if [ $? -eq 0 ]; then
+            echo "[v] Upload $FILE successfully."
+        else
+            echo "[x] Upload $FILE failure."
+        fi
+    done
+    cd ..
 }
 
 init_env() {
@@ -152,14 +158,14 @@ init_env() {
 }
 
 check_cmd() {
-    DEPS=("bash" "git" "jq" "gcc" "make" "x86_64-w64-mingw32-gcc")
+    DEPS=("bash" "git" "jq" "gcc" "make" "x86_64-w64-mingw32-gcc" "aarch64-linux-gnu-gcc" "arm-linux-gnueabi-gcc")
     for dep in ${DEPS[@]}; do
-        echo -e "\033[34m [*] Check dependcy command: $dep. \033[0m"
+        echo -e "\033[34m [*] Check Env: $dep. \033[0m"
         if ! [ -x "$(command -v $dep)" ]; then
             echo -e "\033[31m |x| Error: $dep is not installed. \033[0m"
             exit 1
         else
-            echo -e "\033[32m [√] $dep has been installed. \033[0m"
+            echo -e "\033[32m [v] $dep has been installed. \033[0m"
         fi
     done
 
@@ -169,8 +175,8 @@ main(){
     init_env
     cp -r $(ls | egrep -v '^_build$') ./_build/
     cd ./_build/
-    # fetch_dashboard
     cross_compile
+    uoload_to_file_server
     gen_changelog
 }
 #

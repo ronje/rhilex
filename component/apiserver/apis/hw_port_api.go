@@ -21,24 +21,36 @@ import (
 	"github.com/gin-gonic/gin"
 	common "github.com/hootrhino/rhilex/component/apiserver/common"
 	"github.com/hootrhino/rhilex/component/apiserver/model"
+	"github.com/hootrhino/rhilex/component/apiserver/server"
 	"github.com/hootrhino/rhilex/component/apiserver/service"
-	"github.com/hootrhino/rhilex/component/hwportmanager"
+	"github.com/hootrhino/rhilex/component/uartctrl"
 	"github.com/hootrhino/rhilex/typex"
 	"github.com/hootrhino/rhilex/utils"
 )
 
-type HwPortVo struct {
-	UUID        string         `json:"uuid"`
-	Name        string         `json:"name"`   // 接口名称
-	Type        string         `json:"type"`   // 接口类型, UART(串口),USB(USB),FD(通用文件句柄)
-	Alias       string         `json:"alias"`  // 别名
-	Config      any            `json:"config"` // 配置
-	Busy        bool           `json:"busy"`   // 运行时数据，是否被占
-	OccupyBy    HwPortOccupyVo `json:"occupyBy"`
-	Description string         `json:"description"` // 额外备注
+func InitHwIfaceRoute() {
+	// 硬件接口API
+	HwIFaceApi := server.DefaultApiServer.GetGroup(server.ContextUrl("/hwiface"))
+	{
+		HwIFaceApi.GET("/detail", server.AddRoute(GetUartDetail))
+		HwIFaceApi.GET("/list", server.AddRoute(AllUarts))
+		HwIFaceApi.POST("/update", server.AddRoute(UpdateUartConfig))
+		HwIFaceApi.GET("/refresh", server.AddRoute(RefreshPortList))
+	}
+}
+
+type UartVo struct {
+	UUID        string       `json:"uuid"`
+	Name        string       `json:"name"`   // 接口名称
+	Type        string       `json:"type"`   // 接口类型, UART(串口),USB(USB),FD(通用文件句柄)
+	Alias       string       `json:"alias"`  // 别名
+	Config      any          `json:"config"` // 配置
+	Busy        bool         `json:"busy"`   // 运行时数据，是否被占
+	OccupyBy    UartOccupyVo `json:"occupyBy"`
+	Description string       `json:"description"` // 额外备注
 
 }
-type HwPortOccupyVo struct {
+type UartOccupyVo struct {
 	UUID string `json:"uuid"` // UUID
 	Type string `json:"type"` // DEVICE, Other......
 	Name string `json:"name"` // DEVICE, Other......
@@ -66,7 +78,7 @@ func (u UartConfigVo) JsonString() string {
 *
  */
 func RefreshPortList(c *gin.Context, ruleEngine typex.Rhilex) {
-	if err := service.ReScanHwPortConfig(); err != nil {
+	if err := service.ReScanUartConfig(); err != nil {
 		c.JSON(common.HTTP_OK, common.Error400(err))
 		return
 	}
@@ -78,16 +90,16 @@ func RefreshPortList(c *gin.Context, ruleEngine typex.Rhilex) {
 * 硬件接口
 *
  */
-func AllHwPorts(c *gin.Context, ruleEngine typex.Rhilex) {
-	HwPortVos := []HwPortVo{}
-	for _, port := range hwportmanager.AllHwPort() {
-		HwPortVos = append(HwPortVos, HwPortVo{
+func AllUarts(c *gin.Context, ruleEngine typex.Rhilex) {
+	UartVos := []UartVo{}
+	for _, port := range uartctrl.AllUart() {
+		UartVos = append(UartVos, UartVo{
 			UUID:  port.UUID,
 			Name:  port.Name,
 			Type:  port.Type,
 			Alias: port.Alias,
 			Busy:  port.Busy,
-			OccupyBy: HwPortOccupyVo{
+			OccupyBy: UartOccupyVo{
 				UUID: port.OccupyBy.UUID,
 				Type: port.OccupyBy.Type,
 				Name: port.OccupyBy.Name,
@@ -95,7 +107,7 @@ func AllHwPorts(c *gin.Context, ruleEngine typex.Rhilex) {
 			Description: port.Description,
 		})
 	}
-	c.JSON(common.HTTP_OK, common.OkWithData(HwPortVos))
+	c.JSON(common.HTTP_OK, common.OkWithData(UartVos))
 }
 
 /*
@@ -103,7 +115,7 @@ func AllHwPorts(c *gin.Context, ruleEngine typex.Rhilex) {
 * 更新接口参数
 *
  */
-func UpdateHwPortConfig(c *gin.Context, ruleEngine typex.Rhilex) {
+func UpdateUartConfig(c *gin.Context, ruleEngine typex.Rhilex) {
 	type Form struct {
 		UUID        string       `json:"uuid"`
 		Config      UartConfigVo `json:"config"` // 配置, 串口配置、或者网卡、USB等
@@ -114,7 +126,7 @@ func UpdateHwPortConfig(c *gin.Context, ruleEngine typex.Rhilex) {
 		c.JSON(common.HTTP_OK, common.Error400(err))
 		return
 	}
-	if err := service.UpdateHwPortConfig(model.MHwPort{
+	if err := service.UpdateUartConfig(model.MUart{
 		UUID:        form.UUID,
 		Config:      form.Config.JsonString(),
 		Description: form.Description,
@@ -122,29 +134,29 @@ func UpdateHwPortConfig(c *gin.Context, ruleEngine typex.Rhilex) {
 		c.JSON(common.HTTP_OK, common.Error400(err))
 		return
 	}
-	MHwPort, err1 := service.GetHwPortConfig(form.UUID)
+	MUart, err1 := service.GetUartConfig(form.UUID)
 	if err1 != nil {
 		c.JSON(common.HTTP_OK, common.Error400(err1))
 		return
 	}
-	HwIPort := hwportmanager.SystemHwPort{
-		UUID:        MHwPort.UUID,
-		Name:        MHwPort.Name,
-		Type:        MHwPort.Type,
-		Alias:       MHwPort.Alias,
-		Description: MHwPort.Description,
+	HwIPort := uartctrl.SystemUart{
+		UUID:        MUart.UUID,
+		Name:        MUart.Name,
+		Type:        MUart.Type,
+		Alias:       MUart.Alias,
+		Description: MUart.Description,
 	}
 	// 串口类
-	if MHwPort.Type == "UART" {
-		config := hwportmanager.UartConfig{}
-		utils.BindSourceConfig(MHwPort.GetConfig(), &config)
+	if MUart.Type == "UART" {
+		config := uartctrl.UartConfig{}
+		utils.BindSourceConfig(MUart.GetConfig(), &config)
 		HwIPort.Config = config
 	}
-	if MHwPort.Type == "FD" {
+	if MUart.Type == "FD" {
 		HwIPort.Config = nil
 	}
 	// 刷新接口参数
-	hwportmanager.RefreshPort(HwIPort)
+	uartctrl.RefreshPort(HwIPort)
 	c.JSON(common.HTTP_OK, common.Ok())
 
 }
@@ -154,14 +166,14 @@ func UpdateHwPortConfig(c *gin.Context, ruleEngine typex.Rhilex) {
 * 获取详情
 *
  */
-func GetHwPortDetail(c *gin.Context, ruleEngine typex.Rhilex) {
+func GetUartDetail(c *gin.Context, ruleEngine typex.Rhilex) {
 	uuid, _ := c.GetQuery("uuid")
-	Port, err1 := hwportmanager.GetHwPort(uuid)
+	Port, err1 := uartctrl.GetUart(uuid)
 	if err1 != nil {
 		c.JSON(common.HTTP_OK, common.Error400(err1))
 		return
 	}
-	c.JSON(common.HTTP_OK, common.OkWithData(HwPortVo{
+	c.JSON(common.HTTP_OK, common.OkWithData(UartVo{
 		UUID:        Port.UUID,
 		Name:        Port.Name,
 		Type:        Port.Type,
@@ -169,7 +181,7 @@ func GetHwPortDetail(c *gin.Context, ruleEngine typex.Rhilex) {
 		Config:      Port.Config,
 		Description: Port.Description,
 		Busy:        Port.Busy,
-		OccupyBy: HwPortOccupyVo{
+		OccupyBy: UartOccupyVo{
 			Port.OccupyBy.UUID, Port.OccupyBy.Type, Port.Name,
 		},
 	}))

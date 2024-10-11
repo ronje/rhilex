@@ -242,28 +242,19 @@ func (dev *GenericBacnetIpDevice) Start(cctx typex.CCTX) error {
 			}
 			ReadBacnetValues := dev.ReadProperty()
 			if len(ReadBacnetValues) < 1 {
-				time.Sleep(50 * time.Second)
+				time.Sleep(50 * time.Millisecond)
 				continue
 			}
-			if !*dev.mainConfig.CommonConfig.BatchRequest {
-
-				for _, ReadBacnetValue := range ReadBacnetValues {
-					if bytes, err := json.Marshal(ReadBacnetValue); err != nil {
+			if *dev.mainConfig.CommonConfig.BatchRequest {
+				if len(ReadBacnetValues) > 0 {
+					if bytes, err := json.Marshal(ReadBacnetValues); err != nil {
 						glogger.GLogger.Error(err)
 					} else {
 						glogger.GLogger.Debug(string(bytes))
 						dev.RuleEngine.WorkDevice(dev.Details(), string(bytes))
 					}
 				}
-			} else {
-				if bytes, err := json.Marshal(ReadBacnetValues); err != nil {
-					glogger.GLogger.Error(err)
-				} else {
-					glogger.GLogger.Debug(string(bytes))
-					dev.RuleEngine.WorkDevice(dev.Details(), string(bytes))
-				}
 			}
-
 			<-ticker.C
 		}
 	}(dev.Ctx)
@@ -335,6 +326,15 @@ func (dev *GenericBacnetIpDevice) ReadProperty() []ReadBacnetValue {
 				Value:         fmt.Sprintf("%v", ReadBacnetValue.Value),
 				ErrMsg:        "",
 			})
+			if !*dev.mainConfig.CommonConfig.BatchRequest {
+				if len(ReadBacnetValues) > 0 {
+					if bytes, errMarshal := json.Marshal(ReadBacnetValue); errMarshal != nil {
+						glogger.GLogger.Error(errMarshal)
+					} else {
+						dev.RuleEngine.WorkDevice(dev.Details(), string(bytes))
+					}
+				}
+			}
 		}
 	}
 	return ReadBacnetValues

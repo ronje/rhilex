@@ -18,6 +18,21 @@ import (
 	"gopkg.in/square/go-jose.v2/json"
 )
 
+func InitDeviceRoute() {
+	deviceApi := server.RouteGroup(server.ContextUrl("/devices"))
+	{
+		deviceApi.POST(("/create"), server.AddRoute(CreateDevice))
+		deviceApi.PUT(("/update"), server.AddRoute(UpdateDevice))
+		deviceApi.DELETE(("/del"), server.AddRoute(DeleteDevice))
+		deviceApi.GET(("/detail"), server.AddRoute(DeviceDetail))
+		deviceApi.GET("/group", server.AddRoute(ListDeviceGroup))
+		deviceApi.GET("/listByGroup", server.AddRoute(ListDeviceByGroup))
+		deviceApi.GET("/list", server.AddRoute(ListDevice))
+		deviceApi.PUT("/restart", server.AddRoute(RestartDevice))
+		deviceApi.GET("/deviceErrMsg", server.AddRoute(GetDeviceErrorMsg))
+	}
+}
+
 type DeviceVo struct {
 	UUID        string                 `json:"uuid"`
 	Gid         string                 `json:"gid"`
@@ -185,13 +200,6 @@ func DeleteDevice(c *gin.Context, ruleEngine typex.Rhilex) {
 	// 西门子需要同步删除点位表记录
 	if Mdev.Type == typex.SIEMENS_PLC.String() {
 		if err := service.DeleteAllSiemensPointByDevice(uuid); err != nil {
-			c.JSON(common.HTTP_OK, common.Error400(err))
-			return
-		}
-	}
-	// 华中数控需要同步删除点位表记录
-	if Mdev.Type == typex.HNC8.String() {
-		if err := service.DeleteAllHnc8PointByDevice(uuid); err != nil {
 			c.JSON(common.HTTP_OK, common.Error400(err))
 			return
 		}

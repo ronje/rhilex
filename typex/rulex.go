@@ -5,63 +5,6 @@ import (
 	"sync"
 )
 
-// Global config
-type ExtLib struct {
-	Value []string `ini:"value,,allowshadow"`
-}
-type Secret struct {
-	Value []string `ini:"value,,allowshadow"`
-}
-type RhilexConfig struct {
-	IniPath               string
-	AppId                 string   `ini:"app_id" json:"appId"`
-	MaxQueueSize          int      `ini:"max_queue_size" json:"maxQueueSize"`
-	SourceRestartInterval int      `ini:"resource_restart_interval" json:"sourceRestartInterval"`
-	GomaxProcs            int      `ini:"gomax_procs" json:"gomaxProcs"`
-	EnablePProf           bool     `ini:"enable_pprof" json:"enablePProf"`
-	EnableConsole         bool     `ini:"enable_console" json:"enableConsole"`
-	AppDebugMode          bool     `ini:"app_debug_mode" json:"appDebugMode"`
-	LogLevel              string   `ini:"log_level" json:"logLevel"`
-	LogPath               string   `ini:"log_path" json:"logPath"`
-	LogMaxSize            int      `ini:"log_max_size" json:"logMaxSize"`
-	LogMaxBackups         int      `ini:"log_max_backups" json:"logMaxBackups"`
-	LogMaxAge             int      `ini:"log_max_age" json:"logMaxAge"`
-	LogCompress           bool     `ini:"log_compress" json:"logCompress"`
-	MaxKvStoreSize        int      `ini:"max_kv_store_size" json:"maxKvStoreSize"`
-	ExtLibs               []string `ini:"ext_libs,,allowshadow" json:"extLibs"`
-	DataSchemaSecret      []string `ini:"dataschema_secrets,,allowshadow" json:"dataSchemaSecret"`
-}
-
-func (C *RhilexConfig) Init() {
-	if C.LogPath == "" {
-		C.LogPath = "./rhilexlog"
-	}
-	if C.LogLevel == "" {
-		C.LogLevel = "info"
-	}
-	if C.MaxQueueSize == 0 {
-		C.MaxQueueSize = 102400
-	}
-	if C.SourceRestartInterval == 0 {
-		C.SourceRestartInterval = 5000
-	}
-	if C.LogMaxSize == 0 {
-		C.LogMaxSize = 5
-	}
-	if C.LogMaxBackups == 0 {
-		C.LogMaxBackups = 5
-	}
-	if C.LogMaxAge == 0 {
-		C.LogMaxAge = 7
-	}
-	if !C.LogCompress {
-		C.LogCompress = true
-	}
-	if C.MaxKvStoreSize == 0 {
-		C.MaxKvStoreSize = 1024
-	}
-}
-
 // Rhilex interface
 type Rhilex interface {
 	//

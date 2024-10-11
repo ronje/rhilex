@@ -42,7 +42,7 @@ docker run -d -v "./data/db" -e MONGO_INITDB_ROOT_USERNAME=root -e MONGO_INITDB_
 
 ```lua
 function(args)
-    local err = data:DToMongo('uuid', args)
+    local err = data:ToMongoDB('uuid', args)
 	return true, args
 end
 ```

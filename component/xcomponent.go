@@ -30,9 +30,24 @@ type XComponentMetaInfo struct {
 * RHILEX 系统组件
 *
  */
+type CallArgs struct {
+	ComponentName string
+	ServiceName   string
+}
+type CallResult struct {
+	Code   int
+	Result any
+}
+
+type ServiceSpec struct {
+	CallArgs   CallArgs
+	CallResult CallResult
+}
 type XComponent interface {
-	Init(cfg map[string]any) error      // 配置
-	Start(r typex.Rhilex) error         // 启动
-	Stop() error                        // 停止
-	PluginMetaInfo() XComponentMetaInfo // 元信息
+	Init(cfg map[string]any) error     // 配置
+	Start(rhilex typex.Rhilex) error   // 启动
+	Call(CallArgs) (CallResult, error) // 调用接口
+	Services() map[string]ServiceSpec  // 服务表
+	MetaInfo() XComponentMetaInfo      // 元信息
+	Stop() error                       // 停止
 }

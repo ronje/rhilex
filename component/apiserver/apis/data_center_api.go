@@ -404,6 +404,11 @@ func GetSchemaDDLDefine(c *gin.Context, ruleEngine typex.Rhilex) {
 	c.JSON(common.HTTP_OK, common.OkWithData(tableColumns))
 
 }
+
+/**
+ *
+ * 标准类型：STRING、 INTEGER 、FLOAT 、BOOL 、GEO 、STRING
+ */
 func SqliteTypeMappingGoDefault(dbType string) (string, interface{}) {
 	switch dbType {
 	case "TEXT":
@@ -414,6 +419,8 @@ func SqliteTypeMappingGoDefault(dbType string) (string, interface{}) {
 		return "FLOAT", 0
 	case "BOOLEAN":
 		return "BOOL", false
+	case "GEO":
+		return "GEO", false
 	default:
 		return "STRING", "''"
 	}

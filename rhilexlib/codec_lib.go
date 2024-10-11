@@ -1,3 +1,18 @@
+// Copyright (C) 2024 wwhai
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Affero General Public License as
+// published by the Free Software Foundation, either version 3 of the
+// License, or (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Affero General Public License for more details.
+//
+// You should have received a copy of the GNU Affero General Public License
+// along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
 package rhilexlib
 
 import (
@@ -13,11 +28,11 @@ import (
 * GRPC 解码
 *
  */
-func Request(rx typex.Rhilex, uuid string) func(L *lua.LState) int {
-	return request(rx, uuid)
+func Request(rx typex.Rhilex) func(*lua.LState) int {
+	return request(rx)
 }
-func RPCDecode(rx typex.Rhilex, uuid string) func(L *lua.LState) int {
-	return request(rx, uuid)
+func RPCDecode(rx typex.Rhilex) func(*lua.LState) int {
+	return request(rx)
 }
 
 /*
@@ -25,10 +40,10 @@ func RPCDecode(rx typex.Rhilex, uuid string) func(L *lua.LState) int {
 * GRPC 编码
 *
  */
-func RPCEncode(rx typex.Rhilex, uuid string) func(L *lua.LState) int {
-	return request(rx, uuid)
+func RPCEncode(rx typex.Rhilex) func(*lua.LState) int {
+	return request(rx)
 }
-func request(rx typex.Rhilex, uuid string) func(L *lua.LState) int {
+func request(rx typex.Rhilex) func(*lua.LState) int {
 	return func(l *lua.LState) int {
 		id := l.ToString(2)               // UUID
 		data := l.ToString(3)             // Data

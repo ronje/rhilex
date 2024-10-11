@@ -23,7 +23,8 @@ import (
 
 	serial "github.com/hootrhino/goserial"
 
-	"github.com/hootrhino/rhilex/component/hwportmanager"
+	"github.com/hootrhino/rhilex/component/lostcache"
+	"github.com/hootrhino/rhilex/component/uartctrl"
 	"github.com/hootrhino/rhilex/glogger"
 	"github.com/hootrhino/rhilex/typex"
 	"github.com/hootrhino/rhilex/utils"
@@ -41,28 +42,28 @@ type GenericUartMainConfig struct {
 	Timeout *int `json:"timeout" validate:"required"`
 	// 端口UUID，用于识别特定的串口设备
 	PortUuid string `json:"portUuid" validate:"required"`
+	// 离线缓存
+	CacheOfflineData *bool `json:"cacheOfflineData" title:"离线缓存"`
 }
 
 type GenericUart struct {
 	typex.XStatus
-	hwPortConfig hwportmanager.UartConfig
-	status       typex.SourceState
-	locker       sync.Mutex
-	serialPort   serial.Port
-	mainConfig   GenericUartMainConfig
+	uartConfig uartctrl.UartConfig
+	status     typex.SourceState
+	locker     sync.Mutex
+	serialPort serial.Port
+	mainConfig GenericUartMainConfig
 }
 
 func NewGenericUart(e typex.Rhilex) typex.XTarget {
 	mdev := new(GenericUart)
 	mdev.RuleEngine = e
 	mdev.mainConfig = GenericUartMainConfig{
-		PortUuid:   "/dev/ttyS1",
-		DataMode:   "RAW_STRING",
-		PingPacket: "RHILEX",
-		AllowPing: func() *bool {
-			b := false
-			return &b
-		}(),
+		PortUuid:         "/dev/ttyS1",
+		DataMode:         "RAW_STRING",
+		PingPacket:       "RHILEX",
+		AllowPing:        new(bool),
+		CacheOfflineData: new(bool),
 		Timeout: func() *int {
 			b := 3000
 			return &b
@@ -75,6 +76,7 @@ func NewGenericUart(e typex.Rhilex) typex.XTarget {
 
 func (mdev *GenericUart) Init(outEndId string, configMap map[string]interface{}) error {
 	mdev.PointId = outEndId
+	lostcache.CreateLostDataTable(outEndId)
 	if err := utils.BindSourceConfig(configMap, &mdev.mainConfig); err != nil {
 		return err
 	}
@@ -83,30 +85,30 @@ func (mdev *GenericUart) Init(outEndId string, configMap map[string]interface{})
 func (mdev *GenericUart) Start(cctx typex.CCTX) error {
 	mdev.Ctx = cctx.Ctx
 	mdev.CancelCTX = cctx.CancelCTX
-	hwPort, err := hwportmanager.GetHwPort(mdev.mainConfig.PortUuid)
+	uartPort, err := uartctrl.GetUart(mdev.mainConfig.PortUuid)
 	if err != nil {
 		return err
 	}
-	if hwPort.Busy {
-		return fmt.Errorf("mdev is busying now, Occupied By:%s", hwPort.OccupyBy)
+	if uartPort.Busy {
+		return fmt.Errorf("mdev is busying now, Occupied By:%s", uartPort.OccupyBy)
 	}
-	switch tCfg := hwPort.Config.(type) {
-	case hwportmanager.UartConfig:
+	switch tCfg := uartPort.Config.(type) {
+	case uartctrl.UartConfig:
 		{
-			mdev.hwPortConfig = tCfg
+			mdev.uartConfig = tCfg
 		}
 	default:
 		{
-			return fmt.Errorf("Invalid config:%s", hwPort.Config)
+			return fmt.Errorf("Invalid config:%s", uartPort.Config)
 		}
 	}
 	config := serial.Config{
-		Address:  mdev.hwPortConfig.Uart,
-		BaudRate: mdev.hwPortConfig.BaudRate,
-		DataBits: mdev.hwPortConfig.DataBits,
-		Parity:   mdev.hwPortConfig.Parity,
-		StopBits: mdev.hwPortConfig.StopBits,
-		Timeout:  time.Duration(mdev.hwPortConfig.Timeout) * time.Millisecond,
+		Address:  mdev.uartConfig.Uart,
+		BaudRate: mdev.uartConfig.BaudRate,
+		DataBits: mdev.uartConfig.DataBits,
+		Parity:   mdev.uartConfig.Parity,
+		StopBits: mdev.uartConfig.StopBits,
+		Timeout:  time.Duration(mdev.uartConfig.Timeout) * time.Millisecond,
 	}
 	serialPort, err := serial.Open(&config)
 	if err != nil {
@@ -135,7 +137,20 @@ func (mdev *GenericUart) Start(cctx typex.CCTX) error {
 	}
 	mdev.serialPort = serialPort
 	mdev.status = typex.SOURCE_UP
-	glogger.GLogger.Info("GenericUart started:", mdev.hwPortConfig.Uart)
+	// 补发数据
+	if *mdev.mainConfig.CacheOfflineData {
+		if CacheData, err1 := lostcache.GetLostCacheData(mdev.PointId); err1 != nil {
+			glogger.GLogger.Error(err1)
+		} else {
+			for _, data := range CacheData {
+				mdev.To(data.Data)
+				{
+					lostcache.DeleteLostCacheData(mdev.PointId, data.ID)
+				}
+			}
+		}
+	}
+	glogger.GLogger.Info("GenericUart started:", mdev.uartConfig.Uart)
 	return nil
 }
 
@@ -158,20 +173,43 @@ func (mdev *GenericUart) Status() typex.SourceState {
  */
 func (mdev *GenericUart) To(data interface{}) (interface{}, error) {
 	if mdev.serialPort == nil {
-		mdev.status = typex.SOURCE_DOWN
+		switch T := data.(type) {
+		case string:
+			_, err := mdev.serialPort.Write([]byte(T))
+			if *mdev.mainConfig.CacheOfflineData {
+				lostcache.SaveLostCacheData(mdev.PointId, lostcache.CacheDataDto{
+					TargetId: mdev.PointId,
+					Data:     T,
+				})
+			}
+			return nil, err
+		}
 		return 0, fmt.Errorf("serial Port invalid")
 	}
 	if mdev.mainConfig.DataMode == "RAW_STRING" {
-		switch S := data.(type) {
+		switch T := data.(type) {
 		case string:
-			return mdev.serialPort.Write([]byte(S))
+			_, err := mdev.serialPort.Write([]byte(T))
+			if *mdev.mainConfig.CacheOfflineData {
+				lostcache.SaveLostCacheData(mdev.PointId, lostcache.CacheDataDto{
+					TargetId: mdev.PointId,
+					Data:     T,
+				})
+			}
+			return nil, err
 		}
 	}
 	if mdev.mainConfig.DataMode == "HEX_STRING" {
-		switch t := data.(type) {
+		switch S := data.(type) {
 		case string:
-			Hex, err := hex.DecodeString(t)
+			Hex, err := hex.DecodeString(S)
 			if err != nil {
+				if *mdev.mainConfig.CacheOfflineData {
+					lostcache.SaveLostCacheData(mdev.PointId, lostcache.CacheDataDto{
+						TargetId: mdev.PointId,
+						Data:     S,
+					})
+				}
 				return nil, err
 			}
 			return mdev.serialPort.Write(Hex)

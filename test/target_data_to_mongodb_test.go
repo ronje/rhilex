@@ -16,7 +16,7 @@ import (
 	"google.golang.org/grpc/credentials/insecure"
 )
 
-func Test_DataToMongo(t *testing.T) {
+func Test_DataToMongoDB(t *testing.T) {
 	engine := RunTestEngine()
 	engine.Start()
 
@@ -39,9 +39,10 @@ func Test_DataToMongo(t *testing.T) {
 	mongoOut := typex.NewOutEnd(typex.MONGO_SINGLE,
 		"MONGO_SINGLE",
 		"MONGO_SINGLE", map[string]interface{}{
-			"mongoUrl":   "mongodb://root:root@127.0.0.1:27017/?connect=direct",
-			"database":   "temp_gateway_test_" + ts,
-			"collection": "temp_gateway_test_" + ts,
+			"mongoUrl":         "mongodb://root:root@127.0.0.1:27017/?connect=direct",
+			"database":         "temp_gateway_test_" + ts,
+			"collection":       "temp_gateway_test_" + ts,
+			"cacheOfflineData": true,
 		})
 	mongoOut.UUID = "mongoOut"
 	ctx1, cancelF1 := typex.NewCCTX() // ,ctx, cancelF
@@ -58,8 +59,8 @@ func Test_DataToMongo(t *testing.T) {
 		`
 		Actions = {
 			function(args)
-			    local err = data:ToMongo('mongoOut', data)
-				print("[LUA DataToMongo] ==>", err)
+			    local err = data:ToMongoDB('mongoOut', data)
+				print("[LUA DataToMongoDB] ==>", err)
 				return true, args
 			end
 		}`,
@@ -74,8 +75,8 @@ func Test_DataToMongo(t *testing.T) {
 	defer conn.Close()
 	client := rhilexrpc.NewRhilexRpcClient(conn)
 
-	resp, err := client.Work(context.Background(), &rhilexrpc.Data{
-		Value: `[{"co2":10,"hum":30,"lex":22,"temp":100}]`,
+	resp, err := client.Request(context.Background(), &rhilexrpc.RpcRequest{
+		Value: (`{"co2":10,"hum":30,"lex":22,"temp":100}`),
 	})
 	if err != nil {
 		glogger.GLogger.Error(err)

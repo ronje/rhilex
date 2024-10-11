@@ -12,10 +12,21 @@ import (
 
 	"github.com/gin-gonic/gin"
 	common "github.com/hootrhino/rhilex/component/apiserver/common"
+	"github.com/hootrhino/rhilex/component/apiserver/server"
 	"github.com/hootrhino/rhilex/ossupport"
 	"github.com/hootrhino/rhilex/typex"
 	"github.com/hootrhino/rhilex/utils"
 )
+
+func InitBackupRoute() {
+	backupApi := server.RouteGroup(server.ContextUrl("/backup"))
+	{
+		backupApi.GET(("/download"), server.AddRoute(DownloadSqlite))
+		backupApi.POST(("/upload"), server.AddRoute(UploadSqlite))
+		backupApi.GET(("/snapshot"), server.AddRoute(SnapshotDump))
+		backupApi.GET(("/runningLog"), server.AddRoute(GetRunningLog))
+	}
+}
 
 /*
 *

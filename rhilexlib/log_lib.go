@@ -22,7 +22,7 @@ import (
 * APP debug输出, Debug(".....")
 *
  */
-func DebugAPP(rx typex.Rhilex, uuid string) func(L *lua.LState) int {
+func DebugAPP(rx typex.Rhilex, uuid string) func(*lua.LState) int {
 	return func(L *lua.LState) int {
 		top := L.GetTop()
 		content := ""
@@ -44,7 +44,7 @@ func DebugAPP(rx typex.Rhilex, uuid string) func(L *lua.LState) int {
 * 辅助Debug使用, 用来向前端Dashboard打印日志的时候带上ID
 *
  */
-func DebugRule(rx typex.Rhilex, uuid string) func(L *lua.LState) int {
+func DebugRule(rx typex.Rhilex, uuid string) func(*lua.LState) int {
 	return func(L *lua.LState) int {
 		top := L.GetTop()
 		content := ""

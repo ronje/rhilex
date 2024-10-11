@@ -19,12 +19,11 @@ import (
 	"context"
 	"fmt"
 	"log"
-	_ "net/http/pprof"
 	"os"
 	"runtime"
 	"time"
 
-	archsupport "github.com/hootrhino/rhilex/bspsupport"
+	archsupport "github.com/hootrhino/rhilex/archsupport"
 	"github.com/hootrhino/rhilex/engine"
 	"github.com/hootrhino/rhilex/ossupport"
 	"github.com/hootrhino/rhilex/typex"
@@ -61,12 +60,12 @@ func init() {
 //go:generate bash ./gen_info.sh
 func main() {
 	app := &cli.App{
-		Name:  "rhilex",
-		Usage: "For more documentation, please refer to: http://rhilex.hootrhino.com",
+		Name:  "RHILEX STREAM SYSTEM",
+		Usage: "For more, please refer to: https://www.hootrhino.com",
 		Commands: []*cli.Command{
 			{
 				Name:  "run",
-				Usage: "Start rhilex, Must with config: -config=path/rhilex.ini",
+				Usage: "Start rhilex, Must with config: -config=/path/rhilex.ini",
 				Flags: []cli.Flag{
 					&cli.StringFlag{
 						Name:  "db",
@@ -99,7 +98,8 @@ func main() {
 					},
 				},
 				Action: func(c *cli.Context) error {
-					file, err := os.Create(ossupport.UpgradeLogPath)
+					flag := os.O_APPEND | os.O_CREATE | os.O_WRONLY
+					file, err := os.OpenFile(ossupport.UpgradeLogPath, flag, 0755)
 					if err != nil {
 						utils.CLog(err.Error())
 						return nil
@@ -199,11 +199,15 @@ func main() {
 					}
 					utils.CLog("[DATA RECOVER] Remove Old Db File")
 					if err := os.Remove(ossupport.RunDbPath); err != nil {
-						utils.CLog("[DATA RECOVER] Remove Old Db File error:%s", err.Error())
+						utils.CLog("[DATA RECOVER] Remove Main COnfig Db error:%s", err.Error())
 						return nil
 					}
 					if err := os.Remove(ossupport.DataCenterPath); err != nil {
-						utils.CLog("[DATA RECOVER] Remove Old Db File error:%s", err.Error())
+						utils.CLog("[DATA RECOVER] Remove Data Center Db error:%s", err.Error())
+						return nil
+					}
+					if err := os.Remove(ossupport.LostCacheDataPath); err != nil {
+						utils.CLog("[DATA RECOVER] Remove Lost Cache Db error:%s", err.Error())
 						return nil
 					}
 					utils.CLog("[DATA RECOVER] Remove Old Db File Finished")
@@ -279,35 +283,17 @@ func main() {
 					}
 					// linux
 					if runtime.GOOS == "linux" {
-						macAddr, err := ossupport.GetLinuxMacAddr(iface)
-						if err != nil {
-							return fmt.Errorf("[LICENCE ACTIVE]: Get Local Mac Address error: %s", err)
-						}
-						// Commercial version will implement it
-						// rhilex active
-						//     \ -H https://127.0.0.1/api/v1/device-active
-						//     \ -U admin -P 123456 -IF eth0
-						// - H: Active Server Host
-						// - U: Active Server Account
-						// - P: Active Server Password
-						// - IF: Active IFace name
-						err1 := utils.FetchLoadLicense(host, sn, username, password, macAddr)
-						if err1 != nil {
-							return fmt.Errorf("[LICENCE ACTIVE]: Fetch license failed, error: %s", err1)
-						}
-						return nil
+						// rhilex active \
+						//     -H https://127.0.0.1/api/v1/device-active \
+						//     -U admin -P 123456 -IF eth0 \
+						//     -H: Active Server Host \
+						//     -U: Active Server Account \
+						//     -P: Active Server Password \
+						//     -IF: Active IFace name
+						return fmt.Errorf("[LICENCE ACTIVE]: Operation Not Permission!")
 					}
 					if runtime.GOOS == "windows" {
-						// Just for test
-						macAddr, err0 := ossupport.GetWindowsFirstMacAddress()
-						if err0 != nil {
-							return fmt.Errorf("[LICENCE ACTIVE]: Get Local Mac Address error: %s", err0)
-						}
-						err1 := utils.FetchLoadLicense(host, sn, username, password, macAddr)
-						if err1 != nil {
-							return fmt.Errorf("[LICENCE ACTIVE]: Fetch license failed, error: %s", err1)
-						}
-						return nil
+						return fmt.Errorf("[LICENCE ACTIVE]: Operation Not Permission!")
 					}
 					return fmt.Errorf("[LICENCE ACTIVE]: Active not supported on current distribution.")
 				},

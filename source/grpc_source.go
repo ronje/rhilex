@@ -5,19 +5,23 @@ import (
 	"fmt"
 	"net"
 
-	"github.com/hootrhino/rhilex/common"
 	"github.com/hootrhino/rhilex/component/rhilexrpc"
 	"github.com/hootrhino/rhilex/glogger"
 	"github.com/hootrhino/rhilex/typex"
 	"github.com/hootrhino/rhilex/utils"
-
 	"google.golang.org/grpc"
 )
 
 const (
-	defaultTransport = "tcp"
+	__defaultTransport = "tcp"
 )
 
+type GrpcConfig struct {
+	Host             string `json:"host" validate:"required" title:"地址"`
+	Port             int    `json:"port" validate:"required" title:"端口"`
+	Type             string `json:"type" title:"类型"`
+	CacheOfflineData *bool  `json:"cacheOfflineData" title:"离线缓存"`
+}
 type RhilexRpcServer struct {
 	grpcInEndSource *grpcInEndSource
 	rhilexrpc.UnimplementedRhilexRpcServer
@@ -28,14 +32,17 @@ type grpcInEndSource struct {
 	typex.XStatus
 	rhilexServer *RhilexRpcServer
 	rpcServer    *grpc.Server
-	mainConfig   common.GrpcConfig
+	mainConfig   GrpcConfig
 	status       typex.SourceState
 }
 
 func NewGrpcInEndSource(e typex.Rhilex) typex.XSource {
 	g := grpcInEndSource{}
 	g.RuleEngine = e
-	g.mainConfig = common.GrpcConfig{}
+	g.mainConfig = GrpcConfig{
+		Host: "127.0.0.1",
+		Port: 2583,
+	}
 	return &g
 }
 
@@ -56,7 +63,7 @@ func (g *grpcInEndSource) Start(cctx typex.CCTX) error {
 	g.Ctx = cctx.Ctx
 	g.CancelCTX = cctx.CancelCTX
 
-	listener, err := net.Listen(defaultTransport, fmt.Sprintf(":%d", g.mainConfig.Port))
+	listener, err := net.Listen(__defaultTransport, fmt.Sprintf(":%d", g.mainConfig.Port))
 	if err != nil {
 		return err
 	}
@@ -99,25 +106,23 @@ func (g *grpcInEndSource) Details() *typex.InEnd {
 	return g.RuleEngine.GetInEnd(g.PointId)
 }
 
-func (r *RhilexRpcServer) Work(ctx context.Context, in *rhilexrpc.Data) (*rhilexrpc.Response, error) {
+func (r *RhilexRpcServer) Request(ctx context.Context, in *rhilexrpc.RpcRequest) (*rhilexrpc.RpcResponse, error) {
 	ok, err := r.grpcInEndSource.RuleEngine.WorkInEnd(
 		r.grpcInEndSource.RuleEngine.GetInEnd(r.grpcInEndSource.PointId),
-		in.Value,
+		string(in.Value),
 	)
 	if ok {
-		return &rhilexrpc.Response{
+		return &rhilexrpc.RpcResponse{
 			Code:    0,
 			Message: "OK",
 		}, nil
-	} else {
-		return &rhilexrpc.Response{
-			Code:    1,
-			Message: err.Error(),
-		}, err
 	}
+	return &rhilexrpc.RpcResponse{
+		Code:    1,
+		Message: err.Error(),
+	}, err
 
 }
-
 
 // 来自外面的数据
 func (*grpcInEndSource) DownStream([]byte) (int, error) {

@@ -20,10 +20,18 @@ import (
 
 	"github.com/gin-gonic/gin"
 	common "github.com/hootrhino/rhilex/component/apiserver/common"
+	"github.com/hootrhino/rhilex/component/apiserver/server"
 	"github.com/hootrhino/rhilex/component/apiserver/service"
 	"github.com/hootrhino/rhilex/component/intercache"
 	"github.com/hootrhino/rhilex/typex"
 )
+
+func InitModbusSlaverRoute() {
+	modbusApi := server.RouteGroup(server.ContextUrl("/modbus_slaver_sheet"))
+	{
+		modbusApi.GET(("/list"), server.AddRoute(ModbusSlaverSheetPageList))
+	}
+}
 
 type ModbusSlaverRegister struct {
 	UUID string `json:"uuid"`

@@ -20,7 +20,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/hootrhino/rhilex/common"
+	"github.com/hootrhino/rhilex/component/lostcache"
 	"github.com/hootrhino/rhilex/glogger"
 	"github.com/hootrhino/rhilex/typex"
 	"github.com/hootrhino/rhilex/utils"
@@ -30,17 +30,34 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
+/*
+*
+* Mongodb 配置
+*
+ */
+type MongoConfig struct {
+	MongoUrl         string `json:"mongoUrl" validate:"required" title:"URL"`
+	Database         string `json:"database" validate:"required" title:"数据库"`
+	Collection       string `json:"collection" validate:"required" title:"集合"`
+	CacheOfflineData *bool  `json:"cacheOfflineData" title:"离线缓存"`
+}
+
 type mongoTarget struct {
 	typex.XStatus
 	client     *mongo.Client
 	collection *mongo.Collection
-	mainConfig common.MongoConfig
+	mainConfig MongoConfig
 	status     typex.SourceState
 }
 
 func NewMongoTarget(e typex.Rhilex) typex.XTarget {
 	mg := new(mongoTarget)
-	mg.mainConfig = common.MongoConfig{}
+	mg.mainConfig = MongoConfig{
+		MongoUrl:         "mongodb://rhilex:rhilex@localhost:27017/rhilex",
+		Database:         "rhilex",
+		Collection:       "rhilex",
+		CacheOfflineData: new(bool),
+	}
 	mg.RuleEngine = e
 	mg.status = typex.SOURCE_DOWN
 	return mg
@@ -48,6 +65,7 @@ func NewMongoTarget(e typex.Rhilex) typex.XTarget {
 
 func (m *mongoTarget) Init(outEndId string, configMap map[string]interface{}) error {
 	m.PointId = outEndId
+	lostcache.CreateLostDataTable(outEndId)
 	if err := utils.BindSourceConfig(configMap, &m.mainConfig); err != nil {
 		return err
 	}
@@ -67,6 +85,20 @@ func (m *mongoTarget) Start(cctx typex.CCTX) error {
 	m.client = client
 	m.Enable = true
 	m.status = typex.SOURCE_UP
+	// 补发数据
+	if *m.mainConfig.CacheOfflineData {
+		if CacheData, err1 := lostcache.GetLostCacheData(m.PointId); err1 != nil {
+			glogger.GLogger.Error(err1)
+		} else {
+			for _, data := range CacheData {
+				m.To(data.Data)
+				{
+					lostcache.DeleteLostCacheData(m.PointId, data.ID)
+				}
+			}
+		}
+	}
+
 	glogger.GLogger.Info("mongoTarget connect successfully")
 	return nil
 
@@ -93,18 +125,30 @@ func (m *mongoTarget) Stop() {
 }
 
 func (m *mongoTarget) To(data interface{}) (interface{}, error) {
-	switch t := data.(type) {
+	switch T := data.(type) {
 	case string:
 		// 将 JSON 数据解析为 map
 		var data map[string]interface{}
 
-		if err := bson.UnmarshalExtJSON([]byte(t), false, &data); err != nil {
+		if err := bson.UnmarshalExtJSON([]byte(T), false, &data); err != nil {
 			glogger.GLogger.Error("Mongo To Failed:", err)
+			if *m.mainConfig.CacheOfflineData {
+				lostcache.SaveLostCacheData(m.PointId, lostcache.CacheDataDto{
+					TargetId: m.PointId,
+					Data:     T,
+				})
+			}
 			return nil, err
 		}
 		r, err := m.collection.InsertOne(m.Ctx, data)
 		if err != nil {
 			glogger.GLogger.Error("Mongo To Failed:", err)
+			if *m.mainConfig.CacheOfflineData {
+				lostcache.SaveLostCacheData(m.PointId, lostcache.CacheDataDto{
+					TargetId: m.PointId,
+					Data:     T,
+				})
+			}
 			return nil, err
 		}
 		return r.InsertedID, nil

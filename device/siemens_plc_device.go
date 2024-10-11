@@ -120,7 +120,7 @@ func (s1200 *SIEMENS_PLC) Init(devId string, configMap map[string]interface{}) e
 	// 开始解析地址表
 	for _, SiemensDataPoint := range list {
 		// 频率不能太快
-		if *SiemensDataPoint.Frequency < 50 {
+		if *SiemensDataPoint.Frequency < 1 {
 			return errors.New("'frequency' must grate than 50 millisecond")
 		}
 		//
@@ -190,19 +190,12 @@ func (s1200 *SIEMENS_PLC) Start(cctx typex.CCTX) error {
 				continue
 			}
 			if !*s1200.mainConfig.CommonConfig.BatchRequest {
-
-				for _, v := range ReadPLCRegisterValues {
-					if bytes, err := json.Marshal(v); err != nil {
+				if len(ReadPLCRegisterValues) > 0 {
+					if bytes, err := json.Marshal(ReadPLCRegisterValues); err != nil {
 						glogger.GLogger.Error(err)
 					} else {
 						s1200.RuleEngine.WorkDevice(s1200.Details(), string(bytes))
 					}
-				}
-			} else {
-				if bytes, err := json.Marshal(ReadPLCRegisterValues); err != nil {
-					glogger.GLogger.Error(err)
-				} else {
-					s1200.RuleEngine.WorkDevice(s1200.Details(), string(bytes))
 				}
 			}
 		}
@@ -304,14 +297,15 @@ func (s1200 *SIEMENS_PLC) Read() []ReadPLCRegisterValue {
 			}
 			// ValidData := [4]byte{} // 固定4字节，以后有8自己的时候再支持
 			copy(__siemensReadResult[:], rData[:db.DataSize])
-			Value := utils.ParseModbusValue(db.DataBlockType, db.DataBlockOrder,
+			Value := utils.ParseModbusValue(db.DataSize, db.DataBlockType, db.DataBlockOrder,
 				float32(*db.Weight), __siemensReadResult)
-			values = append(values, ReadPLCRegisterValue{
+			PlcReadReg := ReadPLCRegisterValue{
 				Tag:           db.Tag,
 				Alias:         db.Alias,
 				Value:         Value,
 				LastFetchTime: lastTimes,
-			})
+			}
+			values = append(values, PlcReadReg)
 			intercache.SetValue(s1200.PointId, uuid, intercache.CacheValue{
 				UUID:          uuid,
 				Status:        0,
@@ -319,8 +313,15 @@ func (s1200 *SIEMENS_PLC) Read() []ReadPLCRegisterValue {
 				Value:         Value,
 				ErrMsg:        "",
 			})
+			if !*s1200.mainConfig.CommonConfig.BatchRequest {
+				if bytes, errMarshal := json.Marshal(PlcReadReg); errMarshal != nil {
+					glogger.GLogger.Error(errMarshal)
+				} else {
+					s1200.RuleEngine.WorkDevice(s1200.Details(), string(bytes))
+				}
+			}
 		}
-		if *db.Frequency < 100 {
+		if *db.Frequency < 10 {
 			*db.Frequency = 100 // 不能太快
 		}
 		time.Sleep(time.Duration(*db.Frequency) * time.Millisecond)

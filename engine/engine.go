@@ -23,25 +23,22 @@ import (
 
 	lua "github.com/hootrhino/gopher-lua"
 	"github.com/hootrhino/rhilex/component/aibase"
-	"github.com/hootrhino/rhilex/component/appstack"
-	"github.com/hootrhino/rhilex/component/hwportmanager"
-	"github.com/hootrhino/rhilex/component/interkv"
-	"github.com/hootrhino/rhilex/component/rhilexmanager"
-	"github.com/hootrhino/rhilex/component/ruleengine"
-	transceiver "github.com/hootrhino/rhilex/component/transceivercom/transceiver"
-	core "github.com/hootrhino/rhilex/config"
-
-	intercache "github.com/hootrhino/rhilex/component/intercache"
-
-	"github.com/hootrhino/rhilex/component/shellymanager"
-	supervisor "github.com/hootrhino/rhilex/component/supervisor"
-
+	"github.com/hootrhino/rhilex/component/applet"
+	"github.com/hootrhino/rhilex/component/crontask"
 	datacenter "github.com/hootrhino/rhilex/component/datacenter"
+	intercache "github.com/hootrhino/rhilex/component/intercache"
 	"github.com/hootrhino/rhilex/component/interdb"
+	"github.com/hootrhino/rhilex/component/interkv"
 	"github.com/hootrhino/rhilex/component/intermetric"
 	"github.com/hootrhino/rhilex/component/internotify"
 	"github.com/hootrhino/rhilex/component/interqueue"
-	"github.com/hootrhino/rhilex/component/trailer"
+	"github.com/hootrhino/rhilex/component/lostcache"
+	"github.com/hootrhino/rhilex/component/rhilexmanager"
+	"github.com/hootrhino/rhilex/component/ruleengine"
+	supervisor "github.com/hootrhino/rhilex/component/supervisor"
+	transceiver "github.com/hootrhino/rhilex/component/transceiver/manager"
+	"github.com/hootrhino/rhilex/component/uartctrl"
+	core "github.com/hootrhino/rhilex/config"
 	"github.com/hootrhino/rhilex/device"
 	"github.com/hootrhino/rhilex/glogger"
 	"github.com/hootrhino/rhilex/source"
@@ -95,10 +92,12 @@ func InitRuleEngine(config typex.RhilexConfig) typex.Rhilex {
 
 	// Internal DB
 	interdb.Init(__DefaultRuleEngine)
+	// Data center: future version maybe support
+	datacenter.InitDataCenter(__DefaultRuleEngine)
+	// Lost Data Cache
+	lostcache.Init(__DefaultRuleEngine)
 	// Internal kv Store
 	interkv.InitInterKVStore(core.GlobalConfig.MaxKvStoreSize)
-	// Shelly Device Registry
-	shellymanager.InitShellyDeviceRegistry(__DefaultRuleEngine)
 	// SuperVisor Admin
 	supervisor.InitResourceSuperVisorAdmin(__DefaultRuleEngine)
 	// Init Global Value Registry
@@ -106,21 +105,18 @@ func InitRuleEngine(config typex.RhilexConfig) typex.Rhilex {
 	// Internal Bus
 	internotify.InitInternalEventBus(__DefaultRuleEngine, core.GlobalConfig.MaxQueueSize)
 	// Load hardware Port Manager
-	hwportmanager.InitHwPortsManager(__DefaultRuleEngine)
+	uartctrl.InitUartsManager(__DefaultRuleEngine)
 	// Internal Metric
 	intermetric.InitInternalMetric(__DefaultRuleEngine)
-	// trailer
-	trailer.InitTrailerRuntime(__DefaultRuleEngine)
-	// lua appstack manager
-	appstack.InitAppStack(__DefaultRuleEngine)
+	// lua applet manager
+	applet.InitApplet(__DefaultRuleEngine)
 	// current only support Internal ai
 	aibase.InitAlgorithmRuntime(__DefaultRuleEngine)
-	// Data center: future version maybe support
-	datacenter.InitDataCenter(__DefaultRuleEngine)
 	// Internal Queue
 	interqueue.InitXQueue(__DefaultRuleEngine, core.GlobalConfig.MaxQueueSize)
 	// Init Transceiver Communicator Manager
 	transceiver.InitTransceiverCommunicatorManager(__DefaultRuleEngine)
+
 	return __DefaultRuleEngine
 }
 
@@ -158,10 +154,8 @@ func (e *RuleEngine) GetConfig() *typex.RhilexConfig {
 // Stop
 func (e *RuleEngine) Stop() {
 	glogger.GLogger.Info("[*] Ready to stop rhilex")
-	// 所有的APP停了
-	appstack.Stop()
-	// 外挂停了
-	trailer.Stop()
+	crontask.StopCronRebootExecutor()
+	applet.Stop()
 	// 资源
 	e.InEnds.Range(func(key, value interface{}) bool {
 		inEnd := value.(*typex.InEnd)
@@ -201,9 +195,6 @@ func (e *RuleEngine) Stop() {
 		glogger.GLogger.Infof("Stop Device:(%s) Successfully", Device.Name)
 		return true
 	})
-	// Flush Shelly Device Cache
-	glogger.GLogger.Info("Flush Shelly Device Cache")
-	shellymanager.Flush()
 	// Internal Cache
 	glogger.GLogger.Info("Flush Internal Cache")
 	intercache.Flush()
@@ -218,7 +209,7 @@ func (e *RuleEngine) Stop() {
 	// UnRegister __DeviceConfigMap
 	intercache.UnRegisterSlot("__DeviceConfigMap")
 	// END
-	glogger.GLogger.Info("[√] Stop rhilex successfully")
+	glogger.GLogger.Info("[v] Stop rhilex successfully")
 	if err := glogger.Close(); err != nil {
 		fmt.Println("Close logger error: ", err)
 	}
@@ -260,7 +251,7 @@ func (e *RuleEngine) RunSourceCallbacks(in *typex.InEnd, callbackArgs string) {
 					rule.LuaVM.GetInfo("n", Debugger, lua.LNil)
 					LFunction := LValue.(*lua.LFunction)
 					LastCall := lua.DbgCall{
-						Name: "_main", Pc: 0,
+						Name: "_main",
 					}
 					if len(LFunction.Proto.DbgCalls) > 0 {
 						LastCall = LFunction.Proto.DbgCalls[0]
@@ -307,7 +298,7 @@ func (e *RuleEngine) RunDeviceCallbacks(Device *typex.Device, callbackArgs strin
 				rule.LuaVM.GetInfo("n", Debugger, lua.LNil)
 				LFunction := LValue.(*lua.LFunction)
 				LastCall := lua.DbgCall{
-					Name: "_main", Pc: 0,
+					Name: "_main",
 				}
 				if len(LFunction.Proto.DbgCalls) > 0 {
 					LastCall = LFunction.Proto.DbgCalls[0]
@@ -522,10 +513,10 @@ func (e *RuleEngine) InitDeviceTypeManager() error {
 			NewDevice: device.NewTencentIoTGateway,
 		},
 	)
-	e.DeviceTypeManager.Register(typex.SMART_HOME_CONTROLLER,
+	e.DeviceTypeManager.Register(typex.ITHINGS_IOTHUB_GATEWAY,
 		&typex.XConfig{
 			Engine:    e,
-			NewDevice: device.NewShellyGen1ProxyGateway,
+			NewDevice: device.NewIThingsGateway,
 		},
 	)
 	e.DeviceTypeManager.Register(typex.GENERIC_HTTP_DEVICE,
@@ -606,16 +597,10 @@ func (e *RuleEngine) InitDeviceTypeManager() error {
 			NewDevice: device.NewBacnetRouter,
 		},
 	)
-	e.DeviceTypeManager.Register(typex.HNC8,
+	e.DeviceTypeManager.Register(typex.GENERIC_MBUS_MASTER,
 		&typex.XConfig{
 			Engine:    e,
-			NewDevice: device.NewHNC8_CNC,
-		},
-	)
-	e.DeviceTypeManager.Register(typex.KDN,
-		&typex.XConfig{
-			Engine:    e,
-			NewDevice: device.NewKDN_CNC,
+			NewDevice: device.NewMBusMasterGateway,
 		},
 	)
 	return nil
@@ -657,12 +642,7 @@ func (e *RuleEngine) InitSourceTypeManager() error {
 			NewSource: source.NewGrpcInEndSource,
 		},
 	)
-	e.SourceTypeManager.Register(typex.NATS_SERVER,
-		&typex.XConfig{
-			Engine:    e,
-			NewSource: source.NewNatsSource,
-		},
-	)
+
 	e.SourceTypeManager.Register(typex.UDP_SERVER,
 		&typex.XConfig{
 			Engine:    e,
@@ -733,12 +713,6 @@ func (e *RuleEngine) InitTargetTypeManager() error {
 			NewTarget: target.NewMqttTarget,
 		},
 	)
-	e.TargetTypeManager.Register(typex.NATS_TARGET,
-		&typex.XConfig{
-			Engine:    e,
-			NewTarget: target.NewNatsTarget,
-		},
-	)
 	e.TargetTypeManager.Register(typex.HTTP_TARGET,
 		&typex.XConfig{
 			Engine:    e,
@@ -751,10 +725,10 @@ func (e *RuleEngine) InitTargetTypeManager() error {
 			NewTarget: target.NewTdEngineTarget,
 		},
 	)
-	e.TargetTypeManager.Register(typex.GRPC_CODEC_TARGET,
+	e.TargetTypeManager.Register(typex.RHILEX_GRPC_TARGET,
 		&typex.XConfig{
 			Engine:    e,
-			NewTarget: target.NewCodecTarget,
+			NewTarget: target.NewRhilexRpcTarget,
 		},
 	)
 	e.TargetTypeManager.Register(typex.UDP_TARGET,
@@ -767,6 +741,12 @@ func (e *RuleEngine) InitTargetTypeManager() error {
 		&typex.XConfig{
 			Engine:    e,
 			NewTarget: target.NewTTcpTarget,
+		},
+	)
+	e.TargetTypeManager.Register(typex.GREPTIME_DATABASE,
+		&typex.XConfig{
+			Engine:    e,
+			NewTarget: target.NewGrepTimeDbTarget,
 		},
 	)
 	return nil

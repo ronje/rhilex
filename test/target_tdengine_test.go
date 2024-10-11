@@ -35,8 +35,9 @@ func Test_data_to_tdengine(t *testing.T) {
 		"GRPC",
 		"Test_data_to_tdengine",
 		"Test_data_to_tdengine", map[string]interface{}{
-			"port": 2581,
-			"host": "127.0.0.1",
+			"port":             2581,
+			"host":             "127.0.0.1",
+			"cacheOfflineData": true,
 		})
 	ctx, cancelF := typex.NewCCTX() // ,ctx, cancelF
 	if err := engine.LoadInEndWithCtx(grpcInend, ctx, cancelF); err != nil {
@@ -98,17 +99,15 @@ func Test_data_to_tdengine(t *testing.T) {
 	source := rand.NewSource(time.Now().UnixNano())
 	rng := rand.New(source)
 	rng.Int()
-	for i := 0; i < 3; i++ {
-		resp, err := client.Work(context.Background(), &rhilexrpc.Data{
-			Value: fmt.Sprintf(`{"co2":%v,"hum":%v,"lex":%v,"temp":%v}`, rand.Int63n(100), rand.Int63n(100), rand.Int63n(100), rand.Int63n(100)),
+	for i := 0; i < 10; i++ {
+		resp, err := client.Request(context.Background(), &rhilexrpc.RpcRequest{
+			Value: fmt.Sprintf(`{"co2":10,"hum":30,"lex":22,"temp":100,"idx":%d}`, i),
 		})
 		if err != nil {
-			t.Fatal(err)
+			t.Fatalf("grpc.Dial err: %v", err)
 		}
-		t.Logf("rhilex Rpc Call Result ====>>: %v --%v", resp.GetMessage(), i)
-
+		t.Logf("rhilex Rpc Call Result ====>>: %v", resp.GetMessage())
 	}
-
 	time.Sleep(3 * time.Second)
 	engine.Stop()
 }

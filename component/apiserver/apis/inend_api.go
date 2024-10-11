@@ -13,6 +13,18 @@ import (
 	"gopkg.in/square/go-jose.v2/json"
 )
 
+func InitInEndRoute() {
+	InEndApi := server.RouteGroup(server.ContextUrl("/inends"))
+	{
+		InEndApi.GET(("/detail"), server.AddRoute(InEndDetail))
+		InEndApi.GET(("/list"), server.AddRoute(InEnds))
+		InEndApi.POST(("/create"), server.AddRoute(CreateInend))
+		InEndApi.DELETE(("/del"), server.AddRoute(DeleteInEnd))
+		InEndApi.PUT(("/update"), server.AddRoute(UpdateInend))
+		InEndApi.PUT("/restart", server.AddRoute(RestartInEnd))
+		InEndApi.GET("/clients", server.AddRoute(GetInEndClients))
+	}
+}
 func InEndDetail(c *gin.Context, ruleEngine typex.Rhilex) {
 	uuid, _ := c.GetQuery("uuid")
 	Model, err := service.GetMInEndWithUUID(uuid)

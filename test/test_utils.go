@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"net/http"
 	"os"
@@ -18,6 +19,11 @@ import (
 	"github.com/hootrhino/rhilex/typex"
 )
 
+func Equal(a, b interface{}) {
+	if a != nil {
+		panic(fmt.Sprintf("Assert Failed: %v %v", a, b))
+	}
+}
 func HttpPost(data map[string]interface{}, url string) string {
 	p, errs1 := json.Marshal(data)
 	if errs1 != nil {

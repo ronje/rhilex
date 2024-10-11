@@ -13,21 +13,6 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-// Copyright (C) 2023 wwhai
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License as
-// published by the Free Software Foundation, either version 3 of the
-// License, or (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program.  If not, see <http://www.gnu.org/licenses/>.
-
 package target
 
 import (
@@ -36,17 +21,22 @@ import (
 	"net"
 	"time"
 
-	"github.com/brocaar/lorawan"
+	"github.com/hootrhino/rhilex/component/lostcache"
 	"github.com/hootrhino/rhilex/glogger"
 	"github.com/hootrhino/rhilex/target/semtechudp"
 	"github.com/hootrhino/rhilex/typex"
 	"github.com/hootrhino/rhilex/utils"
 )
 
+/**
+ *
+ *
+ */
 type SemtechUdpForwarderConfig struct {
-	GwMac string `json:"mac"`
-	Host  string `json:"host"`
-	Port  int    `json:"port"`
+	GwMac            string `json:"mac"`
+	Host             string `json:"host"`
+	Port             int    `json:"port"`
+	CacheOfflineData *bool  `json:"cacheOfflineData" title:"离线缓存"`
 }
 type SemtechUdpForwarder struct {
 	typex.XStatus
@@ -60,9 +50,10 @@ func NewSemtechUdpForwarder(e typex.Rhilex) typex.XTarget {
 	ht := new(SemtechUdpForwarder)
 	ht.RuleEngine = e
 	ht.mainConfig = SemtechUdpForwarderConfig{
-		Host:  "127.0.0.1",
-		Port:  1700,
-		GwMac: "0102030405060708",
+		Host:             "127.0.0.1",
+		Port:             1700,
+		GwMac:            "0102030405060708",
+		CacheOfflineData: new(bool),
 	}
 	ht.status = typex.SOURCE_DOWN
 	return ht
@@ -70,7 +61,7 @@ func NewSemtechUdpForwarder(e typex.Rhilex) typex.XTarget {
 
 func (ht *SemtechUdpForwarder) Init(outEndId string, configMap map[string]interface{}) error {
 	ht.PointId = outEndId
-
+	lostcache.CreateLostDataTable(outEndId)
 	if err := utils.BindSourceConfig(configMap, &ht.mainConfig); err != nil {
 		return err
 	}
@@ -99,6 +90,20 @@ func (ht *SemtechUdpForwarder) Start(cctx typex.CCTX) error {
 	ht.CancelCTX = cctx.CancelCTX
 	//
 	ht.status = typex.SOURCE_UP
+	// 补发数据
+	if *ht.mainConfig.CacheOfflineData {
+		if CacheData, err1 := lostcache.GetLostCacheData(ht.PointId); err1 != nil {
+			glogger.GLogger.Error(err1)
+		} else {
+			for _, data := range CacheData {
+				ht.To(data.Data)
+				{
+					lostcache.DeleteLostCacheData(ht.PointId, data.ID)
+				}
+			}
+		}
+	}
+
 	glogger.GLogger.Info("Semtech Udp Forwarder started")
 	return nil
 }
@@ -119,16 +124,34 @@ func (ht *SemtechUdpForwarder) To(data interface{}) (interface{}, error) {
 		SemtechPushMessageByte, err1 := SemtechPushMessage.MarshalBinary()
 		if err1 != nil {
 			glogger.GLogger.Error(err1)
+			if *ht.mainConfig.CacheOfflineData {
+				lostcache.SaveLostCacheData(ht.PointId, lostcache.CacheDataDto{
+					TargetId: ht.PointId,
+					Data:     T,
+				})
+			}
 			return nil, err1
 		}
 		glogger.GLogger.Debug("Semtech Udp Forwarder:", string(SemtechPushMessageByte))
 		PushAck, errAck := ht.SendUdpData(SemtechPushMessageByte)
 		if errAck != nil {
 			glogger.GLogger.Error(errAck)
+			if *ht.mainConfig.CacheOfflineData {
+				lostcache.SaveLostCacheData(ht.PointId, lostcache.CacheDataDto{
+					TargetId: ht.PointId,
+					Data:     T,
+				})
+			}
 			return nil, errAck
 		}
 		if errCheckAck := checkAck(PushAck); errCheckAck != nil {
 			glogger.GLogger.Error(errCheckAck)
+			if *ht.mainConfig.CacheOfflineData {
+				lostcache.SaveLostCacheData(ht.PointId, lostcache.CacheDataDto{
+					TargetId: ht.PointId,
+					Data:     T,
+				})
+			}
 			return nil, errCheckAck
 		}
 	default:
@@ -243,7 +266,7 @@ func checkAck(ack []byte) error {
 }
 func NewSemtechPushMessage(Mac [8]byte, Payload []byte) semtechudp.PushDataPacket {
 	currentTime := time.Now().UTC()
-	GatewayMAC := lorawan.EUI64(Mac)
+	GatewayMAC := [8]byte{}
 	return semtechudp.PushDataPacket{
 		ProtocolVersion: 2,
 		RandomToken:     0x0305,

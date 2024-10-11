@@ -39,9 +39,6 @@ func AiBaseUuid() string {
 func DataSchemaUuid() string {
 	return MakeUUID("SCHEMA")
 }
-func CronTaskUuid() string {
-	return MakeUUID("CRONTASK")
-}
 
 // MakeUUID
 func RuleUuid() string {
@@ -51,6 +48,11 @@ func RuleUuid() string {
 // MakeUUID
 func UserLuaUuid() string {
 	return MakeUUID("USERLUA")
+}
+
+// MakeUUID
+func MBusPointUUID() string {
+	return MakeUUID("MBUS")
 }
 
 // MakeUUID
@@ -70,16 +72,6 @@ func SnmpOidUUID() string {
 
 func BacnetPointUUID() string {
 	return MakeUUID("BACN")
-}
-
-// 凯帝恩
-func KDNPointUUID() string {
-	return MakeUUID("KDNC")
-}
-
-// 华中数控
-func HNC8PointUUID() string {
-	return MakeUUID("HNC8")
 }
 
 // MakeUUID

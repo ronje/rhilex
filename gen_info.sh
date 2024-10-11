@@ -1,6 +1,6 @@
 #! /bin/bash
 VERSION="$(git describe --tags $(git rev-list --tags --max-count=1))"
-HASH=$(git rev-parse HEAD)
+HASH=$(git rev-parse --short HEAD)
 
 #######################################################################
 ## Gen Version
@@ -13,7 +13,7 @@ package typex
 
 import "github.com/hootrhino/rhilex/utils"
 
-var MainVersion string
+var MainVersion string = "0.0.0-developing"
 
 type VersionInfo struct {
 	ReleaseTime string
@@ -37,11 +37,11 @@ var DefaultVersionInfo = VersionInfo{
 	ReleaseTime: "$(echo $(date "+%Y-%m-%d %H:%M:%S"))",
 }
 var Banner = \`
- **  Welcome to RHILEX framework world <'_'>     -.
-**   Version: ${VERSION}-${HASH:0:15}             -.
- **  More information: https://www.hootrhino.com  -.
+  <<  RHILEX System.©                              -·
+<<·   Version: ${VERSION}-${HASH:0:15}             -·
+  <<  More information: https://www.hootrhino.com  -·
 \`
 EOF
 
-echo "Generate Version Susseccfully"
+echo "[v] Generate Version Susseccfully"
 

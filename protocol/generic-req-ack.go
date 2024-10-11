@@ -36,8 +36,8 @@ type Packet struct {
 	EndFlag     byte
 }
 
-func (P Packet) String() string {
-	if bytes, err := json.Marshal(P); err != nil {
+func (p Packet) String() string {
+	if bytes, err := json.Marshal(p); err != nil {
 		return ""
 	} else {
 		return string(bytes)

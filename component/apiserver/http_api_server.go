@@ -5,18 +5,17 @@ import (
 	"strconv"
 	"time"
 
-	cron_task "github.com/hootrhino/rhilex/component/crontask"
+	"github.com/hootrhino/rhilex/component/crontask"
 	dataschema "github.com/hootrhino/rhilex/component/dataschema"
-	"github.com/hootrhino/rhilex/component/hwportmanager"
 	"github.com/hootrhino/rhilex/component/internotify"
+	"github.com/hootrhino/rhilex/component/uartctrl"
 	"github.com/shirou/gopsutil/cpu"
 
 	"github.com/hootrhino/rhilex/component/apiserver/apis"
-	"github.com/hootrhino/rhilex/component/apiserver/apis/shelly"
 	"github.com/hootrhino/rhilex/component/apiserver/model"
 	"github.com/hootrhino/rhilex/component/apiserver/server"
 	"github.com/hootrhino/rhilex/component/apiserver/service"
-	"github.com/hootrhino/rhilex/component/appstack"
+	"github.com/hootrhino/rhilex/component/applet"
 	"github.com/hootrhino/rhilex/component/interdb"
 	"github.com/hootrhino/rhilex/component/trailer"
 
@@ -104,28 +103,20 @@ func initRhilex(engine typex.Rhilex) {
 	// APP stack
 	//
 	for _, mApp := range service.AllApp() {
-		app := appstack.NewApplication(
+		app := applet.NewApplication(
 			mApp.UUID,
 			mApp.Name,
 			mApp.Version,
 		)
-		if err := appstack.LoadApp(app, mApp.LuaSource); err != nil {
+		if err := applet.LoadApp(app, mApp.LuaSource); err != nil {
 			glogger.GLogger.Error(err)
 			continue
 		}
 		if *mApp.AutoStart {
 			glogger.GLogger.Debug("App autoStart allowed:", app.UUID)
-			if err1 := appstack.StartApp(app.UUID); err1 != nil {
+			if err1 := applet.StartApp(app.UUID); err1 != nil {
 				glogger.GLogger.Error("App autoStart failed:", err1)
 			}
-		}
-	}
-	//
-	// load Cron Task
-	for _, task := range service.AllEnabledCronTask() {
-		if err := cron_task.GetCronManager().AddTask(task); err != nil {
-			glogger.GLogger.Error(err)
-			continue
 		}
 	}
 
@@ -137,33 +128,33 @@ func initRhilex(engine typex.Rhilex) {
 *
  */
 func loadAllPortConfig() {
-	MHwPorts, err := service.AllHwPort()
+	MUarts, err := service.AllUart()
 	if err != nil {
 		glogger.GLogger.Fatal(err)
 		return
 	}
-	for _, MHwPort := range MHwPorts {
-		Port := hwportmanager.SystemHwPort{
-			UUID:        MHwPort.UUID,
-			Name:        MHwPort.Name,
-			Type:        MHwPort.Type,
-			Alias:       MHwPort.Alias,
-			Description: MHwPort.Description,
+	for _, MUart := range MUarts {
+		Port := uartctrl.SystemUart{
+			UUID:        MUart.UUID,
+			Name:        MUart.Name,
+			Type:        MUart.Type,
+			Alias:       MUart.Alias,
+			Description: MUart.Description,
 		}
 		// 串口
-		if MHwPort.Type == "UART" {
-			config := hwportmanager.UartConfig{}
-			if err := utils.BindSourceConfig(MHwPort.GetConfig(), &config); err != nil {
-				glogger.GLogger.Error(err) // 这里必须不能出错
+		if MUart.Type == "UART" {
+			config := uartctrl.UartConfig{}
+			if err := utils.BindSourceConfig(MUart.GetConfig(), &config); err != nil {
+				glogger.GLogger.Error(err)
 				continue
 			}
 			Port.Config = config
-			hwportmanager.SetHwPort(Port)
+			uartctrl.SetUart(Port)
 		}
 		// 未知接口参数为空，以后扩展，比如FD
-		if MHwPort.Type != "UART" {
+		if MUart.Type != "UART" {
 			Port.Config = "NULL"
-			hwportmanager.SetHwPort(Port)
+			uartctrl.SetUart(Port)
 		}
 	}
 }
@@ -173,7 +164,6 @@ func (hs *ApiServerPlugin) Init(config *ini.Section) error {
 		return err
 	}
 	server.StartRhilexApiServer(hs.ruleEngine, hs.mainConfig.Port)
-
 	interdb.DB().Exec("VACUUM;")
 	interdb.RegisterModel(
 		&model.MInEnd{},
@@ -182,35 +172,34 @@ func (hs *ApiServerPlugin) Init(config *ini.Section) error {
 		&model.MUser{},
 		&model.MDevice{},
 		&model.MGoods{},
-		&model.MApp{},
+		&model.MApplet{},
 		&model.MGenericGroup{},
 		&model.MGenericGroupRelation{},
 		&model.MNetworkConfig{},
-		&model.MWifiConfig{},
 		&model.MIotSchema{},
 		&model.MIotProperty{},
 		&model.MIpRoute{},
-		&model.MCronTask{},
-		&model.MCronResult{},
-		&model.MHwPort{},
+		&model.MUart{},
 		&model.MInternalNotify{},
 		&model.MUserLuaTemplate{},
 		&model.MModbusDataPoint{},
 		&model.MSiemensDataPoint{},
-		&model.MHnc8DataPoint{},
-		&model.MKnd8DataPoint{},
 		&model.MSnmpOid{},
 		&model.MBacnetDataPoint{},
 		&model.MBacnetRouterDataPoint{},
+		&model.MMBusDataPoint{},
 		&model.MDataPoint{},
+		&model.MCronRebootConfig{},
 	)
 	// 初始化所有预制参数
+	server.DefaultApiServer.InitializeProduct()
 	server.DefaultApiServer.InitializeGenericOSData()
-	server.DefaultApiServer.InitializeRHILEXG1Data()
 	server.DefaultApiServer.InitializeWindowsData()
 	server.DefaultApiServer.InitializeUnixData()
-	server.DefaultApiServer.InitializeConfigCtl()
+	// InitDataSchemaCache
 	dataschema.InitDataSchemaCache(hs.ruleEngine)
+	// Cron Reboot Executor
+	crontask.InitCronRebootExecutor(hs.ruleEngine)
 	initRhilex(hs.ruleEngine)
 	return nil
 }
@@ -221,257 +210,45 @@ func (hs *ApiServerPlugin) Init(config *ini.Section) error {
 *
  */
 func (hs *ApiServerPlugin) LoadRoute() {
-	systemApi := server.RouteGroup(server.ContextUrl("/"))
-	{
-		systemApi.GET(("/ping"), server.AddRoute(apis.Ping))
-	}
+	// User
+	apis.InitUserRoute()
+	// In End
+	apis.InitInEndRoute()
+	// Rules
+	apis.InitRulesRoute()
+	// Out End
+	apis.InitOutEndRoute()
 
-	//
-	//
-	//
-	server.DefaultApiServer.Route().GET(server.ContextUrl("drivers"), server.AddRoute(apis.Drivers))
-
-	//
-	// Get statistics data
-	//
-	server.DefaultApiServer.Route().GET(server.ContextUrl("statistics"), server.AddRoute(apis.Statistics))
-	//
-	// Auth
-	//
-	userApi := server.RouteGroup(server.ContextUrl("/users"))
-	{
-		// userApi.GET(("/"), server.AddRoute(apis.Users))
-		userApi.POST(("/"), server.AddRoute(apis.CreateUser))
-		userApi.PUT(("/update"), server.AddRoute(apis.UpdateUser))
-		userApi.GET(("/detail"), server.AddRoute(apis.UserDetail))
-		userApi.POST(("/logout"), server.AddRoute(apis.LogOut))
-
-	}
-
-	//
-	//
-	//
-	server.DefaultApiServer.Route().POST(server.ContextUrl("login"), server.AddRoute(apis.Login))
-	//
-	//
-	//
-	server.DefaultApiServer.Route().GET(server.ContextUrl("info"), server.AddRoute(apis.Info))
-	//
-	InEndApi := server.RouteGroup(server.ContextUrl("/inends"))
-	{
-		InEndApi.GET(("/detail"), server.AddRoute(apis.InEndDetail))
-		InEndApi.GET(("/list"), server.AddRoute(apis.InEnds))
-		InEndApi.POST(("/create"), server.AddRoute(apis.CreateInend))
-		InEndApi.DELETE(("/del"), server.AddRoute(apis.DeleteInEnd))
-		InEndApi.PUT(("/update"), server.AddRoute(apis.UpdateInend))
-		InEndApi.PUT("/restart", server.AddRoute(apis.RestartInEnd))
-		InEndApi.GET("/clients", server.AddRoute(apis.GetInEndClients))
-	}
-
-	rulesApi := server.RouteGroup(server.ContextUrl("/rules"))
-	{
-		rulesApi.POST(("/create"), server.AddRoute(apis.CreateRule))
-		rulesApi.PUT(("/update"), server.AddRoute(apis.UpdateRule))
-		rulesApi.DELETE(("/del"), server.AddRoute(apis.DeleteRule))
-		rulesApi.GET(("/list"), server.AddRoute(apis.Rules))
-		rulesApi.GET(("/detail"), server.AddRoute(apis.RuleDetail))
-		//
-		rulesApi.POST(("/test"), server.AddRoute(apis.TestRulesCallback))
-		rulesApi.GET(("/byInend"), server.AddRoute(apis.ListByInend))
-		rulesApi.GET(("/byDevice"), server.AddRoute(apis.ListByDevice))
-		//
-		rulesApi.GET(("/getCanUsedResources"), server.AddRoute(apis.GetAllResources))
-		//
-		rulesApi.POST(("/formatLua"), server.AddRoute(apis.FormatLua))
-
-	}
-	OutEndApi := server.RouteGroup(server.ContextUrl("/outends"))
-	{
-		OutEndApi.GET(("/detail"), server.AddRoute(apis.OutEndDetail))
-		OutEndApi.GET(("/list"), server.AddRoute(apis.OutEnds))
-		OutEndApi.POST(("/create"), server.AddRoute(apis.CreateOutEnd))
-		OutEndApi.DELETE(("/del"), server.AddRoute(apis.DeleteOutEnd))
-		OutEndApi.PUT(("/update"), server.AddRoute(apis.UpdateOutEnd))
-		OutEndApi.PUT("/restart", server.AddRoute(apis.RestartOutEnd))
-	}
-
-	//
-	// 验证 lua 语法
-	//
-	server.DefaultApiServer.Route().POST(server.ContextUrl("validateRule"), server.AddRoute(apis.ValidateLuaSyntax))
-
-	//
 	// 网络适配器列表
-	//
-	osApi := server.RouteGroup(server.ContextUrl("/os"))
-	{
-		osApi.GET(("/netInterfaces"), server.AddRoute(apis.GetNetInterfaces))
-		osApi.GET(("/osRelease"), server.AddRoute(apis.CatOsRelease))
-		osApi.GET(("/system"), server.AddRoute(apis.System))
-		osApi.GET(("/startedAt"), server.AddRoute(apis.StartedAt))
-		osApi.GET(("/getVideos"), server.AddRoute(apis.GetVideos))
-		osApi.GET(("/getGpuInfo"), server.AddRoute(apis.GetGpuInfo))
-		osApi.POST(("/resetInterMetric"), server.AddRoute(apis.ResetInterMetric))
-	}
-	backupApi := server.RouteGroup(server.ContextUrl("/backup"))
-	{
-		backupApi.GET(("/download"), server.AddRoute(apis.DownloadSqlite))
-		backupApi.POST(("/upload"), server.AddRoute(apis.UploadSqlite))
-		backupApi.GET(("/snapshot"), server.AddRoute(apis.SnapshotDump))
-		backupApi.GET(("/runningLog"), server.AddRoute(apis.GetRunningLog))
-	}
-	//
+	apis.InitSystemRoute()
+	// backup
+	apis.InitBackupRoute()
 	// 设备管理
-	//
-	deviceApi := server.RouteGroup(server.ContextUrl("/devices"))
-	{
-		deviceApi.POST(("/create"), server.AddRoute(apis.CreateDevice))
-		deviceApi.PUT(("/update"), server.AddRoute(apis.UpdateDevice))
-		deviceApi.DELETE(("/del"), server.AddRoute(apis.DeleteDevice))
-		deviceApi.GET(("/detail"), server.AddRoute(apis.DeviceDetail))
-		deviceApi.GET("/group", server.AddRoute(apis.ListDeviceGroup))
-		deviceApi.GET("/listByGroup", server.AddRoute(apis.ListDeviceByGroup))
-		deviceApi.GET("/list", server.AddRoute(apis.ListDevice))
-		deviceApi.PUT("/restart", server.AddRoute(apis.RestartDevice))
-		deviceApi.GET("/deviceErrMsg", server.AddRoute(apis.GetDeviceErrorMsg))
-	}
-	// Modbus 点位表
-	modbusMasterApi := server.RouteGroup(server.ContextUrl("/modbus_master_sheet"))
-	{
-		modbusMasterApi.POST(("/sheetImport"), server.AddRoute(apis.ModbusMasterSheetImport))
-		modbusMasterApi.GET(("/sheetExport"), server.AddRoute(apis.ModbusMasterPointsExport))
-		modbusMasterApi.GET(("/list"), server.AddRoute(apis.ModbusMasterSheetPageList))
-		modbusMasterApi.POST(("/update"), server.AddRoute(apis.ModbusMasterSheetUpdate))
-		modbusMasterApi.DELETE(("/delIds"), server.AddRoute(apis.ModbusMasterSheetDelete))
-		modbusMasterApi.DELETE(("/delAll"), server.AddRoute(apis.ModbusMasterSheetDeleteAll))
-	}
-	modbusApi := server.RouteGroup(server.ContextUrl("/modbus_slaver_sheet"))
-	{
-		modbusApi.GET(("/list"), server.AddRoute(apis.ModbusSlaverSheetPageList))
-	}
+	apis.InitDeviceRoute()
+	// Modbus Slaver
+	apis.InitModbusSlaverRoute()
 	// S1200 点位表
-	SIEMENS_PLC := server.RouteGroup(server.ContextUrl("/s1200_data_sheet"))
-	{
-		SIEMENS_PLC.POST(("/sheetImport"), server.AddRoute(apis.SiemensSheetImport))
-		SIEMENS_PLC.GET(("/sheetExport"), server.AddRoute(apis.SiemensPointsExport))
-		SIEMENS_PLC.GET(("/list"), server.AddRoute(apis.SiemensSheetPageList))
-		SIEMENS_PLC.POST(("/update"), server.AddRoute(apis.SiemensSheetUpdate))
-		SIEMENS_PLC.DELETE(("/delIds"), server.AddRoute(apis.SiemensSheetDelete))
-		SIEMENS_PLC.DELETE(("/delAll"), server.AddRoute(apis.SiemensSheetDeleteAll))
-	}
-	// 华中数控 点位表
-	Hnc8 := server.RouteGroup(server.ContextUrl("/hnc8_data_sheet"))
-	{
-		Hnc8.POST(("/sheetImport"), server.AddRoute(apis.Hnc8SheetImport))
-		Hnc8.GET(("/sheetExport"), server.AddRoute(apis.Hnc8PointsExport))
-		Hnc8.GET(("/list"), server.AddRoute(apis.Hnc8SheetPageList))
-		Hnc8.POST(("/update"), server.AddRoute(apis.Hnc8SheetUpdate))
-		Hnc8.DELETE(("/delIds"), server.AddRoute(apis.Hnc8SheetDelete))
-		Hnc8.DELETE(("/delAll"), server.AddRoute(apis.Hnc8SheetDeleteAll))
-	}
-
-	// ----------------------------------------------------------------------------------------------
-	// APP
-	// ----------------------------------------------------------------------------------------------
-	appApi := server.RouteGroup(server.ContextUrl("/app"))
-	{
-		appApi.GET(("/list"), server.AddRoute(apis.Apps))
-		appApi.POST(("/create"), server.AddRoute(apis.CreateApp))
-		appApi.PUT(("/update"), server.AddRoute(apis.UpdateApp))
-		appApi.DELETE(("/del"), server.AddRoute(apis.RemoveApp))
-		appApi.PUT(("/start"), server.AddRoute(apis.StartApp))
-		appApi.PUT(("/stop"), server.AddRoute(apis.StopApp))
-		appApi.GET(("/detail"), server.AddRoute(apis.AppDetail))
-	}
-	// ----------------------------------------------------------------------------------------------
-	// Plugin
-	// ----------------------------------------------------------------------------------------------
-	pluginsApi := server.RouteGroup(server.ContextUrl("/plugware"))
-	{
-		pluginsApi.GET(("/list"), server.AddRoute(apis.Plugins))
-		pluginsApi.POST(("/service"), server.AddRoute(apis.PluginService))
-		pluginsApi.GET(("/detail"), server.AddRoute(apis.PluginDetail))
-	}
-
-	//
+	apis.InitSiemensS7Route()
+	// applet
+	apis.InitAppletRoute()
+	// plugins
+	apis.InitPluginsRoute()
 	// 分组管理
-	//
-	groupApi := server.RouteGroup(server.ContextUrl("/group"))
-	{
-		groupApi.POST("/create", server.AddRoute(apis.CreateGroup))
-		groupApi.PUT("/update", server.AddRoute(apis.UpdateGroup))
-		groupApi.GET("/list", server.AddRoute(apis.ListGroup))
-		groupApi.GET("/detail", server.AddRoute(apis.GroupDetail))
-		groupApi.POST("/bind", server.AddRoute(apis.BindResource))
-		groupApi.PUT("/unbind", server.AddRoute(apis.UnBindResource))
-		groupApi.DELETE("/del", server.AddRoute(apis.DeleteGroup))
-	}
-	//
+	apis.InitGroupRoute()
 	// 用户LUA代码段管理
-	//
-	userLuaApi := server.RouteGroup(server.ContextUrl("/userlua"))
-	{
-		userLuaApi.POST("/create", server.AddRoute(apis.CreateUserLuaTemplate))
-		userLuaApi.PUT("/update", server.AddRoute(apis.UpdateUserLuaTemplate))
-		userLuaApi.GET("/listByGroup", server.AddRoute(apis.ListUserLuaTemplateByGroup))
-		userLuaApi.GET("/detail", server.AddRoute(apis.UserLuaTemplateDetail))
-		userLuaApi.GET("/group", server.AddRoute(apis.ListUserLuaTemplateGroup))
-		userLuaApi.DELETE("/del", server.AddRoute(apis.DeleteUserLuaTemplate))
-		userLuaApi.GET("/search", server.AddRoute(apis.SearchUserLuaTemplateGroup))
-	}
-
-	trailerApi := server.RouteGroup(server.ContextUrl("/goods"))
-	{
-		trailerApi.GET("/list", server.AddRoute(apis.GoodsList))
-		trailerApi.GET(("/detail"), server.AddRoute(apis.GoodsDetail))
-		trailerApi.POST("/create", server.AddRoute(apis.CreateGoods))
-		trailerApi.PUT("/update", server.AddRoute(apis.UpdateGoods))
-		trailerApi.PUT("/cleanGarbage", server.AddRoute(apis.CleanGoodsUpload))
-		trailerApi.PUT("/start", server.AddRoute(apis.StartGoods))
-		trailerApi.PUT("/stop", server.AddRoute(apis.StopGoods))
-		trailerApi.DELETE("/", server.AddRoute(apis.DeleteGoods))
-	}
+	apis.InitUserLuaRoute()
 	// 硬件接口API
-	HwIFaceApi := server.DefaultApiServer.GetGroup(server.ContextUrl("/hwiface"))
-	{
-		HwIFaceApi.GET("/detail", server.AddRoute(apis.GetHwPortDetail))
-		HwIFaceApi.GET("/list", server.AddRoute(apis.AllHwPorts))
-		HwIFaceApi.POST("/update", server.AddRoute(apis.UpdateHwPortConfig))
-		HwIFaceApi.GET("/refresh", server.AddRoute(apis.RefreshPortList))
-	}
-
-	//
-	// 系统设置
-	//
+	apis.InitHwIfaceRoute()
+	// System Permission
+	apis.InitSysMenuPermissionRoute()
+	// System Settings
 	apis.LoadSystemSettingsAPI()
-
-	/**
-	 * 定时任务
-	 */
-	crontaskApi := server.DefaultApiServer.GetGroup(server.ContextUrl("/crontask"))
-	{
-		crontaskApi.POST("/create", server.AddRouteV2(apis.CreateCronTask))
-		crontaskApi.DELETE("/del", server.AddRouteV2(apis.DeleteCronTask))
-		crontaskApi.PUT("/update", server.AddRouteV2(apis.UpdateCronTask))
-		crontaskApi.GET("/list", server.AddRouteV2(apis.ListCronTask))
-		crontaskApi.GET("/results/page", server.AddRouteV2(apis.PageCronTaskResult))
-		crontaskApi.GET("/start", server.AddRouteV2(apis.StartTask))
-		crontaskApi.GET("/stop", server.AddRouteV2(apis.StopTask))
-	}
-	//
-	// jpegStream APi
-	//
-	jpegStream := server.DefaultApiServer.GetGroup(server.ContextUrl("/jpeg_stream"))
-	{
-		jpegStream.GET("/list", server.AddRoute(apis.GetJpegStreamList))
-		jpegStream.GET("/detail", server.AddRoute(apis.GetJpegStreamDetail))
-	}
-	//
-	//New Api
+	// Modbus
+	apis.InitModbusRoute()
+	// Mbus
+	apis.InitMBusRoute()
 	// Init Internal Notify Route
 	apis.InitInternalNotifyRoute()
-	// Shelly
-	shelly.InitShellyRoute()
 	// Snmp Route
 	apis.InitSnmpRoute()
 	// Bacnet Route
@@ -484,10 +261,12 @@ func (hs *ApiServerPlugin) LoadRoute() {
 	apis.InitDataCenterApi()
 	// Transceiver
 	apis.InitTransceiverRoute()
-	// ata Point Route
+	// Data Point Route
 	apis.InitDataPointRoute()
 	// Mqtt Server
 	apis.InitMqttSourceServerRoute()
+	// Cron Reboot
+	apis.InitCronRebootRoute()
 }
 
 // ApiServerPlugin Start

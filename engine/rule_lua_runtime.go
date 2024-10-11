@@ -27,7 +27,7 @@ import (
   - 分组加入函数
 */
 func AddRuleLibToGroup(r *typex.Rule, rx typex.Rhilex,
-	ModuleName string, funcs map[string]func(l *lua.LState) int) {
+	ModuleName string, funcs map[string]func(*lua.LState) int) {
 	var table *lua.LTable
 	if ModuleName == "_G" {
 		table = r.LuaVM.G.Global
@@ -49,9 +49,10 @@ func LoadRuleLibGroup(r *typex.Rule, e typex.Rhilex) {
 			"ToUdp":        rhilexlib.DataToUdp(e, r.UUID),
 			"ToTcp":        rhilexlib.DataToTcp(e, r.UUID),
 			"ToTdEngine":   rhilexlib.DataToTdEngine(e, r.UUID),
-			"ToMongo":      rhilexlib.DataToMongo(e, r.UUID),
+			"ToMongoDB":    rhilexlib.DataToMongoDB(e, r.UUID),
 			"ToSemtechUdp": rhilexlib.DataToSemtechUdp(e, r.UUID),
 			"ToUart":       rhilexlib.DataToUart(e, r.UUID),
+			"ToGreptimeDB": rhilexlib.DataToGreptimeDB(e),
 		}
 		AddRuleLibToGroup(r, e, "data", Funcs)
 	}
@@ -174,20 +175,6 @@ func LoadRuleLibGroup(r *typex.Rule, e typex.Rhilex) {
 	}
 	{
 		Funcs := map[string]func(l *lua.LState) int{
-			"GPIOGet": rhilexlib.RASPI4_GPIOGet(e, r.UUID),
-			"GPIOSet": rhilexlib.RASPI4_GPIOSet(e, r.UUID),
-		}
-		AddRuleLibToGroup(r, e, "raspi4b", Funcs)
-	}
-	{
-		Funcs := map[string]func(l *lua.LState) int{
-			"GPIOGet": rhilexlib.WKYWS1608_GPIOGet(e, r.UUID),
-			"GPIOSet": rhilexlib.WKYWS1608_GPIOSet(e, r.UUID),
-		}
-		AddRuleLibToGroup(r, e, "ws1608", Funcs)
-	}
-	{
-		Funcs := map[string]func(l *lua.LState) int{
 			"TFloat":    rhilexlib.TruncateFloat(e, r.UUID),
 			"RandomInt": rhilexlib.RandomInt(e, r.UUID),
 		}
@@ -201,7 +188,7 @@ func LoadRuleLibGroup(r *typex.Rule, e typex.Rhilex) {
 	}
 	{
 		Funcs := map[string]func(l *lua.LState) int{
-			"Request": rhilexlib.Request(e, r.UUID),
+			"Request": rhilexlib.Request(e),
 		}
 		AddRuleLibToGroup(r, e, "rpc", Funcs)
 	}
@@ -238,6 +225,72 @@ func LoadRuleLibGroup(r *typex.Rule, e typex.Rhilex) {
 			"Ctrl": rhilexlib.CtrlComRF(e),
 		}
 		AddRuleLibToGroup(r, e, "rfcom", Funcs)
+	}
+	{
+		Funcs := map[string]func(l *lua.LState) int{
+			"ParseDOxygen": rhilexlib.ApureParseOxygen(e),
+		}
+		AddRuleLibToGroup(r, e, "apure", Funcs)
+	}
+	{
+		Funcs := map[string]func(l *lua.LState) int{
+			"F5": rhilexlib.SlaverF5(e),
+			"F6": rhilexlib.SlaverF6(e),
+		}
+		AddRuleLibToGroup(r, e, "modbus_slaver", Funcs)
+	}
+	{
+		Funcs := map[string]func(l *lua.LState) int{
+			"ActionReplySuccess":   rhilexlib.IthingsActionReplySuccess(e),
+			"ActionReplyFailure":   rhilexlib.IthingsActionReplyFailure(e),
+			"PropertyReplySuccess": rhilexlib.IthingsPropertyReplySuccess(e),
+			"PropertyReplyFailure": rhilexlib.IthingsPropertyReplyFailure(e),
+			"PropertyReport":       rhilexlib.IthingsPropertyReport(e),
+			"GetPropertyReply":     rhilexlib.IthingsGetPropertyReply(e),
+		}
+		AddRuleLibToGroup(r, e, "ithings", Funcs)
+	}
+	{
+		Funcs := map[string]func(l *lua.LState) int{
+			"ActionReplySuccess":   rhilexlib.IthingsActionReplySuccess(e),
+			"ActionReplyFailure":   rhilexlib.IthingsActionReplyFailure(e),
+			"PropertyReplySuccess": rhilexlib.IthingsPropertyReplySuccess(e),
+			"PropertyReplyFailure": rhilexlib.IthingsPropertyReplyFailure(e),
+			"PropertyReport":       rhilexlib.IthingsPropertyReport(e),
+			"GetPropertyReply":     rhilexlib.IthingsGetPropertyReply(e),
+		}
+		AddRuleLibToGroup(r, e, "tciothub", Funcs)
+	}
+	{
+		Funcs := map[string]func(l *lua.LState) int{
+			// LED On
+			"Led2On": rhilexlib.HAAS506_Led2On(e),
+			"Led3On": rhilexlib.HAAS506_Led3On(e),
+			"Led4On": rhilexlib.HAAS506_Led4On(e),
+			"Led5On": rhilexlib.HAAS506_Led5On(e),
+			// Led Off
+			"Led2Off": rhilexlib.HAAS506_Led2Off(e),
+			"Led3Off": rhilexlib.HAAS506_Led2Off(e),
+			"Led4Off": rhilexlib.HAAS506_Led2Off(e),
+			"Led5Off": rhilexlib.HAAS506_Led2Off(e),
+			// DO On
+			"DO1On": rhilexlib.HAAS506_DO1_On(e),
+			"DO2On": rhilexlib.HAAS506_Do2_On(e),
+			"DO3On": rhilexlib.HAAS506_Do3_On(e),
+			"DO4On": rhilexlib.HAAS506_Do4_On(e),
+			// DO Off
+			"DO1Off": rhilexlib.HAAS506_DO1_Off(e),
+			"DO2Off": rhilexlib.HAAS506_Do2_Off(e),
+			"DO3Off": rhilexlib.HAAS506_Do3_Off(e),
+			"DO4Off": rhilexlib.HAAS506_Do4_Off(e),
+			// AI
+			"GetAI1": rhilexlib.HAAS506_AI1_Get(e),
+			"GetAI2": rhilexlib.HAAS506_AI2_Get(e),
+			"GetAI3": rhilexlib.HAAS506_AI3_Get(e),
+			"GetAI4": rhilexlib.HAAS506_AI4_Get(e),
+			"GetAI5": rhilexlib.HAAS506_AI5_Get(e),
+		}
+		AddRuleLibToGroup(r, e, "haas506ld1", Funcs)
 	}
 }
 

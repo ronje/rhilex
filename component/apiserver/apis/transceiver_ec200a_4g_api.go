@@ -22,7 +22,7 @@ import (
 	"github.com/gin-gonic/gin"
 
 	common "github.com/hootrhino/rhilex/component/apiserver/common"
-	ec200a4g "github.com/hootrhino/rhilex/component/transceivercom/ec200a-4g"
+	ec200a4g "github.com/hootrhino/rhilex/component/transceiver/ec200a-4g"
 
 	"github.com/hootrhino/rhilex/typex"
 )

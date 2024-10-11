@@ -28,7 +28,7 @@ import (
 * Modbus Function1
 *
  */
-func F1(rx typex.Rhilex, uuid string) func(l *lua.LState) int {
+func F1(rx typex.Rhilex, uuid string) func(*lua.LState) int {
 	return func(l *lua.LState) int {
 
 		return 1
@@ -40,7 +40,7 @@ func F1(rx typex.Rhilex, uuid string) func(l *lua.LState) int {
 * Modbus Function2
 *
  */
-func F2(rx typex.Rhilex, uuid string) func(l *lua.LState) int {
+func F2(rx typex.Rhilex, uuid string) func(*lua.LState) int {
 	return func(l *lua.LState) int {
 
 		return 1
@@ -52,7 +52,7 @@ func F2(rx typex.Rhilex, uuid string) func(l *lua.LState) int {
 * Modbus Function3
 *
  */
-func F3(rx typex.Rhilex, uuid string) func(l *lua.LState) int {
+func F3(rx typex.Rhilex, uuid string) func(*lua.LState) int {
 	return func(l *lua.LState) int {
 
 		return 1
@@ -64,7 +64,7 @@ func F3(rx typex.Rhilex, uuid string) func(l *lua.LState) int {
 * Modbus Function4
 *
  */
-func F4(rx typex.Rhilex, uuid string) func(l *lua.LState) int {
+func F4(rx typex.Rhilex, uuid string) func(*lua.LState) int {
 	return func(l *lua.LState) int {
 
 		return 1
@@ -79,7 +79,7 @@ func F4(rx typex.Rhilex, uuid string) func(l *lua.LState) int {
 *
 */
 
-func F5(rx typex.Rhilex, uuid string) func(l *lua.LState) int {
+func F5(rx typex.Rhilex, uuid string) func(*lua.LState) int {
 	return func(l *lua.LState) int {
 		devUUID := l.ToString(2)
 		slaverId := l.ToNumber(3)
@@ -134,7 +134,7 @@ func F5(rx typex.Rhilex, uuid string) func(l *lua.LState) int {
 
 *
  */
-func F6(rx typex.Rhilex, uuid string) func(l *lua.LState) int {
+func F6(rx typex.Rhilex, uuid string) func(*lua.LState) int {
 	return func(l *lua.LState) int {
 		devUUID := l.ToString(2)
 		slaverId := l.ToNumber(3)
@@ -184,7 +184,7 @@ func F6(rx typex.Rhilex, uuid string) func(l *lua.LState) int {
 
 *
 */
-func F15(rx typex.Rhilex, uuid string) func(l *lua.LState) int {
+func F15(rx typex.Rhilex, uuid string) func(*lua.LState) int {
 	return func(l *lua.LState) int {
 		devUUID := l.ToString(2)
 		slaverId := l.ToNumber(3)
@@ -232,7 +232,7 @@ func F15(rx typex.Rhilex, uuid string) func(l *lua.LState) int {
 * Modbus Function16
 *    local error = modbus:F16("uuid1", 0, 1, "0001020304")
  */
-func F16(rx typex.Rhilex, uuid string) func(l *lua.LState) int {
+func F16(rx typex.Rhilex, uuid string) func(*lua.LState) int {
 	return func(l *lua.LState) int {
 		devUUID := l.ToString(2)
 		slaverId := l.ToNumber(3)
@@ -280,7 +280,7 @@ func F16(rx typex.Rhilex, uuid string) func(l *lua.LState) int {
 * 解析Modbus报文
 *
  */
-func ParseModbusByte(rx typex.Rhilex, uuid string) func(l *lua.LState) int {
+func ParseModbusByte(rx typex.Rhilex, uuid string) func(*lua.LState) int {
 	return func(l *lua.LState) int {
 		hexS := l.ToString(2)
 		b, err0 := hex.DecodeString(hexS)

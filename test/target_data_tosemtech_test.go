@@ -2,6 +2,7 @@ package test
 
 import (
 	"context"
+	"fmt"
 	"testing"
 	"time"
 
@@ -27,9 +28,10 @@ func Test_DataToSemtechUdp(t *testing.T) {
 	//
 	SEMTECH_UDP_FORWARDER := typex.NewOutEnd(typex.SEMTECH_UDP_FORWARDER,
 		"SEMTECH_UDP_FORWARDER", "SEMTECH_UDP_FORWARDER", map[string]interface{}{
-			"host": "192.168.10.163",
-			"port": 1700,
-			"mac":  "a46a4de31a346180",
+			"host":             "192.168.10.163",
+			"port":             1700,
+			"mac":              "a46a4de31a346180",
+			"cacheOfflineData": true,
 		},
 	)
 	SEMTECH_UDP_FORWARDER.UUID = "SEMTECH_UDP_FORWARDER"
@@ -76,10 +78,13 @@ func Test_DataToSemtechUdp(t *testing.T) {
 	defer grpcConn.Close()
 	client := rhilexrpc.NewRhilexRpcClient(grpcConn)
 	for i := 0; i < 10; i++ {
-		_, err1 := client.Work(context.Background(), &rhilexrpc.Data{Value: `HelloWorld`})
-		if err1 != nil {
-			t.Fatal(err1)
+		resp, err := client.Request(context.Background(), &rhilexrpc.RpcRequest{
+			Value: fmt.Sprintf(`{"co2":10,"hum":30,"lex":22,"temp":100,"idx":%d}`, i),
+		})
+		if err != nil {
+			t.Fatalf("grpc.Dial err: %v", err)
 		}
+		t.Logf("rhilex Rpc Call Result ====>>: %v", resp.GetMessage())
 	}
 
 	time.Sleep(1 * time.Second)

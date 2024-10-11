@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"runtime"
 
-	archsupport "github.com/hootrhino/rhilex/bspsupport"
+	archsupport "github.com/hootrhino/rhilex/archsupport"
 )
 
 /*

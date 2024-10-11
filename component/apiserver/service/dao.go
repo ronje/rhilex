@@ -104,67 +104,6 @@ func UpdateMOutEnd(uuid string, o *model.MOutEnd) error {
 	}
 }
 
-// -----------------------------------------------------------------------------------
-// USER
-// -----------------------------------------------------------------------------------
-func GetMUser(username string) (*model.MUser, error) {
-	m := new(model.MUser)
-	if err := interdb.DB().Where("username=?", username).First(m).Error; err != nil {
-		return nil, err
-	} else {
-		return m, nil
-	}
-}
-func Login(username, pwd string) (*model.MUser, error) {
-	m := new(model.MUser)
-	if err := interdb.DB().
-		Where("username=? AND password=?", username, pwd).
-		First(m).Error; err != nil {
-		return nil, err
-	} else {
-		return m, nil
-	}
-}
-
-func InsertMUser(o *model.MUser) error {
-	return interdb.DB().Table("m_users").Create(o).Error
-}
-func InitMUser(o *model.MUser) error {
-	return interdb.DB().Table("m_users").FirstOrCreate(o).Error
-}
-
-func UpdateMUser(oldName string, o *model.MUser) error {
-	return interdb.DB().Table("m_users").
-		Where("username=?", oldName).
-		Updates(*o).Error
-
-}
-
-// -----------------------------------------------------------------------------------
-func AllMRules() []model.MRule {
-	rules := []model.MRule{}
-	interdb.DB().Table("m_rules").Find(&rules)
-	return rules
-}
-
-func AllMInEnd() []model.MInEnd {
-	inends := []model.MInEnd{}
-	interdb.DB().Table("m_in_ends").Find(&inends)
-	return inends
-}
-
-func AllMOutEnd() []model.MOutEnd {
-	outends := []model.MOutEnd{}
-	interdb.DB().Table("m_out_ends").Find(&outends)
-	return outends
-}
-
-func AllMUser() []model.MUser {
-	users := []model.MUser{}
-	interdb.DB().Find(&users)
-	return users
-}
-
 func AllDevices() []model.MDevice {
 	devices := []model.MDevice{}
 	interdb.DB().Find(&devices)
@@ -248,14 +187,14 @@ func UpdateGoods(goods model.MGoods) error {
 // -------------------------------------------------------------------------------------
 
 // 获取App列表
-func AllApp() []model.MApp {
-	m := []model.MApp{}
+func AllApp() []model.MApplet {
+	m := []model.MApplet{}
 	interdb.DB().Find(&m)
 	return m
 
 }
-func GetMAppWithUUID(uuid string) (*model.MApp, error) {
-	m := model.MApp{}
+func GetMAppWithUUID(uuid string) (*model.MApplet, error) {
+	m := model.MApplet{}
 	if err := interdb.DB().Where("uuid=?", uuid).First(&m).Error; err != nil {
 		return nil, err
 	} else {
@@ -265,17 +204,17 @@ func GetMAppWithUUID(uuid string) (*model.MApp, error) {
 
 // 删除App
 func DeleteApp(uuid string) error {
-	return interdb.DB().Where("uuid=?", uuid).Delete(&model.MApp{}).Error
+	return interdb.DB().Where("uuid=?", uuid).Delete(&model.MApplet{}).Error
 }
 
 // 创建App
-func InsertApp(app *model.MApp) error {
+func InsertApp(app *model.MApplet) error {
 	return interdb.DB().Create(app).Error
 }
 
 // 更新App
-func UpdateApp(app *model.MApp) error {
-	m := model.MApp{}
+func UpdateApp(app *model.MApplet) error {
+	m := model.MApplet{}
 	if err := interdb.DB().Where("uuid=?", app.UUID).First(&m).Error; err != nil {
 		return err
 	} else {
@@ -319,15 +258,4 @@ func UpdateAiBase(AiBase *model.MAiBase) error {
 		interdb.DB().Model(m).Updates(*AiBase)
 		return nil
 	}
-}
-
-// -------------------------------------------------------------------------------------
-// Cron Task
-// -------------------------------------------------------------------------------------
-
-// AllEnabledCronTask
-func AllEnabledCronTask() []model.MCronTask {
-	tasks := make([]model.MCronTask, 0)
-	interdb.DB().Where("enable = ?", "1").Find(&tasks)
-	return tasks
 }

@@ -11,7 +11,7 @@ import (
 	"github.com/hootrhino/rhilex/component/apiserver/service"
 	"github.com/hootrhino/rhilex/component/interqueue"
 	rule_engine "github.com/hootrhino/rhilex/component/ruleengine"
-	transceivercom "github.com/hootrhino/rhilex/component/transceivercom/transceiver"
+	transceivercom "github.com/hootrhino/rhilex/component/transceiver/manager"
 	"github.com/hootrhino/rhilex/glogger"
 
 	"github.com/hootrhino/rhilex/typex"
@@ -19,6 +19,23 @@ import (
 
 	"github.com/gin-gonic/gin"
 )
+
+func InitRulesRoute() {
+	rulesApi := server.RouteGroup(server.ContextUrl("/rules"))
+	{
+		rulesApi.POST(("/create"), server.AddRoute(CreateRule))
+		rulesApi.PUT(("/update"), server.AddRoute(UpdateRule))
+		rulesApi.DELETE(("/del"), server.AddRoute(DeleteRule))
+		rulesApi.GET(("/list"), server.AddRoute(Rules))
+		rulesApi.GET(("/detail"), server.AddRoute(RuleDetail))
+		rulesApi.POST(("/test"), server.AddRoute(TestRulesCallback))
+		rulesApi.GET(("/byInend"), server.AddRoute(ListByInend))
+		rulesApi.GET(("/byDevice"), server.AddRoute(ListByDevice))
+		rulesApi.GET(("/getCanUsedResources"), server.AddRoute(GetAllResources))
+		rulesApi.POST(("/formatLua"), server.AddRoute(FormatLua))
+
+	}
+}
 
 type ruleVo struct {
 	UUID        string   `json:"uuid"`
