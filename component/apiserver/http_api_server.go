@@ -218,8 +218,7 @@ func (hs *ApiServerPlugin) LoadRoute() {
 	apis.InitRulesRoute()
 	// Out End
 	apis.InitOutEndRoute()
-
-	// 网络适配器列表
+	// System API
 	apis.InitSystemRoute()
 	// backup
 	apis.InitBackupRoute()

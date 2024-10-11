@@ -34,6 +34,7 @@ func InitSystemRoute() {
 	{
 		osApi.GET(("/osRelease"), server.AddRoute(CatOsRelease))
 		osApi.GET(("/system"), server.AddRoute(System))
+		osApi.GET(("/uarts"), server.AddRoute(GetUartList))
 		osApi.GET(("/startedAt"), server.AddRoute(StartedAt))
 		osApi.GET(("/getVideos"), server.AddRoute(GetVideos))
 		osApi.GET(("/getGpuInfo"), server.AddRoute(GetGpuInfo))
