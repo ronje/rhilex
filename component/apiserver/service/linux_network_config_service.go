@@ -1,8 +1,11 @@
 package service
 
 import (
+	"errors"
+
 	"github.com/hootrhino/rhilex/component/apiserver/model"
 	"github.com/hootrhino/rhilex/component/interdb"
+	"gorm.io/gorm"
 )
 
 func GetEthConfig(Interface string) (model.MNetworkConfig, error) {
@@ -14,10 +17,17 @@ func GetEthConfig(Interface string) (model.MNetworkConfig, error) {
 }
 
 func UpdateEthConfig(MNetworkConfig model.MNetworkConfig) error {
-	return interdb.DB().
-		Model(&MNetworkConfig).
-		Where("interface=? AND type =\"ETHNET\"", MNetworkConfig.Interface).
-		FirstOrCreate(&MNetworkConfig).Error
+	return interdb.DB().Transaction(func(tx *gorm.DB) error {
+		var existingConfig model.MNetworkConfig
+		if err := tx.Where("interface = ? AND type = ?", MNetworkConfig.Interface, "ETHNET").
+			First(&existingConfig).Error; err != nil {
+			if errors.Is(err, gorm.ErrRecordNotFound) {
+				return tx.Create(&MNetworkConfig).Error
+			}
+			return err
+		}
+		return tx.Model(&existingConfig).Updates(MNetworkConfig).Error
+	})
 }
 
 func AllEthConfig() ([]model.MNetworkConfig, error) {

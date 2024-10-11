@@ -1,8 +1,11 @@
 package service
 
 import (
+	"errors"
+
 	"github.com/hootrhino/rhilex/component/apiserver/model"
 	"github.com/hootrhino/rhilex/component/interdb"
+	"gorm.io/gorm"
 )
 
 /*
@@ -11,11 +14,19 @@ import (
 *
  */
 func UpdateWlanConfig(MNetworkConfig model.MNetworkConfig) error {
-	Model := model.MNetworkConfig{Interface: MNetworkConfig.Interface}
-	return interdb.DB().
-		Model(Model).
-		Where("interface=? and type=\"WIFI\"", MNetworkConfig.Interface).
-		FirstOrCreate(&MNetworkConfig).Error
+	// 使用事务来确保数据的一致性
+	return interdb.DB().Transaction(func(tx *gorm.DB) error {
+		// 检查记录是否存在
+		var existingConfig model.MNetworkConfig
+		if err := tx.Where("interface = ? AND type = ?", MNetworkConfig.Interface, "WIFI").
+			First(&existingConfig).Error; err != nil {
+			if errors.Is(err, gorm.ErrRecordNotFound) {
+				return tx.Create(&MNetworkConfig).Error
+			}
+			return err
+		}
+		return tx.Model(&existingConfig).Updates(MNetworkConfig).Error
+	})
 }
 
 /*

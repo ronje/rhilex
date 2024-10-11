@@ -71,12 +71,6 @@ func SetWifi(iface, ssid, psk string, timeout time.Duration) error {
 	}
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	defer cancel()
-	// {
-	// 	cmd := exec.CommandContext(ctx, "pkill", "wpa_supplicant")
-	// 	if err := cmd.Run(); err != nil {
-	// 		return fmt.Errorf("failed to terminate wpa_supplicant: %v", err)
-	// 	}
-	// }
 	{
 
 		cmd := exec.CommandContext(ctx, "wpa_supplicant", "-B", "-i", iface, "-c", configFilePath)
@@ -87,7 +81,6 @@ func SetWifi(iface, ssid, psk string, timeout time.Duration) error {
 	{
 
 		cmd := exec.CommandContext(ctx, "udhcpc", "-i", iface)
-		n(cmd.String())
 		if err := cmd.Start(); err != nil {
 			return fmt.Errorf("failed to start wpa_supplicant: %v", err)
 		}

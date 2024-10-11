@@ -23,7 +23,7 @@ package model
 type MNetworkConfig struct {
 	RhilexModel
 	Type        string // 类型: ETH | WIFI
-	Interface   string // eth1 eth0
+	Interface   string `gorm:"column:interface;uniqueIndex"`
 	Address     string
 	Netmask     string
 	Gateway     string
