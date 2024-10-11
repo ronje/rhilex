@@ -28,9 +28,17 @@ import (
 	common "github.com/hootrhino/rhilex/component/apiserver/common"
 	"github.com/hootrhino/rhilex/component/apiserver/model"
 	"github.com/hootrhino/rhilex/component/apiserver/service"
-	"github.com/hootrhino/rhilex/ossupport"
 	"github.com/hootrhino/rhilex/typex"
 )
+
+type NetworkConfigVo struct {
+	Interface   string
+	Address     string
+	Netmask     string
+	Gateway     string
+	DNS         []string
+	DHCPEnabled *bool
+}
 
 /*
 *
@@ -38,21 +46,21 @@ import (
 *
  */
 func GetEthNetwork(c *gin.Context, ruleEngine typex.Rhilex) {
-
-}
-
-/*
- *
- * 获取当前网络情况
- *
- */
-func GetCurrentNetConnection(c *gin.Context, ruleEngine typex.Rhilex) {
-	nmcliOutput, err := ossupport.GetCurrentNetConnection()
+	Interface, _ := c.GetQuery("iface")
+	MNetworkConfig, err := service.GetEthConfig(Interface)
 	if err != nil {
 		c.JSON(common.HTTP_OK, common.Error400(err))
 		return
 	}
-	c.JSON(common.HTTP_OK, common.OkWithData(nmcliOutput))
+	c.JSON(common.HTTP_OK, common.OkWithData(NetworkConfigVo{
+		Interface:   MNetworkConfig.Interface,
+		Address:     MNetworkConfig.Address,
+		Netmask:     MNetworkConfig.Netmask,
+		Gateway:     MNetworkConfig.Gateway,
+		DNS:         MNetworkConfig.DNS,
+		DHCPEnabled: MNetworkConfig.DHCPEnabled,
+	}))
+
 }
 
 /*
@@ -119,7 +127,7 @@ func SetEthNetwork(c *gin.Context, ruleEngine typex.Rhilex) {
 	}
 	if typex.DefaultVersionInfo.Product == "RHILEXPRO1" {
 		config := []rhilexpro1.NetworkInterfaceConfig{
-			rhilexpro1.NetworkInterfaceConfig{
+			{
 				Interface:   MNetCfg.Interface,
 				Address:     MNetCfg.Address,
 				Netmask:     MNetCfg.Netmask,
@@ -136,7 +144,7 @@ func SetEthNetwork(c *gin.Context, ruleEngine typex.Rhilex) {
 	}
 	if typex.DefaultVersionInfo.Product == "HAAS506LD1" {
 		config := []haas506.NetworkInterfaceConfig{
-			haas506.NetworkInterfaceConfig{
+			{
 				Interface:   MNetCfg.Interface,
 				Address:     MNetCfg.Address,
 				Netmask:     MNetCfg.Netmask,
@@ -153,7 +161,7 @@ func SetEthNetwork(c *gin.Context, ruleEngine typex.Rhilex) {
 	}
 	if typex.DefaultVersionInfo.Product == "RHILEXG1" {
 		config := []rhilexg1.NetworkInterfaceConfig{
-			rhilexg1.NetworkInterfaceConfig{
+			{
 				Interface:   MNetCfg.Interface,
 				Address:     MNetCfg.Address,
 				Netmask:     MNetCfg.Netmask,
@@ -208,20 +216,6 @@ func bitsInByte(b int) int {
 	return count
 }
 
-/*
-*
-* 设置静态网络IP等, 当前只支持Linux 其他的没测试暂时不予支持
-
-	{
-	  "name": "eth0",
-	  "interface": "eth0",
-	  "address": "192.168.1.100",
-	  "netmask": "255.255.255.0",
-	  "gateway": "192.168.1.1",
-	  "dns": ["8.8.8.8", "8.8.4.4"],
-	  "dhcp_enabled": false
-	}
-*/
 func isValidIP(ip string) bool {
 	parsedIP := net.ParseIP(ip)
 	return parsedIP != nil

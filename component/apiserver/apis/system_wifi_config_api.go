@@ -98,7 +98,7 @@ func SetWifi(c *gin.Context, ruleEngine typex.Rhilex) {
 		}
 	}
 	if typex.DefaultVersionInfo.Product == "RHILEXPRO1" {
-		errSetWifi := rhilexpro1.SetWifi(MNetCfg.Interface, MNetCfg.SSID, MNetCfg.Password, 3*time.Second)
+		errSetWifi := rhilexpro1.SetWifi(MNetCfg.Interface, MNetCfg.SSID, MNetCfg.Password, 10*time.Second)
 		if errSetWifi != nil {
 			c.JSON(common.HTTP_OK, common.Error400(errSetWifi))
 			return
@@ -106,7 +106,7 @@ func SetWifi(c *gin.Context, ruleEngine typex.Rhilex) {
 		goto END
 	}
 	if typex.DefaultVersionInfo.Product == "HAAS506LD1" {
-		errSetWifi := haas506.SetWifi(MNetCfg.Interface, MNetCfg.SSID, MNetCfg.Password, 3*time.Second)
+		errSetWifi := haas506.SetWifi(MNetCfg.Interface, MNetCfg.SSID, MNetCfg.Password, 10*time.Second)
 		if errSetWifi != nil {
 			c.JSON(common.HTTP_OK, common.Error400(errSetWifi))
 			return
@@ -114,7 +114,7 @@ func SetWifi(c *gin.Context, ruleEngine typex.Rhilex) {
 		goto END
 	}
 	if typex.DefaultVersionInfo.Product == "RHILEXG1" {
-		errSetWifi := rhilexg1.SetWifi(MNetCfg.Interface, MNetCfg.SSID, MNetCfg.Password, 3*time.Second)
+		errSetWifi := rhilexg1.SetWifi(MNetCfg.Interface, MNetCfg.SSID, MNetCfg.Password, 10*time.Second)
 		if errSetWifi != nil {
 			c.JSON(common.HTTP_OK, common.Error400(errSetWifi))
 			return
@@ -122,6 +122,6 @@ func SetWifi(c *gin.Context, ruleEngine typex.Rhilex) {
 		goto END
 	}
 END:
-	c.JSON(common.HTTP_OK, common.Error("Unsupported Product:"+typex.DefaultVersionInfo.Product))
+	c.JSON(common.HTTP_OK, common.Ok())
 
 }

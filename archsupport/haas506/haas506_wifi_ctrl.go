@@ -57,6 +57,7 @@ func SetWifi(iface, ssid, psk string, timeout time.Duration) error {
 	if err != nil {
 		return fmt.Errorf("failed to parse template: %v", err)
 	}
+	os.MkdirAll("/etc/wpa_supplicant/", 0755)
 	configFilePath := fmt.Sprintf("/etc/wpa_supplicant/wpa_supplicant-%s.conf", iface)
 	// configFilePath := fmt.Sprintf("./data/wpa_supplicant-%s.conf", iface)
 	file, err := os.Create(configFilePath)
@@ -72,6 +73,7 @@ func SetWifi(iface, ssid, psk string, timeout time.Duration) error {
 	defer cancel()
 	{
 		cmd := exec.CommandContext(ctx, "pkill", "wpa_supplicant")
+		fmt.Println(cmd.String())
 		if err := cmd.Run(); err != nil {
 			return fmt.Errorf("failed to terminate wpa_supplicant: %v", err)
 		}
@@ -79,6 +81,7 @@ func SetWifi(iface, ssid, psk string, timeout time.Duration) error {
 	{
 
 		cmd := exec.CommandContext(ctx, "wpa_supplicant", "-B", "-i", iface, "-c", configFilePath)
+		fmt.Println(cmd.String())
 		if err := cmd.Start(); err != nil {
 			return fmt.Errorf("failed to start wpa_supplicant: %v", err)
 		}
@@ -86,6 +89,7 @@ func SetWifi(iface, ssid, psk string, timeout time.Duration) error {
 	{
 
 		cmd := exec.CommandContext(ctx, "udhcpc", "-i", iface)
+		fmt.Println(cmd.String())
 		if err := cmd.Start(); err != nil {
 			return fmt.Errorf("failed to start wpa_supplicant: %v", err)
 		}

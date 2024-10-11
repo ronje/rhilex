@@ -16,34 +16,20 @@
 package ossupport
 
 import (
-	"os"
-	"regexp"
+	"fmt"
+	"os/exec"
 )
 
-const devFolder = "/dev"
-const regexFilter = "(ttyS|ttyHS|ttyUSB|ttyACM|ttyAMA|rfcomm|ttyO|ttymxc)[0-9]{1,3}"
-
-func GetPortsListUnix() ([]string, error) {
-	files, err := os.ReadDir(devFolder)
+/*
+*
+* Ubuntu: 刷新DNS，
+*
+ */
+func ReloadDNS() error {
+	cmd := exec.Command("systemctl", "restart", "NetworkManager")
+	output, err := cmd.CombinedOutput()
 	if err != nil {
-		return nil, err
+		return fmt.Errorf("Error executing nmcli: %s", err.Error()+":"+string(output))
 	}
-	ports := make([]string, 0, len(files))
-	regex, err := regexp.Compile(regexFilter)
-	if err != nil {
-		return nil, err
-	}
-	for _, f := range files {
-		// Skip folders
-		if f.IsDir() {
-			continue
-		}
-		if !regex.MatchString(f.Name()) {
-			continue
-		}
-		portName := devFolder + "/" + f.Name()
-		ports = append(ports, portName)
-	}
-
-	return ports, nil
+	return nil
 }

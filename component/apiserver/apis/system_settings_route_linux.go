@@ -25,7 +25,6 @@ func LoadSystemSettingsAPI() {
 	iFacesApi := server.RouteGroup(server.ContextUrl("/settings"))
 	{
 		iFacesApi.GET(("/ctrlTree"), server.AddRoute(GetDeviceCtrlTree))
-		iFacesApi.GET(("/ifaces"), server.AddRoute(GetNetInterfaces))
 		iFacesApi.GET(("/uarts"), server.AddRoute(GetUartList))
 		iFacesApi.GET(("/netStatus"), server.AddRoute(GetNetworkStatus))
 	}

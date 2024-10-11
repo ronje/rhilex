@@ -13,7 +13,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-package ossupport
+package haas506
 
 import (
 	"fmt"
@@ -26,7 +26,7 @@ import (
 * 获取板子支持的网络接口
 *
  */
-func GetBSPNetIfaces() ([]string, error) {
+func GetNetIfaces() ([]string, error) {
 	// 执行命令
 	cmd := exec.Command("sh", "-c", "ip -o link show | awk -F': ' '{print $2}'")
 	output, err := cmd.CombinedOutput()
