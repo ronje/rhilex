@@ -19,8 +19,10 @@ import (
 	"bufio"
 	"context"
 	"fmt"
+	"math"
 	"os"
 	"os/exec"
+	"strconv"
 	"strings"
 	"text/template"
 	"time"
@@ -118,8 +120,9 @@ iw dev %s scan | awk '
 		if len(parts) == 2 {
 			ssid := parts[0]
 			signal := parts[1]
+			number, _ := strconv.ParseFloat(signal, 64)
 			if ssid != "" {
-				wifiList = append(wifiList, [2]string{ssid, signal})
+				wifiList = append(wifiList, [2]string{ssid, fmt.Sprintf("%v", math.Abs(number))})
 			}
 		}
 	}

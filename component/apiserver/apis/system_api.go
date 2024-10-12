@@ -32,6 +32,7 @@ import (
 func InitSystemRoute() {
 	osApi := server.RouteGroup(server.ContextUrl("/os"))
 	{
+		osApi.GET(("/netInterfaces"), server.AddRoute(GetNetInterfaces))
 		osApi.GET(("/osRelease"), server.AddRoute(CatOsRelease))
 		osApi.GET(("/system"), server.AddRoute(System))
 		osApi.GET(("/uarts"), server.AddRoute(GetUartList))
@@ -77,6 +78,20 @@ func Plugins(c *gin.Context, ruleEngine typex.Rhilex) {
 		return true
 	})
 	c.JSON(common.HTTP_OK, common.OkWithData(data))
+}
+
+/*
+*
+* 本地网卡
+*
+ */
+func GetNetInterfaces(c *gin.Context, ruleEngine typex.Rhilex) {
+	interfaces, err := ossupport.GetAvailableInterfaces()
+	if err != nil {
+		c.JSON(common.HTTP_OK, common.Error400(err))
+	} else {
+		c.JSON(common.HTTP_OK, common.OkWithData(interfaces))
+	}
 }
 
 // 计算资源数据

@@ -22,12 +22,23 @@ import (
 	"github.com/hootrhino/rhilex/common"
 	"github.com/hootrhino/rhilex/component/intercache"
 	"github.com/hootrhino/rhilex/component/interdb"
-	mbus_device "github.com/hootrhino/rhilex/device/mbus"
 	"github.com/hootrhino/rhilex/glogger"
 	"github.com/hootrhino/rhilex/typex"
 	"github.com/hootrhino/rhilex/utils"
 )
 
+// MBusData 用于封装M-Bus采集的数据
+type MBusDataPoint struct {
+	UUID         string `json:"uuid"`
+	DeviceID     string `json:"deviceId"`
+	SlaverId     string `json:"slaverId"`
+	Type         string `json:"Type"`
+	Manufacturer string `json:"Manufacturer"`
+	Tag          string `json:"tag"`
+	Alias        string `json:"alias"`
+	Frequency    int64  `json:"frequency"`
+	DataLength   int    `json:"dataLength"`
+}
 type MBusMasterGatewayCommonConfig struct {
 	Mode         string `json:"mode" validate:"required"`
 	AutoRequest  *bool  `json:"autoRequest" validate:"required"`
@@ -53,7 +64,7 @@ type MBusMasterGateway struct {
 	typex.XStatus
 	status         typex.DeviceState
 	mainConfig     MBusMasterGatewayMainConfig
-	MBusDataPoints map[string]mbus_device.MBusDataPoint
+	MBusDataPoints map[string]MBusDataPoint
 }
 
 func NewMBusMasterGateway(e typex.Rhilex) typex.XDevice {
@@ -86,7 +97,7 @@ func NewMBusMasterGateway(e typex.Rhilex) typex.XDevice {
 			StopBits: 1,
 		},
 	}
-	gw.MBusDataPoints = map[string]mbus_device.MBusDataPoint{}
+	gw.MBusDataPoints = map[string]MBusDataPoint{}
 	return gw
 }
 
@@ -101,7 +112,7 @@ func (gw *MBusMasterGateway) Init(devId string, configMap map[string]interface{}
 	if !utils.SContains([]string{"UART", "TCP"}, gw.mainConfig.CommonConfig.Mode) {
 		return errors.New("unsupported mode, only can be one of 'TCP' or 'UART'")
 	}
-	var ModbusPointList []mbus_device.MBusDataPoint
+	var ModbusPointList []MBusDataPoint
 	PointLoadErr := interdb.DB().Table("m_mbus_data_points").
 		Where("device_uuid=?", devId).Find(&ModbusPointList).Error
 	if PointLoadErr != nil {
@@ -112,7 +123,7 @@ func (gw *MBusMasterGateway) Init(devId string, configMap map[string]interface{}
 		if MbusPoint.Frequency < 1 {
 			return errors.New("'frequency' must grate than 50 millisecond")
 		}
-		gw.MBusDataPoints[MbusPoint.UUID] = mbus_device.MBusDataPoint{
+		gw.MBusDataPoints[MbusPoint.UUID] = MBusDataPoint{
 			UUID:         MbusPoint.UUID,
 			DeviceID:     MbusPoint.DeviceID,
 			SlaverId:     MbusPoint.SlaverId,
