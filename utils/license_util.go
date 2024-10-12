@@ -33,26 +33,6 @@ import (
 	"github.com/hootrhino/rhilex/ossupport"
 )
 
-// FetchLoadLicense rhilex active -H 127.0.0.1 -U admin -P 123456
-func FetchLoadLicense(host, SN, username, password, Iface, macAddr string) error {
-	activeParams := fmt.Sprintf(`%s&%s&%s&%s&%s&0&0`,
-		SN, username, password, Iface, macAddr)
-	CLog("\n*>> BEGIN LICENCE ACTIVE\n"+
-		"*# Vendor Admin: (%s, %s).\n"+
-		"*# Local Iface: (%s).\n"+
-		"*# Local Mac Address: (%s).\n"+
-		"*# Try to request license from server:(%s).",
-		username, password, Iface, macAddr, host)
-	filePath := fmt.Sprintf("license_%v.zip", time.Now().UnixMilli())
-	err := Download(host, activeParams, filePath)
-	if err != nil {
-		return fmt.Errorf("Request failed")
-	}
-	fmt.Println("*# License fetch success, save as: " + filePath)
-	fmt.Println("*<< END LICENCE ACTIVE")
-	return nil
-}
-
 func RSADecrypt(License, Key []byte) ([]byte, error) {
 	block, _ := pem.Decode(Key)
 	privateKey, err := x509.ParsePKCS1PrivateKey(block.Bytes)
@@ -76,6 +56,7 @@ func SumMd5(inputString string) string {
 }
 
 type LocalLicense struct {
+	Type              string `json:"type"` // PERSONAL | COMMERCIAL
 	DeviceID          string `json:"device_id"`
 	AuthorizeAdmin    string `json:"authorize_admin"`
 	AuthorizePassword string `json:"authorize_password"`
@@ -90,6 +71,7 @@ func (ll *LocalLicense) ToString() string {
 	beginTime := time.UnixMilli(ll.BeginAuthorize).Format(time.RFC3339)
 	endTime := time.UnixMilli(ll.EndAuthorize).Format(time.RFC3339)
 	return fmt.Sprintf(`
+** License Type       : %s
 ** Device SN          : %s
 ** Authorize Admin    : %s
 ** Authorize Password : %s
@@ -97,6 +79,7 @@ func (ll *LocalLicense) ToString() string {
 ** End Authorize      : %s
 ** Authorized MAC     : %s
 `,
+		ll.Type,
 		ll.DeviceID,
 		ll.AuthorizeAdmin,
 		ll.AuthorizePassword,
@@ -114,7 +97,7 @@ func (ll LocalLicense) ValidateTime() bool {
 	return true
 }
 
-// 00001 & rhino & hoot & eth0 & FF:FF:FF:FF:FF:FF & 0 & 0
+// type & 00001 & rhino & hoot & eth0 & FF:FF:FF:FF:FF:FF & 0 & 0
 func ParseAuthInfo(info string) (LocalLicense, error) {
 	var ll LocalLicense
 	ss := strings.Split(info, "&")
