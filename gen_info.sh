@@ -23,6 +23,7 @@ type VersionInfo struct {
 }
 
 var License = utils.LocalLicense{
+	Type:              "FREETRIAL",
 	DeviceID:          "",
 	AuthorizeAdmin:    "",
 	AuthorizePassword: "",

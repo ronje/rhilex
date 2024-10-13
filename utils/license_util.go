@@ -56,7 +56,7 @@ func SumMd5(inputString string) string {
 }
 
 type LocalLicense struct {
-	Type              string `json:"type"` // PERSONAL | COMMERCIAL
+	Type              string `json:"type"` // FREETRIAL | COMMERCIAL
 	DeviceID          string `json:"device_id"`
 	AuthorizeAdmin    string `json:"authorize_admin"`
 	AuthorizePassword string `json:"authorize_password"`
@@ -100,25 +100,30 @@ func (ll LocalLicense) ValidateTime() bool {
 // type & 00001 & rhino & hoot & eth0 & FF:FF:FF:FF:FF:FF & 0 & 0
 func ParseAuthInfo(info string) (LocalLicense, error) {
 	var ll LocalLicense
+
 	ss := strings.Split(info, "&")
-	if len(ss) != 7 {
+	if len(ss) != 8 {
 		return ll, fmt.Errorf("failed to parse: %s", info)
 	}
 
-	beginAuthorize, err1 := strconv.ParseInt(ss[5], 10, 64)
+	beginAuthorize, err1 := strconv.ParseInt(ss[6], 10, 64)
 	if err1 != nil {
 		return ll, fmt.Errorf("failed to parse BeginAuthorize: %w", err1)
 	}
-	endAuthorize, err2 := strconv.ParseInt(ss[6], 10, 64)
+	endAuthorize, err2 := strconv.ParseInt(ss[7], 10, 64)
 	if err2 != nil {
 		return ll, fmt.Errorf("failed to parse EndAuthorize: %w", err2)
 	}
-
-	ll.DeviceID = ss[0]
-	ll.AuthorizeAdmin = ss[1]
-	ll.AuthorizePassword = ss[2]
-	ll.Iface = ss[3]
-	ll.MAC = ss[4]
+	if ss[0] == "" {
+		ll.Type = "FREETRIAL"
+	} else {
+		ll.Type = ss[0]
+	}
+	ll.DeviceID = ss[1]
+	ll.AuthorizeAdmin = ss[2]
+	ll.AuthorizePassword = ss[3]
+	ll.Iface = ss[4]
+	ll.MAC = ss[5]
 	ll.BeginAuthorize = beginAuthorize
 	ll.EndAuthorize = endAuthorize
 	return ll, nil

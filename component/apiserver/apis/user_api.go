@@ -150,6 +150,7 @@ type LoginResultVo struct {
 	EndAuthorize   int64  `json:"endAuthorize"`
 	Role           string `json:"role"`
 	Token          string `json:"token"`
+	Type           string `json:"type"`
 	Username       string `json:"username"`
 }
 
@@ -211,6 +212,7 @@ func Login(c *gin.Context, ruleEngine typex.Rhilex) {
 		Description:    MUser.Description,
 		BeginAuthorize: typex.License.BeginAuthorize,
 		EndAuthorize:   typex.License.EndAuthorize,
+		Type:           typex.License.Type,
 		Token:          token,
 	}))
 
