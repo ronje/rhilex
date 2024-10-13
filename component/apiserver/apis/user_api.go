@@ -144,6 +144,15 @@ func md5Hash(str string) string {
 	return hex.EncodeToString(h.Sum(nil))
 }
 
+type LoginResultVo struct {
+	BeginAuthorize int64  `json:"beginAuthorize"`
+	Description    string `json:"description"`
+	EndAuthorize   int64  `json:"endAuthorize"`
+	Role           string `json:"role"`
+	Token          string `json:"token"`
+	Username       string `json:"username"`
+}
+
 // Login
 // TODO: 下个版本实现用户基础管理
 func Login(c *gin.Context, ruleEngine typex.Rhilex) {
@@ -195,11 +204,14 @@ func Login(c *gin.Context, ruleEngine typex.Rhilex) {
 		Info: fmt.Sprintf(`User Login Success, Username: %s, RemoteAddr: %s`,
 			u.Username, clientIP),
 	})
-	c.JSON(common.HTTP_OK, common.OkWithData(map[string]interface{}{
-		"username":    MUser.Username,
-		"role":        MUser.Role,
-		"description": MUser.Description,
-		"token":       token,
+
+	c.JSON(common.HTTP_OK, common.OkWithData(LoginResultVo{
+		Username:       MUser.Username,
+		Role:           MUser.Role,
+		Description:    MUser.Description,
+		BeginAuthorize: typex.License.BeginAuthorize,
+		EndAuthorize:   typex.License.EndAuthorize,
+		Token:          token,
 	}))
 
 }
