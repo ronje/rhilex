@@ -128,7 +128,7 @@ uoload_to_file_server(){
     BASIC_AUTH="rhilex-file-server-admin:rhilex-file-server-admin_secret"
     VERSION="$(git describe --tags $(git rev-list --tags --max-count=1))"
     cd _release
-    UPLOAD_URL="http://112.5.155.64:10120/${VERSION}/"
+    UPLOAD_URL="http://112.5.155.64:10120/release/${VERSION}/"
     ZIP_FILES=$(find . -maxdepth 1 -type f -name "rhilex*.zip")
     if [ -z "$ZIP_FILES" ]; then
         echo "[!] No .zip files found in the current directory."
