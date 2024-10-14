@@ -27,6 +27,11 @@ func (dlt DLT6452007DataLinkLayer) CheckCrc(A []byte, B byte) error {
 	}
 	return nil
 }
+
+/**
+ * CRC
+ *
+ */
 func crc8(data []byte) byte {
 	var checksum byte
 	for _, b := range data {

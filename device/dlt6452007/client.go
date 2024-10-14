@@ -19,9 +19,12 @@ import (
 	"errors"
 	"fmt"
 	"io"
+
+	"github.com/sirupsen/logrus"
 )
 
 type DLT645ClientHandler struct {
+	logger        *logrus.Logger
 	DataLinkLayer DLT6452007DataLinkLayer
 	Transporter   dlt645SerialTransporter
 }
@@ -34,12 +37,35 @@ func NewDLT645ClientHandler(Transporter io.ReadWriteCloser) *DLT645ClientHandler
 	}
 	return handler
 }
+func (handler *DLT645ClientHandler) SetLogger(logger *logrus.Logger) {
+	handler.logger = logger
+}
+
+/**
+ * 发送请求
+ *
+ */
+func (handler *DLT645ClientHandler) Request(data []byte) ([]byte, error) {
+	request := ""
+	for _, b := range data {
+		request += fmt.Sprintf("0x%02x ", b)
+	}
+	handler.logger.Debug("DLT645ClientHandler.Request:", request)
+	r, e := handler.Transporter.SendFrame(data)
+	result := ""
+	for _, b := range r {
+		result += fmt.Sprintf("0x%02x ", b)
+	}
+	handler.logger.Debug("Transporter.Received:", result)
+	return r, e
+}
 
 /**
  * 打包帧
  *
  */
 func (handler *DLT645ClientHandler) DecodeDLT645Frame0x11(data []byte) (DLT645Frame0x11, error) {
+	handler.logger.Debug("DLT645ClientHandler.DecodeDLT645Frame0x11:", data)
 	// 6 (Address) + 1 (CtrlCode) + 1 (DataLength) + 4 (DataType) + 1 (Checksum) + 0-N (minimum DataArea) + 1 (End)
 	frame := DLT645Frame0x11{}
 	if len(data) < 15 {
@@ -76,7 +102,7 @@ func (handler *DLT645ClientHandler) DecodeDLT645Frame0x11(data []byte) (DLT645Fr
 func (handler *DLT645ClientHandler) DecodeDLT645Frame0x11Response(data []byte) (DLT645Frame0x11, error) {
 	frame := DLT645Frame0x11{
 		Start:      data[0],
-		Address:    data[2:8],
+		Address:    data[1:7],
 		CtrlCode:   data[8],
 		DataLength: data[9],
 		DataType:   [4]byte{data[10], data[11], data[12], data[13]},

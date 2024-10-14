@@ -37,31 +37,35 @@ func (dlt *dlt645SerialTransporter) SendFrame(aduRequest []byte) (aduResponse []
  *
  */
 func (dlt *dlt645SerialTransporter) ReadFrame(rwc io.ReadWriteCloser) (aduResponse []byte, err error) {
+	// 0x68
+	var start1 byte
 	for {
 		var b byte
 		if err = binary.Read(rwc, binary.BigEndian, &b); err != nil {
 			return nil, err
 		}
 		if b != 0xFE {
+			start1 = b
 			break
 		}
-	}
 
-	// 读取帧起始符
-	var start byte
-	if err = binary.Read(rwc, binary.BigEndian, &start); err != nil {
-		return nil, err
 	}
-	if start != 0x68 {
-		return nil, errors.New("invalid start byte")
+	if start1 != 0x68 {
+		return nil, errors.New("invalid start1 byte")
 	}
-
-	// 读取地址域
+	// 读取地址域 [6]byte
 	var address [6]byte
 	if err = binary.Read(rwc, binary.BigEndian, &address); err != nil {
 		return nil, err
 	}
-
+	// 0x68
+	var start2 byte
+	if err = binary.Read(rwc, binary.BigEndian, &start2); err != nil {
+		return nil, err
+	}
+	if start2 != 0x68 {
+		return nil, errors.New("invalid start2 byte")
+	}
 	// 读取控制码
 	var c byte
 	if err = binary.Read(rwc, binary.BigEndian, &c); err != nil {
@@ -85,7 +89,6 @@ func (dlt *dlt645SerialTransporter) ReadFrame(rwc io.ReadWriteCloser) (aduRespon
 	if err = binary.Read(rwc, binary.BigEndian, &cs); err != nil {
 		return nil, err
 	}
-	// crc:= dlt.DataLinkLayer
 	// 读取帧结束符
 	var end byte
 	if err = binary.Read(rwc, binary.BigEndian, &end); err != nil {
@@ -94,8 +97,9 @@ func (dlt *dlt645SerialTransporter) ReadFrame(rwc io.ReadWriteCloser) (aduRespon
 	if end != 0x16 {
 		return nil, errors.New("invalid end byte")
 	}
-	aduResponse = append(aduResponse, start)
+	aduResponse = append(aduResponse, start1)
 	aduResponse = append(aduResponse, address[:]...)
+	aduResponse = append(aduResponse, start2)
 	aduResponse = append(aduResponse, c)
 	aduResponse = append(aduResponse, l)
 	aduResponse = append(aduResponse, data...)
