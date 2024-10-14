@@ -63,7 +63,7 @@ func TestCodec_DLT645_2007_Frame(t *testing.T) {
 	client := dlt6452007.NewDLT645ClientHandler(NewSimpleReadWriteCloser())
 	frame := dlt6452007.DLT645Frame0x11{
 		Start:      dlt6452007.CTRL_CODE_FRAME_START,
-		Address:    []byte{0x45, 0x92, 0x66, 0x23, 0x00, 0x10},
+		Address:    [6]byte{0x45, 0x92, 0x66, 0x23, 0x00, 0x10},
 		CtrlCode:   dlt6452007.CTRL_CODE_READ_DATA,
 		DataLength: 0x04,
 		DataType:   [4]byte{0x33, 0x34, 0x34, 0x35},
@@ -131,7 +131,7 @@ func TestCodec_DLT645_2007_Meter(t *testing.T) {
 	// 68 45 92 66 23 00 10 68 11 04 33 34 34 35 25 16
 	frame := dlt6452007.DLT645Frame0x11{
 		Start:      dlt6452007.CTRL_CODE_FRAME_START,
-		Address:    []byte{0x45, 0x92, 0x66, 0x23, 0x00, 0x10},
+		Address:    [6]byte{0x45, 0x92, 0x66, 0x23, 0x00, 0x10},
 		CtrlCode:   dlt6452007.CTRL_CODE_READ_DATA,
 		DataLength: 0x04,
 		DataType:   [4]byte{0x33, 0x34, 0x34, 0x35},

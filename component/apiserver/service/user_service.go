@@ -32,18 +32,17 @@ func Login(username, pwd string) (*model.MUser, error) {
 }
 
 func InsertMUser(o *model.MUser) error {
-	return interdb.DB().Table("m_users").Create(o).Error
+	return interdb.DB().Model(o).Create(o).Error
 }
 func InitMUser(o *model.MUser) error {
-	return interdb.DB().Table("m_users").FirstOrCreate(o).Error
+	return interdb.DB().Model(o).FirstOrCreate(o).Error
 }
 func ClearAllUser() error {
-	return interdb.DB().Table("m_users").Exec(`DELETE FROM m_users`).Error
+	return interdb.DB().Model(&model.MUser{}).Exec(`DELETE FROM m_users`).Error
 }
 
 func UpdateMUser(oldName string, o *model.MUser) error {
-	return interdb.DB().Table("m_users").
+	return interdb.DB().Model(o).
 		Where("username=?", oldName).
 		Updates(*o).Error
-
 }

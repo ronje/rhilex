@@ -37,6 +37,18 @@ func NewDLT645ClientHandler(Transporter io.ReadWriteCloser) *DLT645ClientHandler
 	}
 	return handler
 }
+
+/**
+ * 关闭
+ *
+ */
+func (handler *DLT645ClientHandler) Close() error {
+	if handler.Transporter.port == nil {
+		return fmt.Errorf("invalid Transporter")
+	}
+	return handler.Transporter.port.Close()
+}
+
 func (handler *DLT645ClientHandler) SetLogger(logger *logrus.Logger) {
 	handler.logger = logger
 }
@@ -66,43 +78,9 @@ func (handler *DLT645ClientHandler) Request(data []byte) ([]byte, error) {
  */
 func (handler *DLT645ClientHandler) DecodeDLT645Frame0x11(data []byte) (DLT645Frame0x11, error) {
 	handler.logger.Debug("DLT645ClientHandler.DecodeDLT645Frame0x11:", data)
-	// 6 (Address) + 1 (CtrlCode) + 1 (DataLength) + 4 (DataType) + 1 (Checksum) + 0-N (minimum DataArea) + 1 (End)
-	frame := DLT645Frame0x11{}
-	if len(data) < 15 {
-		return frame, fmt.Errorf("data too short to be a valid DLT645 frame")
-	}
-	frame.Start = data[0]
-	copy(frame.Address[:], data[1:7])
-	frame.CtrlCode = data[7]
-	frame.DataLength = data[8]
-	copy(frame.DataType[:], data[9:13])
-	if 13+int(frame.DataLength)-4 > len(data) {
-		return frame, fmt.Errorf("data too large to be a valid DLT645 frame")
-	}
-	frame.DataArea = data[13 : 13+int(frame.DataLength)-4]
-	frame.CheckSum = data[len(data)-2]
-	frame.End = data[len(data)-1]
-
-	if frame.Start != 0x68 || frame.End != 0x16 {
-		return frame, fmt.Errorf("invalid start or end byte")
-	}
-
-	if int(frame.DataLength-4) != len(frame.DataArea) {
-		return frame, fmt.Errorf("data length mismatch")
-	}
-	CheckCrcErr := handler.DataLinkLayer.CheckCrc(data[0:13+int(frame.DataLength)-4], frame.CheckSum)
-	if CheckCrcErr != nil {
-		return frame, CheckCrcErr
-	}
-
-	return frame, nil
-}
-
-// 解包DLT645协议帧
-func (handler *DLT645ClientHandler) DecodeDLT645Frame0x11Response(data []byte) (DLT645Frame0x11, error) {
 	frame := DLT645Frame0x11{
 		Start:      data[0],
-		Address:    data[1:7],
+		Address:    [6]byte{data[1], data[2], data[3], data[4], data[5], data[6]},
 		CtrlCode:   data[8],
 		DataLength: data[9],
 		DataType:   [4]byte{data[10], data[11], data[12], data[13]},
@@ -118,10 +96,49 @@ func (handler *DLT645ClientHandler) DecodeDLT645Frame0x11Response(data []byte) (
 		}
 		frame.DataArea = data[14 : 14+frame.DataLength-4]
 	}
-
 	frame.CheckSum = data[len(data)-2]
 	frame.End = data[len(data)-1]
+	if frame.Start != 0x68 || frame.End != 0x16 {
+		return frame, fmt.Errorf("invalid start or end byte")
+	}
+	if int(frame.DataLength-4) != len(frame.DataArea) {
+		return frame, fmt.Errorf("data length mismatch")
+	}
+	CheckCrcErr := handler.DataLinkLayer.CheckCrc(data[0:len(data)-2], frame.CheckSum)
+	if CheckCrcErr != nil {
+		return frame, CheckCrcErr
+	}
+	return frame, nil
+}
 
+// 解包DLT645协议帧
+func (handler *DLT645ClientHandler) DecodeDLT645Frame0x11Response(data []byte) (DLT645Frame0x11, error) {
+	frame := DLT645Frame0x11{
+		Start:      data[0],
+		Address:    [6]byte{data[1], data[2], data[3], data[4], data[5], data[6]},
+		CtrlCode:   data[8],
+		DataLength: data[9],
+		DataType:   [4]byte{data[10], data[11], data[12], data[13]},
+	}
+
+	if len(data) < 16 { // 至少包含起始符、地址域、控制码、数据长度、校验和和结束符
+		return frame, errors.New("invalid frame length")
+	}
+
+	if frame.DataLength > 0 {
+		if 14+frame.DataLength-4 > byte(len(data)) {
+			return frame, errors.New("invalid frame length")
+		}
+		frame.DataArea = data[14 : 14+frame.DataLength-4]
+	}
+	frame.CheckSum = data[len(data)-2]
+	frame.End = data[len(data)-1]
+	if frame.Start != 0x68 || frame.End != 0x16 {
+		return frame, fmt.Errorf("invalid start or end byte")
+	}
+	if int(frame.DataLength-4) != len(frame.DataArea) {
+		return frame, fmt.Errorf("data length mismatch")
+	}
 	CheckCrcErr := handler.DataLinkLayer.CheckCrc(data[0:len(data)-2], frame.CheckSum)
 	if CheckCrcErr != nil {
 		return frame, CheckCrcErr

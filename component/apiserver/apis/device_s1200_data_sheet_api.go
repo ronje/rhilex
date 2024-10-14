@@ -245,13 +245,13 @@ func CheckSiemensDataPoints(M SiemensPointVo) error {
 	}
 
 	// Check required string fields
-	if err := checkStringLength(M.Tag, "tag", 256); err != nil {
+	if err := checkStringLength(M.Tag, "tag", 64); err != nil {
 		return err
 	}
-	if err := checkStringLength(M.Alias, "alias", 256); err != nil {
+	if err := checkStringLength(M.Alias, "alias", 64); err != nil {
 		return err
 	}
-	if err := checkStringLength(M.SiemensAddress, "address", 256); err != nil { // Assuming a max length of 256 for SiemensAddress
+	if err := checkStringLength(M.SiemensAddress, "address", 64); err != nil { // Assuming a max length of 256 for SiemensAddress
 		return err
 	}
 

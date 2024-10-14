@@ -51,8 +51,6 @@ func InitSystemRoute() {
 	server.DefaultApiServer.Route().
 		POST(server.ContextUrl("login"), server.AddRoute(Login))
 	server.DefaultApiServer.Route().
-		GET(server.ContextUrl("info"), server.AddRoute(Info))
-	server.DefaultApiServer.Route().
 		POST(server.ContextUrl("validateRule"), server.AddRoute(ValidateLuaSyntax))
 }
 

@@ -492,6 +492,12 @@ func (e *RuleEngine) RestartDevice(uuid string) error {
  */
 
 func (e *RuleEngine) InitDeviceTypeManager() error {
+	e.DeviceTypeManager.Register(typex.DLT6452004_MASTER,
+		&typex.XConfig{
+			Engine:    e,
+			NewDevice: device.NewDLT645_2007_MasterGateway,
+		},
+	)
 	e.DeviceTypeManager.Register(typex.KNX_GATEWAY,
 		&typex.XConfig{
 			Engine:    e,

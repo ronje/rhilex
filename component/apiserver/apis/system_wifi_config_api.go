@@ -113,9 +113,9 @@ func SetWifi(c *gin.Context, ruleEngine typex.Rhilex) {
 		Password:  DtoCfg.Password,
 		Security:  DtoCfg.Security,
 	}
-	if err := service.UpdateWlanConfig(MNetCfg); err != nil {
-		if err != nil {
-			c.JSON(common.HTTP_OK, common.Error400(err))
+	if err1 := service.UpdateWlanConfig(MNetCfg); err1 != nil {
+		if err1 != nil {
+			c.JSON(common.HTTP_OK, common.Error400(err1))
 			return
 		}
 	}

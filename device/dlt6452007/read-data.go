@@ -24,10 +24,10 @@ import (
 
 // http://www.csmhkj.com/images/DLT645-2007%E9%80%9A%E4%BF%A1%E8%A7%84%E7%BA%A6.pdf
 type DLT645Frame0x11 struct {
-	Start      byte   // 起始符，固定为0x68
-	Address    []byte // 地址域
-	CtrlCode   byte   // 控制码
-	DataLength byte   // 数据长度
+	Start      byte    // 起始符，固定为0x68
+	Address    [6]byte // 地址域
+	CtrlCode   byte    // 控制码
+	DataLength byte    // 数据长度
 	DataType   [4]byte
 	DataArea   []byte // 数据域
 	CheckSum   byte   // 校验和
@@ -72,7 +72,7 @@ func (frame DLT645Frame0x11) Encode() ([]byte, error) {
 
 	nFrame := new(bytes.Buffer)
 	nFrame.WriteByte(frame.Start)
-	nFrame.Write(frame.Address)
+	nFrame.Write(frame.Address[:])
 	nFrame.WriteByte(frame.Start)
 	nFrame.WriteByte(frame.CtrlCode)
 	nFrame.WriteByte(frame.DataLength)

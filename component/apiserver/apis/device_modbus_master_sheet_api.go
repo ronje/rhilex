@@ -262,10 +262,10 @@ func CheckModbusMasterDataPoints(M ModbusMasterPointVo) error {
 	}
 
 	// Check required string fields
-	if err := checkStringLength(M.Tag, "tag", 256); err != nil {
+	if err := checkStringLength(M.Tag, "tag", 64); err != nil {
 		return err
 	}
-	if err := checkStringLength(M.Alias, "alias", 256); err != nil {
+	if err := checkStringLength(M.Alias, "alias", 64); err != nil {
 		return err
 	}
 
