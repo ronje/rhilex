@@ -23,20 +23,20 @@ import (
 )
 
 // http://www.csmhkj.com/images/DLT645-2007%E9%80%9A%E4%BF%A1%E8%A7%84%E7%BA%A6.pdf
-type DLT645Frame0x11 struct {
-	Start      byte   // 起始符，固定为0x68
-	Address    []byte // 地址域
-	CtrlCode   byte   // 控制码
-	DataLength byte   // 数据长度
-	DataType   [4]byte
-	DataArea   []byte // 数据域
-	CheckSum   byte   // 校验和
-	End        byte   // 结束符，固定为0x16
+type DLT645Frame0x13 struct {
+	Start      byte    // 起始符，固定为0x68
+	Address    []byte  // 地址域
+	CtrlCode   byte    // 控制码
+	DataLength byte    // 数据长度
+	DataType   [4]byte // 数据标识
+	DataArea   []byte  // 数据域
+	CheckSum   byte    // 校验和
+	End        byte    // 结束符，固定为0x16
 }
 
-func (frame DLT645Frame0x11) String() string {
+func (frame DLT645Frame0x13) String() string {
 	var result string
-	result += fmt.Sprintf("DLT645Frame0x11:\n=======\nStart: 0x%02x ", frame.Start)
+	result += fmt.Sprintf("DLT645Frame0x13:\n=======\nStart: 0x%02x ", frame.Start)
 	result += "\nAddress: "
 	for _, b := range frame.Address {
 		result += fmt.Sprintf("0x%02x ", b)
@@ -62,7 +62,7 @@ func (frame DLT645Frame0x11) String() string {
 }
 
 // Pack 打包DLT645协议帧
-func (frame DLT645Frame0x11) Encode() ([]byte, error) {
+func (frame DLT645Frame0x13) Encode() ([]byte, error) {
 	if len(frame.Address) != 6 {
 		return nil, errors.New("address length must be 6 bytes")
 	}
@@ -87,7 +87,7 @@ func (frame DLT645Frame0x11) Encode() ([]byte, error) {
  * 获取数据类型
  *
  */
-func (frame DLT645Frame0x11) GetDataType() (int64, error) {
+func (frame DLT645Frame0x13) GetDataType() (int64, error) {
 	BCD := []byte{}
 	for _, b := range frame.DataType {
 		BCD = append(BCD, b-0x33)
@@ -106,7 +106,7 @@ func (frame DLT645Frame0x11) GetDataType() (int64, error) {
  * 解析数据
  *
  */
-func (frame DLT645Frame0x11) GetData() (int64, error) {
+func (frame DLT645Frame0x13) GetData() string {
 	BCD := []byte{}
 	for _, b := range frame.DataArea {
 		BCD = append(BCD, b-0x33)
@@ -118,5 +118,5 @@ func (frame DLT645Frame0x11) GetData() (int64, error) {
 	for _, v := range BCD {
 		str += fmt.Sprintf("%x", v)
 	}
-	return strconv.ParseInt(str, 10, len(BCD)*8)
+	return str
 }

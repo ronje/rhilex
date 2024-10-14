@@ -15,10 +15,22 @@
 
 package dlt6452007
 
-type DLT645FrameNFE struct {
-	NFE []byte
+import "fmt"
+
+type DLT6452007DataLinkLayer struct {
 }
 
-func (f DLT645FrameNFE) Pack() ([]byte, error) {
-	return []byte{0xFE, 0xFE}, nil
+func (dlt DLT6452007DataLinkLayer) CheckCrc(A []byte, B byte) error {
+	crcCode := crc8(A)
+	if crcCode != B {
+		return fmt.Errorf("Crc8 (%v, CRC=%v) Check Failed: %v", A, crcCode, B)
+	}
+	return nil
+}
+func crc8(data []byte) byte {
+	var checksum byte
+	for _, b := range data {
+		checksum += b
+	}
+	return checksum
 }
