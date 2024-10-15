@@ -35,6 +35,7 @@ import (
 	"github.com/hootrhino/rhilex/component/lostcache"
 	"github.com/hootrhino/rhilex/component/rhilexmanager"
 	"github.com/hootrhino/rhilex/component/ruleengine"
+	"github.com/hootrhino/rhilex/component/security"
 	supervisor "github.com/hootrhino/rhilex/component/supervisor"
 	transceiver "github.com/hootrhino/rhilex/component/transceiver/manager"
 	core "github.com/hootrhino/rhilex/config"
@@ -88,7 +89,8 @@ func InitRuleEngine(config typex.RhilexConfig) typex.Rhilex {
 		Devices:           &sync.Map{},
 		Config:            &config,
 	}
-
+	// Init Security License
+	security.InitSecurityLicense()
 	// Internal DB
 	interdb.Init(__DefaultRuleEngine)
 	// Data center: future version maybe support

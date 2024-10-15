@@ -114,10 +114,8 @@ func SetWifi(c *gin.Context, ruleEngine typex.Rhilex) {
 		Security:  DtoCfg.Security,
 	}
 	if err1 := service.UpdateWlanConfig(MNetCfg); err1 != nil {
-		if err1 != nil {
-			c.JSON(common.HTTP_OK, common.Error400(err1))
-			return
-		}
+		c.JSON(common.HTTP_OK, common.Error400(err1))
+		return
 	}
 	if typex.DefaultVersionInfo.Product == "RHILEXPRO1" {
 		errSetWifi := rhilexpro1.SetWifi(MNetCfg.Interface, MNetCfg.SSID, MNetCfg.Password, 10*time.Second)

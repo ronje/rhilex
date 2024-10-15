@@ -17,14 +17,14 @@ import (
 	"github.com/hootrhino/rhilex/component/apiserver/service"
 	"github.com/hootrhino/rhilex/component/applet"
 	"github.com/hootrhino/rhilex/component/intermetric"
+	"github.com/hootrhino/rhilex/component/security"
 	core "github.com/hootrhino/rhilex/config"
 	"github.com/hootrhino/rhilex/glogger"
 	"github.com/hootrhino/rhilex/ossupport"
 	"github.com/hootrhino/rhilex/utils"
 
-	"github.com/hootrhino/rhilex/typex"
-
 	"github.com/gin-gonic/gin"
+	"github.com/hootrhino/rhilex/typex"
 	"github.com/shirou/gopsutil/v3/cpu"
 	"github.com/shirou/gopsutil/v3/disk"
 )
@@ -41,6 +41,7 @@ func InitSystemRoute() {
 		osApi.GET(("/getGpuInfo"), server.AddRoute(GetGpuInfo))
 		osApi.GET(("/sysConfig"), server.AddRoute(GetSysConfig))
 		osApi.POST(("/resetInterMetric"), server.AddRoute(ResetInterMetric))
+		osApi.GET(("/getSecurityLicense"), server.AddRoute(GetSecurityLicense))
 	}
 	systemApi := server.RouteGroup(server.ContextUrl("/"))
 	{
@@ -64,6 +65,29 @@ var __StartedAt = time.Unix(time.Now().Unix(), 0).Format("2006-01-02 15:04:05")
  */
 func Ping(c *gin.Context, ruleEngine typex.Rhilex) {
 	c.JSON(common.HTTP_OK, common.OkWithData("PONG"))
+}
+
+/**
+ * 前端证书
+ *
+ */
+//
+type SecurityLiscnse struct {
+	PublicKey string `json:"public_key"`
+}
+
+func GetSecurityLicense(c *gin.Context, ruleEngine typex.Rhilex) {
+	if !security.CheckLicense() {
+		security.InitSecurityLicense()
+	}
+	_, pub, err := security.ReadLocalKeys()
+	if err != nil {
+		c.JSON(common.HTTP_OK, common.Error400(err))
+	} else {
+		c.JSON(common.HTTP_OK, common.OkWithData(SecurityLiscnse{
+			PublicKey: pub,
+		}))
+	}
 }
 
 // Get all plugins
