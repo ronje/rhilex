@@ -18,68 +18,104 @@ package cjt1882004
 import (
 	"bytes"
 	"fmt"
+	"strconv"
 )
 
-// CJT188DataReadRequest represents a CJT188 data read request.
-type CJT188DataReadRequest struct {
-	ControlCode byte   // Control code (e.g., 0x11 for read request)
-	Length      byte   // Data length
-	Address     []byte // Meter address
-	DataID      byte   // Data identifier
+// CJT188Frame represents the structure of a CJ-T188 protocol frame.
+type CJT188Frame0x01 struct {
+	Start        byte    // 帧起始符
+	MeterType    byte    // 仪表类型
+	Address      [7]byte // 地址域
+	CtrlCode     byte    // 控制码
+	DataLength   byte    // 数据长度域
+	DataType     [2]byte // 数据长度域
+	DataArea     []byte  // 数据域
+	SerialNumber byte
+	CheckSum     byte // 校验码
+	End          byte // 结束符
 }
 
-// CJT188DataReadResponse represents a CJT188 data read response.
-type CJT188DataReadResponse struct {
-	ControlCode byte   // Control code (e.g., 0x91 for read response)
-	Length      byte   // Data length
-	Address     []byte // Meter address
-	DataID      byte   // Data identifier
-	Status      byte   // Status byte
-	Data        []byte // Data field
-	Checksum    byte   // Checksum
-}
-
-// PackCJT188DataReadRequest constructs a byte slice from a CJT188DataReadRequest.
-func PackCJT188DataReadRequest(req CJT188DataReadRequest) []byte {
-	buffer := new(bytes.Buffer)
-	buffer.WriteByte(req.ControlCode)
-	buffer.WriteByte(req.Length)
-	buffer.Write(req.Address)
-	buffer.WriteByte(req.DataID)
-	// Compute and append checksum
-	checksum := calculateChecksum(buffer.Bytes())
-	buffer.WriteByte(checksum)
-	return buffer.Bytes()
-}
-
-// UnpackCJT188DataReadResponse parses a byte slice into a CJT188DataReadResponse.
-func UnpackCJT188DataReadResponse(packet []byte) (*CJT188DataReadResponse, error) {
-	if len(packet) < 8 { // Minimum frame length
-		return nil, fmt.Errorf("invalid packet length")
+func (frame CJT188Frame0x01) String() string {
+	var result string
+	result += fmt.Sprintf("CJT188Frame0x01:\n=======\nStart: 0x%02x ", frame.Start)
+	result += fmt.Sprintf("\nMeterType: 0x%02x ", frame.MeterType)
+	result += "\nAddress: "
+	for _, b := range frame.Address {
+		result += fmt.Sprintf("0x%02x ", b)
+	}
+	result += fmt.Sprintf("\nCtrlCode: 0x%02x ", frame.CtrlCode)
+	result += fmt.Sprintf("\nDataLength: 0x%02x ", frame.DataLength)
+	result += "\nDataType: "
+	if len(frame.DataType) == 0 {
+		result += "[]"
+	} else {
+		for _, b := range frame.DataType {
+			result += fmt.Sprintf("0x%02x ", b)
+		}
+	}
+	result += fmt.Sprintf("\nSerialNumber: 0x%02x ", frame.SerialNumber)
+	result += "\nDataArea: "
+	if len(frame.DataArea) == 0 {
+		result += "[]"
+	} else {
+		for _, b := range frame.DataArea {
+			result += fmt.Sprintf("0x%02x ", b)
+		}
 	}
 
-	var resp CJT188DataReadResponse
-	resp.ControlCode = packet[0]
-	resp.Length = packet[1]
-	resp.Address = packet[2:6]
-	resp.DataID = packet[6]
-	resp.Status = packet[7]
-	resp.Data = packet[8 : 8+resp.Length-3] // Subtract control code, length, and status
-
-	// Checksum verification
-	calculatedChecksum := calculateChecksum(packet[:len(packet)-1])
-	if resp.Checksum != calculatedChecksum {
-		return nil, fmt.Errorf("invalid checksum")
-	}
-
-	return &resp, nil
+	result += fmt.Sprintf("\nCheckSum: 0x%02x ", frame.CheckSum)
+	result += fmt.Sprintf("\nEnd: 0x%02x\n=======\n", frame.End)
+	return result
 }
 
-// calculateChecksum computes the checksum for the given byte slice.
-func calculateChecksum(data []byte) byte {
-	var checksum byte
-	for _, b := range data {
-		checksum += b
+// Encode encodes the CJT188Frame into a byte slice.
+func (frame CJT188Frame0x01) Encode() ([]byte, error) {
+	nFrame := new(bytes.Buffer)
+	nFrame.WriteByte(frame.Start)
+	nFrame.WriteByte(frame.MeterType)
+	nFrame.Write(frame.Address[:])
+	nFrame.WriteByte(frame.CtrlCode)
+	nFrame.WriteByte(frame.DataLength)
+	nFrame.Write(frame.DataType[:])
+	nFrame.Write(frame.DataArea[:])
+	nFrame.WriteByte(frame.SerialNumber)
+	frame.CheckSum = crc8(nFrame.Bytes())
+	nFrame.WriteByte(frame.CheckSum)
+	nFrame.WriteByte(frame.End)
+	return nFrame.Bytes(), nil
+}
+
+/**
+ * 解析数据
+ *
+ */
+func (frame CJT188Frame0x01) GetData() (int64, error) {
+	BCD := []byte{}
+	for _, b := range frame.DataArea {
+		BCD = append(BCD, b-0x33)
 	}
-	return checksum
+	for i, j := 0, len(BCD)-1; i < j; i, j = i+1, j-1 {
+		BCD[i], BCD[j] = BCD[j], BCD[i]
+	}
+	str := ""
+	for _, v := range BCD {
+		str += fmt.Sprintf("%x", v)
+	}
+	return strconv.ParseInt(str, 10, len(BCD)*8)
+}
+
+// CJT188Frame0x01Response
+type CJT188Frame0x01Response struct {
+	Start        byte    // 帧起始符
+	MeterType    byte    // 仪表类型
+	Address      [7]byte // 地址域
+	CtrlCode     byte    // 控制码
+	DataLength   byte    // 数据长度域
+	DataType     [2]byte // 数据长度域
+	SerialNumber byte
+	CurData      []byte
+	S1           byte
+	S2           byte
+	CheckSum     byte // 校验码
+	End          byte // 结束符
 }

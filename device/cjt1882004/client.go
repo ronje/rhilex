@@ -13,7 +13,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-package dlt6452007
+package cjt1882004
 
 import (
 	"errors"
@@ -23,17 +23,17 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-type DLT645ClientHandler struct {
+type CJT188ClientHandler struct {
 	logger        *logrus.Logger
-	DataLinkLayer DLT6452007DataLinkLayer
-	Transporter   dlt645SerialTransporter
+	DataLinkLayer CJT1882004DataLinkLayer
+	Transporter   CJT188SerialTransporter
 }
 
 // NewRTUClientHandler allocates and initializes a RTUClientHandler.
-func NewDLT645ClientHandler(Transporter io.ReadWriteCloser) *DLT645ClientHandler {
-	handler := &DLT645ClientHandler{
-		DataLinkLayer: DLT6452007DataLinkLayer{},
-		Transporter:   dlt645SerialTransporter{port: Transporter},
+func NewCJT188ClientHandler(Transporter io.ReadWriteCloser) *CJT188ClientHandler {
+	handler := &CJT188ClientHandler{
+		DataLinkLayer: CJT1882004DataLinkLayer{},
+		Transporter:   CJT188SerialTransporter{port: Transporter},
 	}
 	return handler
 }
@@ -42,14 +42,14 @@ func NewDLT645ClientHandler(Transporter io.ReadWriteCloser) *DLT645ClientHandler
  * 关闭
  *
  */
-func (handler *DLT645ClientHandler) Close() error {
+func (handler *CJT188ClientHandler) Close() error {
 	if handler.Transporter.port == nil {
 		return fmt.Errorf("invalid Transporter")
 	}
 	return handler.Transporter.port.Close()
 }
 
-func (handler *DLT645ClientHandler) SetLogger(logger *logrus.Logger) {
+func (handler *CJT188ClientHandler) SetLogger(logger *logrus.Logger) {
 	handler.logger = logger
 }
 
@@ -57,12 +57,12 @@ func (handler *DLT645ClientHandler) SetLogger(logger *logrus.Logger) {
  * 发送请求
  *
  */
-func (handler *DLT645ClientHandler) Request(data []byte) ([]byte, error) {
+func (handler *CJT188ClientHandler) Request(data []byte) ([]byte, error) {
 	request := ""
 	for _, b := range data {
 		request += fmt.Sprintf("0x%02x ", b)
 	}
-	handler.logger.Debug("DLT645ClientHandler.Request:", request)
+	handler.logger.Debug("CJT188ClientHandler.Request:", request)
 	r, e := handler.Transporter.SendFrame(data)
 	result := ""
 	for _, b := range r {
@@ -72,37 +72,33 @@ func (handler *DLT645ClientHandler) Request(data []byte) ([]byte, error) {
 	return r, e
 }
 
-/**
- * 打包帧
- *
- */
-func (handler *DLT645ClientHandler) DecodeDLT645Frame0x11(data []byte) (DLT645Frame0x11, error) {
-	handler.logger.Debug("DLT645ClientHandler.DecodeDLT645Frame0x11:", data)
-	frame := DLT645Frame0x11{
-		Start:      data[0],
-		Address:    [6]byte{data[1], data[2], data[3], data[4], data[5], data[6]},
-		CtrlCode:   data[8],
-		DataLength: data[9],
-		DataType:   [4]byte{data[10], data[11], data[12], data[13]},
+// 解包CJT188协议帧
+func (handler *CJT188ClientHandler) DecodeCJT188Frame0x01(data []byte) (CJT188Frame0x01, error) {
+	handler.logger.Debug("CJT188ClientHandler.DecodeCJT188Frame0x11:", data)
+	frame := CJT188Frame0x01{
+		Start:        data[0],
+		MeterType:    data[1],
+		Address:      [7]byte{data[2], data[3], data[4], data[5], data[6], data[7], data[8]},
+		CtrlCode:     data[9],
+		DataLength:   data[10],
+		DataType:     [2]byte{data[11], data[12]},
+		SerialNumber: data[13],
+	}
+	if len(data) < 15 {
+		return frame, errors.New("invalid frame length")
 	}
 
-	if len(data) < 16 { // 至少包含起始符、地址域、控制码、数据长度、校验和和结束符
+	if int(data[10]) > len(data) {
 		return frame, errors.New("invalid frame length")
 	}
 
 	if frame.DataLength > 0 {
-		if frame.DataLength-4 > byte(len(data)) {
-			return frame, errors.New("invalid frame length")
-		}
-		frame.DataArea = data[14 : 14+frame.DataLength-4]
+		frame.DataArea = data[14 : 14+data[10]-3]
 	}
 	frame.CheckSum = data[len(data)-2]
 	frame.End = data[len(data)-1]
 	if frame.Start != 0x68 || frame.End != 0x16 {
 		return frame, fmt.Errorf("invalid start or end byte")
-	}
-	if int(frame.DataLength-4) != len(frame.DataArea) {
-		return frame, fmt.Errorf("data length mismatch")
 	}
 	CheckCrcErr := handler.DataLinkLayer.CheckCrc(data[0:len(data)-2], frame.CheckSum)
 	if CheckCrcErr != nil {
@@ -111,7 +107,10 @@ func (handler *DLT645ClientHandler) DecodeDLT645Frame0x11(data []byte) (DLT645Fr
 	return frame, nil
 }
 
-// 解包DLT645协议帧
-func (handler *DLT645ClientHandler) DecodeDLT645Frame0x11Response(data []byte) (DLT645Frame0x11, error) {
-	return handler.DecodeDLT645Frame0x11(data)
+/**
+ * 打包帧
+ *
+ */
+func (handler *CJT188ClientHandler) DecodeCJT188Frame0x01Response(data []byte) (CJT188Frame0x01, error) {
+	return handler.DecodeCJT188Frame0x01(data)
 }

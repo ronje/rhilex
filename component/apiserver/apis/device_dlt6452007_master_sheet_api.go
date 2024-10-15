@@ -350,7 +350,7 @@ func Dlt6452007MasterSheetImport(c *gin.Context, ruleEngine typex.Rhilex) {
 		c.JSON(common.HTTP_OK, common.Error400(errDb))
 		return
 	}
-	if Device.Type != (string(typex.DLT6452004_MASTER)) {
+	if Device.Type != (string(typex.DLT6452007_MASTER)) {
 		c.JSON(common.HTTP_OK,
 			common.Error("Invalid Device Type, Only Support Import  Dlt6452007Master Device"))
 		return

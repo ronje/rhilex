@@ -26,30 +26,30 @@ import (
 	serial "github.com/hootrhino/goserial"
 )
 
-// SimpleReadWriteCloser 是一个简单的 ReadWriteCloser 实现
-type SimpleReadWriteCloser struct {
+// DltReadWriteCloser 是一个简单的 ReadWriteCloser 实现
+type DltReadWriteCloser struct {
 	buffer *bytes.Buffer
 }
 
-// NewSimpleReadWriteCloser 创建一个新的 SimpleReadWriteCloser 实例
-func NewSimpleReadWriteCloser() *SimpleReadWriteCloser {
-	return &SimpleReadWriteCloser{
+// NewDltReadWriteCloser 创建一个新的 DltReadWriteCloser 实例
+func NewDltReadWriteCloser() *DltReadWriteCloser {
+	return &DltReadWriteCloser{
 		buffer: new(bytes.Buffer),
 	}
 }
 
 // Read 从 buffer 中读取数据
-func (s *SimpleReadWriteCloser) Read(p []byte) (n int, err error) {
+func (s *DltReadWriteCloser) Read(p []byte) (n int, err error) {
 	return s.buffer.Read(p)
 }
 
 // Write 向 buffer 中写入数据
-func (s *SimpleReadWriteCloser) Write(p []byte) (n int, err error) {
+func (s *DltReadWriteCloser) Write(p []byte) (n int, err error) {
 	return s.buffer.Write(p)
 }
 
 // Close 清空 buffer 并模拟关闭连接
-func (s *SimpleReadWriteCloser) Close() error {
+func (s *DltReadWriteCloser) Close() error {
 	s.buffer.Reset()
 	return nil
 }
@@ -60,7 +60,8 @@ func (s *SimpleReadWriteCloser) Close() error {
 // ============================= 33 34 34 35 66 55
 // ============================= 00 01 01 02 33 22
 func TestCodec_DLT645_2007_Frame(t *testing.T) {
-	client := dlt6452007.NewDLT645ClientHandler(NewSimpleReadWriteCloser())
+	client := dlt6452007.NewDLT645ClientHandler(NewDltReadWriteCloser())
+	client.SetLogger(logrus.StandardLogger())
 	frame := dlt6452007.DLT645Frame0x11{
 		Start:      dlt6452007.CTRL_CODE_FRAME_START,
 		Address:    [6]byte{0x45, 0x92, 0x66, 0x23, 0x00, 0x10},

@@ -15,15 +15,15 @@
 
 package cjt1882004
 
-const (
-	CTRL_CODE_FRAME_START = 0x68
-	CTRL_CODE_FRAME_END   = 0x16
-	CTRL_CODE_READ_DATA   = 0x01
-)
+import "fmt"
 
-const (
-	WATER_METER_0x10 = 0x10
-	WATER_METER_0x11 = 0x11
-	WATER_METER_0x12 = 0x12
-	WATER_METER_0x13 = 0x13
-)
+type CJT1882004DataLinkLayer struct {
+}
+
+func (dlt CJT1882004DataLinkLayer) CheckCrc(A []byte, B byte) error {
+	crcCode := crc8(A)
+	if crcCode != B {
+		return fmt.Errorf("Crc8 (%v, CRC=%v) Check Failed: %v", A, crcCode, B)
+	}
+	return nil
+}

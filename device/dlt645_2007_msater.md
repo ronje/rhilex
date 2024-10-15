@@ -19,9 +19,9 @@
 ## 配置
 ```json
 {
-    "name": "DLT6452004_MASTER",
-    "type": "DLT6452004_MASTER",
-    "description": "DLT6452004_MASTER",
+    "name": "DLT6452007_MASTER",
+    "type": "DLT6452007_MASTER",
+    "description": "DLT6452007_MASTER",
     "gid": "DROOT",
     "config": {
         "commonConfig": {

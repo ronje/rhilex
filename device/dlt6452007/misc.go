@@ -13,17 +13,16 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-package cjt1882004
+package dlt6452007
 
-const (
-	CTRL_CODE_FRAME_START = 0x68
-	CTRL_CODE_FRAME_END   = 0x16
-	CTRL_CODE_READ_DATA   = 0x01
-)
-
-const (
-	WATER_METER_0x10 = 0x10
-	WATER_METER_0x11 = 0x11
-	WATER_METER_0x12 = 0x12
-	WATER_METER_0x13 = 0x13
-)
+/**
+ * CRC
+ *
+ */
+func crc8(data []byte) byte {
+	var checksum byte
+	for _, b := range data {
+		checksum += b
+	}
+	return checksum
+}
