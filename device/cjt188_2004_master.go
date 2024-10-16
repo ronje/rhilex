@@ -59,11 +59,11 @@ type CJT188_2004_MasterGatewayMainConfig struct {
 
 type CJT188_2004_MasterGateway struct {
 	typex.XStatus
-	status                 typex.DeviceState
-	mainConfig             CJT188_2004_MasterGatewayMainConfig
-	CJT188_2004_DataPoints map[string]CJT188_2004_DataPoint
-	uartHandler            *cjt1882004.CJT188ClientHandler
-	tcpHandler             *cjt1882004.CJT188ClientHandler
+	status      typex.DeviceState
+	mainConfig  CJT188_2004_MasterGatewayMainConfig
+	DataPoints  map[string]CJT188_2004_DataPoint
+	uartHandler *cjt1882004.CJT188ClientHandler
+	tcpHandler  *cjt1882004.CJT188ClientHandler
 }
 
 func NewCJT188_2004_MasterGateway(e typex.Rhilex) typex.XDevice {
@@ -94,7 +94,7 @@ func NewCJT188_2004_MasterGateway(e typex.Rhilex) typex.XDevice {
 			StopBits: 1,
 		},
 	}
-	gw.CJT188_2004_DataPoints = map[string]CJT188_2004_DataPoint{}
+	gw.DataPoints = map[string]CJT188_2004_DataPoint{}
 	return gw
 }
 
@@ -120,7 +120,7 @@ func (gw *CJT188_2004_MasterGateway) Init(devId string, configMap map[string]int
 		if CJT188_2004_Point.Frequency < 1 {
 			return errors.New("'frequency' must grate than 50 millisecond")
 		}
-		gw.CJT188_2004_DataPoints[CJT188_2004_Point.UUID] = CJT188_2004_DataPoint{
+		gw.DataPoints[CJT188_2004_Point.UUID] = CJT188_2004_DataPoint{
 			UUID:      CJT188_2004_Point.UUID,
 			MeterId:   CJT188_2004_Point.MeterId,
 			Tag:       CJT188_2004_Point.Tag,
@@ -197,7 +197,7 @@ func (gw *CJT188_2004_MasterGateway) work(handler *cjt1882004.CJT188ClientHandle
 		default:
 		}
 		cjt1882004_ReadDatas := []cjt1882004_ReadData{}
-		for _, DataPoint := range gw.CJT188_2004_DataPoints {
+		for _, DataPoint := range gw.DataPoints {
 			MeterSn, errc := utils.HexStringToBytes(DataPoint.MeterId)
 			if errc != nil {
 				glogger.GLogger.Error(errc)

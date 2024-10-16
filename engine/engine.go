@@ -572,10 +572,10 @@ func (e *RuleEngine) InitDeviceTypeManager() error {
 			NewDevice: device.NewGenericSnmpDevice,
 		},
 	)
-	e.DeviceTypeManager.Register(typex.GENERIC_UART_PROTOCOL,
+	e.DeviceTypeManager.Register(typex.GENERIC_USER_PROTOCOL,
 		&typex.XConfig{
 			Engine:    e,
-			NewDevice: device.NewGenericUartProtocolDevice,
+			NewDevice: device.NewGenericUserProtocolDevice,
 		},
 	)
 	e.DeviceTypeManager.Register(typex.GENERIC_OPCUA,

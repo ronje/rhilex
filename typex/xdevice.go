@@ -20,7 +20,6 @@ const (
 	GENERIC_MODBUS_SLAVER  DeviceType = "GENERIC_MODBUS_SLAVER"  // 通用 GENERIC_MODBUS_SLAVER
 	GENERIC_SNMP           DeviceType = "GENERIC_SNMP"           // SNMP 协议支持
 	GENERIC_UART_RW        DeviceType = "GENERIC_UART_RW"        // 通用读写串口
-	GENERIC_UART_PROTOCOL  DeviceType = "GENERIC_UART_PROTOCOL"  // 通用控制串口
 	GENERIC_OPCUA          DeviceType = "GENERIC_OPCUA"          // 通用OPCUA协议
 	GENERIC_CAMERA         DeviceType = "GENERIC_CAMERA"         // 通用摄像头
 	GENERIC_AIS_RECEIVER   DeviceType = "GENERIC_AIS_RECEIVER"   // 通用AIS
@@ -34,7 +33,7 @@ const (
 	GENERIC_MBUS_MASTER    DeviceType = "GENERIC_MBUS_MASTER"    // 通用 Mbus
 	DLT6452007_MASTER      DeviceType = "DLT6452007_MASTER"      // DLT6452004
 	CJT1882004_MASTER      DeviceType = "CJT1882004_MASTER"      // CJT1882004
-
+	GENERIC_USER_PROTOCOL  DeviceType = "GENERIC_USER_PROTOCOL"  // 自定义协议
 )
 
 type DCAModel struct {

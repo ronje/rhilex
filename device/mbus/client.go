@@ -18,6 +18,7 @@ package mbus
 import (
 	"bufio"
 	"fmt"
+	"time"
 
 	"github.com/hootrhino/rhilex/typex"
 	"github.com/hootrhino/rhilex/utils"
@@ -26,15 +27,19 @@ import (
 
 type MbusClientHandler struct {
 	logger        *logrus.Logger
-	DataLinkLayer MbusDataLinkLayer
-	Transporter   MbusSerialTransporter
+	DataLinkLayer *MbusDataLinkLayer
+	Transporter   *MbusSerialTransporter
 }
 
 // NewRTUClientHandler allocates and initializes a RTUClientHandler.
 func NewMbusClientHandler(Transporter typex.GenericRWC) *MbusClientHandler {
 	handler := &MbusClientHandler{
-		DataLinkLayer: MbusDataLinkLayer{},
-		Transporter:   MbusSerialTransporter{port: Transporter},
+		DataLinkLayer: &MbusDataLinkLayer{},
+		Transporter: NewMbusSerialTransporter(TransporterConfig{
+			ReadTimeout:  100 * time.Millisecond,
+			WriteTimeout: 100 * time.Millisecond,
+			Port:         Transporter,
+		}),
 	}
 	return handler
 }

@@ -18,6 +18,7 @@ package cjt1882004
 import (
 	"errors"
 	"fmt"
+	"time"
 
 	"github.com/hootrhino/rhilex/typex"
 	"github.com/hootrhino/rhilex/utils"
@@ -26,15 +27,19 @@ import (
 
 type CJT188ClientHandler struct {
 	logger        *logrus.Logger
-	DataLinkLayer CJT1882004DataLinkLayer
-	Transporter   CJT188SerialTransporter
+	DataLinkLayer *CJT1882004DataLinkLayer
+	Transporter   *CJT188SerialTransporter
 }
 
 // NewRTUClientHandler allocates and initializes a RTUClientHandler.
 func NewCJT188ClientHandler(Transporter typex.GenericRWC) *CJT188ClientHandler {
 	handler := &CJT188ClientHandler{
-		DataLinkLayer: CJT1882004DataLinkLayer{},
-		Transporter:   CJT188SerialTransporter{port: Transporter},
+		DataLinkLayer: &CJT1882004DataLinkLayer{},
+		Transporter: NewCJT188SerialTransporter(TransporterConfig{
+			ReadTimeout:  100 * time.Millisecond,
+			WriteTimeout: 100 * time.Millisecond,
+			Port:         Transporter,
+		}),
 	}
 	return handler
 }

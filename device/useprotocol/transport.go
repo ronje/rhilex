@@ -13,10 +13,9 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-package mbus
+package userprotocol
 
 import (
-	"encoding/binary"
 	"time"
 
 	"github.com/hootrhino/rhilex/typex"
@@ -28,21 +27,21 @@ type TransporterConfig struct {
 	Port         typex.GenericRWC
 }
 
-type MbusSerialTransporter struct {
+type UserProtocolTransporter struct {
 	port         typex.GenericRWC
 	readTimeout  time.Duration
 	writeTimeout time.Duration
 }
 
-func NewMbusSerialTransporter(config TransporterConfig) *MbusSerialTransporter {
-	return &MbusSerialTransporter{
+func NewUserProtocolTransporter(config TransporterConfig) *UserProtocolTransporter {
+	return &UserProtocolTransporter{
 		readTimeout:  config.ReadTimeout,
 		writeTimeout: config.WriteTimeout,
 		port:         config.Port,
 	}
 }
 
-func (dlt *MbusSerialTransporter) SendFrame(aduRequest []byte) ([]byte, error) {
+func (dlt *UserProtocolTransporter) SendFrame(aduRequest []byte) ([]byte, error) {
 	deadline := time.Now().Add(dlt.writeTimeout)
 	dlt.port.SetWriteDeadline(deadline)
 	if _, err := dlt.port.Write(aduRequest); err != nil {
@@ -52,7 +51,7 @@ func (dlt *MbusSerialTransporter) SendFrame(aduRequest []byte) ([]byte, error) {
 	return dlt.ReadFrame(dlt.port)
 }
 
-func (dlt *MbusSerialTransporter) ReadFrame(rwc typex.GenericRWC) ([]byte, error) {
+func (dlt *UserProtocolTransporter) ReadFrame(rwc typex.GenericRWC) ([]byte, error) {
 	aduResponse := [128]byte{}
 	deadline := time.Now().Add(dlt.readTimeout)
 	dlt.port.SetReadDeadline(deadline)

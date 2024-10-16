@@ -19,18 +19,38 @@ import (
 	"encoding/binary"
 	"errors"
 	"io"
+	"time"
 
 	"github.com/hootrhino/rhilex/typex"
 )
 
-type dlt645SerialTransporter struct {
-	port typex.GenericRWC
+type TransporterConfig struct {
+	ReadTimeout  time.Duration
+	WriteTimeout time.Duration
+	Port         typex.GenericRWC
 }
 
-func (dlt *dlt645SerialTransporter) SendFrame(aduRequest []byte) (aduResponse []byte, err error) {
-	if _, err = dlt.port.Write(aduRequest); err != nil {
+type Dlt645SerialTransporter struct {
+	port         typex.GenericRWC
+	readTimeout  time.Duration
+	writeTimeout time.Duration
+}
+
+func NewDlt645SerialTransporter(config TransporterConfig) *Dlt645SerialTransporter {
+	return &Dlt645SerialTransporter{
+		readTimeout:  config.ReadTimeout,
+		writeTimeout: config.WriteTimeout,
+		port:         config.Port,
+	}
+}
+
+func (dlt *Dlt645SerialTransporter) SendFrame(aduRequest []byte) ([]byte, error) {
+	deadline := time.Now().Add(dlt.writeTimeout)
+	dlt.port.SetWriteDeadline(deadline)
+	if _, err := dlt.port.Write(aduRequest); err != nil {
 		return nil, err
 	}
+	defer dlt.port.SetWriteDeadline(time.Time{})
 	return dlt.ReadFrame(dlt.port)
 }
 
@@ -38,7 +58,7 @@ func (dlt *dlt645SerialTransporter) SendFrame(aduRequest []byte) (aduResponse []
  * 读请求
  *
  */
-func (dlt *dlt645SerialTransporter) ReadFrame(rwc io.ReadWriteCloser) (aduResponse []byte, err error) {
+func (dlt *Dlt645SerialTransporter) ReadFrame(rwc typex.GenericRWC) (aduResponse []byte, err error) {
 	// 0x68
 	var start1 byte
 	for {

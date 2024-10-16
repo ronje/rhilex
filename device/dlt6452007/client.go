@@ -18,6 +18,7 @@ package dlt6452007
 import (
 	"errors"
 	"fmt"
+	"time"
 
 	"github.com/hootrhino/rhilex/typex"
 	"github.com/hootrhino/rhilex/utils"
@@ -26,15 +27,19 @@ import (
 
 type DLT645ClientHandler struct {
 	logger        *logrus.Logger
-	DataLinkLayer DLT6452007DataLinkLayer
-	Transporter   dlt645SerialTransporter
+	DataLinkLayer *DLT6452007DataLinkLayer
+	Transporter   *Dlt645SerialTransporter
 }
 
 // NewRTUClientHandler allocates and initializes a RTUClientHandler.
 func NewDLT645ClientHandler(Transporter typex.GenericRWC) *DLT645ClientHandler {
 	handler := &DLT645ClientHandler{
-		DataLinkLayer: DLT6452007DataLinkLayer{},
-		Transporter:   dlt645SerialTransporter{port: Transporter},
+		DataLinkLayer: &DLT6452007DataLinkLayer{},
+		Transporter: NewDlt645SerialTransporter(TransporterConfig{
+			ReadTimeout:  100 * time.Millisecond,
+			WriteTimeout: 100 * time.Millisecond,
+			Port:         Transporter,
+		}),
 	}
 	return handler
 }

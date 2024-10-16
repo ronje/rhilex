@@ -19,18 +19,38 @@ import (
 	"encoding/binary"
 	"errors"
 	"io"
+	"time"
 
 	"github.com/hootrhino/rhilex/typex"
 )
 
+type TransporterConfig struct {
+	ReadTimeout  time.Duration
+	WriteTimeout time.Duration
+	Port         typex.GenericRWC
+}
+
 type CJT188SerialTransporter struct {
-	port typex.GenericRWC
+	port         typex.GenericRWC
+	readTimeout  time.Duration
+	writeTimeout time.Duration
+}
+
+func NewCJT188SerialTransporter(config TransporterConfig) *CJT188SerialTransporter {
+	return &CJT188SerialTransporter{
+		readTimeout:  config.ReadTimeout,
+		writeTimeout: config.WriteTimeout,
+		port:         config.Port,
+	}
 }
 
 func (dlt *CJT188SerialTransporter) SendFrame(aduRequest []byte) (aduResponse []byte, err error) {
-	if _, err = dlt.port.Write(aduRequest); err != nil {
+	deadline := time.Now().Add(dlt.writeTimeout)
+	dlt.port.SetWriteDeadline(deadline)
+	if _, err := dlt.port.Write(aduRequest); err != nil {
 		return nil, err
 	}
+	defer dlt.port.SetWriteDeadline(time.Time{})
 	return dlt.ReadFrame(dlt.port)
 }
 
@@ -38,7 +58,7 @@ func (dlt *CJT188SerialTransporter) SendFrame(aduRequest []byte) (aduResponse []
  * 读请求
  *
  */
-func (dlt *CJT188SerialTransporter) ReadFrame(rwc io.ReadWriteCloser) (aduResponse []byte, err error) {
+func (dlt *CJT188SerialTransporter) ReadFrame(rwc typex.GenericRWC) (aduResponse []byte, err error) {
 	// 0x68
 	var start byte
 	for {
