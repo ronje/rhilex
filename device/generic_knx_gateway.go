@@ -69,7 +69,7 @@ func (hd *KNXGateway) Start(cctx typex.CCTX) error {
 }
 
 func (hd *KNXGateway) Status() typex.DeviceState {
-	return typex.DEV_UP
+	return hd.status
 }
 
 func (hd *KNXGateway) Stop() {

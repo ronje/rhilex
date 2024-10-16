@@ -240,7 +240,7 @@ func (mdev *ModbusSlaver) Start(cctx typex.CCTX) error {
 }
 
 func (mdev *ModbusSlaver) Status() typex.DeviceState {
-	return typex.DEV_UP
+	return mdev.status
 }
 
 /*

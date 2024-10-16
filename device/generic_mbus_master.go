@@ -153,7 +153,7 @@ func (gw *MBusMasterGateway) Start(cctx typex.CCTX) error {
 }
 
 func (gw *MBusMasterGateway) Status() typex.DeviceState {
-	return typex.DEV_UP
+	return gw.status
 }
 
 func (gw *MBusMasterGateway) Stop() {
@@ -161,7 +161,7 @@ func (gw *MBusMasterGateway) Stop() {
 	if gw.CancelCTX != nil {
 		gw.CancelCTX()
 	}
-	intercache.RegisterSlot(gw.PointId)
+	intercache.UnRegisterSlot(gw.PointId)
 }
 
 func (gw *MBusMasterGateway) Details() *typex.Device {

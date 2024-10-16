@@ -127,7 +127,6 @@ func (sd *genericSnmpDevice) Init(devId string, configMap map[string]interface{}
 		})
 	}
 	if sd.mainConfig.SchemaId != "" {
-		intercache.RegisterSlot(sd.PointId)
 		var SchemaProperties []SnmpSchemaProperty
 		dataSchemaLoadError := interdb.DB().Table("m_iot_properties").
 			Where("schema_id=?", sd.mainConfig.SchemaId).Find(&SchemaProperties).Error

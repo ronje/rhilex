@@ -114,11 +114,6 @@ func (hd *TemplateDevice) OnWrite(cmd []byte, b []byte) (int, error) {
 	return 0, nil // 返回 0 表示没有数据写入，nil 表示没有错误
 }
 
-// Status 方法返回 TemplateDevice 的当前状态。在这个实现中，它总是返回 DEV_UP。
-func (hd *TemplateDevice) Status() typex.DeviceState {
-	return typex.DEV_UP // 表示设备状态为 UP
-}
-
 // Stop 方法用于停止 TemplateDevice 实例。它将设备状态设置为 DEV_DOWN 并调用取消函数。
 func (hd *TemplateDevice) Stop() {
 	hd.status = typex.DEV_DOWN // 设置设备状态为 DOWN
@@ -135,6 +130,11 @@ func (hd *TemplateDevice) SetState(status typex.DeviceState) {
 	hd.status = status // 设置设备状态
 }
 
+// Status 方法返回 TemplateDevice 的当前状态。在这个实现中，它总是返回 DEV_UP。
+func (hd *TemplateDevice) Status() typex.DeviceState {
+	return typex.DEV_UP // 表示设备状态为 UP
+}
+
 // OnDCACall 方法是 TemplateDevice 的 DCA（设备控制命令）回调函数。它接受 UUID、命令和参数，
 // 并返回一个 DCAResult 类型的结果。在这个实现中，它返回一个空的 DCAResult 实例。
 func (hd *TemplateDevice) OnDCACall(UUID string, Command string, Args interface{}) typex.DCAResult {
@@ -148,6 +148,18 @@ func (hd *TemplateDevice) OnCtrl(cmd []byte, args []byte) ([]byte, error) {
 }
 
 ```
+## 状态管理
+```go
+SetState(status typex.DeviceState) {
+	hd.status = status
+}
+
+Status() typex.DeviceState
+```
+- SetState:外部设置状态，固定写法：hd.status = status
+- Status：返回自己的状态
+> Status() 决定了是否能重启资源
+
 
 ## 关键接口
 - Init(devId string, configMap map[string]interface{}) error

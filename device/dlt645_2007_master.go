@@ -290,7 +290,7 @@ func (gw *DLT645_2007_MasterGateway) Status() typex.DeviceState {
 			return typex.DEV_DOWN
 		}
 	}
-	return typex.DEV_UP
+	return gw.status
 }
 
 func (gw *DLT645_2007_MasterGateway) Stop() {
@@ -308,7 +308,7 @@ func (gw *DLT645_2007_MasterGateway) Stop() {
 			gw.tcpHandler.Close()
 		}
 	}
-	intercache.RegisterSlot(gw.PointId)
+	intercache.UnRegisterSlot(gw.PointId)
 }
 
 func (gw *DLT645_2007_MasterGateway) Details() *typex.Device {

@@ -63,7 +63,7 @@ func (hd *TemplateDevice) Start(cctx typex.CCTX) error {
 }
 
 func (hd *TemplateDevice) Status() typex.DeviceState {
-	return typex.DEV_UP
+	return hd.Status
 }
 
 func (hd *TemplateDevice) Stop() {

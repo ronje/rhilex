@@ -158,7 +158,7 @@ func (br *BacnetRouter) Start(cctx typex.CCTX) error {
 }
 
 func (br *BacnetRouter) Status() typex.DeviceState {
-	return typex.DEV_UP
+	return br.status
 }
 
 func (br *BacnetRouter) Stop() {
