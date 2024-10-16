@@ -139,4 +139,8 @@ type Rhilex interface {
 	SetDeviceStatus(uuid string, s DeviceState)
 	//
 	SetSourceStatus(uuid string, s SourceState)
+	// 检查类型是否支持
+	CheckSourceType(Type InEndType) error
+	CheckDeviceType(Type DeviceType) error
+	CheckTargetType(Type TargetType) error
 }

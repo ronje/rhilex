@@ -245,6 +245,10 @@ func CreateDevice(c *gin.Context, ruleEngine typex.Rhilex) {
 		c.JSON(common.HTTP_OK, common.Error400(err))
 		return
 	}
+	if err := ruleEngine.CheckDeviceType(typex.DeviceType(form.Type)); err != nil {
+		c.JSON(common.HTTP_OK, common.Error400(err))
+		return
+	}
 	if service.CheckNameDuplicate(form.Name) {
 		c.JSON(common.HTTP_OK, common.Error("Device Name Duplicated"))
 		return
@@ -270,6 +274,7 @@ func CreateDevice(c *gin.Context, ruleEngine typex.Rhilex) {
 		c.JSON(common.HTTP_OK, common.Error400(msg))
 		return
 	}
+
 	newUUID := utils.DeviceUuid()
 	MDevice := model.MDevice{
 		UUID:        newUUID,

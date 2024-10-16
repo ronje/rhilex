@@ -100,6 +100,10 @@ func CreateInend(c *gin.Context, ruleEngine typex.Rhilex) {
 		c.JSON(common.HTTP_OK, common.Error(r))
 		return
 	}
+	if err := ruleEngine.CheckSourceType(typex.InEndType(form.Type)); err != nil {
+		c.JSON(common.HTTP_OK, common.Error400(err))
+		return
+	}
 	isSingle := false
 	// 内部消息总线是单例模式
 	if form.Type == typex.INTERNAL_EVENT.String() {

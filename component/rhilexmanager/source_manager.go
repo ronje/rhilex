@@ -44,3 +44,15 @@ func (rm *SourceTypeManager) All() []*typex.XConfig {
 	}
 	return data
 }
+
+/**
+ * 获取所有类型
+ *
+ */
+func (rm *SourceTypeManager) AllKeys() []string {
+	data := []string{}
+	for k := range rm.registry {
+		data = append(data, k.String())
+	}
+	return data
+}

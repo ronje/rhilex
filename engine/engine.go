@@ -777,3 +777,27 @@ func RegisterNewTarget(Type typex.TargetType, Cfg *typex.XConfig) error {
 	__DefaultRuleEngine.TargetTypeManager.Register(Type, Cfg)
 	return nil
 }
+
+func (e *RuleEngine) CheckSourceType(Type typex.InEndType) error {
+	keys := e.SourceTypeManager.AllKeys()
+	if utils.SContains(keys, string(Type)) {
+		return nil
+	}
+	return fmt.Errorf("Source Type Not Support:%s", Type)
+}
+
+func (e *RuleEngine) CheckDeviceType(Type typex.DeviceType) error {
+	keys := e.DeviceTypeManager.AllKeys()
+	if utils.SContains(keys, string(Type)) {
+		return nil
+	}
+	return fmt.Errorf("Device Type Not Support:%s", Type)
+}
+
+func (e *RuleEngine) CheckTargetType(Type typex.TargetType) error {
+	keys := e.TargetTypeManager.AllKeys()
+	if utils.SContains(keys, string(Type)) {
+		return nil
+	}
+	return fmt.Errorf("Target Type Not Support:%s", Type)
+}

@@ -145,6 +145,10 @@ func CreateOutEnd(c *gin.Context, ruleEngine typex.Rhilex) {
 		c.JSON(common.HTTP_OK, common.Error400(err1))
 		return
 	}
+	if err := ruleEngine.CheckTargetType(typex.TargetType(form.Type)); err != nil {
+		c.JSON(common.HTTP_OK, common.Error400(err))
+		return
+	}
 	newUUID := utils.OutUuid()
 	if err := service.InsertMOutEnd(&model.MOutEnd{
 		UUID:        newUUID,
