@@ -38,7 +38,7 @@ import (
 )
 
 func InitUserProtocolRoute() {
-	Api := server.RouteGroup(server.ContextUrl("/userProtocol_master_sheet"))
+	Api := server.RouteGroup(server.ContextUrl("/user_protocol_master_sheet"))
 	{
 		Api.POST(("/sheetImport"), server.AddRoute(UserProtocolMasterSheetImport))
 		Api.GET(("/sheetExport"), server.AddRoute(UserProtocolMasterPointsExport))
