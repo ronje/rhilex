@@ -494,6 +494,12 @@ func (e *RuleEngine) RestartDevice(uuid string) error {
  */
 
 func (e *RuleEngine) InitDeviceTypeManager() error {
+	e.DeviceTypeManager.Register(typex.CJT1882004_MASTER,
+		&typex.XConfig{
+			Engine:    e,
+			NewDevice: device.NewCJT188_2004_MasterGateway,
+		},
+	)
 	e.DeviceTypeManager.Register(typex.DLT6452007_MASTER,
 		&typex.XConfig{
 			Engine:    e,

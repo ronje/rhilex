@@ -26,51 +26,51 @@ import (
 	"github.com/hootrhino/rhilex/common"
 	"github.com/hootrhino/rhilex/component/intercache"
 	"github.com/hootrhino/rhilex/component/interdb"
-	"github.com/hootrhino/rhilex/device/dlt6452007"
+	"github.com/hootrhino/rhilex/device/cjt1882004"
 	"github.com/hootrhino/rhilex/glogger"
 	"github.com/hootrhino/rhilex/typex"
 	"github.com/hootrhino/rhilex/utils"
 )
 
-// DLT645_2007_Data 用于封装M-Bus采集的数据
-type DLT645_2007_DataPoint struct {
+// CJT188_2004_Data 用于封装M-Bus采集的数据
+type CJT188_2004_DataPoint struct {
 	UUID      string `json:"uuid"`
 	MeterId   string `json:"meterId"`
 	Tag       string `json:"tag"`
 	Alias     string `json:"alias"`
 	Frequency int64  `json:"frequency"`
 }
-type DLT645_2007_MasterGatewayCommonConfig struct {
+type CJT188_2004_MasterGatewayCommonConfig struct {
 	Mode         string `json:"mode" validate:"required"` // UART | TCP
 	AutoRequest  *bool  `json:"autoRequest" validate:"required"`
 	BatchRequest *bool  `json:"batchRequest" validate:"required"`
 }
 
-type DLT645_2007_MasterGatewayMainConfig struct {
-	CommonConfig DLT645_2007_MasterGatewayCommonConfig `json:"commonConfig"`
+type CJT188_2004_MasterGatewayMainConfig struct {
+	CommonConfig CJT188_2004_MasterGatewayCommonConfig `json:"commonConfig"`
 	HostConfig   common.HostConfig                     `json:"hostConfig"`
 	UartConfig   common.UartConfig                     `json:"uartConfig"`
 }
 
 /**
  *
- * DLT645_2007_
+ * CJT188_2004_
  */
 
-type DLT645_2007_MasterGateway struct {
+type CJT188_2004_MasterGateway struct {
 	typex.XStatus
 	status                 typex.DeviceState
-	mainConfig             DLT645_2007_MasterGatewayMainConfig
-	DLT645_2007_DataPoints map[string]DLT645_2007_DataPoint
-	uartHandler            *dlt6452007.DLT645ClientHandler
-	tcpHandler             *dlt6452007.DLT645ClientHandler
+	mainConfig             CJT188_2004_MasterGatewayMainConfig
+	CJT188_2004_DataPoints map[string]CJT188_2004_DataPoint
+	uartHandler            *cjt1882004.CJT188ClientHandler
+	tcpHandler             *cjt1882004.CJT188ClientHandler
 }
 
-func NewDLT645_2007_MasterGateway(e typex.Rhilex) typex.XDevice {
-	gw := new(DLT645_2007_MasterGateway)
+func NewCJT188_2004_MasterGateway(e typex.Rhilex) typex.XDevice {
+	gw := new(CJT188_2004_MasterGateway)
 	gw.RuleEngine = e
-	gw.mainConfig = DLT645_2007_MasterGatewayMainConfig{
-		CommonConfig: DLT645_2007_MasterGatewayCommonConfig{
+	gw.mainConfig = CJT188_2004_MasterGatewayMainConfig{
+		CommonConfig: CJT188_2004_MasterGatewayCommonConfig{
 			Mode: "UART",
 			AutoRequest: func() *bool {
 				b := false
@@ -94,11 +94,11 @@ func NewDLT645_2007_MasterGateway(e typex.Rhilex) typex.XDevice {
 			StopBits: 1,
 		},
 	}
-	gw.DLT645_2007_DataPoints = map[string]DLT645_2007_DataPoint{}
+	gw.CJT188_2004_DataPoints = map[string]CJT188_2004_DataPoint{}
 	return gw
 }
 
-func (gw *DLT645_2007_MasterGateway) Init(devId string, configMap map[string]interface{}) error {
+func (gw *CJT188_2004_MasterGateway) Init(devId string, configMap map[string]interface{}) error {
 	gw.PointId = devId
 	intercache.RegisterSlot(gw.PointId)
 
@@ -109,26 +109,26 @@ func (gw *DLT645_2007_MasterGateway) Init(devId string, configMap map[string]int
 	if !utils.SContains([]string{"UART", "TCP"}, gw.mainConfig.CommonConfig.Mode) {
 		return errors.New("unsupported mode, only can be one of 'TCP' or 'UART'")
 	}
-	var DLT645_ModbusPointList []DLT645_2007_DataPoint
-	PointLoadErr := interdb.DB().Table("m_dlt6452007_data_points").
+	var DLT645_ModbusPointList []CJT188_2004_DataPoint
+	PointLoadErr := interdb.DB().Table("m_cjt1882004_data_points").
 		Where("device_uuid=?", devId).Find(&DLT645_ModbusPointList).Error
 	if PointLoadErr != nil {
 		return PointLoadErr
 	}
 	LastFetchTime := uint64(time.Now().UnixMilli())
-	for _, DLT645_2007_Point := range DLT645_ModbusPointList {
-		if DLT645_2007_Point.Frequency < 1 {
+	for _, CJT188_2004_Point := range DLT645_ModbusPointList {
+		if CJT188_2004_Point.Frequency < 1 {
 			return errors.New("'frequency' must grate than 50 millisecond")
 		}
-		gw.DLT645_2007_DataPoints[DLT645_2007_Point.UUID] = DLT645_2007_DataPoint{
-			UUID:      DLT645_2007_Point.UUID,
-			MeterId:   DLT645_2007_Point.MeterId,
-			Tag:       DLT645_2007_Point.Tag,
-			Alias:     DLT645_2007_Point.Alias,
-			Frequency: DLT645_2007_Point.Frequency,
+		gw.CJT188_2004_DataPoints[CJT188_2004_Point.UUID] = CJT188_2004_DataPoint{
+			UUID:      CJT188_2004_Point.UUID,
+			MeterId:   CJT188_2004_Point.MeterId,
+			Tag:       CJT188_2004_Point.Tag,
+			Alias:     CJT188_2004_Point.Alias,
+			Frequency: CJT188_2004_Point.Frequency,
 		}
-		intercache.SetValue(gw.PointId, DLT645_2007_Point.UUID, intercache.CacheValue{
-			UUID:          DLT645_2007_Point.UUID,
+		intercache.SetValue(gw.PointId, CJT188_2004_Point.UUID, intercache.CacheValue{
+			UUID:          CJT188_2004_Point.UUID,
 			Status:        0,
 			LastFetchTime: LastFetchTime,
 			Value:         "0",
@@ -138,7 +138,7 @@ func (gw *DLT645_2007_MasterGateway) Init(devId string, configMap map[string]int
 	return nil
 }
 
-func (gw *DLT645_2007_MasterGateway) Start(cctx typex.CCTX) error {
+func (gw *CJT188_2004_MasterGateway) Start(cctx typex.CCTX) error {
 	gw.Ctx = cctx.Ctx
 	gw.CancelCTX = cctx.CancelCTX
 	if gw.mainConfig.CommonConfig.Mode == "UART" {
@@ -154,7 +154,7 @@ func (gw *DLT645_2007_MasterGateway) Start(cctx typex.CCTX) error {
 		if err != nil {
 			return err
 		}
-		gw.uartHandler = dlt6452007.NewDLT645ClientHandler(serialPort)
+		gw.uartHandler = cjt1882004.NewCJT188ClientHandler(serialPort)
 		gw.uartHandler.SetLogger(glogger.Logrus)
 		if *gw.mainConfig.CommonConfig.AutoRequest {
 			go gw.work(gw.uartHandler)
@@ -168,7 +168,7 @@ func (gw *DLT645_2007_MasterGateway) Start(cctx typex.CCTX) error {
 		if errDial != nil {
 			return errDial
 		}
-		gw.tcpHandler = dlt6452007.NewDLT645ClientHandler(tcpconn)
+		gw.tcpHandler = cjt1882004.NewCJT188ClientHandler(tcpconn)
 		gw.uartHandler.SetLogger(glogger.Logrus)
 		if *gw.mainConfig.CommonConfig.AutoRequest {
 			go gw.work(gw.tcpHandler)
@@ -184,20 +184,20 @@ END:
  * 读到的数据
  *
  */
-type CJT1882004_ReadData struct {
+type cjt1882004_ReadData struct {
 	MeterId string `json:"meterId"`
 	Value   int64  `json:"value"`
 }
 
-func (gw *DLT645_2007_MasterGateway) work(handler *dlt6452007.DLT645ClientHandler) {
+func (gw *CJT188_2004_MasterGateway) work(handler *cjt1882004.CJT188ClientHandler) {
 	for {
 		select {
 		case <-gw.Ctx.Done():
 			return
 		default:
 		}
-		CJT1882004_ReadDatas := []CJT1882004_ReadData{}
-		for _, DataPoint := range gw.DLT645_2007_DataPoints {
+		cjt1882004_ReadDatas := []cjt1882004_ReadData{}
+		for _, DataPoint := range gw.CJT188_2004_DataPoints {
 			MeterSn, errc := utils.HexStringToBytes(DataPoint.MeterId)
 			if errc != nil {
 				glogger.GLogger.Error(errc)
@@ -208,13 +208,16 @@ func (gw *DLT645_2007_MasterGateway) work(handler *dlt6452007.DLT645ClientHandle
 				continue
 			}
 			Address := utils.ByteReverse(MeterSn)
-			frame := dlt6452007.DLT645Frame0x11{
-				Start:      dlt6452007.CTRL_CODE_FRAME_START,
-				Address:    [6]byte{Address[0], Address[1], Address[2], Address[3], Address[4], Address[5]},
-				CtrlCode:   dlt6452007.CTRL_CODE_READ_DATA,
-				DataLength: 0x04,
-				DataType:   [4]byte{0x33, 0x34, 0x34, 0x35},
-				End:        dlt6452007.CTRL_CODE_FRAME_END,
+			frame := cjt1882004.CJT188Frame0x01{
+				Start:        cjt1882004.CTRL_CODE_FRAME_START,
+				MeterType:    0x10,
+				Address:      [7]byte{Address[0], Address[1], Address[2], Address[3], Address[4], Address[5], Address[6]},
+				CtrlCode:     cjt1882004.CTRL_CODE_READ_DATA,
+				DataLength:   0x03,
+				DataType:     [2]byte{0x90, 0x1F},
+				DataArea:     []byte{},
+				SerialNumber: 0x00,
+				End:          cjt1882004.CTRL_CODE_FRAME_END,
 			}
 			Bytes, err := frame.Encode()
 			if err != nil {
@@ -226,7 +229,7 @@ func (gw *DLT645_2007_MasterGateway) work(handler *dlt6452007.DLT645ClientHandle
 				glogger.GLogger.Error(errRequest)
 				continue
 			}
-			DLT645Frame0x11, errDecode := handler.DecodeDLT645Frame0x11Response(Resp)
+			DLT645Frame0x11, errDecode := handler.DecodeCJT188Frame0x01Response(Resp)
 			if errDecode != nil {
 				glogger.GLogger.Error(errDecode)
 				continue
@@ -249,7 +252,7 @@ func (gw *DLT645_2007_MasterGateway) work(handler *dlt6452007.DLT645ClientHandle
 			}
 			intercache.SetValue(gw.PointId, DataPoint.UUID, NewValue)
 			if !*gw.mainConfig.CommonConfig.BatchRequest {
-				if bytes, err := json.Marshal(CJT1882004_ReadData{
+				if bytes, err := json.Marshal(cjt1882004_ReadData{
 					MeterId: DataPoint.MeterId,
 					Value:   Value,
 				}); err != nil {
@@ -259,7 +262,7 @@ func (gw *DLT645_2007_MasterGateway) work(handler *dlt6452007.DLT645ClientHandle
 					gw.RuleEngine.WorkDevice(gw.Details(), string(bytes))
 				}
 			} else {
-				CJT1882004_ReadDatas = append(CJT1882004_ReadDatas, CJT1882004_ReadData{
+				cjt1882004_ReadDatas = append(cjt1882004_ReadDatas, cjt1882004_ReadData{
 					MeterId: DataPoint.MeterId,
 					Value:   Value,
 				})
@@ -267,8 +270,8 @@ func (gw *DLT645_2007_MasterGateway) work(handler *dlt6452007.DLT645ClientHandle
 			time.Sleep(time.Duration(DataPoint.Frequency) * time.Millisecond)
 		}
 		if *gw.mainConfig.CommonConfig.BatchRequest {
-			if len(CJT1882004_ReadDatas) > 0 {
-				if bytes, err := json.Marshal(CJT1882004_ReadDatas); err != nil {
+			if len(cjt1882004_ReadDatas) > 0 {
+				if bytes, err := json.Marshal(cjt1882004_ReadDatas); err != nil {
 					glogger.GLogger.Error(err)
 				} else {
 					glogger.GLogger.Debug(string(bytes))
@@ -278,7 +281,7 @@ func (gw *DLT645_2007_MasterGateway) work(handler *dlt6452007.DLT645ClientHandle
 		}
 	}
 }
-func (gw *DLT645_2007_MasterGateway) Status() typex.DeviceState {
+func (gw *CJT188_2004_MasterGateway) Status() typex.DeviceState {
 	if gw.mainConfig.CommonConfig.Mode == "UART" {
 		if gw.uartHandler == nil {
 			return typex.DEV_DOWN
@@ -292,7 +295,7 @@ func (gw *DLT645_2007_MasterGateway) Status() typex.DeviceState {
 	return gw.status
 }
 
-func (gw *DLT645_2007_MasterGateway) Stop() {
+func (gw *CJT188_2004_MasterGateway) Stop() {
 	gw.status = typex.DEV_DOWN
 	if gw.CancelCTX != nil {
 		gw.CancelCTX()
@@ -310,27 +313,27 @@ func (gw *DLT645_2007_MasterGateway) Stop() {
 	intercache.UnRegisterSlot(gw.PointId)
 }
 
-func (gw *DLT645_2007_MasterGateway) Details() *typex.Device {
+func (gw *CJT188_2004_MasterGateway) Details() *typex.Device {
 	return gw.RuleEngine.GetDevice(gw.PointId)
 }
 
-func (gw *DLT645_2007_MasterGateway) SetState(status typex.DeviceState) {
+func (gw *CJT188_2004_MasterGateway) SetState(status typex.DeviceState) {
 	gw.status = status
 }
 
-func (gw *DLT645_2007_MasterGateway) OnDCACall(UUID string, Command string, Args interface{}) typex.DCAResult {
+func (gw *CJT188_2004_MasterGateway) OnDCACall(UUID string, Command string, Args interface{}) typex.DCAResult {
 	return typex.DCAResult{}
 }
 
-func (gw *DLT645_2007_MasterGateway) OnCtrl(cmd []byte, args []byte) ([]byte, error) {
+func (gw *CJT188_2004_MasterGateway) OnCtrl(cmd []byte, args []byte) ([]byte, error) {
 	return []byte{}, nil
 }
 
-func (gw *DLT645_2007_MasterGateway) OnRead(cmd []byte, data []byte) (int, error) {
+func (gw *CJT188_2004_MasterGateway) OnRead(cmd []byte, data []byte) (int, error) {
 
 	return 0, nil
 }
 
-func (gw *DLT645_2007_MasterGateway) OnWrite(cmd []byte, b []byte) (int, error) {
+func (gw *CJT188_2004_MasterGateway) OnWrite(cmd []byte, b []byte) (int, error) {
 	return 0, nil
 }

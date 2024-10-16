@@ -33,6 +33,7 @@ const (
 	KNX_GATEWAY            DeviceType = "KNX_GATEWAY"            // KNX 网关
 	GENERIC_MBUS_MASTER    DeviceType = "GENERIC_MBUS_MASTER"    // 通用 Mbus
 	DLT6452007_MASTER      DeviceType = "DLT6452007_MASTER"      // DLT6452004
+	CJT1882004_MASTER      DeviceType = "CJT1882004_MASTER"      // CJT1882004
 
 )
 

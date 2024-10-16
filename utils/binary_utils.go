@@ -15,7 +15,10 @@
 
 package utils
 
-import "errors"
+import (
+	"errors"
+	"strconv"
+)
 
 //--------------------------------------------------------------------------------------------------
 // 内部函数
@@ -109,4 +112,35 @@ func BitToUint8(data byte, index uint8) uint8 {
  */
 func ByteToBool(data byte) bool {
 	return data == 1
+}
+
+/**
+ * 转表号
+ *
+ */
+func HexStringToBytes(s string) ([]byte, error) {
+	if len(s)%2 != 0 {
+		s = "0" + s
+	}
+	bytes := make([]byte, len(s)/2)
+	for i := 0; i < len(s); i += 2 {
+		val, err := strconv.ParseUint(s[i:i+2], 16, 8)
+		if err != nil {
+			return nil, err
+		}
+		bytes[i/2] = byte(val)
+	}
+	return bytes, nil
+}
+
+/**
+ * 翻转字节
+ *
+ */
+func ByteReverse(bs []byte) []byte {
+	r := make([]byte, len(bs))
+	for i, b := range bs {
+		r[len(bs)-i-1] = b
+	}
+	return r
 }

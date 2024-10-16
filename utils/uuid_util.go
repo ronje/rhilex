@@ -73,8 +73,13 @@ func SnmpOidUUID() string {
 func BacnetPointUUID() string {
 	return MakeUUID("BACN")
 }
+
 func Dlt6452007PointUUID() string {
 	return MakeUUID("DLT645")
+}
+
+func Cjt1882004PointUUID() string {
+	return MakeUUID("CJT188")
 }
 
 // MakeUUID
