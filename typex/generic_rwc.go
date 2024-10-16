@@ -13,4 +13,15 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-package mbus
+package typex
+
+import (
+	"io"
+	"time"
+)
+
+type GenericRWC interface {
+	io.ReadWriteCloser
+	SetReadDeadline(t time.Time) error
+	SetWriteDeadline(t time.Time) error
+}

@@ -18,8 +18,8 @@ package dlt6452007
 import (
 	"errors"
 	"fmt"
-	"io"
 
+	"github.com/hootrhino/rhilex/typex"
 	"github.com/sirupsen/logrus"
 )
 
@@ -30,7 +30,7 @@ type DLT645ClientHandler struct {
 }
 
 // NewRTUClientHandler allocates and initializes a RTUClientHandler.
-func NewDLT645ClientHandler(Transporter io.ReadWriteCloser) *DLT645ClientHandler {
+func NewDLT645ClientHandler(Transporter typex.GenericRWC) *DLT645ClientHandler {
 	handler := &DLT645ClientHandler{
 		DataLinkLayer: DLT6452007DataLinkLayer{},
 		Transporter:   dlt645SerialTransporter{port: Transporter},

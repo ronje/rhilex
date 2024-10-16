@@ -23,7 +23,7 @@ require (
 	github.com/hootrhino/gomodbus v0.2.5
 	github.com/hootrhino/gomodbus-server v0.1.10
 	github.com/hootrhino/gopher-lua v1.0.3
-	github.com/hootrhino/goserial v0.2.1
+	github.com/hootrhino/goserial v0.2.2
 	github.com/hootrhino/wmi v0.0.0-20230603082700-cfa077a8cf01
 	github.com/itchyny/gojq v0.12.16
 	github.com/jinzhu/copier v0.4.0

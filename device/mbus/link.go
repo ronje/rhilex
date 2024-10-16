@@ -14,3 +14,16 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 package mbus
+
+import "fmt"
+
+type MbusDataLinkLayer struct {
+}
+
+func (dlt MbusDataLinkLayer) CheckCrc(A []byte, B byte) error {
+	crcCode := crc8(A)
+	if crcCode != B {
+		return fmt.Errorf("Crc8 (%v, CRC=%v) Check Failed: %v", A, crcCode, B)
+	}
+	return nil
+}

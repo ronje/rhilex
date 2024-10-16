@@ -14,3 +14,15 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 package mbus
+
+/**
+ * CRC
+ *
+ */
+func crc8(data []byte) byte {
+	var checksum byte
+	for _, b := range data {
+		checksum += b
+	}
+	return checksum
+}

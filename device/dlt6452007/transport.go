@@ -19,10 +19,12 @@ import (
 	"encoding/binary"
 	"errors"
 	"io"
+
+	"github.com/hootrhino/rhilex/typex"
 )
 
 type dlt645SerialTransporter struct {
-	port io.ReadWriteCloser
+	port typex.GenericRWC
 }
 
 func (dlt *dlt645SerialTransporter) SendFrame(aduRequest []byte) (aduResponse []byte, err error) {

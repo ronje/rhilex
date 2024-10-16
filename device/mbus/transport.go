@@ -14,3 +14,28 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 package mbus
+
+import (
+	"io"
+
+	"github.com/hootrhino/rhilex/typex"
+)
+
+type MbusSerialTransporter struct {
+	port typex.GenericRWC
+}
+
+func (dlt *MbusSerialTransporter) SendFrame(aduRequest []byte) (aduResponse []byte, err error) {
+	if _, err = dlt.port.Write(aduRequest); err != nil {
+		return nil, err
+	}
+	return dlt.ReadFrame(dlt.port)
+}
+
+/**
+ * 读请求
+ *
+ */
+func (dlt *MbusSerialTransporter) ReadFrame(rwc io.ReadWriteCloser) (aduResponse []byte, err error) {
+	return aduResponse, nil
+}

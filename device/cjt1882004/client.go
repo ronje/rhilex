@@ -18,8 +18,8 @@ package cjt1882004
 import (
 	"errors"
 	"fmt"
-	"io"
 
+	"github.com/hootrhino/rhilex/typex"
 	"github.com/sirupsen/logrus"
 )
 
@@ -30,7 +30,7 @@ type CJT188ClientHandler struct {
 }
 
 // NewRTUClientHandler allocates and initializes a RTUClientHandler.
-func NewCJT188ClientHandler(Transporter io.ReadWriteCloser) *CJT188ClientHandler {
+func NewCJT188ClientHandler(Transporter typex.GenericRWC) *CJT188ClientHandler {
 	handler := &CJT188ClientHandler{
 		DataLinkLayer: CJT1882004DataLinkLayer{},
 		Transporter:   CJT188SerialTransporter{port: Transporter},
