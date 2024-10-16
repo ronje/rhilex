@@ -15,7 +15,6 @@
 
 package model
 
-// SNMP 点位表
 type MSnmpOid struct {
 	RhilexModel
 	UUID       string

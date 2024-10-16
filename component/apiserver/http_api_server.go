@@ -141,7 +141,9 @@ func (hs *ApiServerPlugin) Init(config *ini.Section) error {
 		&model.MModbusDataPoint{},
 		&model.MSiemensDataPoint{},
 		&model.MSnmpOid{},
+		&model.MCjt1882004DataPoint{},
 		&model.MDlt6452007DataPoint{},
+		&model.MUserProtocolDataPoint{},
 		&model.MBacnetDataPoint{},
 		&model.MBacnetRouterDataPoint{},
 		&model.MMBusDataPoint{},
@@ -203,6 +205,8 @@ func (hs *ApiServerPlugin) LoadRoute() {
 	apis.InitMBusRoute()
 	// DLT645
 	apis.InitDlt6452007Route()
+	// USer Protocol
+	apis.InitUserProtocolRoute()
 	// Init Internal Notify Route
 	apis.InitInternalNotifyRoute()
 	// Snmp Route

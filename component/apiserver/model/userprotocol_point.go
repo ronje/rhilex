@@ -15,7 +15,6 @@
 
 package model
 
-// SNMP 点位表
 type MUserProtocolDataPoint struct {
 	RhilexModel
 	UUID       string

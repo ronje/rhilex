@@ -15,8 +15,7 @@
 
 package model
 
-// SNMP 点位表
-type MCjt1882004DataPoint struct {
+type MDlt6452007DataPoint struct {
 	RhilexModel
 	UUID       string
 	DeviceUuid string

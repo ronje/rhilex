@@ -113,7 +113,7 @@ func (gw *GenericUserProtocolDevice) Init(devId string, configMap map[string]int
 		return errors.New("unsupported mode, only can be one of 'TCP' or 'UART'")
 	}
 	var DataPoints []GenericUserProtocolDataPoint
-	PointLoadErr := interdb.DB().Table("m_userprotocol_data_points").
+	PointLoadErr := interdb.DB().Table("m_user_protocol_data_points").
 		Where("device_uuid=?", devId).Find(&DataPoints).Error
 	if PointLoadErr != nil {
 		return PointLoadErr
