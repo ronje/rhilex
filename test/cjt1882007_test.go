@@ -19,6 +19,7 @@ import (
 	"bytes"
 	"fmt"
 	"testing"
+	"time"
 
 	"github.com/hootrhino/rhilex/device/cjt1882004"
 	"github.com/sirupsen/logrus"
@@ -51,6 +52,15 @@ func (s *CjtReadWriteCloser) Write(p []byte) (n int, err error) {
 func (s *CjtReadWriteCloser) Close() error {
 	s.buffer.Reset()
 	return nil
+}
+
+func (s *CjtReadWriteCloser) SetReadDeadline(t time.Time) error {
+	return nil
+
+}
+func (s *CjtReadWriteCloser) SetWriteDeadline(t time.Time) error {
+	return nil
+
 }
 
 // go test -timeout 30s -run ^TestCodec_CJT188_2007_Frame github.com/hootrhino/rhilex/test -v -count=1

@@ -20,6 +20,7 @@ import (
 	"fmt"
 
 	"github.com/hootrhino/rhilex/typex"
+	"github.com/hootrhino/rhilex/utils"
 	"github.com/sirupsen/logrus"
 )
 
@@ -58,17 +59,14 @@ func (handler *CJT188ClientHandler) SetLogger(logger *logrus.Logger) {
  *
  */
 func (handler *CJT188ClientHandler) Request(data []byte) ([]byte, error) {
+	data = append([]byte{0xFE, 0xFE, 0xFE, 0xFE}, data...)
 	request := ""
 	for _, b := range data {
 		request += fmt.Sprintf("0x%02x ", b)
 	}
 	handler.logger.Debug("CJT188ClientHandler.Request:", request)
 	r, e := handler.Transporter.SendFrame(data)
-	result := ""
-	for _, b := range r {
-		result += fmt.Sprintf("0x%02x ", b)
-	}
-	handler.logger.Debug("Transporter.Received:", result)
+	handler.logger.Debug("Transporter.Received:", utils.ByteDumpHexString(r))
 	return r, e
 }
 

@@ -18,9 +18,9 @@ package mbus
 import (
 	"bufio"
 	"fmt"
-	"io"
 
 	"github.com/hootrhino/rhilex/typex"
+	"github.com/hootrhino/rhilex/utils"
 	"github.com/sirupsen/logrus"
 )
 
@@ -65,11 +65,7 @@ func (handler *MbusClientHandler) Request(data []byte) ([]byte, error) {
 	}
 	handler.logger.Debug("MbusClientHandler.Request:", request)
 	r, e := handler.Transporter.SendFrame(data)
-	result := ""
-	for _, b := range r {
-		result += fmt.Sprintf("0x%02x ", b)
-	}
-	handler.logger.Debug("Transporter.Received:", result)
+	handler.logger.Debug("MbusClientHandler Transporter.Received:", utils.ByteDumpHexString(r))
 	return r, e
 }
 
@@ -207,7 +203,7 @@ func (handler *MbusClientHandler) ReadAllFrames(primaryID int) ([]*DecodedFrame,
 		return nil, err
 	}
 
-	_, err = handler.ReadSingleCharFrame(handler.Transporter.port)
+	_, err = handler.ReadSingleCharFrame()
 	if err != nil {
 		return nil, err
 	}
@@ -301,8 +297,8 @@ func (handler *MbusClientHandler) ReadLongFrame() (LongFrame, error) {
 	}
 }
 
-func (handler *MbusClientHandler) ReadSingleCharFrame(r io.Reader) (LongFrame, error) {
-	buf := bufio.NewReader(r)
+func (handler *MbusClientHandler) ReadSingleCharFrame() (LongFrame, error) {
+	buf := bufio.NewReader(handler.Transporter.port)
 	msg, err := buf.ReadBytes(SingleCharacterFrame)
 	if err != nil {
 		return nil, err
@@ -311,10 +307,10 @@ func (handler *MbusClientHandler) ReadSingleCharFrame(r io.Reader) (LongFrame, e
 }
 
 // ReadAnyAndPrint is used for debugging.
-func (handler *MbusClientHandler) ReadAnyAndPrint(r io.Reader) error {
+func (handler *MbusClientHandler) ReadAnyAndPrint() error {
 	tmp := make([]byte, 256) // using small tmo buffer for demonstrating
 	for {
-		n, err := r.Read(tmp)
+		n, err := handler.Transporter.port.Read(tmp)
 		if err != nil {
 			return err
 		}

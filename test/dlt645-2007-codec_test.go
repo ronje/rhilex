@@ -19,6 +19,7 @@ import (
 	"bytes"
 	"fmt"
 	"testing"
+	"time"
 
 	"github.com/hootrhino/rhilex/device/dlt6452007"
 	"github.com/sirupsen/logrus"
@@ -45,6 +46,7 @@ func (s *DltReadWriteCloser) Read(p []byte) (n int, err error) {
 
 // Write 向 buffer 中写入数据
 func (s *DltReadWriteCloser) Write(p []byte) (n int, err error) {
+	fmt.Println("DltReadWriteCloser.Write:", p)
 	return s.buffer.Write(p)
 }
 
@@ -52,6 +54,15 @@ func (s *DltReadWriteCloser) Write(p []byte) (n int, err error) {
 func (s *DltReadWriteCloser) Close() error {
 	s.buffer.Reset()
 	return nil
+}
+
+func (s *DltReadWriteCloser) SetReadDeadline(t time.Time) error {
+	return nil
+
+}
+func (s *DltReadWriteCloser) SetWriteDeadline(t time.Time) error {
+	return nil
+
 }
 
 // go test -timeout 30s -run ^TestCodec_DLT645_2007_Frame github.com/hootrhino/rhilex/test -v -count=1

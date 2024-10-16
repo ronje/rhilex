@@ -17,6 +17,7 @@ package utils
 
 import (
 	"errors"
+	"fmt"
 	"strconv"
 )
 
@@ -143,4 +144,16 @@ func ByteReverse(bs []byte) []byte {
 		r[len(bs)-i-1] = b
 	}
 	return r
+}
+
+/**
+ * 打印十六进制
+ *
+ */
+func ByteDumpHexString(b []byte) string {
+	result := ""
+	for _, v := range b {
+		result += fmt.Sprintf("0x%02x ", v)
+	}
+	return result
 }
