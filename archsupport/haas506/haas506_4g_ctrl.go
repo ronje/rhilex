@@ -13,7 +13,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-package rhilexg1
+package haas506
 
 import (
 	"fmt"
@@ -23,6 +23,14 @@ import (
 	"strings"
 	"time"
 )
+
+type ModuleInfo struct {
+	ICCID     string
+	SIMNumber string
+	IMEL      string
+	IMSI      string
+	CSQ       string
+}
 
 /*
 *
@@ -44,7 +52,6 @@ const (
 	__AT_TIMEOUT         = 300 * time.Millisecond // timeout ms
 	__GET_APN_CFG        = "AT+QICSGP=1\r\n"      // APN
 	__SAVE_CONFIG        = "AT&W\r\n"             // SaveConfig
-	// __USB_4G_DEV_PATH    = "/dev/ttyUSB1"         // USB
 )
 
 /*
@@ -63,13 +70,13 @@ OK
 AT+QICSGP=1,1,"UNINET","","",1 //配置场景 1，APN 配置为"UNINET"（中国联通）。
 OK\ERROR
 */
-func EC200AGetAPN(path string) (string, error) {
-	return __EC200A_AT(path, __GET_APN_CFG, __AT_TIMEOUT)
+func ML307RGetAPN(path string) (string, error) {
+	return __ML307R_AT(path, __GET_APN_CFG, __AT_TIMEOUT)
 }
 
 // 场景恒等于1
-func EC200ASetAPN(path string, ptype int, apn, username, password string, auth, cdmaPwd int) (string, error) {
-	return __EC200A_AT(path, fmt.Sprintf(`AT+QICSGP=1,%d,"%s","%s","%s",%d,%d`,
+func ML307RSetAPN(path string, ptype int, apn, username, password string, auth, cdmaPwd int) (string, error) {
+	return __ML307R_AT(path, fmt.Sprintf(`AT+QICSGP=1,%d,"%s","%s","%s",%d,%d`,
 		ptype, apn, username, password, auth, cdmaPwd), __AT_TIMEOUT)
 }
 
@@ -81,9 +88,9 @@ func EC200ASetAPN(path string, ptype int, apn, username, password string, auth, 
   - 10-14：较弱的信号，但可能可以建立连接。
   - 15-19：中等强度的信号。
   - 20-31：非常强的信号，信号质量非常好。
-    EC200AGet4G_CSQ: 返回值代表信号格
+    ML307RGet4G_CSQ: 返回值代表信号格
 */
-func EC200AGet4G_CSQ(path string) int {
+func ML307RGet4G_CSQ(path string) int {
 	return __Get4G_CSQ(path)
 }
 
@@ -97,13 +104,13 @@ func EC200AGet4G_CSQ(path string) int {
 (3,"CHN-CT","CT","46011",7),
 (1,"460 15","460 15","46015",7),,(0-4),(0-2)
 */
-func EC200AGetCOPS(path string) (string, error) {
+func ML307RGetCOPS(path string) (string, error) {
 	// +COPS: 0,0,"CHINA MOBILE",7
 	// +COPS: 0,0,"CHIN-UNICOM",7
-	return __EC200A_AT(path, __CURRENT_COPS_CMD, __AT_TIMEOUT)
+	return __ML307R_AT(path, __CURRENT_COPS_CMD, __AT_TIMEOUT)
 }
-func EC200ARestart4G(path string) (string, error) {
-	return __EC200A_AT(path, __RESET_AT_CMD, __AT_TIMEOUT)
+func ML307RRestart4G(path string) (string, error) {
+	return __ML307R_AT(path, __RESET_AT_CMD, __AT_TIMEOUT)
 }
 
 /*
@@ -111,8 +118,8 @@ func EC200ARestart4G(path string) (string, error) {
 * 获取ICCID, 用户查询电话卡号
 * +QCCID: 89860025128306012474
  */
-func EC200AGetICCID(path string) (string, error) {
-	return __EC200A_AT(path, __GET_ICCID_CMD, __AT_TIMEOUT)
+func ML307RGetICCID(path string) (string, error) {
+	return __ML307R_AT(path, __GET_ICCID_CMD, __AT_TIMEOUT)
 
 }
 func __Get4G_CSQ(path string) int {
@@ -174,32 +181,32 @@ func __Get4G_CSQ(path string) int {
 * 初始化4G模组
 *
  */
-func InitEC200A4G(path string) {
+func InitML307R4G(path string) {
 	if err := turnOffEcho(path); err != nil {
-		fmt.Println("EC200AInit4G turnOffEcho error:", err)
+		fmt.Println("ML307RInit4G turnOffEcho error:", err)
 		return
 	}
-	fmt.Println("EC200AInit4G turnOffEcho ok.")
+	fmt.Println("ML307RInit4G turnOffEcho ok.")
 	if err := setDriverMode(path); err != nil {
-		fmt.Println("EC200AInit4G setDriverMode error:", err)
+		fmt.Println("ML307RInit4G setDriverMode error:", err)
 		return
 	}
-	fmt.Println("EC200AInit4G setDriverMode ok.")
+	fmt.Println("ML307RInit4G setDriverMode ok.")
 	if err := setDial(path); err != nil {
-		fmt.Println("EC200AInit4G setDial error:", err)
+		fmt.Println("ML307RInit4G setDial error:", err)
 		return
 	}
-	fmt.Println("EC200AInit4G setDial ok.")
+	fmt.Println("ML307RInit4G setDial ok.")
 	if err := setNetMode(path); err != nil {
-		fmt.Println("EC200AInit4G setNetMode error:", err)
+		fmt.Println("ML307RInit4G setNetMode error:", err)
 		return
 	}
-	fmt.Println("EC200AInit4G setNetMode ok.")
+	fmt.Println("ML307RInit4G setNetMode ok.")
 	if err := resetCard(path); err != nil {
-		fmt.Println("EC200AInit4G resetCard error:", err)
+		fmt.Println("ML307RInit4G resetCard error:", err)
 		return
 	}
-	fmt.Println("EC200AInit4G resetCard ok.")
+	fmt.Println("ML307RInit4G resetCard ok.")
 
 }
 func turnOffEcho(path string) error {
@@ -218,11 +225,11 @@ func resetCard(path string) error {
 	return __ExecuteAT(path, __RESET_AT_CMD)
 }
 func __ExecuteAT(path string, cmd string) error {
-	_, err0 := __EC200A_AT(path, cmd, __AT_TIMEOUT)
+	_, err0 := __ML307R_AT(path, cmd, __AT_TIMEOUT)
 	if err0 != nil {
 		return err0
 	}
-	_, err1 := __EC200A_AT(path, __SAVE_CONFIG, __AT_TIMEOUT)
+	_, err1 := __ML307R_AT(path, __SAVE_CONFIG, __AT_TIMEOUT)
 	if err1 != nil {
 		return err1
 	}
@@ -231,8 +238,8 @@ func __ExecuteAT(path string, cmd string) error {
 
 /*
 *
-  - EC200A 系列AT指令封装
-    指令格式：AT+<?>\r\n
+  - ML307R 系列AT指令封装
+    指令格式：AT+<CMD>\r\n
     指令返回值：\r\nCMD\r\n\r\nOK\r\n
 
 解析结果
@@ -249,7 +256,7 @@ func __ExecuteAT(path string, cmd string) error {
 
 *
 */
-func __EC200A_AT(path string, command string, timeout time.Duration) (string, error) {
+func __ML307R_AT(path string, command string, timeout time.Duration) (string, error) {
 	// 打开设备文件以供读写
 	file, err := os.OpenFile(path, os.O_RDWR, os.ModePerm)
 	if err != nil {
