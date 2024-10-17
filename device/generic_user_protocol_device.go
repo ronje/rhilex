@@ -145,9 +145,7 @@ func (gw *GenericUserProtocolDevice) Init(devId string, configMap map[string]int
 func (gw *GenericUserProtocolDevice) Start(cctx typex.CCTX) error {
 	gw.Ctx = cctx.Ctx
 	gw.CancelCTX = cctx.CancelCTX
-	// 现阶段暂时只支持RS485串口, 以后有需求再支持TCP、UDP
 	if gw.mainConfig.CommonConfig.Mode == "UART" {
-
 		config := serial.Config{
 			Address:  gw.mainConfig.UartConfig.Uart,
 			BaudRate: gw.mainConfig.UartConfig.BaudRate,
@@ -217,7 +215,7 @@ func (gw *GenericUserProtocolDevice) work(handler *userproto.UserProtocolClientH
 			NewValue := intercache.CacheValue{
 				UUID:          DataPoint.UUID,
 				LastFetchTime: lastTimes,
-				Value:         RespBytes,
+				Value:         Value,
 				Status:        1,
 				ErrMsg:        "",
 			}
@@ -235,7 +233,7 @@ func (gw *GenericUserProtocolDevice) work(handler *userproto.UserProtocolClientH
 			} else {
 				UserProtocolReadDatas = append(UserProtocolReadDatas, UserProtocolReadData{
 					Command: DataPoint.Command,
-					Value:   hex.EncodeToString(RespBytes),
+					Value:   Value,
 				})
 			}
 			time.Sleep(time.Duration(DataPoint.Frequency) * time.Millisecond)
