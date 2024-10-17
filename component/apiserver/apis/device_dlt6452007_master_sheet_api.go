@@ -258,7 +258,7 @@ func CheckDlt6452007MasterDataPoints(M Dlt6452007MasterPointVo) error {
 func Dlt6452007MasterSheetUpdate(c *gin.Context, ruleEngine typex.Rhilex) {
 	type Form struct {
 		DeviceUUID                 string                    `json:"device_uuid"`
-		Dlt6452007MasterDataPoints []Dlt6452007MasterPointVo `json:"dlt6452007_data_points"`
+		Dlt6452007MasterDataPoints []Dlt6452007MasterPointVo `json:"data_points"`
 	}
 	//  Dlt6452007MasterDataPoints := [] Dlt6452007MasterPointVo{}
 	form := Form{}

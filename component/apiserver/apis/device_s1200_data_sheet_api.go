@@ -312,7 +312,7 @@ func CheckSiemensDataPoints(M SiemensPointVo) error {
 func SiemensSheetUpdate(c *gin.Context, ruleEngine typex.Rhilex) {
 	type Form struct {
 		DeviceUUID        string           `json:"device_uuid"`
-		SiemensDataPoints []SiemensPointVo `json:"siemens_data_points"`
+		SiemensDataPoints []SiemensPointVo `json:"data_points"`
 	}
 	form := Form{}
 	// SiemensDataPoints := []SiemensPointVo{}

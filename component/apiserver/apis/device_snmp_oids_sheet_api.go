@@ -244,7 +244,7 @@ func checkSnmpOids(M SnmpOidVo) error {
 func SnmpSheetUpdate(c *gin.Context, ruleEngine typex.Rhilex) {
 	type Form struct {
 		DeviceUUID string      `json:"device_uuid"`
-		SnmpOids   []SnmpOidVo `json:"snmp_oids"`
+		SnmpOids   []SnmpOidVo `json:"data_points"`
 	}
 	// SnmpOids := []SnmpOidVo{}
 	form := Form{}

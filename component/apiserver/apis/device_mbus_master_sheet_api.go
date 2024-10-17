@@ -276,7 +276,7 @@ func CheckMBusMasterDataPoints(M MBusMasterPointVo) error {
 func MBusMasterSheetUpdate(c *gin.Context, ruleEngine typex.Rhilex) {
 	type Form struct {
 		DeviceUUID           string              `json:"device_uuid"`
-		MBusMasterDataPoints []MBusMasterPointVo `json:"mbus_data_points"`
+		MBusMasterDataPoints []MBusMasterPointVo `json:"data_points"`
 	}
 	//  MBusMasterDataPoints := [] MBusMasterPointVo{}
 	form := Form{}

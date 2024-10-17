@@ -39,7 +39,7 @@ import (
 )
 
 func InitUserProtocolRoute() {
-	Api := server.RouteGroup(server.ContextUrl("/user_protocol_master_sheet"))
+	Api := server.RouteGroup(server.ContextUrl("/user_protocol_sheet"))
 	{
 		Api.POST(("/sheetImport"), server.AddRoute(UserProtocolMasterSheetImport))
 		Api.GET(("/sheetExport"), server.AddRoute(UserProtocolMasterPointsExport))
@@ -258,7 +258,7 @@ func CheckUserProtocolMasterDataPoints(M UserProtocolMasterPointVo) error {
 func UserProtocolMasterSheetUpdate(c *gin.Context, ruleEngine typex.Rhilex) {
 	type Form struct {
 		DeviceUUID                   string                      `json:"device_uuid"`
-		UserProtocolMasterDataPoints []UserProtocolMasterPointVo `json:"userProtocol_data_points"`
+		UserProtocolMasterDataPoints []UserProtocolMasterPointVo `json:"data_points"`
 	}
 	//  UserProtocolMasterDataPoints := [] UserProtocolMasterPointVo{}
 	form := Form{}

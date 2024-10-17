@@ -356,7 +356,7 @@ func CheckModbusMasterDataPoints(M ModbusMasterPointVo) error {
 func ModbusMasterSheetUpdate(c *gin.Context, ruleEngine typex.Rhilex) {
 	type Form struct {
 		DeviceUUID             string                `json:"device_uuid"`
-		ModbusMasterDataPoints []ModbusMasterPointVo `json:"modbus_data_points"`
+		ModbusMasterDataPoints []ModbusMasterPointVo `json:"data_points"`
 	}
 	//  ModbusMasterDataPoints := [] ModbusMasterPointVo{}
 	form := Form{}

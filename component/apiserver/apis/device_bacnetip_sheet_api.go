@@ -260,7 +260,7 @@ func BacnetIpSheetDeleteAll(c *gin.Context, ruleEngine typex.Rhilex) {
 func BacnetIpSheetCreateOrUpdate(c *gin.Context, ruleEngine typex.Rhilex) {
 	type Form struct {
 		DeviceUUID string                              `json:"device_uuid"`
-		Points     []dto.BacnetDataPointCreateOrUpdate `json:"points"`
+		Points     []dto.BacnetDataPointCreateOrUpdate `json:"data_points"`
 	}
 	form := Form{}
 	err := c.ShouldBindJSON(&form)

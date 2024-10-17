@@ -184,7 +184,7 @@ func DataPointSheetPageList(c *gin.Context, ruleEngine typex.Rhilex) {
 func DataPointSheetCreateOrUpdate(c *gin.Context, ruleEngine typex.Rhilex) (any, error) {
 	type Form struct {
 		DeviceUUID string                           `json:"device_uuid"`
-		Points     []dto.DataPointCreateOrUpdateDTO `json:"points"`
+		Points     []dto.DataPointCreateOrUpdateDTO `json:"data_points"`
 	}
 	form := Form{}
 	err := c.ShouldBindJSON(&form)

@@ -258,7 +258,7 @@ func BacnetRouterSheetDeleteAll(c *gin.Context, ruleEngine typex.Rhilex) {
 func BacnetRouterSheetCreateOrUpdate(c *gin.Context, ruleEngine typex.Rhilex) {
 	type Form struct {
 		DeviceUUID string                                    `json:"device_uuid"`
-		Points     []dto.BacnetRouterDataPointCreateOrUpdate `json:"points"`
+		Points     []dto.BacnetRouterDataPointCreateOrUpdate `json:"data_points"`
 	}
 	form := Form{}
 	err := c.ShouldBindJSON(&form)
