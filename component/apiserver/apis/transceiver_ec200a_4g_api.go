@@ -46,7 +46,7 @@ func EC200ARestart4G(c *gin.Context, ruleEngine typex.Rhilex) {
 * 获取4G基本信息
 *
  */
-func Get4GBaseInfo(c *gin.Context, ruleEngine typex.Rhilex) {
+func GetEC1200A4GBaseInfo(c *gin.Context, ruleEngine typex.Rhilex) {
 	csq := ec200a4g.EC200AGet4G_CSQ("/dev/ttyUSB1")
 	if csq == 0 {
 		time.Sleep(100 * time.Millisecond)

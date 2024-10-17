@@ -16,68 +16,171 @@
 package haas506
 
 import (
-	"fmt"
+	"context"
 	"io"
+	"log"
 	"os"
+	"os/exec"
 	"strconv"
 	"strings"
 	"time"
 )
 
+func init() {
+	env := os.Getenv("ARCHSUPPORT")
+	if env == "EN6400" {
+		InitML307R4G("/dev/ttyUSB2")
+	}
+}
+
 type ModuleInfo struct {
-	ICCID     string
-	SIMNumber string
-	IMEL      string
-	IMSI      string
-	CSQ       string
+	Up    bool
+	ICCID string
+	IMEL  string
+	CSQ   int32
+	COPS  string
+}
+
+/*
+*
+* 初始化4G模组
+*
+ */
+func InitML307R4G(path string) {
+	if err := turnOffEcho(path); err != nil {
+		log.Println("ML307RInit4G turnOffEcho error:", err)
+		return
+	}
+	log.Println("ML307RInit4G resetCard ok.")
+
+}
+
+// /dev/ttyUSB2
+
+/*
+*
+* 获取4G数据
+*
+ */
+func Get4GBaseInfo() ModuleInfo {
+	info := ModuleInfo{
+		ICCID: "0",
+		CSQ:   0,
+		COPS:  "UNKNOWN",
+	}
+
+	csq := ML307RGet4G_CSQ("/dev/ttyUSB2")
+	if csq == 0 {
+		time.Sleep(100 * time.Millisecond)
+		csq = ML307RGet4G_CSQ("/dev/ttyUSB2")
+	}
+	cops, err1 := ML307RGetCOPS("/dev/ttyUSB2")
+	if err1 != nil {
+		return info
+	}
+	cm := "UNKNOWN"
+	if strings.Contains(cops, "CMCC") {
+		cm = "CHINA CMCC"
+	}
+	if strings.Contains(cops, "MOBILE") {
+		cm = "CHINA MOBILE"
+	}
+	if strings.Contains(cops, "UNICOM") {
+		cm = "CHINA UNICOM"
+	}
+	iccid, err2 := ML307RGetICCID("/dev/ttyUSB2")
+	if err2 != nil {
+		return info
+	}
+	imel, err3 := ML307RGetIMEL("/dev/ttyUSB2")
+	if err3 != nil {
+		return info
+	}
+	Up, _ := isInterfaceUp("eth0")
+	info.Up = Up
+	info.IMEL = imel
+	info.COPS = cm
+	info.CSQ = csq
+	info.ICCID = iccid
+	return info
 }
 
 /*
 *
   - 初始化4G模组
-    echo -e "AT+QCFG=\"usbnet\",1\r\n" >/dev/ttyUSB1  //驱动模式
-    echo -e "AT+QNETDEVCTL=3,1,1\r\n" >/dev/ttyUSB1   //自动拨号
-    echo -e "AT+QCFG=\"nat\",1 \r\n" >/dev/ttyUSB1    //网卡模式
-    echo -e "AT+CFUN=1,1\r\n" >/dev/ttyUSB1           //重启
+    echo -e "AT+QCFG=\"usbnet\",1\r\n" >/dev/ttyUSB2  //驱动模式
+    echo -e "AT+QNETDEVCTL=3,1,1\r\n" >/dev/ttyUSB2   //自动拨号
+    echo -e "AT+QCFG=\"nat\",1 \r\n" >/dev/ttyUSB2    //网卡模式
+    echo -e "AT+CFUN=1,1\r\n" >/dev/ttyUSB2           //重启
 */
+
 const (
-	__DRIVER_MODE_AT_CMD = "AT+QCFG=\"usbnet\",1\r\n"
-	__DIAL_AT_CMD        = "AT+QNETDEVCTL=3,1,1\r\n"
-	__NET_MODE_AT_CMD    = "AT+QCFG=\"nat\",1\r\n"
-	__RESET_AT_CMD       = "AT+CFUN=1,1\r\n"
-	__CSQ                = "AT+CSQ\r\n"           // CSQ
-	__TURN_OFF_ECHO      = "ATE0\r\n"             // ECHO Mode
-	__CURRENT_COPS_CMD   = "AT+COPS?\r\n"         // COPS
-	__GET_ICCID_CMD      = "AT+QCCID\r\n"         // Get ICCID
-	__AT_TIMEOUT         = 300 * time.Millisecond // timeout ms
-	__GET_APN_CFG        = "AT+QICSGP=1\r\n"      // APN
-	__SAVE_CONFIG        = "AT&W\r\n"             // SaveConfig
+	__AT_TIMEOUT = 300 * time.Millisecond // timeout ms
 )
+
+const (
+	__TURN_OFF_ECHO = "ATE0\r\n"           // ECHO Mode
+	__GET_CSQ_CMD   = "AT+CSQ\r\n"         // CSQ  信号
+	__GET_COPS_CMD  = "AT+COPS?\r\n"       // COPS 运营商
+	__DAIL_CMD      = "AT+MDIALUP=1,1\r\n" // 拨号
+	__GET_IMEL_CMD  = "AT+CGSN=1\r\n"      // Get IMEL
+	__GET_INFO_CMD  = "ATI\r\n"            // Get INFO
+	__SAVE_CONFIG   = "AT&W\r\n"           // SaveConfig
+)
+
+/**
+ * 开启4G
+ *
+ */
+func ML307RTurnOn4G() error {
+	__ML307R_AT("/dev/ttyUSB2", __DAIL_CMD, __AT_TIMEOUT)
+	{
+		ctx, Cancel := context.WithDeadline(context.Background(), time.Now().Add(3000*time.Millisecond))
+		defer Cancel()
+		output, err := exec.CommandContext(ctx, "sh", "-c", `ifconfig eth0 up`).CombinedOutput()
+		log.Println("[ML307RTurnOn4G] ifconfig eth0 up:", ", Output=", string(output))
+		if err != nil {
+			return err
+		}
+	}
+	{
+		ctx, Cancel := context.WithDeadline(context.Background(), time.Now().Add(3000*time.Millisecond))
+		defer Cancel()
+		output, err := exec.CommandContext(ctx, "sh", "-c", `udhcpc -i eth0`).CombinedOutput()
+		log.Println("[ML307RTurnOn4G] udhcpc -i eth0:", ", Output=", string(output))
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+/**
+ * 关闭4g
+ *
+ */
+func ML307RTurnOff4G() error {
+	ctx, Cancel := context.WithDeadline(context.Background(), time.Now().Add(3000*time.Millisecond))
+	defer Cancel()
+	output, err := exec.CommandContext(ctx, "sh", "-c", `ifconfig eth0 down`).CombinedOutput()
+	log.Println("[ML307RTurnOff4G] ifconfig eth0 down:", ", Output=", string(output))
+	if err != nil {
+		return err
+	}
+	return nil
+}
 
 /*
 *
-* APN 配置, 参考文档: Quectel_LTE_Standard(A)系列_TCP(IP)_应用指导_V1.4.pdf-2.3.2章节
---
-
-AT+QICSGP=<contextID>[,<context_
-type>,<APN>[,<username>,<passwo
-rd>)[,<authentication>[,<CDMA_pw
-d>]]]]
-
-AT+QICSGP=1 //查询场景 1 配置。
-+QICSGP: 1,"","","",0
-OK
-AT+QICSGP=1,1,"UNINET","","",1 //配置场景 1，APN 配置为"UNINET"（中国联通）。
-OK\ERROR
-*/
+* APN 配置
+ */
 func ML307RGetAPN(path string) (string, error) {
-	return __ML307R_AT(path, __GET_APN_CFG, __AT_TIMEOUT)
+	return "", nil
 }
 
 // 场景恒等于1
 func ML307RSetAPN(path string, ptype int, apn, username, password string, auth, cdmaPwd int) (string, error) {
-	return __ML307R_AT(path, fmt.Sprintf(`AT+QICSGP=1,%d,"%s","%s","%s",%d,%d`,
-		ptype, apn, username, password, auth, cdmaPwd), __AT_TIMEOUT)
+	return "", nil
 }
 
 /*
@@ -90,8 +193,12 @@ func ML307RSetAPN(path string, ptype int, apn, username, password string, auth, 
   - 20-31：非常强的信号，信号质量非常好。
     ML307RGet4G_CSQ: 返回值代表信号格
 */
-func ML307RGet4G_CSQ(path string) int {
+func ML307RGet4G_CSQ(path string) int32 {
 	return __Get4G_CSQ(path)
+}
+
+func ML307RGetINFO(path string) (string, error) {
+	return __ML307R_AT(path, __GET_INFO_CMD, __AT_TIMEOUT)
 }
 
 /*
@@ -107,10 +214,7 @@ func ML307RGet4G_CSQ(path string) int {
 func ML307RGetCOPS(path string) (string, error) {
 	// +COPS: 0,0,"CHINA MOBILE",7
 	// +COPS: 0,0,"CHIN-UNICOM",7
-	return __ML307R_AT(path, __CURRENT_COPS_CMD, __AT_TIMEOUT)
-}
-func ML307RRestart4G(path string) (string, error) {
-	return __ML307R_AT(path, __RESET_AT_CMD, __AT_TIMEOUT)
+	return __ML307R_AT(path, __GET_COPS_CMD, __AT_TIMEOUT)
 }
 
 /*
@@ -119,22 +223,31 @@ func ML307RRestart4G(path string) (string, error) {
 * +QCCID: 89860025128306012474
  */
 func ML307RGetICCID(path string) (string, error) {
-	return __ML307R_AT(path, __GET_ICCID_CMD, __AT_TIMEOUT)
+	return "UNKNOWN", nil
 
 }
-func __Get4G_CSQ(path string) int {
-	csq := 0
+
+/**
+ * 获取IMEL
+ *
+ */
+func ML307RGetIMEL(path string) (string, error) {
+	return __ML307R_AT(path, __GET_IMEL_CMD, __AT_TIMEOUT)
+
+}
+func __Get4G_CSQ(path string) int32 {
+	csq := int32(0)
 	file, err := os.OpenFile(path, os.O_RDWR, os.ModePerm)
 	if err != nil {
 		return csq
 	}
 	defer file.Close()
-	_, err = file.WriteString(__CSQ)
+	_, err = file.WriteString(__GET_CSQ_CMD)
 	if err != nil {
 		return csq
 	}
 	// 4G 模组的绝大多数指令都是100毫秒
-	timeout := 300 * time.Millisecond
+	timeout := 200 * time.Millisecond
 	buffer := [1]byte{}
 	var responseData []byte
 	b1 := 0
@@ -161,6 +274,7 @@ func __Get4G_CSQ(path string) int {
 			}
 		}
 	}
+	log.Println("[ML307R __Get4G_CSQ]:", __GET_CSQ_CMD, ", Output:", string(responseData))
 	if len(responseData) > 6 {
 		// +CSQ: 30,99
 		response := string(responseData[6:])
@@ -168,7 +282,7 @@ func __Get4G_CSQ(path string) int {
 		if len(parts) == 2 {
 			v, err := strconv.Atoi(parts[0])
 			if err == nil {
-				csq = v
+				csq = int32(v)
 			}
 		}
 	}
@@ -176,60 +290,18 @@ func __Get4G_CSQ(path string) int {
 	return csq
 }
 
-/*
-*
-* 初始化4G模组
-*
- */
-func InitML307R4G(path string) {
-	if err := turnOffEcho(path); err != nil {
-		fmt.Println("ML307RInit4G turnOffEcho error:", err)
-		return
-	}
-	fmt.Println("ML307RInit4G turnOffEcho ok.")
-	if err := setDriverMode(path); err != nil {
-		fmt.Println("ML307RInit4G setDriverMode error:", err)
-		return
-	}
-	fmt.Println("ML307RInit4G setDriverMode ok.")
-	if err := setDial(path); err != nil {
-		fmt.Println("ML307RInit4G setDial error:", err)
-		return
-	}
-	fmt.Println("ML307RInit4G setDial ok.")
-	if err := setNetMode(path); err != nil {
-		fmt.Println("ML307RInit4G setNetMode error:", err)
-		return
-	}
-	fmt.Println("ML307RInit4G setNetMode ok.")
-	if err := resetCard(path); err != nil {
-		fmt.Println("ML307RInit4G resetCard error:", err)
-		return
-	}
-	fmt.Println("ML307RInit4G resetCard ok.")
-
-}
 func turnOffEcho(path string) error {
 	return __ExecuteAT(path, __TURN_OFF_ECHO)
 }
-func setDriverMode(path string) error {
-	return __ExecuteAT(path, __DRIVER_MODE_AT_CMD)
-}
-func setDial(path string) error {
-	return __ExecuteAT(path, __DIAL_AT_CMD)
-}
-func setNetMode(path string) error {
-	return __ExecuteAT(path, __NET_MODE_AT_CMD)
-}
-func resetCard(path string) error {
-	return __ExecuteAT(path, __RESET_AT_CMD)
-}
+
 func __ExecuteAT(path string, cmd string) error {
-	_, err0 := __ML307R_AT(path, cmd, __AT_TIMEOUT)
+	buffer, err0 := __ML307R_AT(path, cmd, __AT_TIMEOUT)
+	log.Println("[ML307R __ExecuteAT]:", cmd, ", Output:", (buffer))
 	if err0 != nil {
 		return err0
 	}
-	_, err1 := __ML307R_AT(path, __SAVE_CONFIG, __AT_TIMEOUT)
+	buffer, err1 := __ML307R_AT(path, __SAVE_CONFIG, __AT_TIMEOUT)
+	log.Println("[ML307R __ExecuteAT]:", cmd, ", Output:", (buffer))
 	if err1 != nil {
 		return err1
 	}
@@ -291,5 +363,6 @@ func __ML307R_AT(path string, command string, timeout time.Duration) (string, er
 			}
 		}
 	}
+	log.Println("[ML307R __ML307R_AT]:", command, ", Output:", string(responseData))
 	return string(responseData), nil
 }

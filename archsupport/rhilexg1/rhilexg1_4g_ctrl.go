@@ -32,19 +32,22 @@ import (
     echo -e "AT+QCFG=\"nat\",1 \r\n" >/dev/ttyUSB1    //网卡模式
     echo -e "AT+CFUN=1,1\r\n" >/dev/ttyUSB1           //重启
 */
+
+const (
+	__AT_TIMEOUT = 300 * time.Millisecond // timeout ms
+)
+
 const (
 	__DRIVER_MODE_AT_CMD = "AT+QCFG=\"usbnet\",1\r\n"
 	__DIAL_AT_CMD        = "AT+QNETDEVCTL=3,1,1\r\n"
 	__NET_MODE_AT_CMD    = "AT+QCFG=\"nat\",1\r\n"
 	__RESET_AT_CMD       = "AT+CFUN=1,1\r\n"
-	__CSQ                = "AT+CSQ\r\n"           // CSQ
-	__TURN_OFF_ECHO      = "ATE0\r\n"             // ECHO Mode
-	__CURRENT_COPS_CMD   = "AT+COPS?\r\n"         // COPS
-	__GET_ICCID_CMD      = "AT+QCCID\r\n"         // Get ICCID
-	__AT_TIMEOUT         = 300 * time.Millisecond // timeout ms
-	__GET_APN_CFG        = "AT+QICSGP=1\r\n"      // APN
-	__SAVE_CONFIG        = "AT&W\r\n"             // SaveConfig
-	// __USB_4G_DEV_PATH    = "/dev/ttyUSB1"         // USB
+	__GET_CSQ_CMD        = "AT+CSQ\r\n"      // CSQ
+	__TURN_OFF_ECHO      = "ATE0\r\n"        // ECHO Mode
+	__GET_COPS_CMD       = "AT+COPS?\r\n"    // COPS
+	__GET_ICCID_CMD      = "AT+QCCID\r\n"    // Get ICCID
+	__GET_APN_CFG        = "AT+QICSGP=1\r\n" // APN
+	__SAVE_CONFIG        = "AT&W\r\n"        // SaveConfig
 )
 
 /*
@@ -100,7 +103,7 @@ func EC200AGet4G_CSQ(path string) int {
 func EC200AGetCOPS(path string) (string, error) {
 	// +COPS: 0,0,"CHINA MOBILE",7
 	// +COPS: 0,0,"CHIN-UNICOM",7
-	return __EC200A_AT(path, __CURRENT_COPS_CMD, __AT_TIMEOUT)
+	return __EC200A_AT(path, __GET_COPS_CMD, __AT_TIMEOUT)
 }
 func EC200ARestart4G(path string) (string, error) {
 	return __EC200A_AT(path, __RESET_AT_CMD, __AT_TIMEOUT)
@@ -122,7 +125,7 @@ func __Get4G_CSQ(path string) int {
 		return csq
 	}
 	defer file.Close()
-	_, err = file.WriteString(__CSQ)
+	_, err = file.WriteString(__GET_CSQ_CMD)
 	if err != nil {
 		return csq
 	}
