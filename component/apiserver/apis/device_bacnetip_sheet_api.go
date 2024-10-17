@@ -85,6 +85,11 @@ func BacnetIpSheetImport(c *gin.Context, ruleEngine typex.Rhilex) {
 		c.JSON(common.HTTP_OK, common.Error400(errDb))
 		return
 	}
+	if Device.Type == "" {
+		c.JSON(common.HTTP_OK,
+			common.Error("Device Not Exists"))
+		return
+	}
 	if Device.Type != typex.GENERIC_BACNET_IP.String() {
 		c.JSON(common.HTTP_OK,
 			common.Error("Invalid Device Type, Only Support Import BacnetIp Device"))

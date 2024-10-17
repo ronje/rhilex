@@ -16,7 +16,6 @@
 package apis
 
 import (
-	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
@@ -27,6 +26,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	common "github.com/hootrhino/rhilex/component/apiserver/common"
+	"github.com/hootrhino/rhilex/component/apiserver/dto"
 	"github.com/hootrhino/rhilex/component/apiserver/model"
 	"github.com/hootrhino/rhilex/component/apiserver/server"
 	"github.com/hootrhino/rhilex/component/apiserver/service"
@@ -419,22 +419,6 @@ func ModbusMasterSheetUpdate(c *gin.Context, ruleEngine typex.Rhilex) {
 
 }
 
-type ModbusDeviceDto struct {
-	UUID   string
-	Name   string
-	Type   string
-	Config string
-}
-
-func (md ModbusDeviceDto) GetConfig() map[string]interface{} {
-	result := make(map[string]interface{})
-	err := json.Unmarshal([]byte(md.Config), &result)
-	if err != nil {
-		return map[string]interface{}{}
-	}
-	return result
-}
-
 // ModbusMasterSheetImport 上传Excel文件
 func ModbusMasterSheetImport(c *gin.Context, ruleEngine typex.Rhilex) {
 	// 解析 multipart/form-data 类型的请求体
@@ -453,11 +437,16 @@ func ModbusMasterSheetImport(c *gin.Context, ruleEngine typex.Rhilex) {
 	defer file.Close()
 	deviceUuid := c.Request.Form.Get("device_uuid")
 
-	Device := ModbusDeviceDto{}
+	Device := dto.RhilexDeviceDto{}
 	errDb := interdb.DB().Table("m_devices").
 		Where("uuid=?", deviceUuid).Find(&Device).Error
 	if errDb != nil {
 		c.JSON(common.HTTP_OK, common.Error400(errDb))
+		return
+	}
+	if Device.Type == "" {
+		c.JSON(common.HTTP_OK,
+			common.Error("Device Not Exists"))
 		return
 	}
 	if Device.Type != typex.GENERIC_MODBUS_MASTER.String() {

@@ -15,16 +15,17 @@
             "batchRequest": false
         },
         "hostConfig": {
-            "host": "127.0.0.1",
-            "port": 6001,
+            "host": "192.168.1.100",
+            "port": 6000,
             "timeout": 5000
         },
         "uartConfig": {
-            "uart": "COM1",
-            "baudRate": 9600,
+            "uart": "COM9",
+            "baudRate": 2400,
             "dataBits": 8,
             "stopBits": 1,
-            "parity": "N"
+            "parity": "E",
+            "timeout": 5000
         }
     }
 }

@@ -27,6 +27,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	common "github.com/hootrhino/rhilex/component/apiserver/common"
+	"github.com/hootrhino/rhilex/component/apiserver/dto"
 	"github.com/hootrhino/rhilex/component/apiserver/model"
 	"github.com/hootrhino/rhilex/component/apiserver/server"
 	"github.com/hootrhino/rhilex/component/apiserver/service"
@@ -343,14 +344,19 @@ func Dlt6452007MasterSheetImport(c *gin.Context, ruleEngine typex.Rhilex) {
 	defer file.Close()
 	deviceUuid := c.Request.Form.Get("device_uuid")
 
-	Device := ModbusDeviceDto{}
+	Device := dto.RhilexDeviceDto{}
 	errDb := interdb.DB().Table("m_devices").
 		Where("uuid=?", deviceUuid).Find(&Device).Error
 	if errDb != nil {
 		c.JSON(common.HTTP_OK, common.Error400(errDb))
 		return
 	}
-	if Device.Type != (string(typex.DLT6452007_MASTER)) {
+	if Device.Type == "" {
+		c.JSON(common.HTTP_OK,
+			common.Error("Device Not Exists"))
+		return
+	}
+	if Device.Type != typex.DLT6452007_MASTER.String() {
 		c.JSON(common.HTTP_OK,
 			common.Error("Invalid Device Type, Only Support Import  Dlt6452007Master Device"))
 		return

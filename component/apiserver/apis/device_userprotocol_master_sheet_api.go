@@ -27,6 +27,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	common "github.com/hootrhino/rhilex/component/apiserver/common"
+	"github.com/hootrhino/rhilex/component/apiserver/dto"
 	"github.com/hootrhino/rhilex/component/apiserver/model"
 	"github.com/hootrhino/rhilex/component/apiserver/server"
 	"github.com/hootrhino/rhilex/component/apiserver/service"
@@ -343,16 +344,21 @@ func UserProtocolMasterSheetImport(c *gin.Context, ruleEngine typex.Rhilex) {
 	defer file.Close()
 	deviceUuid := c.Request.Form.Get("device_uuid")
 
-	Device := ModbusDeviceDto{}
+	Device := dto.RhilexDeviceDto{}
 	errDb := interdb.DB().Table("m_devices").
 		Where("uuid=?", deviceUuid).Find(&Device).Error
 	if errDb != nil {
 		c.JSON(common.HTTP_OK, common.Error400(errDb))
 		return
 	}
-	if Device.Type != (string(typex.GENERIC_USER_PROTOCOL)) {
+	if Device.Type == "" {
 		c.JSON(common.HTTP_OK,
-			common.Error("Invalid Device Type, Only Support Import  UserProtocolMaster Device"))
+			common.Error("Device Not Exists"))
+		return
+	}
+	if Device.Type != typex.GENERIC_USER_PROTOCOL.String() {
+		c.JSON(common.HTTP_OK,
+			common.Error("Invalid Device Type, Only Support Import UserProtocolMaster Device"))
 		return
 	}
 
