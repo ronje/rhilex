@@ -86,6 +86,10 @@ func UserProtocolPointUUID() string {
 	return MakeUUID("USERPT")
 }
 
+func UnionPointUUID() string {
+	return MakeUUID("UNION")
+}
+
 // MakeUUID
 func MakeUUID(prefix string) string {
 	return prefix + strings.ToUpper(shortuuid.New()[:8])

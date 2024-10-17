@@ -53,7 +53,7 @@ func InitUserProtocolRoute() {
 type UserProtocolMasterPointVo struct {
 	DeviceUuid    string      `json:"device_uuid"`
 	UUID          string      `json:"uuid"`
-	Command       string      `json:"Command"`
+	Command       string      `json:"command"`
 	Tag           string      `json:"tag"`
 	Alias         string      `json:"alias"`
 	Frequency     uint64      `json:"frequency"`
