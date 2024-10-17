@@ -184,18 +184,19 @@ func DeleteDevice(c *gin.Context, ruleEngine typex.Rhilex) {
 				c.JSON(common.HTTP_OK, common.Error400(err0))
 				return
 			}
-			c.JSON(common.HTTP_OK, common.Error("Can't remove, Already have rule bind:"+Mdev.BindRules.String()))
+			c.JSON(common.HTTP_OK, common.Error("Device already have rule binding:"+Mdev.BindRules.String()))
 			return
 		}
 
 	}
 
-	// 检查是否通用Modbus设备.需要同步删除点位表记录
+	// GENERIC_MODBUS_MASTER需要同步删除点位表记录
 	if Mdev.Type == typex.GENERIC_MODBUS_MASTER.String() {
 		if err := service.DeleteAllModbusPointByDevice(uuid); err != nil {
 			c.JSON(common.HTTP_OK, common.Error400(err))
 			return
 		}
+		goto NEXT
 	}
 	// 西门子需要同步删除点位表记录
 	if Mdev.Type == typex.SIEMENS_PLC.String() {
@@ -203,7 +204,58 @@ func DeleteDevice(c *gin.Context, ruleEngine typex.Rhilex) {
 			c.JSON(common.HTTP_OK, common.Error400(err))
 			return
 		}
+		goto NEXT
 	}
+	// SNMP需要同步删除点位表记录
+	if Mdev.Type == typex.GENERIC_SNMP.String() {
+		if err := service.DeleteAllSnmpOidByDevice(uuid); err != nil {
+			c.JSON(common.HTTP_OK, common.Error400(err))
+			return
+		}
+		goto NEXT
+	}
+	// BacnetIP需要同步删除点位表记录
+	if Mdev.Type == typex.GENERIC_BACNET_IP.String() {
+		if err := service.DeleteAllBacnetDataPointByDeviceUuid(uuid); err != nil {
+			c.JSON(common.HTTP_OK, common.Error400(err))
+			return
+		}
+		goto NEXT
+	}
+	// BACNET GW需要同步删除点位表记录
+	if Mdev.Type == typex.BACNET_ROUTER_GW.String() {
+		if err := service.DeleteAllBacnetRouterPointByDeviceUuid(uuid); err != nil {
+			c.JSON(common.HTTP_OK, common.Error400(err))
+			return
+		}
+		goto NEXT
+	}
+	// DLT6452007_MASTER需要同步删除点位表记录
+	if Mdev.Type == (typex.DLT6452007_MASTER).String() {
+		if err := service.DeleteAllMDlt6452007ByDevice(uuid); err != nil {
+			c.JSON(common.HTTP_OK, common.Error400(err))
+			return
+		}
+		goto NEXT
+	}
+	// CJT1882004_MASTER需要同步删除点位表记录
+	if Mdev.Type == (typex.CJT1882004_MASTER).String() {
+		if err := service.DeleteAllMCjt1882004ByDevice(uuid); err != nil {
+			c.JSON(common.HTTP_OK, common.Error400(err))
+			return
+		}
+		goto NEXT
+	}
+	// GENERIC_USER_PROTOCOL需要同步删除点位表记录
+	if Mdev.Type == (typex.GENERIC_USER_PROTOCOL).String() {
+		if err := service.DeleteAllMUserProtocolByDevice(uuid); err != nil {
+			c.JSON(common.HTTP_OK, common.Error400(err))
+			return
+		}
+		goto NEXT
+	}
+
+NEXT:
 	old := ruleEngine.GetDevice(uuid)
 	if old != nil {
 		if old.Device.Status() == typex.DEV_UP {
