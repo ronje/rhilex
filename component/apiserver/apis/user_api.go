@@ -280,7 +280,7 @@ func generateToken(username string) (string, error) {
 	claims := &JwtClaims{
 		Username: username,
 		StandardClaims: jwt.StandardClaims{
-			ExpiresAt: time.Now().Add(time.Duration(60*60*24) * time.Second).Unix(),
+			ExpiresAt: time.Now().Add(time.Duration(60*60*24*7) * time.Second).Unix(),
 			Issuer:    username,
 		},
 	}
