@@ -2,6 +2,7 @@ package apis
 
 import (
 	"crypto/md5"
+	"encoding/base64"
 	"encoding/hex"
 	"fmt"
 	"time"
@@ -12,6 +13,7 @@ import (
 	"github.com/hootrhino/rhilex/component/apiserver/server"
 	"github.com/hootrhino/rhilex/component/apiserver/service"
 	"github.com/hootrhino/rhilex/component/internotify"
+	"github.com/hootrhino/rhilex/component/security"
 	"github.com/hootrhino/rhilex/glogger"
 	"github.com/hootrhino/rhilex/typex"
 
@@ -155,12 +157,11 @@ type LoginResultVo struct {
 	UserDetail UserDetailVo `json:"userDetail"`
 }
 
-// Login
-// TODO: 下个版本实现用户基础管理
+// Login, 密码是被RSA加密过的
 func Login(c *gin.Context, ruleEngine typex.Rhilex) {
 	type _user struct {
 		Username string `json:"username" binding:"required"`
-		Password string `json:"password" binding:"required"`
+		Password string `json:"password" binding:"required"` // 密码是RSA密文
 	}
 	clientIP := c.ClientIP()
 	var u _user
@@ -168,8 +169,15 @@ func Login(c *gin.Context, ruleEngine typex.Rhilex) {
 		c.JSON(common.HTTP_OK, common.Error400(err))
 		return
 	}
+	// 私钥解密
+	Password, _ := base64.StdEncoding.DecodeString(u.Password)
+	decryptedBytes, errDecrypt := security.RSA_Decrypt(Password, "./.encrypt.priv")
+	if errDecrypt != nil {
+		c.JSON(common.HTTP_OK, common.Error400(errDecrypt))
+		return
+	}
 	Ts := uint64(time.Now().UnixMilli())
-	_, errLogin := service.Login(u.Username, md5Hash(u.Password))
+	_, errLogin := service.Login(u.Username, md5Hash(string(decryptedBytes)))
 	if errLogin != nil {
 		glogger.GLogger.Warn("User Login Failed:", clientIP)
 		internotify.Push(internotify.BaseEvent{
@@ -252,7 +260,7 @@ func UserDetail(c *gin.Context, ruleEngine typex.Rhilex) {
 	token := c.GetHeader("Authorization")
 	claims, err := parseToken(token)
 	if err != nil {
-		c.JSON(common.HTTP_OK, common.Error400(err))
+		c.JSON(common.HTTP_OK, common.OkWithData(UserDetailVo{}))
 		return
 	}
 	c.JSON(common.HTTP_OK, common.OkWithData(UserDetailVo{

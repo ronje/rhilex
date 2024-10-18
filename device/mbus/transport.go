@@ -16,7 +16,6 @@
 package mbus
 
 import (
-	"encoding/binary"
 	"time"
 
 	"github.com/hootrhino/rhilex/typex"
