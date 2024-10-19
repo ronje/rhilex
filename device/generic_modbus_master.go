@@ -33,12 +33,26 @@ import (
 
 	modbus "github.com/hootrhino/gomodbus"
 	core "github.com/hootrhino/rhilex/config"
-	modbus_device "github.com/hootrhino/rhilex/device/modbus"
 
 	"github.com/hootrhino/rhilex/glogger"
 	"github.com/hootrhino/rhilex/typex"
 	"github.com/hootrhino/rhilex/utils"
 )
+
+type ModbusPoint struct {
+	UUID      string  `json:"uuid,omitempty"` // 当UUID为空时新建
+	Tag       string  `json:"tag"`
+	Alias     string  `json:"alias"`
+	Function  int     `json:"function"`
+	SlaverId  byte    `json:"slaverId"`
+	Address   uint16  `json:"address"`
+	Frequency int64   `json:"frequency"`
+	Quantity  uint16  `json:"quantity"`
+	Value     string  `json:"value,omitempty"` // 运行时数据
+	DataType  string  `json:"dataType"`        // 运行时数据
+	DataOrder string  `json:"dataOrder"`       // 运行时数据
+	Weight    float64 `json:"weight"`          // 权重
+}
 
 // 这是个通用Modbus采集器, 主要用来在通用场景下采集数据，因此需要配合规则引擎来使用
 //
@@ -155,7 +169,7 @@ func (mdev *GenericModbusMaster) Init(devId string, configMap map[string]interfa
 		return errors.New("unsupported mode, only can be one of 'TCP' or 'UART'")
 	}
 	// 合并数据库里面的点位表
-	var ModbusPointList []modbus_device.ModbusPoint
+	var ModbusPointList []ModbusPoint
 	modbusPointLoadErr := interdb.DB().Table("m_modbus_data_points").
 		Where("device_uuid=?", devId).Find(&ModbusPointList).Error
 	if modbusPointLoadErr != nil {

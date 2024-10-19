@@ -13,24 +13,17 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-package modbus
+package szy2062016
 
-/*
-*
-* 点位表
-*
- */
-type ModbusPoint struct {
-	UUID      string  `json:"uuid,omitempty"` // 当UUID为空时新建
-	Tag       string  `json:"tag"`
-	Alias     string  `json:"alias"`
-	Function  int     `json:"function"`
-	SlaverId  byte    `json:"slaverId"`
-	Address   uint16  `json:"address"`
-	Frequency int64   `json:"frequency"`
-	Quantity  uint16  `json:"quantity"`
-	Value     string  `json:"value,omitempty"` // 运行时数据
-	DataType  string  `json:"dataType"`        // 运行时数据
-	DataOrder string  `json:"dataOrder"`       // 运行时数据
-	Weight    float64 `json:"weight"`          // 权重
+import "fmt"
+
+type SZY2062016DataLinkLayer struct {
+}
+
+func (dlt SZY2062016DataLinkLayer) CheckCrc(A []byte, B byte) error {
+	crcCode := crc8(A)
+	if crcCode != B {
+		return fmt.Errorf("Crc8 (%v, CRC=%v) Check Failed: %v", A, crcCode, B)
+	}
+	return nil
 }

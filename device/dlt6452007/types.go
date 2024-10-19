@@ -15,11 +15,9 @@
 
 package dlt6452007
 
-import (
+import ()
 
-)
-
-const CTRL_CODE_READ_DATA = 0x11
-const CTRL_CODE_READ_ADDR = 0x13
-const CTRL_CODE_FRAME_START = 0x68
-const CTRL_CODE_FRAME_END = 0x16
+const CTRL_CODE_READ_DATA byte = 0x11
+const CTRL_CODE_READ_ADDR byte = 0x13
+const CTRL_CODE_FRAME_START byte = 0x68
+const CTRL_CODE_FRAME_END byte = 0x16
