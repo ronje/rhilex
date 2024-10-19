@@ -73,7 +73,7 @@ type Cjt1882004MasterPointVo struct {
 func Cjt1882004MasterPointsExport(c *gin.Context, ruleEngine typex.Rhilex) {
 	deviceUuid, _ := c.GetQuery("device_uuid")
 	var records []model.MCjt1882004DataPoint
-	result := interdb.DB().Table("m_Cjt1882004_data_points").
+	result := interdb.DB().Table("m_cjt1882004_data_points").
 		Where("device_uuid=?", deviceUuid).Find(&records)
 	if result.Error != nil {
 		c.JSON(common.HTTP_OK, common.Error400(result.Error))
@@ -106,7 +106,7 @@ func Cjt1882004MasterPointsExport(c *gin.Context, ruleEngine typex.Rhilex) {
 
 // 分页获取
 // SELECT * FROM WHERE
-// `m_Cjt1882004_data_points`.`device_uuid` = "UUID"
+// `m_cjt1882004_data_points`.`device_uuid` = "UUID"
 // ORDER BY
 // created_at DESC LIMIT 2 OFFSET 10
 func Cjt1882004MasterSheetPageList(c *gin.Context, ruleEngine typex.Rhilex) {
