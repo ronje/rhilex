@@ -451,7 +451,7 @@ func ModbusMasterSheetImport(c *gin.Context, ruleEngine typex.Rhilex) {
 	}
 	if Device.Type != typex.GENERIC_MODBUS_MASTER.String() {
 		c.JSON(common.HTTP_OK,
-			common.Error("Invalid Device Type, Only Support Import  ModbusMaster Device"))
+			common.Error("Invalid Device Type, Only Support Import ModbusMaster Device"))
 		return
 	}
 

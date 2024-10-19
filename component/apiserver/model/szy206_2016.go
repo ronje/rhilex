@@ -13,17 +13,15 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-package szy2062016
+package model
 
-import "fmt"
-
-type SZY2062016DataLinkLayer struct {
-}
-
-func (dlt SZY2062016DataLinkLayer) CheckCrc(A []byte, B byte) error {
-	crcCode := crc(A)
-	if crcCode != B {
-		return fmt.Errorf("Crc8 (%v, CRC=%v) Check Failed: %v", A, crcCode, B)
-	}
-	return nil
+type MSzy2062016DataPoint struct {
+	RhilexModel
+	UUID       string
+	DeviceUuid string
+	MeterId    string
+	MeterType  byte
+	Tag        string
+	Alias      string
+	Frequency  uint64
 }

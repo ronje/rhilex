@@ -82,6 +82,10 @@ func Cjt1882004PointUUID() string {
 	return MakeUUID("CJT188")
 }
 
+func Szy2062016PointUUID() string {
+	return MakeUUID("SZY206")
+}
+
 func UserProtocolPointUUID() string {
 	return MakeUUID("USERPT")
 }

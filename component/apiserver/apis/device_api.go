@@ -254,6 +254,14 @@ func DeleteDevice(c *gin.Context, ruleEngine typex.Rhilex) {
 		}
 		goto NEXT
 	}
+	// SZY2062016_MASTER
+	if Mdev.Type == (typex.SZY2062016_MASTER).String() {
+		if err := service.DeleteAllMUserProtocolByDevice(uuid); err != nil {
+			c.JSON(common.HTTP_OK, common.Error400(err))
+			return
+		}
+		goto NEXT
+	}
 
 NEXT:
 	old := ruleEngine.GetDevice(uuid)

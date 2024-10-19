@@ -143,6 +143,7 @@ func (hs *ApiServerPlugin) Init(config *ini.Section) error {
 		&model.MSnmpOid{},
 		&model.MCjt1882004DataPoint{},
 		&model.MDlt6452007DataPoint{},
+		&model.MSzy2062016DataPoint{},
 		&model.MUserProtocolDataPoint{},
 		&model.MBacnetDataPoint{},
 		&model.MBacnetRouterDataPoint{},

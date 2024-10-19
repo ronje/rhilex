@@ -38,22 +38,23 @@ import (
 	"github.com/xuri/excelize/v2"
 )
 
-func InitDlt6452007Route() {
-	Api := server.RouteGroup(server.ContextUrl("/dlt6452007_master_sheet"))
+func InitSzy2062016Route() {
+	Api := server.RouteGroup(server.ContextUrl("/szy2062016_master_sheet"))
 	{
-		Api.POST(("/sheetImport"), server.AddRoute(Dlt6452007MasterSheetImport))
-		Api.GET(("/sheetExport"), server.AddRoute(Dlt6452007MasterPointsExport))
-		Api.GET(("/list"), server.AddRoute(Dlt6452007MasterSheetPageList))
-		Api.POST(("/update"), server.AddRoute(Dlt6452007MasterSheetUpdate))
-		Api.DELETE(("/delIds"), server.AddRoute(Dlt6452007MasterSheetDelete))
-		Api.DELETE(("/delAll"), server.AddRoute(Dlt6452007MasterSheetDeleteAll))
+		Api.POST(("/sheetImport"), server.AddRoute(Szy2062016MasterSheetImport))
+		Api.GET(("/sheetExport"), server.AddRoute(Szy2062016MasterPointsExport))
+		Api.GET(("/list"), server.AddRoute(Szy2062016MasterSheetPageList))
+		Api.POST(("/update"), server.AddRoute(Szy2062016MasterSheetUpdate))
+		Api.DELETE(("/delIds"), server.AddRoute(Szy2062016MasterSheetDelete))
+		Api.DELETE(("/delAll"), server.AddRoute(Szy2062016MasterSheetDeleteAll))
 	}
 }
 
-type Dlt6452007MasterPointVo struct {
+type Szy2062016MasterPointVo struct {
 	DeviceUuid    string      `json:"device_uuid"`
 	UUID          string      `json:"uuid"`
 	MeterId       string      `json:"meterId"`
+	MeterType     byte        `json:"meterType"`
 	Tag           string      `json:"tag"`
 	Alias         string      `json:"alias"`
 	Frequency     uint64      `json:"frequency"`
@@ -66,20 +67,20 @@ type Dlt6452007MasterPointVo struct {
 /*
 *
 * 特殊设备需要和外界交互，这里主要就是一些设备的点位表导入导出等支持
-*  http://127.0.0.1:2580/api/v1/dlt6452007_data_sheet/export
+*  http://127.0.0.1:2580/api/v1/Szy2062016_data_sheet/export
  */
 
-// Dlt6452007MasterPoints 获取Dlt6452007_excel类型的点位数据
-func Dlt6452007MasterPointsExport(c *gin.Context, ruleEngine typex.Rhilex) {
+// Szy2062016MasterPoints 获取Szy2062016_excel类型的点位数据
+func Szy2062016MasterPointsExport(c *gin.Context, ruleEngine typex.Rhilex) {
 	deviceUuid, _ := c.GetQuery("device_uuid")
-	var records []model.MDlt6452007DataPoint
-	result := interdb.DB().Table("m_dlt6452007_data_points").
+	var records []model.MSzy2062016DataPoint
+	result := interdb.DB().Table("m_szy2062016_data_points").
 		Where("device_uuid=?", deviceUuid).Find(&records)
 	if result.Error != nil {
 		c.JSON(common.HTTP_OK, common.Error400(result.Error))
 		return
 	}
-	Headers := []string{"MeterId", "Tag", "Alias", "Frequency"}
+	Headers := []string{"MeterId", "MeterType", "Tag", "Alias", "Frequency"}
 	xlsx := excelize.NewFile()
 	defer func() {
 		if err := xlsx.Close(); err != nil {
@@ -106,10 +107,10 @@ func Dlt6452007MasterPointsExport(c *gin.Context, ruleEngine typex.Rhilex) {
 
 // 分页获取
 // SELECT * FROM WHERE
-// `m_dlt6452007_data_points`.`device_uuid` = "UUID"
+// `m_szy2062016_data_points`.`device_uuid` = "UUID"
 // ORDER BY
 // created_at DESC LIMIT 2 OFFSET 10
-func Dlt6452007MasterSheetPageList(c *gin.Context, ruleEngine typex.Rhilex) {
+func Szy2062016MasterSheetPageList(c *gin.Context, ruleEngine typex.Rhilex) {
 	pager, err := service.ReadPageRequest(c)
 	if err != nil {
 		c.JSON(common.HTTP_OK, common.Error400(err))
@@ -119,28 +120,29 @@ func Dlt6452007MasterSheetPageList(c *gin.Context, ruleEngine typex.Rhilex) {
 	db := interdb.DB()
 	tx := db.Scopes(service.Paginate(*pager))
 	var count int64
-	err1 := interdb.DB().Model(&model.MDlt6452007DataPoint{}).
+	err1 := interdb.DB().Model(&model.MSzy2062016DataPoint{}).
 		Where("device_uuid=?", deviceUuid).Count(&count).Error
 	if err1 != nil {
 		c.JSON(common.HTTP_OK, common.Error400(err1))
 		return
 	}
-	var records []model.MDlt6452007DataPoint
+	var records []model.MSzy2062016DataPoint
 	result := tx.Order("created_at DESC").Find(&records,
-		&model.MDlt6452007DataPoint{DeviceUuid: deviceUuid})
+		&model.MSzy2062016DataPoint{DeviceUuid: deviceUuid})
 	if result.Error != nil {
 		c.JSON(common.HTTP_OK, common.Error400(result.Error))
 		return
 	}
-	recordsVo := []Dlt6452007MasterPointVo{}
-	// "MeterId", "Tag", "Alias", "Frequency"
+	recordsVo := []Szy2062016MasterPointVo{}
+	// "MeterId", "MeterType", "Tag", "Alias", "Frequency"
 	for _, record := range records {
 		Slot := intercache.GetSlot(deviceUuid)
 		Value, ok := Slot[record.UUID]
-		Vo := Dlt6452007MasterPointVo{
+		Vo := Szy2062016MasterPointVo{
 			UUID:          record.UUID,
 			DeviceUuid:    record.DeviceUuid,
 			MeterId:       record.MeterId,
+			MeterType:     record.MeterType,
 			Tag:           record.Tag,
 			Alias:         record.Alias,
 			Frequency:     record.Frequency,
@@ -171,7 +173,7 @@ func Dlt6452007MasterSheetPageList(c *gin.Context, ruleEngine typex.Rhilex) {
 * 删除单行
 *
  */
-func Dlt6452007MasterSheetDeleteAll(c *gin.Context, ruleEngine typex.Rhilex) {
+func Szy2062016MasterSheetDeleteAll(c *gin.Context, ruleEngine typex.Rhilex) {
 	type Form struct {
 		UUIDs      []string `json:"uuids"`
 		DeviceUUID string   `json:"device_uuid"`
@@ -181,7 +183,7 @@ func Dlt6452007MasterSheetDeleteAll(c *gin.Context, ruleEngine typex.Rhilex) {
 		c.JSON(common.HTTP_OK, common.Error400(Error))
 		return
 	}
-	err := service.DeleteAllMDlt6452007ByDevice(form.DeviceUUID)
+	err := service.DeleteAllMSzy2062016ByDevice(form.DeviceUUID)
 	if err != nil {
 		c.JSON(common.HTTP_OK, common.Error400(err))
 		return
@@ -196,7 +198,7 @@ func Dlt6452007MasterSheetDeleteAll(c *gin.Context, ruleEngine typex.Rhilex) {
 *删除
 *
  */
-func Dlt6452007MasterSheetDelete(c *gin.Context, ruleEngine typex.Rhilex) {
+func Szy2062016MasterSheetDelete(c *gin.Context, ruleEngine typex.Rhilex) {
 	type Form struct {
 		UUIDs      []string `json:"uuids"`
 		DeviceUUID string   `json:"device_uuid"`
@@ -206,7 +208,7 @@ func Dlt6452007MasterSheetDelete(c *gin.Context, ruleEngine typex.Rhilex) {
 		c.JSON(common.HTTP_OK, common.Error400(Error))
 		return
 	}
-	err := service.DeleteDlt6452007PointByDevice(form.UUIDs, form.DeviceUUID)
+	err := service.DeleteSzy2062016PointByDevice(form.UUIDs, form.DeviceUUID)
 	if err != nil {
 		c.JSON(common.HTTP_OK, common.Error400(err))
 		return
@@ -222,7 +224,7 @@ func Dlt6452007MasterSheetDelete(c *gin.Context, ruleEngine typex.Rhilex) {
 *
  */
 
-func CheckDlt6452007MasterDataPoints(M Dlt6452007MasterPointVo) error {
+func CheckSzy2062016MasterDataPoints(M Szy2062016MasterPointVo) error {
 	// Helper function to check string length
 	checkStringLength := func(value string, paramName string, maxLength int) error {
 		if value == "" {
@@ -255,50 +257,52 @@ func CheckDlt6452007MasterDataPoints(M Dlt6452007MasterPointVo) error {
 * 更新点位表
 *
  */
-func Dlt6452007MasterSheetUpdate(c *gin.Context, ruleEngine typex.Rhilex) {
+func Szy2062016MasterSheetUpdate(c *gin.Context, ruleEngine typex.Rhilex) {
 	type Form struct {
 		DeviceUUID                 string                    `json:"device_uuid"`
-		Dlt6452007MasterDataPoints []Dlt6452007MasterPointVo `json:"data_points"`
+		Szy2062016MasterDataPoints []Szy2062016MasterPointVo `json:"data_points"`
 	}
-	//  Dlt6452007MasterDataPoints := [] Dlt6452007MasterPointVo{}
+	//  Szy2062016MasterDataPoints := [] Szy2062016MasterPointVo{}
 	form := Form{}
 	err := c.ShouldBindJSON(&form)
 	if err != nil {
 		c.JSON(common.HTTP_OK, common.Error400(err))
 		return
 	}
-	for _, Dlt6452007MasterDataPoint := range form.Dlt6452007MasterDataPoints {
-		if err := CheckDlt6452007MasterDataPoints(Dlt6452007MasterDataPoint); err != nil {
+	for _, Szy2062016MasterDataPoint := range form.Szy2062016MasterDataPoints {
+		if err := CheckSzy2062016MasterDataPoints(Szy2062016MasterDataPoint); err != nil {
 			c.JSON(common.HTTP_OK, common.Error400(err))
 			return
 		}
-		// "MeterId", "Tag", "Alias", "Frequency"
-		if Dlt6452007MasterDataPoint.UUID == "" ||
-			Dlt6452007MasterDataPoint.UUID == "new" ||
-			Dlt6452007MasterDataPoint.UUID == "copy" {
-			NewRow := model.MDlt6452007DataPoint{
-				UUID:       utils.Dlt6452007PointUUID(),
-				DeviceUuid: Dlt6452007MasterDataPoint.DeviceUuid,
-				MeterId:    Dlt6452007MasterDataPoint.MeterId,
-				Tag:        Dlt6452007MasterDataPoint.Tag,
-				Alias:      Dlt6452007MasterDataPoint.Alias,
-				Frequency:  Dlt6452007MasterDataPoint.Frequency,
+		// "MeterId", "MeterType", "Tag", "Alias", "Frequency"
+		if Szy2062016MasterDataPoint.UUID == "" ||
+			Szy2062016MasterDataPoint.UUID == "new" ||
+			Szy2062016MasterDataPoint.UUID == "copy" {
+			NewRow := model.MSzy2062016DataPoint{
+				UUID:       utils.Szy2062016PointUUID(),
+				DeviceUuid: Szy2062016MasterDataPoint.DeviceUuid,
+				MeterId:    Szy2062016MasterDataPoint.MeterId,
+				MeterType:  Szy2062016MasterDataPoint.MeterType,
+				Tag:        Szy2062016MasterDataPoint.Tag,
+				Alias:      Szy2062016MasterDataPoint.Alias,
+				Frequency:  Szy2062016MasterDataPoint.Frequency,
 			}
-			err0 := service.InsertDlt6452007Point(NewRow)
+			err0 := service.InsertSzy2062016Point(NewRow)
 			if err0 != nil {
 				c.JSON(common.HTTP_OK, common.Error400(err0))
 				return
 			}
 		} else {
-			OldRow := model.MDlt6452007DataPoint{
-				UUID:       Dlt6452007MasterDataPoint.UUID,
-				DeviceUuid: Dlt6452007MasterDataPoint.DeviceUuid,
-				MeterId:    Dlt6452007MasterDataPoint.MeterId,
-				Tag:        Dlt6452007MasterDataPoint.Tag,
-				Alias:      Dlt6452007MasterDataPoint.Alias,
-				Frequency:  Dlt6452007MasterDataPoint.Frequency,
+			OldRow := model.MSzy2062016DataPoint{
+				UUID:       Szy2062016MasterDataPoint.UUID,
+				DeviceUuid: Szy2062016MasterDataPoint.DeviceUuid,
+				MeterId:    Szy2062016MasterDataPoint.MeterId,
+				MeterType:  Szy2062016MasterDataPoint.MeterType,
+				Tag:        Szy2062016MasterDataPoint.Tag,
+				Alias:      Szy2062016MasterDataPoint.Alias,
+				Frequency:  Szy2062016MasterDataPoint.Frequency,
 			}
-			err0 := service.UpdateDlt6452007Point(OldRow)
+			err0 := service.UpdateSzy2062016Point(OldRow)
 			if err0 != nil {
 				c.JSON(common.HTTP_OK, common.Error400(err0))
 				return
@@ -310,14 +314,14 @@ func Dlt6452007MasterSheetUpdate(c *gin.Context, ruleEngine typex.Rhilex) {
 
 }
 
-type Dlt6452007DeviceDto struct {
+type Szy2062016DeviceDto struct {
 	UUID   string
 	Name   string
 	Type   string
 	Config string
 }
 
-func (md Dlt6452007DeviceDto) GetConfig() map[string]interface{} {
+func (md Szy2062016DeviceDto) GetConfig() map[string]interface{} {
 	result := make(map[string]interface{})
 	err := json.Unmarshal([]byte(md.Config), &result)
 	if err != nil {
@@ -326,8 +330,8 @@ func (md Dlt6452007DeviceDto) GetConfig() map[string]interface{} {
 	return result
 }
 
-// Dlt6452007MasterSheetImport 上传Excel文件
-func Dlt6452007MasterSheetImport(c *gin.Context, ruleEngine typex.Rhilex) {
+// Szy2062016MasterSheetImport 上传Excel文件
+func Szy2062016MasterSheetImport(c *gin.Context, ruleEngine typex.Rhilex) {
 	// 解析 multipart/form-data 类型的请求体
 	err := c.Request.ParseMultipartForm(1024 * 1024 * 10)
 	if err != nil {
@@ -356,9 +360,9 @@ func Dlt6452007MasterSheetImport(c *gin.Context, ruleEngine typex.Rhilex) {
 			common.Error("Device Not Exists"))
 		return
 	}
-	if Device.Type != typex.DLT6452007_MASTER.String() {
+	if Device.Type != typex.SZY2062016_MASTER.String() {
 		c.JSON(common.HTTP_OK,
-			common.Error("Invalid Device Type, Only Support Import Dlt6452007Master Device"))
+			common.Error("Invalid Device Type, Only Support Import Szy2062016Master Device"))
 		return
 	}
 
@@ -374,12 +378,12 @@ func Dlt6452007MasterSheetImport(c *gin.Context, ruleEngine typex.Rhilex) {
 		return
 	}
 	// 只取第一张表，而且名字必须是Sheet1
-	list, err := parseDlt6452007MasterPointExcel(file, "Sheet1", deviceUuid)
+	list, err := parseSzy2062016MasterPointExcel(file, "Sheet1", deviceUuid)
 	if err != nil {
 		c.JSON(common.HTTP_OK, common.Error400(err))
 		return
 	}
-	if err = service.InsertDlt6452007Points(list); err != nil {
+	if err = service.InsertSzy2062016Points(list); err != nil {
 		c.JSON(common.HTTP_OK, common.Error400(err))
 		return
 	}
@@ -393,8 +397,8 @@ func Dlt6452007MasterSheetImport(c *gin.Context, ruleEngine typex.Rhilex) {
 *
  */
 
-func parseDlt6452007MasterPointExcel(r io.Reader, sheetName string,
-	deviceUuid string) (list []model.MDlt6452007DataPoint, err error) {
+func parseSzy2062016MasterPointExcel(r io.Reader, sheetName string,
+	deviceUuid string) (list []model.MSzy2062016DataPoint, err error) {
 	excelFile, err := excelize.OpenReader(r)
 	if err != nil {
 		return nil, err
@@ -406,32 +410,35 @@ func parseDlt6452007MasterPointExcel(r io.Reader, sheetName string,
 		return nil, err
 	}
 	// 判断首行标头
-	// "MeterId", "Tag", "Alias", "Frequency"
+	// "MeterId", "MeterType", "Tag", "Alias", "Frequency"
 	err1 := errors.New(" Invalid Sheet Header")
-	if len(rows[0]) < 4 {
+	if len(rows[0]) < 5 {
 		return nil, err1
 	}
-	// "MeterId", "Tag", "Alias", "Frequency"
+	// "MeterId", "MeterType", "Tag", "Alias", "Frequency"
 
 	// 严格检查表结构
 	if rows[0][0] != "MeterId" ||
-		rows[0][1] != "Tag" ||
-		rows[0][2] != "Alias" ||
-		rows[0][3] != "Frequency" {
+		rows[0][1] != "MeterType" ||
+		rows[0][2] != "Tag" ||
+		rows[0][3] != "Alias" ||
+		rows[0][4] != "Frequency" {
 		return nil, err1
 	}
 
-	list = make([]model.MDlt6452007DataPoint, 0)
-	// "MeterId", "Tag", "Alias", "Frequency"
+	list = make([]model.MSzy2062016DataPoint, 0)
+	// "MeterId", "MeterType", "Tag", "Alias", "Frequency"
 	for i := 1; i < len(rows); i++ {
 		row := rows[i]
 		MeterId := row[0]
-		Tag := row[1]
-		Alias := row[2]
-		Frequency, _ := strconv.ParseUint(row[3], 10, 64)
-		// "MeterId", "Tag", "Alias", "Frequency"
-		if err := CheckDlt6452007MasterDataPoints(Dlt6452007MasterPointVo{
+		MeterType := row[1]
+		Tag := row[2]
+		Alias := row[3]
+		Frequency, _ := strconv.ParseUint(row[4], 10, 64)
+		// "MeterId", "MeterType", "Tag", "Alias", "Frequency"
+		if err := CheckSzy2062016MasterDataPoints(Szy2062016MasterPointVo{
 			MeterId:   MeterId,
+			MeterType: []byte(MeterType)[0],
 			Tag:       Tag,
 			Alias:     Alias,
 			Frequency: Frequency,
@@ -439,10 +446,11 @@ func parseDlt6452007MasterPointExcel(r io.Reader, sheetName string,
 			return nil, err
 		}
 		//
-		model := model.MDlt6452007DataPoint{
-			UUID:       utils.Dlt6452007PointUUID(),
+		model := model.MSzy2062016DataPoint{
+			UUID:       utils.Szy2062016PointUUID(),
 			DeviceUuid: deviceUuid,
 			MeterId:    MeterId,
+			MeterType:  []byte(MeterType)[0],
 			Tag:        Tag,
 			Alias:      Alias,
 			Frequency:  Frequency,

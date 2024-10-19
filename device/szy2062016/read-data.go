@@ -69,7 +69,7 @@ func (frame SZY206Frame0x00) Encode() ([]byte, error) {
 	nFrame.WriteByte(frame.CtrlCode)
 	nFrame.Write(frame.Address[:])
 	nFrame.Write(frame.DataArea)
-	frame.CheckSum = crc8(nFrame.Bytes())
+	frame.CheckSum = crc(nFrame.Bytes())
 	nFrame.WriteByte(frame.CheckSum)
 	nFrame.WriteByte(frame.End)
 	return nFrame.Bytes(), nil

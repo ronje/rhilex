@@ -383,7 +383,7 @@ func MBusMasterSheetImport(c *gin.Context, ruleEngine typex.Rhilex) {
 	}
 	if Device.Type != typex.GENERIC_MBUS_MASTER.String() {
 		c.JSON(common.HTTP_OK,
-			common.Error("Invalid Device Type, Only Support Import  MBusMaster Device"))
+			common.Error("Invalid Device Type, Only Support Import MBusMaster Device"))
 		return
 	}
 

@@ -358,7 +358,7 @@ func Cjt1882004MasterSheetImport(c *gin.Context, ruleEngine typex.Rhilex) {
 	}
 	if Device.Type != typex.CJT1882004_MASTER.String() {
 		c.JSON(common.HTTP_OK,
-			common.Error("Invalid Device Type, Only Support Import  Cjt1882004Master Device"))
+			common.Error("Invalid Device Type, Only Support Import Cjt1882004Master Device"))
 		return
 	}
 
