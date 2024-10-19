@@ -26,6 +26,7 @@ import (
 	"github.com/hootrhino/rhilex/common"
 	"github.com/hootrhino/rhilex/component/intercache"
 	"github.com/hootrhino/rhilex/component/interdb"
+	"github.com/hootrhino/rhilex/component/uartctrl"
 	userproto "github.com/hootrhino/rhilex/device/useprotocol"
 
 	serial "github.com/hootrhino/goserial"
@@ -111,6 +112,10 @@ func (gw *GenericUserProtocolDevice) Init(devId string, configMap map[string]int
 	}
 	if !utils.SContains([]string{"UART", "TCP"}, gw.mainConfig.CommonConfig.Mode) {
 		return errors.New("unsupported mode, only can be one of 'TCP' or 'UART'")
+	}
+	// CheckSerialBusy
+	if err := uartctrl.CheckSerialBusy(gw.mainConfig.UartConfig.Uart); err != nil {
+		return err
 	}
 	var DataPoints []GenericUserProtocolDataPoint
 	PointLoadErr := interdb.DB().Table("m_user_protocol_data_points").

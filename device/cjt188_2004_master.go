@@ -26,6 +26,7 @@ import (
 	"github.com/hootrhino/rhilex/common"
 	"github.com/hootrhino/rhilex/component/intercache"
 	"github.com/hootrhino/rhilex/component/interdb"
+	"github.com/hootrhino/rhilex/component/uartctrl"
 	"github.com/hootrhino/rhilex/device/cjt1882004"
 	"github.com/hootrhino/rhilex/glogger"
 	"github.com/hootrhino/rhilex/typex"
@@ -109,6 +110,10 @@ func (gw *CJT188_2004_MasterGateway) Init(devId string, configMap map[string]int
 	if !utils.SContains([]string{"UART", "TCP"}, gw.mainConfig.CommonConfig.Mode) {
 		return errors.New("unsupported mode, only can be one of 'TCP' or 'UART'")
 	}
+	// CheckSerialBusy
+	if err := uartctrl.CheckSerialBusy(gw.mainConfig.UartConfig.Uart); err != nil {
+		return err
+	}
 	var DLT645_ModbusPointList []CJT188_2004_DataPoint
 	PointLoadErr := interdb.DB().Table("m_cjt1882004_data_points").
 		Where("device_uuid=?", devId).Find(&DLT645_ModbusPointList).Error
@@ -150,6 +155,7 @@ func (gw *CJT188_2004_MasterGateway) Start(cctx typex.CCTX) error {
 			StopBits: gw.mainConfig.UartConfig.StopBits,
 			Timeout:  time.Duration(gw.mainConfig.UartConfig.Timeout) * time.Millisecond,
 		}
+
 		serialPort, err := serial.Open(&config)
 		if err != nil {
 			return err

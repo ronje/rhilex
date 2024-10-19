@@ -13,6 +13,7 @@ import (
 
 	serial "github.com/hootrhino/goserial"
 	"github.com/hootrhino/rhilex/common"
+	"github.com/hootrhino/rhilex/component/uartctrl"
 	"github.com/hootrhino/rhilex/glogger"
 	"github.com/hootrhino/rhilex/typex"
 	"github.com/hootrhino/rhilex/utils"
@@ -80,6 +81,10 @@ func (uart *genericUartDevice) Init(devId string, configMap map[string]interface
 
 	if err := utils.BindSourceConfig(configMap, &uart.mainConfig); err != nil {
 		glogger.GLogger.Error(err)
+		return err
+	}
+	// CheckSerialBusy
+	if err := uartctrl.CheckSerialBusy(uart.mainConfig.UartConfig.Uart); err != nil {
 		return err
 	}
 	if uart.mainConfig.RwConfig.TimeSlice < 30 {

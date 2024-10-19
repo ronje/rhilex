@@ -26,6 +26,7 @@ import (
 	"github.com/hootrhino/rhilex/common"
 	"github.com/hootrhino/rhilex/component/intercache"
 	"github.com/hootrhino/rhilex/component/interdb"
+	"github.com/hootrhino/rhilex/component/uartctrl"
 	"github.com/hootrhino/rhilex/device/dlt6452007"
 	"github.com/hootrhino/rhilex/glogger"
 	"github.com/hootrhino/rhilex/typex"
@@ -108,6 +109,10 @@ func (gw *DLT645_2007_MasterGateway) Init(devId string, configMap map[string]int
 	}
 	if !utils.SContains([]string{"UART", "TCP"}, gw.mainConfig.CommonConfig.Mode) {
 		return errors.New("unsupported mode, only can be one of 'TCP' or 'UART'")
+	}
+	// CheckSerialBusy
+	if err := uartctrl.CheckSerialBusy(gw.mainConfig.UartConfig.Uart); err != nil {
+		return err
 	}
 	var DLT645_ModbusPointList []DLT645_2007_DataPoint
 	PointLoadErr := interdb.DB().Table("m_dlt6452007_data_points").

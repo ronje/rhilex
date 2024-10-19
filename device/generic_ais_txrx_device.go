@@ -14,6 +14,7 @@ import (
 	"github.com/adrianmo/go-nmea"
 	aislib "github.com/hootrhino/go-ais"
 	"github.com/hootrhino/rhilex/common"
+	"github.com/hootrhino/rhilex/component/uartctrl"
 
 	serial "github.com/hootrhino/goserial"
 	"github.com/hootrhino/rhilex/glogger"
@@ -80,7 +81,10 @@ func (aism *AISDeviceMaster) Init(devId string, configMap map[string]interface{}
 	if !utils.SContains([]string{"UART", "TCP"}, aism.mainConfig.CommonConfig.Mode) {
 		return errors.New("unsupported mode, only can be one of 'TCP' or 'RTU'")
 	}
-
+	// CheckSerialBusy
+	if err := uartctrl.CheckSerialBusy(aism.mainConfig.UartConfig.Uart); err != nil {
+		return err
+	}
 	return nil
 }
 
