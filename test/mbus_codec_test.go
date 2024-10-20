@@ -23,7 +23,6 @@ import (
 
 	"testing"
 
-	"github.com/hootrhino/rhilex/device/mbus"
 	gombus "github.com/hootrhino/rhilex/device/mbus"
 	"github.com/sirupsen/logrus"
 )
@@ -70,7 +69,7 @@ var primaryID = flag.Int("id", 1, "primaryID to fetch data from")
 
 // go test -timeout 30s -run ^TestMbusCodec github.com/hootrhino/rhilex/test -v -count=1
 func TestMbusCodec(t *testing.T) {
-	client := mbus.NewMbusClientHandler(NewDltReadWriteCloser())
+	client := gombus.NewMbusClientHandler(NewDltReadWriteCloser())
 	client.SetLogger(logrus.StandardLogger())
 
 	frame := client.SndNKE(uint8(*primaryID))

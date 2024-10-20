@@ -15,12 +15,19 @@
 
 package protocol
 
-import "time"
+type GenericProtocolHandler struct {
+	appLayer *GenericAppLayer
+}
 
-type Transport interface {
-	Connect(address string, timeout time.Duration) error
-	SendRequest(data []byte, timeout time.Duration) error
-	ReadResponse(headerLength int, timeout time.Duration) ([]byte, error)
-	Status() error
-	Close() error
+func NewGenericProtocolHandler(config TransporterConfig) *GenericProtocolHandler {
+	return &GenericProtocolHandler{appLayer: NewGenericAppLayerAppLayer(config)}
+}
+func (handler *GenericProtocolHandler) Request(appframe AppLayerFrame) (AppLayerFrame, error) {
+	return handler.appLayer.Request(appframe)
+}
+func (handler *GenericProtocolHandler) Status() error {
+	return handler.appLayer.Status()
+}
+func (handler *GenericProtocolHandler) Close() error {
+	return handler.appLayer.Close()
 }

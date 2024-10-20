@@ -1,154 +1,124 @@
-## 固定包长度协议
-### 协议概述
-本文将介绍如何实现一个固定包长度协议，其中前4个字节用于表示数据包的长度，后面的字节表示实际数据。我们将使用C语言作为示例来演示这个协议的实现过程。
-### 协议概述
-在本协议中，每个数据包的格式如下：
-```
-+----------------+---------------------+
-| Length (4 bytes) | Data (Length bytes) |
-+----------------+---------------------+
-```
+# 自定义交互协议指南
 
-- **Length**: 包头的前4个字节表示数据包的总长度，包括Length字段本身。即数据包的总长度是 `Length` + 4 字节。
-- **Data**: 包头之后的数据部分，长度由Length字段指定。
-### 数据打包
-在发送数据之前，我们需要将数据打包为协议规定的格式。下面是一个示例函数，用于将数据打包到一个缓冲区中：
+## 1. 概述
+
+本指南提供了一个自定义交互协议的结构和实现，适用于各种数据传输场景。该协议由 `Header` 和 `AppLayerFrame` 两部分组成，并包含 CRC 校验功能以确保数据传输的完整性。
+
+## 2. 数据结构
+
+### 2.1 Header
+
+`Header` 结构体用于描述数据的元信息，具体字段如下：
+
+- **Type**: `[2]byte`
+  表示数据的类型，使用 2 字节表示。
+
+- **Length**: `[2]byte`
+  表示有效载荷的长度，使用 2 字节表示。
+
+### 2.2 AppLayerFrame
+
+`AppLayerFrame` 结构体用于封装完整的数据帧，具体字段如下：
+
+- **Header**: `Header`
+  包含数据的头部信息。
+
+- **Payload**: `[]byte`
+  表示实际的数据内容，长度可变。
+
+## 3. CRC 校验码
+
+在数据传输中，CRC（循环冗余校验）是一种常用的错误检测机制。本协议使用 CRC-8 校验码以确保数据的完整性。CRC 的计算方法在实现中提供，用户可以直接使用该方法进行数据校验。
+
+## 4. 使用场景
+
+本协议适用于各种需要数据传输的场景，例如：
+
+- 网络通信
+- 文件传输
+- 设备间数据交互
+
+通过使用 `Header`，接收方可以快速了解接收到的数据类型及其长度，从而进行相应处理。
+
+## 5. C语言实现示例
 ```c
 #include <stdio.h>
-#include <stdlib.h>
+#include <stdint.h>
 #include <string.h>
 
-#define HEADER_SIZE 4
+#define HEADER_SIZE 4 // 2 bytes for Type + 2 bytes for Length
+#define PAYLOAD_MAX_SIZE 256 // Maximum payload size
 
-// 打包数据到缓冲区
-void pack_data(const unsigned char *data, size_t data_len, unsigned char *buffer) {
-    // 计算总长度
-    size_t total_len = HEADER_SIZE + data_len;
+// Header structure
+typedef struct {
+    uint8_t Type[2];
+    uint8_t Length[2];
+} Header;
 
-    // 设置长度字段
-    buffer[0] = (total_len >> 24) & 0xFF;
-    buffer[1] = (total_len >> 16) & 0xFF;
-    buffer[2] = (total_len >> 8) & 0xFF;
-    buffer[3] = total_len & 0xFF;
+// AppLayerFrame structure
+typedef struct {
+    Header header;
+    uint8_t payload[PAYLOAD_MAX_SIZE];
+    uint8_t crc; // CRC-8 checksum
+} AppLayerFrame;
 
-    // 复制数据到缓冲区
-    memcpy(buffer + HEADER_SIZE, data, data_len);
+// Function to create an AppLayerFrame
+void createFrame(AppLayerFrame *frame, uint8_t type1, uint8_t type2, uint8_t *data, uint16_t length) {
+    frame->header.Type[0] = type1;
+    frame->header.Type[1] = type2;
+    frame->header.Length[0] = (length >> 8) & 0xFF; // High byte
+    frame->header.Length[1] = length & 0xFF;       // Low byte
+    memcpy(frame->payload, data, length);
+    frame->crc = crc8(frame); // Calculate CRC for the entire frame
 }
 
-int main() {
-    // 示例数据
-    const char *message = "Hello, Protocol!";
-    size_t message_len = strlen(message);
+// Function to calculate CRC-8 checksum
+uint8_t crc8(const AppLayerFrame *frame) {
+    uint8_t crc = 0x00; // Initial value
+    for (size_t i = 0; i < HEADER_SIZE + (frame->header.Length[0] << 8 | frame->header.Length[1]); i++) {
+        uint8_t byte = ((uint8_t*)frame)[i]; // Access bytes of the frame
+        crc ^= byte; // XOR with the current byte
+        for (int j = 0; j < 8; j++) {
+            if (crc & 0x80) {
+                crc = (crc << 1) ^ 0x1D; // Polynomial for CRC-8
+            } else {
+                crc <<= 1;
+            }
+        }
+    }
+    return crc; // Final CRC value
+}
 
-    // 创建缓冲区
-    unsigned char buffer[HEADER_SIZE + message_len];
-
-    // 打包数据
-    pack_data((const unsigned char *)message, message_len, buffer);
-
-    // 打印结果
-    for (size_t i = 0; i < sizeof(buffer); ++i) {
-        printf("%02X ", buffer[i]);
+// Function to display the frame
+void displayFrame(const AppLayerFrame *frame) {
+    printf("Header Type: %02X %02X\n", frame->header.Type[0], frame->header.Type[1]);
+    printf("Payload Length: %d\n", (frame->header.Length[0] << 8) | frame->header.Length[1]);
+    printf("Payload: ");
+    for (int i = 0; i < (frame->header.Length[0] << 8 | frame->header.Length[1]); i++) {
+        printf("%02X ", frame->payload[i]);
     }
     printf("\n");
-
-    return 0;
-}
-```
-## 固定包头尾协议
-协议格式如下：
-
-- **起始标志**: 0xEE 0xEF
-- **数据内容**: 任意长度的数据
-- **结束标志**: \r\n (回车换行)
-### 协议概述
-数据包的格式如下所示：
-```
-+-----------------+---------------------+-----------+
-| Start Flag (2B) | Data (N bytes)      | End Flag (2B) |
-+-----------------+---------------------+-----------+
-| 0xEE 0xEF       | Variable length     | \r\n      |
-+-----------------+---------------------+-----------+
-```
-
-- **Start Flag**: 2个字节的起始标志，标识数据包的开始。
-- **Data**: 数据内容部分，长度不固定。
-- **End Flag**: 2个字节的结束标志，用于标识数据包的结束。
-### 数据打包
-首先，我们需要将数据打包成符合协议格式的格式：
-```c
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-
-#define START_FLAG_1 0xEE
-#define START_FLAG_2 0xEF
-#define END_FLAG_1 '\r'
-#define END_FLAG_2 '\n'
-
-// 打包数据到缓冲区
-void pack_data(const unsigned char *data, size_t data_len, unsigned char *buffer) {
-    // 设置起始标志
-    buffer[0] = START_FLAG_1;
-    buffer[1] = START_FLAG_2;
-
-    // 复制数据到缓冲区
-    memcpy(buffer + 2, data, data_len);
-
-    // 设置结束标志
-    buffer[2 + data_len] = END_FLAG_1;
-    buffer[3 + data_len] = END_FLAG_2;
+    printf("CRC-8 Checksum: %02X\n", frame->crc);
 }
 
 int main() {
-    // 示例数据
-    const char *message = "Hello, Protocol!";
-    size_t message_len = strlen(message);
+    AppLayerFrame frame;
+    uint8_t data[] = {0xDE, 0xAD, 0xBE, 0xEF}; // Example payload
 
-    // 创建缓冲区
-    unsigned char buffer[2 + message_len + 2];
+    // Create a frame with type 0x01 and payload data
+    createFrame(&frame, 0x01, 0x02, data, sizeof(data));
 
-    // 打包数据
-    pack_data((const unsigned char *)message, message_len, buffer);
-
-    // 打印结果
-    for (size_t i = 0; i < sizeof(buffer); ++i) {
-        printf("%02X ", buffer[i]);
-    }
-    printf("\n");
+    // Display the constructed frame
+    displayFrame(&frame);
 
     return 0;
 }
 ```
 
-## 换行符协议
-在许多串口通信协议中，数据帧的结束标志是一个关键要素。本文将介绍一种基于换行符（`\r\n`）的串口协议，指导开发者如何在C语言中实现该协议。此协议特别适用于需要通过串口进行简单的文本数据通信的应用。
-### 协议概述
-“换行符协议”是一个简单的串口通信协议，其中每个数据帧以回车符 (`\r`) 和换行符 (`\n`) 结束。这个协议设计的目的是让接收方能够容易地识别数据的结束，并且可以简单地处理接收到的数据。
+### 说明
 
-- **数据帧格式**: `[数据内容]\r\n`
-- **数据内容**: 一串可打印的字符，不包含 `\r` 或 `\n`。
-### 数据打包
-以下是一个打包程序示例。
-```c
-#include <stdio.h>
-#include <unistd.h>
-
-void send_data(int fd, const char *data) {
-    size_t len = strlen(data);
-    char buffer[len + 2];
-    strcpy(buffer, data);
-    buffer[len] = '\r';
-    buffer[len + 1] = '\n';
-    write(fd, buffer, len + 2);
-}
-
-int main() {
-    // ......
-    send_data(fd, "Hello, World!");
-    return 0;
-}
-```
-## 注意
-根据自己的需求选择最合适的协议即可，要保证协议实现正确。
-
+1. **Header 结构体**：定义数据头部信息。
+2. **AppLayerFrame 结构体**：包含头部、有效载荷和 CRC-8 校验码。
+3. **createFrame 函数**：在创建帧时计算并存储 CRC-8 校验码。
+4. **crc8 函数**：计算给定 `AppLayerFrame` 的 CRC-8 校验码，使用多项式 `0x1D`。
+5. **displayFrame 函数**：显示帧的信息，包括类型、有效载荷和 CRC 校验码。
