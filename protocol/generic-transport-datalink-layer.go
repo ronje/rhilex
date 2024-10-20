@@ -29,14 +29,14 @@ func NewDataLinkLayer(config TransporterConfig) *DataLinkLayer {
 	return &DataLinkLayer{transport: NewTransportLayer(config)}
 }
 
-func (dll *DataLinkLayer) DataLinkerLayerHandle(data []byte) ([]byte, error) {
+func (dll *DataLinkLayer) Write(data []byte) error {
 	crc := dll.checksumCrc8(data)
 	data = append(data, crc)
-	errSend := dll.transport.SendRequest(data)
-	if errSend != nil {
-		return nil, errSend
-	}
-	Bytes, errRead := dll.transport.ReadResponse()
+	return dll.transport.Write(data)
+}
+
+func (dll *DataLinkLayer) Read() ([]byte, error) {
+	Bytes, errRead := dll.transport.Read()
 	if errRead != nil {
 		return nil, errRead
 	}

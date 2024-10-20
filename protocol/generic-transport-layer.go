@@ -16,6 +16,7 @@
 package protocol
 
 import (
+	"bytes"
 	"encoding/binary"
 	"fmt"
 	"io"
@@ -30,8 +31,10 @@ func NewTransportLayer(config TransporterConfig) *TransportLayer {
 	return &TransportLayer{config: config}
 }
 
-func (transport *TransportLayer) SendRequest(data []byte) error {
-	if err := transport.config.Port.SetWriteDeadline(time.Now().Add(transport.config.WriteTimeout)); err != nil {
+func (transport *TransportLayer) Write(data []byte) error {
+	transport.config.Logger.Debug("TransportLayer.Write=", data)
+	if err := transport.config.Port.SetWriteDeadline(time.Now().Add(
+		transport.config.WriteTimeout * time.Millisecond)); err != nil {
 		return err
 	}
 	if _, err := transport.config.Port.Write(data); err != nil {
@@ -40,12 +43,14 @@ func (transport *TransportLayer) SendRequest(data []byte) error {
 	return transport.config.Port.SetWriteDeadline(time.Time{})
 }
 
-func (transport *TransportLayer) ReadResponse() ([]byte, error) {
-	if err := transport.config.Port.SetReadDeadline(time.Now().Add(transport.config.ReadTimeout)); err != nil {
+func (transport *TransportLayer) Read() ([]byte, error) {
+	if err := transport.config.Port.SetReadDeadline(time.Now().Add(
+		transport.config.ReadTimeout * time.Millisecond)); err != nil {
 		return nil, err
 	}
 	responsetHeader := Header{}
-	if err := binary.Read(transport.config.Port, binary.BigEndian, &responsetHeader); err != nil {
+	if err := binary.Read(transport.config.Port, binary.BigEndian,
+		&responsetHeader); err != nil {
 		return nil, err
 	}
 	responseLength := binary.BigEndian.Uint16(responsetHeader.Length[:])
@@ -53,12 +58,15 @@ func (transport *TransportLayer) ReadResponse() ([]byte, error) {
 	if _, err := io.ReadFull(transport.config.Port, response); err != nil {
 		return nil, err
 	}
-
 	if err := transport.config.Port.SetReadDeadline(time.Time{}); err != nil {
 		return response, err
 	}
-
-	return response, nil
+	buffer := new(bytes.Buffer)
+	buffer.Write(responsetHeader.Type[:])
+	buffer.Write(responsetHeader.Length[:])
+	buffer.Write(response)
+	transport.config.Logger.Debug("TransportLayer.Read=", buffer.Bytes())
+	return buffer.Bytes(), nil
 }
 
 func (transport *TransportLayer) Status() error {

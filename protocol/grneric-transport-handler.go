@@ -25,6 +25,12 @@ func NewGenericProtocolHandler(config TransporterConfig) *GenericProtocolHandler
 func (handler *GenericProtocolHandler) Request(appframe AppLayerFrame) (AppLayerFrame, error) {
 	return handler.appLayer.Request(appframe)
 }
+func (handler *GenericProtocolHandler) Write(appframe AppLayerFrame) error {
+	return handler.appLayer.Write(appframe)
+}
+func (handler *GenericProtocolHandler) Read() (AppLayerFrame, error) {
+	return handler.appLayer.Read()
+}
 func (handler *GenericProtocolHandler) Status() error {
 	return handler.appLayer.Status()
 }

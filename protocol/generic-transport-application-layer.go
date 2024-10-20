@@ -33,7 +33,39 @@ func (app *GenericAppLayer) Request(appframe AppLayerFrame) (AppLayerFrame, erro
 	if errEncode != nil {
 		return AppLayerFrame{}, errEncode
 	}
-	bytes, errHd := app.datalink.DataLinkerLayerHandle(appBytes)
+	Write := app.datalink.Write(appBytes)
+	if Write != nil {
+		return AppLayerFrame{}, Write
+	}
+	bytes, errRead := app.datalink.Read()
+	if errRead != nil {
+		return AppLayerFrame{}, errRead
+	}
+	if len(bytes) < 5 {
+		return AppLayerFrame{}, errors.New("data too short for header")
+	}
+	var responseHeader Header
+	copy(responseHeader.Type[:], bytes[:2])
+	copy(responseHeader.Length[:], bytes[2:4])
+	payloadLength := int(binary.BigEndian.Uint16(responseHeader.Length[:]))
+	if len(bytes) < 4+payloadLength {
+		return AppLayerFrame{}, errors.New("data too short for payload")
+	}
+	payload := bytes[4 : 4+payloadLength]
+	return AppLayerFrame{
+		Header:  responseHeader,
+		Payload: payload,
+	}, nil
+}
+func (app *GenericAppLayer) Write(appframe AppLayerFrame) error {
+	appBytes, errEncode := appframe.Encode()
+	if errEncode != nil {
+		return errEncode
+	}
+	return app.datalink.Write(appBytes)
+}
+func (app *GenericAppLayer) Read() (AppLayerFrame, error) {
+	bytes, errHd := app.datalink.Read()
 	if errHd != nil {
 		return AppLayerFrame{}, errHd
 	}
@@ -53,7 +85,6 @@ func (app *GenericAppLayer) Request(appframe AppLayerFrame) (AppLayerFrame, erro
 		Payload: payload,
 	}, nil
 }
-
 func (app *GenericAppLayer) Status() error {
 	return app.datalink.Status()
 }

@@ -18,10 +18,12 @@ package test
 import (
 	"bytes"
 	"fmt"
+	"net"
 	"testing"
 	"time"
 
 	"github.com/hootrhino/rhilex/protocol"
+	"github.com/sirupsen/logrus"
 )
 
 // GenericReadWriteCloser 是一个简单的 ReadWriteCloser 实现
@@ -58,8 +60,8 @@ func (s *GenericReadWriteCloser) SetWriteDeadline(t time.Time) error {
 
 }
 
-// go test -timeout 30s -run ^TestGenericProtocolReqiest github.com/hootrhino/rhilex/test -v -count=1
-func TestGenericProtocolReqiest(t *testing.T) {
+// go test -timeout 30s -run ^TestGenericProtocolTest github.com/hootrhino/rhilex/test -v -count=1
+func TestGenericProtocolTest(t *testing.T) {
 	config := protocol.TransporterConfig{
 		Port:         NewGenericReadWriteCloser(),
 		ReadTimeout:  2000,
@@ -78,4 +80,33 @@ func TestGenericProtocolReqiest(t *testing.T) {
 		t.Fatal(err)
 	}
 	t.Log(response)
+}
+
+// go test -timeout 30s -run ^TestGenericProtocolSlaverTest github.com/hootrhino/rhilex/test -v -count=1
+
+func TestGenericProtocolSlaverTest(t *testing.T) {
+	Listener, err := net.Listen("tcp", ":7799")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer Listener.Close()
+	t.Log("Server listening on port 7799")
+	for {
+		conn, err := Listener.Accept()
+		if err != nil {
+			fmt.Println("Error accepting connection:", err.Error())
+			continue
+		}
+		fmt.Println("Accepting connection:", conn.RemoteAddr())
+		Logger := logrus.StandardLogger()
+		Logger.SetLevel(logrus.DebugLevel)
+		config := protocol.TransporterConfig{
+			Port:         conn,
+			ReadTimeout:  5000,
+			WriteTimeout: 5000,
+			Logger:       Logger,
+		}
+		TransportSlaver := protocol.NewGenericTransportSlaver(config)
+		go TransportSlaver.StartLoop()
+	}
 }
