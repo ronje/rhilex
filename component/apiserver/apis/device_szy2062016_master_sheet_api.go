@@ -54,7 +54,7 @@ type Szy2062016MasterPointVo struct {
 	DeviceUuid    string      `json:"device_uuid"`
 	UUID          string      `json:"uuid"`
 	MeterId       string      `json:"meterId"`
-	MeterType     byte        `json:"meterType"`
+	MeterType     int32       `json:"meterType"`
 	Tag           string      `json:"tag"`
 	Alias         string      `json:"alias"`
 	Frequency     uint64      `json:"frequency"`
@@ -92,6 +92,7 @@ func Szy2062016MasterPointsExport(c *gin.Context, ruleEngine typex.Rhilex) {
 	for idx, record := range records[0:] {
 		Row := []string{
 			record.MeterId,
+			fmt.Sprintf("%d", record.MeterType),
 			record.Tag,
 			record.Alias,
 			fmt.Sprintf("%d", record.Frequency),
@@ -431,14 +432,14 @@ func parseSzy2062016MasterPointExcel(r io.Reader, sheetName string,
 	for i := 1; i < len(rows); i++ {
 		row := rows[i]
 		MeterId := row[0]
-		MeterType := row[1]
+		MeterType, _ := strconv.ParseUint(row[1], 10, 32)
 		Tag := row[2]
 		Alias := row[3]
 		Frequency, _ := strconv.ParseUint(row[4], 10, 64)
 		// "MeterId", "MeterType", "Tag", "Alias", "Frequency"
 		if err := CheckSzy2062016MasterDataPoints(Szy2062016MasterPointVo{
 			MeterId:   MeterId,
-			MeterType: []byte(MeterType)[0],
+			MeterType: int32(MeterType),
 			Tag:       Tag,
 			Alias:     Alias,
 			Frequency: Frequency,
@@ -450,7 +451,7 @@ func parseSzy2062016MasterPointExcel(r io.Reader, sheetName string,
 			UUID:       utils.Szy2062016PointUUID(),
 			DeviceUuid: deviceUuid,
 			MeterId:    MeterId,
-			MeterType:  []byte(MeterType)[0],
+			MeterType:  int32(MeterType),
 			Tag:        Tag,
 			Alias:      Alias,
 			Frequency:  Frequency,

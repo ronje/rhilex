@@ -72,14 +72,14 @@ type Dlt6452007MasterPointVo struct {
 // Dlt6452007MasterPoints 获取Dlt6452007_excel类型的点位数据
 func Dlt6452007MasterPointsExport(c *gin.Context, ruleEngine typex.Rhilex) {
 	deviceUuid, _ := c.GetQuery("device_uuid")
-	var records []model.MDlt6452007DataPoint
+	var records []model.MSzy2062016DataPoint
 	result := interdb.DB().Table("m_dlt6452007_data_points").
 		Where("device_uuid=?", deviceUuid).Find(&records)
 	if result.Error != nil {
 		c.JSON(common.HTTP_OK, common.Error400(result.Error))
 		return
 	}
-	Headers := []string{"MeterId", "Tag", "Alias", "Frequency"}
+	Headers := []string{"MeterId", "MeterType", "Tag", "Alias", "Frequency"}
 	xlsx := excelize.NewFile()
 	defer func() {
 		if err := xlsx.Close(); err != nil {
@@ -91,6 +91,7 @@ func Dlt6452007MasterPointsExport(c *gin.Context, ruleEngine typex.Rhilex) {
 	for idx, record := range records[0:] {
 		Row := []string{
 			record.MeterId,
+			fmt.Sprintf("%d", record.MeterType),
 			record.Tag,
 			record.Alias,
 			fmt.Sprintf("%d", record.Frequency),

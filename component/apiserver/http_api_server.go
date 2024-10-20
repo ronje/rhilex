@@ -206,6 +206,8 @@ func (hs *ApiServerPlugin) LoadRoute() {
 	apis.InitMBusRoute()
 	// DLT645
 	apis.InitDlt6452007Route()
+	// Szy206
+	apis.InitSzy2062016Route()
 	// USer Protocol
 	apis.InitUserProtocolRoute()
 	// Init Internal Notify Route
