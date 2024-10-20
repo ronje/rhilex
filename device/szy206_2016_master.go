@@ -37,7 +37,7 @@ import (
 type SZY206_2016_DataPoint struct {
 	UUID      string `json:"uuid"`
 	MeterId   string `json:"meterId"`
-	MeterType byte   `json:"meterType"`
+	MeterType string `json:"meterType"`
 	Tag       string `json:"tag"`
 	Alias     string `json:"alias"`
 	Frequency int64  `json:"frequency"`
@@ -220,7 +220,7 @@ func (gw *SZY206_2016_MasterGateway) work(handler *szy2062016.SZY206ClientHandle
 				Start1:     szy2062016.CTRL_CODE_FRAME_START,
 				DataLength: 0x07,
 				Start2:     szy2062016.CTRL_CODE_FRAME_START,
-				CtrlCode:   szy2062016.SetControlCode(byte(DataPoint.MeterType)),
+				CtrlCode:   szy2062016.SetControlCode(1),
 				Address:    [5]byte{Address[0], Address[1], Address[2], Address[3], Address[4]},
 				DataArea:   []byte{},
 				End:        szy2062016.CTRL_CODE_FRAME_END,

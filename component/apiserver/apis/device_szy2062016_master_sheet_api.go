@@ -54,7 +54,7 @@ type Szy2062016MasterPointVo struct {
 	DeviceUuid    string      `json:"device_uuid"`
 	UUID          string      `json:"uuid"`
 	MeterId       string      `json:"meterId"`
-	MeterType     int32       `json:"meterType"`
+	MeterType     string      `json:"meterType"`
 	Tag           string      `json:"tag"`
 	Alias         string      `json:"alias"`
 	Frequency     uint64      `json:"frequency"`
@@ -432,14 +432,14 @@ func parseSzy2062016MasterPointExcel(r io.Reader, sheetName string,
 	for i := 1; i < len(rows); i++ {
 		row := rows[i]
 		MeterId := row[0]
-		MeterType, _ := strconv.ParseUint(row[1], 10, 32)
+		MeterType := row[1]
 		Tag := row[2]
 		Alias := row[3]
 		Frequency, _ := strconv.ParseUint(row[4], 10, 64)
 		// "MeterId", "MeterType", "Tag", "Alias", "Frequency"
 		if err := CheckSzy2062016MasterDataPoints(Szy2062016MasterPointVo{
 			MeterId:   MeterId,
-			MeterType: int32(MeterType),
+			MeterType: MeterType,
 			Tag:       Tag,
 			Alias:     Alias,
 			Frequency: Frequency,
@@ -451,7 +451,7 @@ func parseSzy2062016MasterPointExcel(r io.Reader, sheetName string,
 			UUID:       utils.Szy2062016PointUUID(),
 			DeviceUuid: deviceUuid,
 			MeterId:    MeterId,
-			MeterType:  int32(MeterType),
+			MeterType:  MeterType,
 			Tag:        Tag,
 			Alias:      Alias,
 			Frequency:  Frequency,

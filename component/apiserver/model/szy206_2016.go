@@ -20,7 +20,7 @@ type MSzy2062016DataPoint struct {
 	UUID       string
 	DeviceUuid string
 	MeterId    string
-	MeterType  int32
+	MeterType  string
 	Tag        string
 	Alias      string
 	Frequency  uint64
