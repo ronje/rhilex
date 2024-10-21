@@ -204,13 +204,24 @@ func (gw *CJT188_2004_MasterGateway) work(handler *cjt1882004.CJT188ClientHandle
 		}
 		cjt1882004_ReadDatas := []cjt1882004_ReadData{}
 		for _, DataPoint := range gw.DataPoints {
-			MeterSn, errc := utils.HexStringToBytes(DataPoint.MeterId)
-			if errc != nil {
-				glogger.GLogger.Error(errc)
+			lastTimes := uint64(time.Now().UnixMilli())
+			NewValue := intercache.CacheValue{
+				UUID:          DataPoint.UUID,
+				LastFetchTime: lastTimes,
+			}
+			MeterSn, err1 := utils.HexStringToBytes(DataPoint.MeterId)
+			if err1 != nil {
+				glogger.GLogger.Error(err1)
+				NewValue.Status = 0
+				NewValue.ErrMsg = err1.Error()
+				intercache.SetValue(gw.PointId, DataPoint.UUID, NewValue)
 				continue
 			}
 			if len(MeterSn) != 6 {
 				glogger.GLogger.Error("invalid MeterId:", DataPoint.MeterId)
+				NewValue.Status = 0
+				NewValue.ErrMsg = string("invalid MeterId:" + DataPoint.MeterId)
+				intercache.SetValue(gw.PointId, DataPoint.UUID, NewValue)
 				continue
 			}
 			Address := utils.ByteReverse(MeterSn)
@@ -225,37 +236,41 @@ func (gw *CJT188_2004_MasterGateway) work(handler *cjt1882004.CJT188ClientHandle
 				SerialNumber: 0x00,
 				End:          cjt1882004.CTRL_CODE_FRAME_END,
 			}
-			Bytes, err := frame.Encode()
-			if err != nil {
-				glogger.GLogger.Error(err)
+			Bytes, err2 := frame.Encode()
+			if err2 != nil {
+				glogger.GLogger.Error(err2)
+				NewValue.Status = 0
+				NewValue.ErrMsg = err2.Error()
+				intercache.SetValue(gw.PointId, DataPoint.UUID, NewValue)
 				continue
 			}
 			Resp, errRequest := handler.Request(Bytes)
 			if errRequest != nil {
 				glogger.GLogger.Error(errRequest)
+				NewValue.Status = 0
+				NewValue.ErrMsg = errRequest.Error()
+				intercache.SetValue(gw.PointId, DataPoint.UUID, NewValue)
 				continue
 			}
 			DLT645Frame0x11, errDecode := handler.DecodeCJT188Frame0x01Response(Resp)
 			if errDecode != nil {
 				glogger.GLogger.Error(errDecode)
+				NewValue.Status = 0
+				NewValue.ErrMsg = errDecode.Error()
+				intercache.SetValue(gw.PointId, DataPoint.UUID, NewValue)
 				continue
 			}
 			glogger.GLogger.Debug(DLT645Frame0x11.String())
-			lastTimes := uint64(time.Now().UnixMilli())
-			NewValue := intercache.CacheValue{
-				UUID:          DataPoint.UUID,
-				LastFetchTime: lastTimes,
-			}
 			Value, errValue := DLT645Frame0x11.GetData()
 			if errValue != nil {
-				glogger.GLogger.Error(errDecode)
+				glogger.GLogger.Error(errValue)
 				NewValue.Status = 0
 				NewValue.ErrMsg = errValue.Error()
-			} else {
-				NewValue.Value = Value
-				NewValue.Status = 1
-				NewValue.ErrMsg = ""
+				continue
 			}
+			NewValue.Value = Value
+			NewValue.Status = 1
+			NewValue.ErrMsg = ""
 			intercache.SetValue(gw.PointId, DataPoint.UUID, NewValue)
 			if !*gw.mainConfig.CommonConfig.BatchRequest {
 				if bytes, err := json.Marshal(cjt1882004_ReadData{

@@ -205,25 +205,30 @@ func (gw *GenericUserProtocolDevice) work(handler *userproto.UserProtocolClientH
 		}
 		UserProtocolReadDatas := []UserProtocolReadData{}
 		for _, DataPoint := range gw.DataPoints {
-			CommandBytes, err := utils.HexStringToBytes(DataPoint.Command)
-			if err != nil {
-				glogger.GLogger.Error(err)
+			lastTimes := uint64(time.Now().UnixMilli())
+			NewValue := intercache.CacheValue{
+				UUID:          DataPoint.UUID,
+				LastFetchTime: lastTimes,
+			}
+			CommandBytes, err1 := utils.HexStringToBytes(DataPoint.Command)
+			if err1 != nil {
+				glogger.GLogger.Error(err1)
+				NewValue.Status = 0
+				NewValue.ErrMsg = err1.Error()
+				intercache.SetValue(gw.PointId, DataPoint.UUID, NewValue)
 				continue
 			}
 			RespBytes, errRequest := handler.Request(CommandBytes)
 			if errRequest != nil {
 				glogger.GLogger.Error(errRequest)
+				NewValue.Status = 0
+				NewValue.ErrMsg = errRequest.Error()
+				intercache.SetValue(gw.PointId, DataPoint.UUID, NewValue)
 				continue
 			}
 			Value := hex.EncodeToString(RespBytes)
-			lastTimes := uint64(time.Now().UnixMilli())
-			NewValue := intercache.CacheValue{
-				UUID:          DataPoint.UUID,
-				LastFetchTime: lastTimes,
-				Value:         Value,
-				Status:        1,
-				ErrMsg:        "",
-			}
+			NewValue.Status = 1
+			NewValue.ErrMsg = ""
 			intercache.SetValue(gw.PointId, DataPoint.UUID, NewValue)
 			if !*gw.mainConfig.CommonConfig.BatchRequest {
 				if bytes, err := json.Marshal(UserProtocolReadData{
