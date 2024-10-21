@@ -92,7 +92,7 @@
 ```ini
 KEY=value
 ```
-其中KEY是模块的名称，value是ini里面的配置，比如下面这个：
+其中`KEY`是模块的名称，`value`是ini里面的`transceiver.*`配置，比如下面这个：
 ```ini
 [transceiver.atk01]
 # Address: Device is on COM3 serial port for communication
@@ -112,4 +112,4 @@ stop_bits = 1
 # Transport Protocol: 1|2|3, goto homepage for detail
 transport_protocol = 1
 ```
-表示启用atk01这个模块，设备位于`/dev/ttyUSB0`下，使用的是固定报文协议格式。更多请参考文档。
+启动指令 `LORA_SUPPORT=atk01` 表示启用atk01这个模块，设备位于`/dev/ttyUSB0`下，使用的是固定报文协议格式。更多请参考文档。

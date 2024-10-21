@@ -16,8 +16,6 @@
 -->
 # ATK-LORA-01
 
-![atk01](image/atk01-lora/1719544633526.png)
-
 ATK-LORA-01 一款体积小、微功率、低功耗、高性能远距离 LORA 无线串口模块。模块设计是采用高效的 ISM 频段射频 SX1278 扩频芯片，模块的工作频率在 410Mhz~441Mhz，以 1Mhz 频率为步进信道，共 32 个信道。可通过 AT 指令在线修改串口速率，发射功率，空中速率，工作模式等各种参数，并且支持固件升级功能。
 
 ## Topic
@@ -27,89 +25,94 @@ ATK-LORA-01 一款体积小、微功率、低功耗、高性能远距离 LORA �
 
 ## 数据协议
 ### 协议结构
-![1719985683040](image/atk01-lora/1719985683040.png)
-
-- `EE EF`: 起始标识符
-- 中间这部分是任意数据，但是注意整个包长度不能大于256字节
-- `8F C2`: CRC校验值
-- `0D 0A`: 协议结束符
-
-### 实现建议
-
-1. **解析步骤**:
-   - 从数据流中读取并验证起始标识符 `EE EF`。
-   - 读取并解析数据块，将 `Byte 1` 作为数据块标识符，依次读取 `Byte 2-9` 和 `Byte 10-18` 作为数据块内容。
-   - 确认CRC校验值 `8F C2`，以验证数据块的结束和协议的完整性。
-   - 最后确认协议结束符 `0D 0A`，以确认协议数据包的完整性。
-
-2. **注意事项**:
-   - 确保按照固定长度读取和解析数据块，以及正确处理数据块的顺序和标识符的唯一性。
-   - 在处理结束符时，注意不要将它误解为数据块的一部分。
-   - CRC校验默认为Modbus校验机制，使用的多项式为：8005.
-
-## 案例
 ```c
-/*
-Arduino UNO软串口通信
-*/
-#include <Arduino.h>
-#include <SoftwareSerial.h>
-SoftwareSerial atk01(2, 3); // RX, TX
+#define HEADER_SIZE 4 // 2 bytes for Type + 2 bytes for Length
+#define PAYLOAD_MAX_SIZE 256 // Maximum payload size
 
-void setup()
-{
-  Serial.begin(9600);
-  while (!Serial)
-  {
-  }
-  atk01.begin(9600);
-}
-const uint8_t data1[] = {
-    (uint8_t)0xEE,
-    (uint8_t)0xEF,
-    (uint8_t)0x01,
-    (uint8_t)0x03,
-    (uint8_t)0x00,
-    (uint8_t)0x00,
-    (uint8_t)0x00,
-    (uint8_t)0x02,
-    (uint8_t)0x04,
-    (uint8_t)0xD2,
-    (uint8_t)0x16,
-    (uint8_t)0xE2,
-    (uint8_t)0xD2,
-    (uint8_t)0x63,
-    (uint8_t)0x0D,
-    (uint8_t)0x0A,
-};
-const uint8_t data2[] = {
-    (uint8_t)0xEE,
-    (uint8_t)0xEF,
-    (uint8_t)0x01,
-    (uint8_t)0x03,
-    (uint8_t)0x63,
-    (uint8_t)0x0D,
-    (uint8_t)0x0A,
-};
-void loop()
-{
-  for (size_t i = 0; i < 16; i++)
-  {
-    atk01.write(data1[i]);
-  }
-  for (size_t i = 0; i < 7; i++)
-  {
-    atk01.write(data2[i]);
-  }
-  for (size_t i = 0; i < 16; i++)
-  {
-    atk01.write(data1[i]);
-  }
-  for (size_t i = 0; i < 7; i++)
-  {
-    atk01.write(data2[i]);
-  }
-  delay(10);
-}
+// Header structure
+typedef struct {
+    uint8_t Type[2];
+    uint8_t Length[2];
+} Header;
+
+// AppLayerFrame structure
+typedef struct {
+    Header header;
+    uint8_t payload[PAYLOAD_MAX_SIZE];
+    uint8_t crc; // CRC-8 checksum
+} AppLayerFrame;
 
 ```
+
+## Arduino示例
+要在Arduino中实现一个基于上述结构体定义的简单协议，用于上报A0和A1模拟引脚的数据，你可以参考以下代码实例。这里假设你使用的是标准的Arduino Uno板，它具有A0和A1模拟输入引脚。
+
+```cpp
+#include <Arduino.h>
+#include <Wire.h> // For I2C communication
+
+#define HEADER_SIZE 4
+#define PAYLOAD_MAX_SIZE 256
+
+// Header structure
+typedef struct {
+    uint8_t Type[2];
+    uint8_t Length[2];
+} Header;
+
+// AppLayerFrame structure
+typedef struct {
+    Header header;
+    uint8_t payload[PAYLOAD_MAX_SIZE];
+    uint8_t crc; // CRC-8 checksum
+} AppLayerFrame;
+
+// Function to calculate the CRC8 of a buffer
+uint8_t crc8(const uint8_t* data, size_t len);
+
+void setup() {
+    Serial.begin(9600); // Initialize serial for debugging
+    Wire.begin(); // Initialize I2C for communication
+}
+
+void loop() {
+    static int counter = 0; // Counter to simulate data change
+    AppLayerFrame frame;
+
+    // Prepare frame header
+    frame.header.Type[0] = 'D'; // Data type identifier
+    frame.header.Type[1] = 'T';
+    frame.header.Length[0] = 2; // Payload length
+    frame.header.Length[1] = 0;
+
+    // Prepare payload
+    frame.payload[0] = analogRead(A0); // Read A0
+    frame.payload[1] = analogRead(A1); // Read A1
+    frame.crc = crc8((uint8_t*)&frame, HEADER_SIZE + 2); // Calculate CRC8 over header and payload
+
+    // Send frame via I2C
+    Wire.write((uint8_t*)&frame, HEADER_SIZE + PAYLOAD_MAX_SIZE + 1); // Send full frame
+
+    delay(1000); // Delay to avoid flooding the bus
+    counter++; // Increment counter
+}
+
+uint8_t crc8(const uint8_t* data, size_t len) {
+    const uint8_t POLYNOMIAL = 0x07; // CRC-8 polynomial
+    uint8_t crc = 0;
+
+    for (size_t pos = 0; pos < len; pos++) {
+        crc ^= *data++;
+        for (uint8_t bit = 0x80; bit > 0; bit >>= 1) {
+            if (crc & bit)
+                crc = (crc << 1) ^ POLYNOMIAL;
+            else
+                crc <<= 1;
+        }
+    }
+
+    return crc;
+}
+```
+
+在这个示例中，我们定义了结构体`Header`和`AppLayerFrame`。在`loop`函数内，我们读取A0和A1模拟引脚的数据，并将其放入`payload`字段。然后计算CRC-8校验值并存储在`crc`字段中。最后通过I2C发送整个帧。

@@ -22,6 +22,7 @@ import (
 	"time"
 
 	serial "github.com/hootrhino/goserial"
+	"github.com/hootrhino/rhilex/component/internotify"
 	transceivercom "github.com/hootrhino/rhilex/component/transceiver"
 
 	"github.com/hootrhino/rhilex/glogger"
@@ -33,10 +34,10 @@ type ATK01LoraConfig struct {
 	ComConfig transceivercom.TransceiverConfig
 }
 type ATK01Lora struct {
-	R               typex.Rhilex
-	locker          sync.Mutex
-	mainConfig      ATK01LoraConfig
-	ProtocolHandler *protocol.GenericProtocolHandler
+	R              typex.Rhilex
+	locker         sync.Mutex
+	mainConfig     ATK01LoraConfig
+	ProtocolSlaver *protocol.GenericProtocolSlaver
 }
 
 func NewATK01Lora(R typex.Rhilex) transceivercom.TransceiverCommunicator {
@@ -67,54 +68,37 @@ func (tc *ATK01Lora) Start(Config transceivercom.TransceiverConfig) error {
 		ComConfig: Config,
 	}
 	glogger.GLogger.Info("ATK01-LORA-01 Init")
-	serialPort, err := tc.startSerialPort()
-	if err != nil {
-		return err
-	}
-	config := protocol.TransporterConfig{
-		Port:         serialPort,
-		ReadTimeout:  time.Duration(tc.mainConfig.ComConfig.IOTimeout),
-		WriteTimeout: time.Duration(tc.mainConfig.ComConfig.IOTimeout),
-	}
-	tc.ProtocolHandler = protocol.NewGenericProtocolHandler(config)
-	glogger.GLogger.Info("ATK01-LORA-01 Started")
-	return nil
-}
-
-/*
-*
-* 打开串口
-*
- */
-func (tc *ATK01Lora) startSerialPort() (serial.Port, error) {
-	config := serial.Config{
+	serialPort, errOpen := serial.Open(&serial.Config{
 		Address:  tc.mainConfig.ComConfig.Address,
 		BaudRate: tc.mainConfig.ComConfig.BaudRate,
 		DataBits: tc.mainConfig.ComConfig.DataBits,
 		Parity:   tc.mainConfig.ComConfig.Parity,
 		StopBits: tc.mainConfig.ComConfig.StopBits,
 		Timeout:  time.Duration(tc.mainConfig.ComConfig.IOTimeout) * time.Millisecond,
+	})
+	if errOpen != nil {
+		return errOpen
 	}
-	serialPort, err := serial.Open(&config)
-	if err != nil {
-		return nil, err
+	config := protocol.TransporterConfig{
+		Port:         serialPort,
+		ReadTimeout:  time.Duration(tc.mainConfig.ComConfig.IOTimeout),
+		WriteTimeout: time.Duration(tc.mainConfig.ComConfig.IOTimeout),
 	}
-	return serialPort, nil
-}
-
-/*
-*
-* 向RHILEX推数据
-*
- */
-func (tc *ATK01Lora) Work() {
-	for {
-		select {
-		case <-context.Background().Done():
-		default:
-		}
-	}
-
+	ctx, cancel := context.WithCancel(context.Background())
+	tc.ProtocolSlaver = protocol.NewGenericProtocolSlaver(ctx, cancel, config)
+	go tc.ProtocolSlaver.StartLoop(func(AppLayerFrame protocol.AppLayerFrame) {
+		buffer, _ := AppLayerFrame.Encode()
+		glogger.GLogger.Debug("ATK01Lora.ProtocolSlaver.Receive:", AppLayerFrame.String())
+		internotify.Push(internotify.BaseEvent{
+			Type:    "transceiver.up.data",
+			Event:   "transceiver.up.data.atk01",
+			Ts:      uint64(time.Now().UnixMilli()),
+			Summary: "transceiver.up.data",
+			Info:    buffer,
+		})
+	})
+	glogger.GLogger.Info("ATK01-LORA-01 Started")
+	return nil
 }
 
 func (tc *ATK01Lora) Ctrl(topic, args []byte, timeout time.Duration) ([]byte, error) {
@@ -134,7 +118,7 @@ func (tc *ATK01Lora) Info() transceivercom.CommunicatorInfo {
 	}
 }
 func (tc *ATK01Lora) Status() transceivercom.TransceiverStatus {
-	if tc.ProtocolHandler == nil {
+	if tc.ProtocolSlaver == nil {
 		return transceivercom.TransceiverStatus{
 			Code:  transceivercom.TC_ERROR,
 			Error: fmt.Errorf("Invalid Device"),
@@ -148,8 +132,8 @@ func (tc *ATK01Lora) Status() transceivercom.TransceiverStatus {
 
 }
 func (tc *ATK01Lora) Stop() {
-	if tc.ProtocolHandler != nil {
-		tc.ProtocolHandler.Close()
+	if tc.ProtocolSlaver != nil {
+		tc.ProtocolSlaver.Stop()
 	}
 	glogger.GLogger.Info("ATK01-LORA Stopped")
 }

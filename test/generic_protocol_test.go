@@ -17,6 +17,7 @@ package test
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"net"
 	"testing"
@@ -106,7 +107,10 @@ func TestGenericProtocolSlaverTest(t *testing.T) {
 			WriteTimeout: 5000,
 			Logger:       Logger,
 		}
-		TransportSlaver := protocol.NewGenericProtocolSlaver(config)
-		go TransportSlaver.StartLoop()
+		ctx, cancel := context.WithCancel(context.Background())
+		TransportSlaver := protocol.NewGenericProtocolSlaver(ctx, cancel, config)
+		go TransportSlaver.StartLoop(func(AppLayerFrame protocol.AppLayerFrame) {
+			t.Log(AppLayerFrame.String())
+		})
 	}
 }

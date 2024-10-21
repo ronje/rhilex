@@ -21,24 +21,22 @@ import (
 )
 
 type GenericProtocolSlaver struct {
-	handler   *GenericProtocolHandler
-	InChannel chan AppLayerFrame
-	ctx       context.Context
-	cancel    context.CancelFunc
+	handler *GenericProtocolHandler
+	ctx     context.Context
+	cancel  context.CancelFunc
 }
 
-func NewGenericProtocolSlaver(config TransporterConfig) *GenericProtocolSlaver {
-	ctx, cancel := context.WithCancel(context.Background())
+func NewGenericProtocolSlaver(ctx context.Context,
+	cancel context.CancelFunc, config TransporterConfig) *GenericProtocolSlaver {
 	return &GenericProtocolSlaver{
-		ctx:       ctx,
-		cancel:    cancel,
-		handler:   NewGenericProtocolHandler(config),
-		InChannel: make(chan AppLayerFrame, 1024),
+		ctx:     ctx,
+		cancel:  cancel,
+		handler: NewGenericProtocolHandler(config),
 	}
 }
 
 // Start
-func (slaver *GenericProtocolSlaver) StartLoop() {
+func (slaver *GenericProtocolSlaver) StartLoop(callback func(AppLayerFrame AppLayerFrame)) {
 	for {
 		select {
 		case <-slaver.ctx.Done():
@@ -51,7 +49,7 @@ func (slaver *GenericProtocolSlaver) StartLoop() {
 				slaver.Stop()
 			}
 		}
-		slaver.InChannel <- AppLayerFrame
+		callback(AppLayerFrame)
 	}
 }
 
