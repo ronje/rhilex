@@ -15,5 +15,22 @@
 
 package protocol
 
-type GenericTransportMaster struct {
+type GenericProtocolMaster struct {
+	handler *GenericProtocolHandler
+}
+
+func NewGenericProtocolMaster(config TransporterConfig) *GenericProtocolMaster {
+	return &GenericProtocolMaster{
+		handler: NewGenericProtocolHandler(config),
+	}
+}
+
+func (master *GenericProtocolMaster) Request(appframe AppLayerFrame) (AppLayerFrame, error) {
+	return master.handler.Request(appframe)
+}
+
+func (master *GenericProtocolMaster) Stop() {
+	if master.handler != nil {
+		master.handler.Close()
+	}
 }

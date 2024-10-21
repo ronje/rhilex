@@ -17,8 +17,6 @@ package protocol
 
 import (
 	"fmt"
-
-	"github.com/hootrhino/rhilex/utils"
 )
 
 type DataLinkLayer struct {
@@ -61,5 +59,9 @@ func (dll *DataLinkLayer) Close() error {
 }
 
 func (dll *DataLinkLayer) checksumCrc8(data []byte) byte {
-	return utils.ChecksumCrc8(data)
+	var checksum byte
+	for _, b := range data {
+		checksum += b
+	}
+	return checksum
 }

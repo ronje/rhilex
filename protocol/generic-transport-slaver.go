@@ -20,16 +20,16 @@ import (
 	"io"
 )
 
-type GenericTransportSlaver struct {
+type GenericProtocolSlaver struct {
 	handler   *GenericProtocolHandler
 	InChannel chan AppLayerFrame
 	ctx       context.Context
 	cancel    context.CancelFunc
 }
 
-func NewGenericTransportSlaver(config TransporterConfig) *GenericTransportSlaver {
+func NewGenericProtocolSlaver(config TransporterConfig) *GenericProtocolSlaver {
 	ctx, cancel := context.WithCancel(context.Background())
-	return &GenericTransportSlaver{
+	return &GenericProtocolSlaver{
 		ctx:       ctx,
 		cancel:    cancel,
 		handler:   NewGenericProtocolHandler(config),
@@ -38,7 +38,7 @@ func NewGenericTransportSlaver(config TransporterConfig) *GenericTransportSlaver
 }
 
 // Start
-func (slaver *GenericTransportSlaver) StartLoop() {
+func (slaver *GenericProtocolSlaver) StartLoop() {
 	for {
 		select {
 		case <-slaver.ctx.Done():
@@ -56,7 +56,7 @@ func (slaver *GenericTransportSlaver) StartLoop() {
 }
 
 // Stop
-func (slaver *GenericTransportSlaver) Stop() {
+func (slaver *GenericProtocolSlaver) Stop() {
 	if slaver.cancel != nil {
 		slaver.cancel()
 		slaver.handler.Close()

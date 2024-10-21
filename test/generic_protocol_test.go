@@ -83,7 +83,7 @@ func TestGenericProtocolTest(t *testing.T) {
 }
 
 // go test -timeout 30s -run ^TestGenericProtocolSlaverTest github.com/hootrhino/rhilex/test -v -count=1
-
+// 00 01 00 05 01 02 03 04 10
 func TestGenericProtocolSlaverTest(t *testing.T) {
 	Listener, err := net.Listen("tcp", ":7799")
 	if err != nil {
@@ -106,7 +106,7 @@ func TestGenericProtocolSlaverTest(t *testing.T) {
 			WriteTimeout: 5000,
 			Logger:       Logger,
 		}
-		TransportSlaver := protocol.NewGenericTransportSlaver(config)
+		TransportSlaver := protocol.NewGenericProtocolSlaver(config)
 		go TransportSlaver.StartLoop()
 	}
 }
