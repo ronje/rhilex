@@ -189,7 +189,8 @@ END:
  * 读到的数据
  *
  */
-type CJT1882004_ReadData struct {
+type DLT6452007ReadData struct {
+	Tag     string `json:"tag"`
 	MeterId string `json:"meterId"`
 	Value   int64  `json:"value"`
 }
@@ -201,7 +202,7 @@ func (gw *DLT645_2007_MasterGateway) work(handler *dlt6452007.DLT645ClientHandle
 			return
 		default:
 		}
-		CJT1882004_ReadDatas := []CJT1882004_ReadData{}
+		DLT6452007ReadDataList := []DLT6452007ReadData{}
 		for _, DataPoint := range gw.DataPoints {
 			lastTimes := uint64(time.Now().UnixMilli())
 			NewValue := intercache.CacheValue{
@@ -271,7 +272,7 @@ func (gw *DLT645_2007_MasterGateway) work(handler *dlt6452007.DLT645ClientHandle
 			NewValue.ErrMsg = ""
 			intercache.SetValue(gw.PointId, DataPoint.UUID, NewValue)
 			if !*gw.mainConfig.CommonConfig.BatchRequest {
-				if bytes, err := json.Marshal(CJT1882004_ReadData{
+				if bytes, err := json.Marshal(DLT6452007ReadData{
 					MeterId: DataPoint.MeterId,
 					Value:   Value,
 				}); err != nil {
@@ -281,16 +282,17 @@ func (gw *DLT645_2007_MasterGateway) work(handler *dlt6452007.DLT645ClientHandle
 					gw.RuleEngine.WorkDevice(gw.Details(), string(bytes))
 				}
 			} else {
-				CJT1882004_ReadDatas = append(CJT1882004_ReadDatas, CJT1882004_ReadData{
+				DLT6452007ReadDataList = append(DLT6452007ReadDataList, DLT6452007ReadData{
 					MeterId: DataPoint.MeterId,
+					Tag:     DataPoint.Tag,
 					Value:   Value,
 				})
 			}
 			time.Sleep(time.Duration(DataPoint.Frequency) * time.Millisecond)
 		}
 		if *gw.mainConfig.CommonConfig.BatchRequest {
-			if len(CJT1882004_ReadDatas) > 0 {
-				if bytes, err := json.Marshal(CJT1882004_ReadDatas); err != nil {
+			if len(DLT6452007ReadDataList) > 0 {
+				if bytes, err := json.Marshal(DLT6452007ReadDataList); err != nil {
 					glogger.GLogger.Error(err)
 				} else {
 					glogger.GLogger.Debug(string(bytes))

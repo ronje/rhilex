@@ -192,7 +192,8 @@ END:
  * 读到的数据
  *
  */
-type szy2062016_ReadData struct {
+type SZY2062016ReadData struct {
+	Tag     string `json:"tag"`
 	MeterId string `json:"meterId"`
 	Value   int64  `json:"value"`
 }
@@ -204,7 +205,7 @@ func (gw *SZY206_2016_MasterGateway) work(handler *szy2062016.SZY206ClientHandle
 			return
 		default:
 		}
-		szy2062016_ReadDatas := []szy2062016_ReadData{}
+		SZY2062016ReadDataList := []SZY2062016ReadData{}
 		for _, DataPoint := range gw.DataPoints {
 			lastTimes := uint64(time.Now().UnixMilli())
 			NewValue := intercache.CacheValue{
@@ -276,7 +277,7 @@ func (gw *SZY206_2016_MasterGateway) work(handler *szy2062016.SZY206ClientHandle
 			NewValue.ErrMsg = ""
 			intercache.SetValue(gw.PointId, DataPoint.UUID, NewValue)
 			if !*gw.mainConfig.CommonConfig.BatchRequest {
-				if bytes, err := json.Marshal(szy2062016_ReadData{
+				if bytes, err := json.Marshal(SZY2062016ReadData{
 					MeterId: DataPoint.MeterId,
 					Value:   Value,
 				}); err != nil {
@@ -286,16 +287,17 @@ func (gw *SZY206_2016_MasterGateway) work(handler *szy2062016.SZY206ClientHandle
 					gw.RuleEngine.WorkDevice(gw.Details(), string(bytes))
 				}
 			} else {
-				szy2062016_ReadDatas = append(szy2062016_ReadDatas, szy2062016_ReadData{
+				SZY2062016ReadDataList = append(SZY2062016ReadDataList, SZY2062016ReadData{
 					MeterId: DataPoint.MeterId,
+					Tag:     DataPoint.Tag,
 					Value:   Value,
 				})
 			}
 			time.Sleep(time.Duration(DataPoint.Frequency) * time.Millisecond)
 		}
 		if *gw.mainConfig.CommonConfig.BatchRequest {
-			if len(szy2062016_ReadDatas) > 0 {
-				if bytes, err := json.Marshal(szy2062016_ReadDatas); err != nil {
+			if len(SZY2062016ReadDataList) > 0 {
+				if bytes, err := json.Marshal(SZY2062016ReadDataList); err != nil {
 					glogger.GLogger.Error(err)
 				} else {
 					glogger.GLogger.Debug(string(bytes))

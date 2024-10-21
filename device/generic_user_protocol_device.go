@@ -192,6 +192,7 @@ END:
 }
 
 type UserProtocolReadData struct {
+	Tag     string `json:"tag"`
 	Command string `json:"command"`
 	Value   string `json:"value"`
 }
@@ -203,7 +204,7 @@ func (gw *GenericUserProtocolDevice) work(handler *userproto.UserProtocolClientH
 			return
 		default:
 		}
-		UserProtocolReadDatas := []UserProtocolReadData{}
+		UserProtocolReadDataList := []UserProtocolReadData{}
 		for _, DataPoint := range gw.DataPoints {
 			lastTimes := uint64(time.Now().UnixMilli())
 			NewValue := intercache.CacheValue{
@@ -233,6 +234,7 @@ func (gw *GenericUserProtocolDevice) work(handler *userproto.UserProtocolClientH
 			intercache.SetValue(gw.PointId, DataPoint.UUID, NewValue)
 			if !*gw.mainConfig.CommonConfig.BatchRequest {
 				if bytes, err := json.Marshal(UserProtocolReadData{
+					Tag:     DataPoint.Tag,
 					Command: DataPoint.Command,
 					Value:   Value,
 				}); err != nil {
@@ -242,16 +244,17 @@ func (gw *GenericUserProtocolDevice) work(handler *userproto.UserProtocolClientH
 					gw.RuleEngine.WorkDevice(gw.Details(), string(bytes))
 				}
 			} else {
-				UserProtocolReadDatas = append(UserProtocolReadDatas, UserProtocolReadData{
+				UserProtocolReadDataList = append(UserProtocolReadDataList, UserProtocolReadData{
 					Command: DataPoint.Command,
+					Tag:     DataPoint.Tag,
 					Value:   Value,
 				})
 			}
 			time.Sleep(time.Duration(DataPoint.Frequency) * time.Millisecond)
 		}
 		if *gw.mainConfig.CommonConfig.BatchRequest {
-			if len(UserProtocolReadDatas) > 0 {
-				if bytes, err := json.Marshal(UserProtocolReadDatas); err != nil {
+			if len(UserProtocolReadDataList) > 0 {
+				if bytes, err := json.Marshal(UserProtocolReadDataList); err != nil {
 					glogger.GLogger.Error(err)
 				} else {
 					glogger.GLogger.Debug(string(bytes))
