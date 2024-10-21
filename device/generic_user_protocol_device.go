@@ -209,6 +209,7 @@ func (gw *GenericUserProtocolDevice) work(handler *userproto.UserProtocolClientH
 			NewValue := intercache.CacheValue{
 				UUID:          DataPoint.UUID,
 				LastFetchTime: lastTimes,
+				Value:         "0",
 			}
 			CommandBytes, err1 := utils.HexStringToBytes(DataPoint.Command)
 			if err1 != nil {

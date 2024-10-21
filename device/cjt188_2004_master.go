@@ -208,6 +208,7 @@ func (gw *CJT188_2004_MasterGateway) work(handler *cjt1882004.CJT188ClientHandle
 			NewValue := intercache.CacheValue{
 				UUID:          DataPoint.UUID,
 				LastFetchTime: lastTimes,
+				Value:         "0",
 			}
 			MeterSn, err1 := utils.HexStringToBytes(DataPoint.MeterId)
 			if err1 != nil {

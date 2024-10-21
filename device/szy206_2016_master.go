@@ -210,6 +210,7 @@ func (gw *SZY206_2016_MasterGateway) work(handler *szy2062016.SZY206ClientHandle
 			NewValue := intercache.CacheValue{
 				UUID:          DataPoint.UUID,
 				LastFetchTime: lastTimes,
+				Value:         "0",
 			}
 			MeterSn, err1 := utils.HexStringToBytes(DataPoint.MeterId)
 			if err1 != nil {

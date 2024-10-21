@@ -207,6 +207,7 @@ func (gw *DLT645_2007_MasterGateway) work(handler *dlt6452007.DLT645ClientHandle
 			NewValue := intercache.CacheValue{
 				UUID:          DataPoint.UUID,
 				LastFetchTime: lastTimes,
+				Value:         "0",
 			}
 			MeterSn, err1 := utils.HexStringToBytes(DataPoint.MeterId)
 			if err1 != nil {
