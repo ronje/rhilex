@@ -58,10 +58,18 @@ func (dll *DataLinkLayer) Close() error {
 	return dll.transport.Close()
 }
 
+// CRC8多项式: x^8 + x^2 + x + 1
 func (dll *DataLinkLayer) checksumCrc8(data []byte) byte {
-	var checksum byte
+	crc := byte(0x00)
 	for _, b := range data {
-		checksum += b
+		crc ^= b
+		for i := 8; i > 0; i-- {
+			if crc&0x80 == 0x80 {
+				crc = (crc << 1) ^ 0x07
+			} else {
+				crc <<= 1
+			}
+		}
 	}
-	return checksum
+	return crc
 }
