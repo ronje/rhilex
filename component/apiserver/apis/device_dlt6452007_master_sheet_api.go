@@ -91,7 +91,7 @@ func Dlt6452007MasterPointsExport(c *gin.Context, ruleEngine typex.Rhilex) {
 	for idx, record := range records[0:] {
 		Row := []string{
 			record.MeterId,
-			fmt.Sprintf("%d", record.MeterType),
+			record.MeterType,
 			record.Tag,
 			record.Alias,
 			fmt.Sprintf("%d", record.Frequency),

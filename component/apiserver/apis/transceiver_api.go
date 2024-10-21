@@ -21,8 +21,7 @@ import (
 	"github.com/gin-gonic/gin"
 	common "github.com/hootrhino/rhilex/component/apiserver/common"
 	"github.com/hootrhino/rhilex/component/apiserver/server"
-	transceiver "github.com/hootrhino/rhilex/component/transceiver/manager"
-
+	transceiver "github.com/hootrhino/rhilex/component/transceiver"
 	"github.com/hootrhino/rhilex/typex"
 )
 

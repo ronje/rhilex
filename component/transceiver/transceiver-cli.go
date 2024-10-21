@@ -13,12 +13,11 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-package manager
+package transceiver
 
 import (
 	"time"
 
-	transceivercom "github.com/hootrhino/rhilex/component/transceiver"
 	"github.com/hootrhino/rhilex/glogger"
 )
 
@@ -36,12 +35,12 @@ func Unload(name string) {
 }
 
 // List
-func List() []transceivercom.CommunicatorInfo {
+func List() []CommunicatorInfo {
 	return DefaultTransceiverCommunicatorManager.List()
 }
 
 // List
-func GetCommunicator(name string) transceivercom.TransceiverCommunicator {
+func GetCommunicator(name string) TransceiverCommunicator {
 	return DefaultTransceiverCommunicatorManager.Get(name)
 }
 

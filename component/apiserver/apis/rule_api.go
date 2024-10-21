@@ -11,7 +11,7 @@ import (
 	"github.com/hootrhino/rhilex/component/apiserver/service"
 	"github.com/hootrhino/rhilex/component/interqueue"
 	rule_engine "github.com/hootrhino/rhilex/component/ruleengine"
-	transceivercom "github.com/hootrhino/rhilex/component/transceiver/manager"
+	transceiver "github.com/hootrhino/rhilex/component/transceiver"
 	"github.com/hootrhino/rhilex/glogger"
 
 	"github.com/hootrhino/rhilex/typex"
@@ -725,7 +725,7 @@ func GetAllResources(c *gin.Context, ruleEngine typex.Rhilex) {
 			Name: v.Name,
 		})
 	}
-	for _, v := range transceivercom.List() {
+	for _, v := range transceiver.List() {
 		RfComs = append(RfComs, RhilexResource{
 			UUID: v.Name,
 			Name: v.Name,

@@ -13,7 +13,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-package manager
+package transceiver
 
 import (
 	"fmt"
@@ -21,9 +21,6 @@ import (
 	"sync"
 	"time"
 
-	transceivercom "github.com/hootrhino/rhilex/component/transceiver"
-	atk01lora "github.com/hootrhino/rhilex/component/transceiver/atk01-lora"
-	ec200a4g "github.com/hootrhino/rhilex/component/transceiver/ec200a-4g"
 	core "github.com/hootrhino/rhilex/config"
 	"github.com/hootrhino/rhilex/utils"
 
@@ -47,8 +44,8 @@ func InitTransceiverCommunicatorManager(R typex.Rhilex) {
 	initDefaultRFModule()
 }
 
-func (TM *TransceiverCommunicatorManager) Load(name string, config transceivercom.TransceiverConfig,
-	tc transceivercom.TransceiverCommunicator) error {
+func (TM *TransceiverCommunicatorManager) Load(name string, config TransceiverConfig,
+	tc TransceiverCommunicator) error {
 	glogger.GLogger.Debugf("Transceiver Communicator Load:(%s, %v, %s)",
 		name, config, tc.Info().String())
 	if _, ok := TM.Transceivers.Load(name); !ok {
@@ -59,14 +56,14 @@ func (TM *TransceiverCommunicatorManager) Load(name string, config transceiverco
 		TM.Transceivers.Store(name, tc)
 		return nil
 	}
-	return fmt.Errorf("transceiver already loaded: %s", name)
+	return fmt.Errorf("Transceiver already loaded: %s", name)
 }
 
-func (TM *TransceiverCommunicatorManager) List() []transceivercom.CommunicatorInfo {
-	List := []transceivercom.CommunicatorInfo{}
+func (TM *TransceiverCommunicatorManager) List() []CommunicatorInfo {
+	List := []CommunicatorInfo{}
 	TM.Transceivers.Range(func(key, value any) bool {
 		switch T := value.(type) {
-		case transceivercom.TransceiverCommunicator:
+		case TransceiverCommunicator:
 			List = append(List, T.Info())
 		}
 		return true
@@ -74,10 +71,10 @@ func (TM *TransceiverCommunicatorManager) List() []transceivercom.CommunicatorIn
 	return List
 }
 
-func (TM *TransceiverCommunicatorManager) Get(name string) transceivercom.TransceiverCommunicator {
+func (TM *TransceiverCommunicatorManager) Get(name string) TransceiverCommunicator {
 	if value, ok := TM.Transceivers.Load(name); ok {
 		switch T := value.(type) {
-		case transceivercom.TransceiverCommunicator:
+		case TransceiverCommunicator:
 			return T
 		}
 	}
@@ -86,7 +83,7 @@ func (TM *TransceiverCommunicatorManager) Get(name string) transceivercom.Transc
 func (TM *TransceiverCommunicatorManager) UnLoad(name string) {
 	if value, ok := TM.Transceivers.Load(name); ok {
 		switch T := value.(type) {
-		case transceivercom.TransceiverCommunicator:
+		case TransceiverCommunicator:
 			T.Stop()
 			TM.Transceivers.Delete(name)
 		}
@@ -97,21 +94,21 @@ func (TM *TransceiverCommunicatorManager) Ctrl(name string, topic, args []byte,
 	timeout time.Duration) ([]byte, error) {
 	if value, ok := TM.Transceivers.Load(name); ok {
 		switch T := value.(type) {
-		case transceivercom.TransceiverCommunicator:
+		case TransceiverCommunicator:
 			return T.Ctrl(topic, args, timeout)
 		}
 	}
-	return nil, fmt.Errorf("transceiver not exists: %s", name)
+	return nil, fmt.Errorf("Transceiver not exists: %s", name)
 }
 
-func (TM *TransceiverCommunicatorManager) Status(name string) (transceivercom.TransceiverStatus, error) {
+func (TM *TransceiverCommunicatorManager) Status(name string) (TransceiverStatus, error) {
 	if value, ok := TM.Transceivers.Load(name); ok {
 		switch T := value.(type) {
-		case transceivercom.TransceiverCommunicator:
+		case TransceiverCommunicator:
 			return T.Status(), nil
 		}
 	}
-	return transceivercom.TransceiverStatus{}, fmt.Errorf("transceiver not exists: %s", name)
+	return TransceiverStatus{}, fmt.Errorf("Transceiver not exists: %s", name)
 }
 
 /*
@@ -120,33 +117,19 @@ func (TM *TransceiverCommunicatorManager) Status(name string) (transceivercom.Tr
 *
  */
 func initDefaultRFModule() {
-	env2 := os.Getenv("4GSUPPORT")
-	if env2 == "ec200a" {
-		Config := transceivercom.TransceiverConfig{}
-		err1 := utils.INIToStruct(core.GlobalConfig.IniPath, fmt.Sprintf("transceiver.%s", env2), &Config)
+	env := os.Getenv("TRANSCEIVER")
+	if env == "default_transceiver" {
+		Config := TransceiverConfig{}
+		err1 := utils.INIToStruct(core.GlobalConfig.IniPath, fmt.Sprintf("transceiver.%s", env), &Config)
 		if err1 != nil {
 			glogger.GLogger.Fatal(err1)
 			os.Exit(1)
 		}
-		EC200A := ec200a4g.NewEC200ADtu(DefaultTransceiverCommunicatorManager.R)
-		err := DefaultTransceiverCommunicatorManager.Load(EC200A.Info().Name, Config, EC200A)
-		if err != nil {
-			glogger.GLogger.Fatal(err1)
-			os.Exit(1)
-		}
-	}
-	env3 := os.Getenv("LORASUPPORT")
-	if env3 == "atk01" {
-		Config := transceivercom.TransceiverConfig{}
-		err1 := utils.INIToStruct(core.GlobalConfig.IniPath, fmt.Sprintf("transceiver.%s", env3), &Config)
-		if err1 != nil {
-			glogger.GLogger.Fatal(err1)
-			os.Exit(1)
-		}
-		ATK01 := atk01lora.NewATK01Lora(DefaultTransceiverCommunicatorManager.R)
-		err := DefaultTransceiverCommunicatorManager.Load(ATK01.Info().Name, Config, ATK01)
-		if err != nil {
-			glogger.GLogger.Fatal(err1)
+		Config.Name = env
+		Transceiver := NewTransceiver(DefaultTransceiverCommunicatorManager.R)
+		err2 := DefaultTransceiverCommunicatorManager.Load(env, Config, Transceiver)
+		if err2 != nil {
+			glogger.GLogger.Fatal(err2)
 			os.Exit(1)
 		}
 	}

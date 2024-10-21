@@ -56,8 +56,6 @@ func LoadSystemSettingsAPI() {
 		settings4GApi.POST(("/turnon"), server.AddRoute(Turnon4g))
 		settings4GApi.POST(("/turnoff"), server.AddRoute(Turnoff4g))
 		settings4GApi.GET(("/info"), server.AddRoute(Get4GBaseInfo))
-		settings4GApi.GET("/apn", server.AddRoute(GetAPN))
-		settings4GApi.POST("/apn", server.AddRoute(SetAPN))
 	}
 	// 固件
 	settingsFirmware := server.RouteGroup(server.ContextUrl("/firmware"))

@@ -37,7 +37,7 @@ import (
 	"github.com/hootrhino/rhilex/component/ruleengine"
 	"github.com/hootrhino/rhilex/component/security"
 	supervisor "github.com/hootrhino/rhilex/component/supervisor"
-	transceiver "github.com/hootrhino/rhilex/component/transceiver/manager"
+	transceiver "github.com/hootrhino/rhilex/component/transceiver"
 	core "github.com/hootrhino/rhilex/config"
 	"github.com/hootrhino/rhilex/device"
 	"github.com/hootrhino/rhilex/glogger"
