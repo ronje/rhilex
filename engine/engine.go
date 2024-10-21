@@ -635,25 +635,20 @@ func (e *RuleEngine) InitSourceTypeManager() error {
 			NewSource: source.NewTransceiverForwarder,
 		},
 	)
-	e.SourceTypeManager.Register(typex.MQTT,
-		&typex.XConfig{
-			Engine:    e,
-			NewSource: source.NewMqttInEndSource,
-		},
-	)
-	e.SourceTypeManager.Register(typex.HTTP,
+
+	e.SourceTypeManager.Register(typex.HTTP_SERVER,
 		&typex.XConfig{
 			Engine:    e,
 			NewSource: source.NewHttpInEndSource,
 		},
 	)
-	e.SourceTypeManager.Register(typex.COAP,
+	e.SourceTypeManager.Register(typex.COAP_SERVER,
 		&typex.XConfig{
 			Engine:    e,
 			NewSource: source.NewCoAPInEndSource,
 		},
 	)
-	e.SourceTypeManager.Register(typex.GRPC,
+	e.SourceTypeManager.Register(typex.GRPC_SERVER,
 		&typex.XConfig{
 			Engine:    e,
 			NewSource: source.NewGrpcInEndSource,
@@ -672,19 +667,13 @@ func (e *RuleEngine) InitSourceTypeManager() error {
 			NewSource: source.NewTcpSource,
 		},
 	)
-	e.SourceTypeManager.Register(typex.GENERIC_IOT_HUB,
-		&typex.XConfig{
-			Engine:    e,
-			NewSource: source.NewIoTHubSource,
-		},
-	)
 	e.SourceTypeManager.Register(typex.INTERNAL_EVENT,
 		&typex.XConfig{
 			Engine:    e,
 			NewSource: source.NewInternalEventSource,
 		},
 	)
-	e.SourceTypeManager.Register(typex.GENERIC_MQTT,
+	e.SourceTypeManager.Register(typex.GENERIC_MQTT_SERVER,
 		&typex.XConfig{
 			Engine:    e,
 			NewSource: source.NewGenericMqttSource,

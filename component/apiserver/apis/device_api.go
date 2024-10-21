@@ -313,12 +313,33 @@ func CreateDevice(c *gin.Context, ruleEngine typex.Rhilex) {
 		c.JSON(common.HTTP_OK, common.Error("Device Name Duplicated"))
 		return
 	}
+	// 检查个人版的创建权限: 以下三种情况，以及2个数量
+	// - GENERIC_UART_RW
+	// - GENERIC_MODBUS_MASTER
+	// - GENERIC_MODBUS_SLAVER
+	if typex.License.Type == "FREETRIAL" {
+		if !utils.SContains([]string{
+			"GENERIC_UART_RW",
+			"GENERIC_MODBUS_MASTER",
+			"GENERIC_MODBUS_SLAVER",
+		}, form.Type) {
+			c.JSON(common.HTTP_OK,
+				common.Error("FREETRIAL Version Only Allow Create Limited Device Type"))
+			return
+		}
+		if count := service.CheckDeviceCount(form.Name); count > (2) {
+			c.JSON(common.HTTP_OK,
+				common.Error("FREETRIAL Version Only Allow Create 2 Input Devices"))
+			return
+		}
+	}
+
 	if ok, r := utils.IsValidNameLength(form.Name); !ok {
 		c.JSON(common.HTTP_OK, common.Error(r))
 		return
 	}
 	isSingle := false
-	// 红外线是单例模式
+	// 内部通知单例模式
 	if form.Type == typex.INTERNAL_EVENT.String() {
 		ruleEngine.AllDevices().Range(func(key, value any) bool {
 			In := value.(*typex.Device)
@@ -330,7 +351,7 @@ func CreateDevice(c *gin.Context, ruleEngine typex.Rhilex) {
 		})
 	}
 	if isSingle {
-		msg := fmt.Errorf("the %s is singleton Device, can not create again", form.Name)
+		msg := fmt.Errorf("The %s is singleton Device, can not create multiple", form.Name)
 		c.JSON(common.HTTP_OK, common.Error400(msg))
 		return
 	}
@@ -348,9 +369,9 @@ func CreateDevice(c *gin.Context, ruleEngine typex.Rhilex) {
 		c.JSON(common.HTTP_OK, common.Error400(err))
 		return
 	}
-	// 新建大屏的时候必须给一个分组
+	// 给一个分组
 	if err := service.BindResource(form.Gid, MDevice.UUID); err != nil {
-		c.JSON(common.HTTP_OK, common.Error("Group not found"))
+		c.JSON(common.HTTP_OK, common.Errorf("Group not found:%s", form.Gid))
 		return
 	}
 	if err := server.LoadNewestDevice(newUUID, ruleEngine); err != nil {
@@ -377,6 +398,26 @@ func UpdateDevice(c *gin.Context, ruleEngine typex.Rhilex) {
 	if ok, r := utils.IsValidNameLength(form.Name); !ok {
 		c.JSON(common.HTTP_OK, common.Error(r))
 		return
+	}
+	// 检查个人版的创建权限: 以下三种情况，以及2个数量
+	// - GENERIC_UART_RW
+	// - GENERIC_MODBUS_MASTER
+	// - GENERIC_MODBUS_SLAVER
+	if typex.License.Type == "FREETRIAL" {
+		if !utils.SContains([]string{
+			"GENERIC_UART_RW",
+			"GENERIC_MODBUS_MASTER",
+			"GENERIC_MODBUS_SLAVER",
+		}, form.Type) {
+			c.JSON(common.HTTP_OK,
+				common.Error("FREETRIAL Version Only Allow Create Limited Device Type"))
+			return
+		}
+		if count := service.CheckDeviceCount(form.Name); count > (2) {
+			c.JSON(common.HTTP_OK,
+				common.Error("FREETRIAL Version Only Allow Create 2 Input Devices"))
+			return
+		}
 	}
 	//
 	// 取消绑定分组,删除原来旧的分组
@@ -406,7 +447,7 @@ func UpdateDevice(c *gin.Context, ruleEngine typex.Rhilex) {
 /*
 *
 * 获取设备挂了的异常信息
-*
+* __DefaultRuleEngine：用于RHILEX内部存储一些KV键值对
  */
 func GetDeviceErrorMsg(c *gin.Context, ruleEngine typex.Rhilex) {
 	uuid, _ := c.GetQuery("uuid")

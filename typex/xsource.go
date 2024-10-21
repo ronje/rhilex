@@ -10,17 +10,13 @@ func (i InEndType) String() string {
 }
 
 const (
-	MQTT                  InEndType = "MQTT"
-	HTTP                  InEndType = "HTTP"
-	COAP                  InEndType = "COAP"
-	GRPC                  InEndType = "GRPC"
-	NATS_SERVER           InEndType = "NATS_SERVER"
-	UDP_SERVER            InEndType = "UDP_SERVER"
-	TCP_SERVER            InEndType = "TCP_SERVER"
-	GENERIC_IOT_HUB       InEndType = "GENERIC_IOT_HUB"
-	INTERNAL_EVENT        InEndType = "INTERNAL_EVENT"        // 内部消息
-	GENERIC_MQTT          InEndType = "GENERIC_MQTT"          // 通用 MQTT
+	COAP_SERVER           InEndType = "COAP_SERVER"           // COAP_SERVER
+	UDP_SERVER            InEndType = "UDP_SERVER"            // UDP_SERVER
+	TCP_SERVER            InEndType = "TCP_SERVER"            // TCP_SERVER
+	HTTP_SERVER           InEndType = "HTTP_SERVER"           // HTTP_SERVER
+	GRPC_SERVER           InEndType = "GRPC_SERVER"           // GRPC_SERVER
 	GENERIC_MQTT_SERVER   InEndType = "GENERIC_MQTT_SERVER"   // Mqtt Server
+	INTERNAL_EVENT        InEndType = "INTERNAL_EVENT"        // 内部消息
 	COMTC_EVENT_FORWARDER InEndType = "COMTC_EVENT_FORWARDER" // 外设通信模块事件
 )
 

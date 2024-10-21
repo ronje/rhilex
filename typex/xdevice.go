@@ -13,13 +13,23 @@ func (d DeviceType) String() string {
 
 }
 
-// 支持的设备类型
+/**
+ * 免费版只支持这三个
+ *
+ */
+const (
+	GENERIC_UART_RW       DeviceType = "GENERIC_UART_RW"       // 通用读写串口
+	GENERIC_MODBUS_MASTER DeviceType = "GENERIC_MODBUS_MASTER" // 通用 GENERIC_MODBUS_MASTER
+	GENERIC_MODBUS_SLAVER DeviceType = "GENERIC_MODBUS_SLAVER" // 通用 GENERIC_MODBUS_SLAVER
+)
+
+/**
+ * 企业版
+ *
+ */
 const (
 	SIEMENS_PLC            DeviceType = "SIEMENS_PLC"            // SIEMENS-S71200
-	GENERIC_MODBUS_MASTER  DeviceType = "GENERIC_MODBUS_MASTER"  // 通用 GENERIC_MODBUS_MASTER
-	GENERIC_MODBUS_SLAVER  DeviceType = "GENERIC_MODBUS_SLAVER"  // 通用 GENERIC_MODBUS_SLAVER
 	GENERIC_SNMP           DeviceType = "GENERIC_SNMP"           // SNMP 协议支持
-	GENERIC_UART_RW        DeviceType = "GENERIC_UART_RW"        // 通用读写串口
 	GENERIC_OPCUA          DeviceType = "GENERIC_OPCUA"          // 通用OPCUA协议
 	GENERIC_CAMERA         DeviceType = "GENERIC_CAMERA"         // 通用摄像头
 	GENERIC_AIS_RECEIVER   DeviceType = "GENERIC_AIS_RECEIVER"   // 通用AIS

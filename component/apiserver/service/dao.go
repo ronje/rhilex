@@ -119,6 +119,13 @@ func GetMDeviceWithUUID(uuid string) (*model.MDevice, error) {
 }
 
 // 检查名称是否重复
+func CheckDeviceCount(T string) int64 {
+	Count := int64(0)
+	interdb.DB().Model(model.MDevice{}).Where("type=?", T).Count(&Count)
+	return Count
+}
+
+// 检查名称是否重复
 func CheckNameDuplicate(name string) bool {
 	Count := int64(0)
 	interdb.DB().Model(model.MDevice{}).Where("name=?", name).Count(&Count)
