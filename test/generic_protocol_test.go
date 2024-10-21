@@ -109,8 +109,12 @@ func TestGenericProtocolSlaverTest(t *testing.T) {
 		}
 		ctx, cancel := context.WithCancel(context.Background())
 		TransportSlaver := protocol.NewGenericProtocolSlaver(ctx, cancel, config)
-		go TransportSlaver.StartLoop(func(AppLayerFrame protocol.AppLayerFrame) {
-			t.Log(AppLayerFrame.String())
+		go TransportSlaver.StartLoop(func(AppLayerFrame protocol.AppLayerFrame, err error) {
+			if err != nil {
+				t.Log(err)
+			} else {
+				t.Log(AppLayerFrame.String())
+			}
 		})
 	}
 }

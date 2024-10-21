@@ -81,14 +81,19 @@ func (tc *ATK01Lora) Start(Config transceivercom.TransceiverConfig) error {
 	}
 	config := protocol.TransporterConfig{
 		Port:         serialPort,
-		ReadTimeout:  time.Duration(tc.mainConfig.ComConfig.IOTimeout),
-		WriteTimeout: time.Duration(tc.mainConfig.ComConfig.IOTimeout),
+		ReadTimeout:  time.Duration(tc.mainConfig.ComConfig.IOTimeout * int64(time.Millisecond)),
+		WriteTimeout: time.Duration(tc.mainConfig.ComConfig.IOTimeout * int64(time.Millisecond)),
+		Logger:       glogger.Logrus,
 	}
 	ctx, cancel := context.WithCancel(context.Background())
 	tc.ProtocolSlaver = protocol.NewGenericProtocolSlaver(ctx, cancel, config)
-	go tc.ProtocolSlaver.StartLoop(func(AppLayerFrame protocol.AppLayerFrame) {
-		buffer, _ := AppLayerFrame.Encode()
+	go tc.ProtocolSlaver.StartLoop(func(AppLayerFrame protocol.AppLayerFrame, errRead error) {
+		if errRead != nil {
+			glogger.GLogger.Error(errRead)
+			return
+		}
 		glogger.GLogger.Debug("ATK01Lora.ProtocolSlaver.Receive:", AppLayerFrame.String())
+		buffer, _ := AppLayerFrame.Encode()
 		internotify.Push(internotify.BaseEvent{
 			Type:    "transceiver.up.data",
 			Event:   "transceiver.up.data.atk01",

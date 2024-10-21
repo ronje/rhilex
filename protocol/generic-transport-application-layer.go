@@ -29,34 +29,17 @@ func NewGenericAppLayerAppLayer(config TransporterConfig) *GenericAppLayer {
 }
 
 func (app *GenericAppLayer) Request(appframe AppLayerFrame) (AppLayerFrame, error) {
-	appBytes, errEncode := appframe.Encode()
-	if errEncode != nil {
-		return AppLayerFrame{}, errEncode
+	errWrite := app.Write(appframe)
+	if errWrite != nil {
+		return AppLayerFrame{}, errWrite
 	}
-	Write := app.datalink.Write(appBytes)
-	if Write != nil {
-		return AppLayerFrame{}, Write
-	}
-	bytes, errRead := app.datalink.Read()
+	responseFrame, errRead := app.Read()
 	if errRead != nil {
 		return AppLayerFrame{}, errRead
 	}
-	if len(bytes) < 5 {
-		return AppLayerFrame{}, errors.New("data too short for header")
-	}
-	var responseHeader Header
-	copy(responseHeader.Type[:], bytes[:2])
-	copy(responseHeader.Length[:], bytes[2:4])
-	payloadLength := int(binary.BigEndian.Uint16(responseHeader.Length[:]))
-	if len(bytes) < 4+payloadLength {
-		return AppLayerFrame{}, errors.New("data too short for payload")
-	}
-	payload := bytes[4 : 4+payloadLength]
-	return AppLayerFrame{
-		Header:  responseHeader,
-		Payload: payload,
-	}, nil
+	return responseFrame, nil
 }
+
 func (app *GenericAppLayer) Write(appframe AppLayerFrame) error {
 	appBytes, errEncode := appframe.Encode()
 	if errEncode != nil {
@@ -64,6 +47,7 @@ func (app *GenericAppLayer) Write(appframe AppLayerFrame) error {
 	}
 	return app.datalink.Write(appBytes)
 }
+
 func (app *GenericAppLayer) Read() (AppLayerFrame, error) {
 	bytes, errHd := app.datalink.Read()
 	if errHd != nil {
@@ -75,7 +59,7 @@ func (app *GenericAppLayer) Read() (AppLayerFrame, error) {
 	var responseHeader Header
 	copy(responseHeader.Type[:], bytes[:2])
 	copy(responseHeader.Length[:], bytes[2:4])
-	payloadLength := int(binary.BigEndian.Uint16(responseHeader.Length[:]))
+	payloadLength := int(binary.BigEndian.Uint16(responseHeader.Length[:])) - 1 /*crc byte*/
 	if len(bytes) < 4+payloadLength {
 		return AppLayerFrame{}, errors.New("data too short for payload")
 	}
@@ -85,9 +69,11 @@ func (app *GenericAppLayer) Read() (AppLayerFrame, error) {
 		Payload: payload,
 	}, nil
 }
+
 func (app *GenericAppLayer) Status() error {
 	return app.datalink.Status()
 }
+
 func (app *GenericAppLayer) Close() error {
 	return app.datalink.Close()
 }

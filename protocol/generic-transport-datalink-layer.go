@@ -43,11 +43,12 @@ func (dll *DataLinkLayer) Read() ([]byte, error) {
 		return nil, fmt.Errorf("Invalid data length")
 	}
 	Sum1 := Bytes[ByteLen-1]
-	Sum2 := dll.checksumCrc8(Bytes[:ByteLen-1])
+	Data := Bytes[:ByteLen-1]
+	Sum2 := dll.checksumCrc8(Data)
 	if Sum1 != Sum2 {
 		return nil, fmt.Errorf("Check sum error, expected:%d, checked: %d", Sum1, Sum2)
 	}
-	return Bytes, nil
+	return Data, nil
 }
 
 func (dll *DataLinkLayer) Status() error {

@@ -32,7 +32,7 @@ func NewTransportLayer(config TransporterConfig) *TransportLayer {
 }
 
 func (transport *TransportLayer) Write(data []byte) error {
-	transport.config.Logger.Debug("TransportLayer.Write=", data)
+	transport.config.Logger.Debug("TransportLayer.Write=", ByteDumpHexString(data))
 	if err := transport.config.Port.SetWriteDeadline(time.Now().Add(
 		transport.config.WriteTimeout * time.Millisecond)); err != nil {
 		return err
@@ -65,7 +65,7 @@ func (transport *TransportLayer) Read() ([]byte, error) {
 	buffer.Write(responsetHeader.Type[:])
 	buffer.Write(responsetHeader.Length[:])
 	buffer.Write(response)
-	transport.config.Logger.Debug("TransportLayer.Read=", buffer.Bytes())
+	transport.config.Logger.Debug("TransportLayer.Read=", ByteDumpHexString(buffer.Bytes()))
 	return buffer.Bytes(), nil
 }
 
