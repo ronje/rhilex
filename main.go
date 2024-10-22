@@ -128,14 +128,7 @@ func main() {
 						utils.CLog("[RHILEX UPGRADE] Nothing todo")
 						return nil
 					}
-					// unzip Firmware
-					utils.CLog("[RHILEX UPGRADE] Unzip Firmware")
-					if err := ossupport.UnzipFirmware(
-						ossupport.FirmwarePath, ossupport.MainWorkDir); err != nil {
-						utils.CLog("[RHILEX UPGRADE] Unzip error:%s", err.Error())
-						return nil
-					}
-					utils.CLog("[RHILEX UPGRADE] Unzip Firmware finished")
+
 					// Move to rollback
 					utils.CLog("[RHILEX BACKUP OLD VERSION] Start backup old version")
 					var errBob error
@@ -165,6 +158,14 @@ func main() {
 						return errBob
 					}
 					utils.CLog("[RHILEX BACKUP OLD VERSION] Start old version finished")
+					// unzip Firmware
+					utils.CLog("[RHILEX UPGRADE] Unzip Firmware")
+					if err := ossupport.UnzipFirmware(
+						ossupport.FirmwarePath, ossupport.MainWorkDir); err != nil {
+						utils.CLog("[RHILEX UPGRADE] Unzip error:%s", err.Error())
+						return nil
+					}
+					utils.CLog("[RHILEX UPGRADE] Unzip Firmware finished")
 					// Remove old package
 					utils.CLog("[RHILEX UPGRADE] Remove Firmware")
 					if err := os.Remove(ossupport.FirmwarePath); err != nil {
