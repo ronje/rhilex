@@ -139,27 +139,27 @@ func main() {
 					// Move to rollback
 					utils.CLog("[RHILEX BACKUP OLD VERSION] Start backup old version")
 					var errBob error
-					errBob = ossupport.BackupOldVersion(ossupport.MainExePath, ossupport.OldBackupDir)
+					errBob = ossupport.BackupOldVersion(ossupport.MainExePath, ossupport.OldBackupDir+"rhilex")
 					if errBob != nil {
 						utils.CLog("[RHILEX BACKUP OLD VERSION] Backup old version Failed: %s", errBob)
 						return errBob
 					}
-					errBob = ossupport.BackupOldVersion(ossupport.RunConfigPath, ossupport.OldBackupDir)
+					errBob = ossupport.BackupOldVersion(ossupport.RunConfigPath, ossupport.OldBackupDir+"rhilex.ini")
 					if errBob != nil {
 						utils.CLog("[RHILEX BACKUP OLD VERSION] Backup old version Failed: %s", errBob)
 						return errBob
 					}
-					errBob = ossupport.BackupOldVersion(ossupport.RunDbPath, ossupport.OldBackupDir)
+					errBob = ossupport.BackupOldVersion(ossupport.RunDbPath, ossupport.OldBackupDir+"rhilex.db")
 					if errBob != nil {
 						utils.CLog("[RHILEX BACKUP OLD VERSION] Backup old version Failed: %s", errBob)
 						return errBob
 					}
-					errBob = ossupport.BackupOldVersion(ossupport.DataCenterPath, ossupport.OldBackupDir)
+					errBob = ossupport.BackupOldVersion(ossupport.DataCenterPath, ossupport.OldBackupDir+"rhilex_datacenter.db")
 					if errBob != nil {
 						utils.CLog("[RHILEX BACKUP OLD VERSION] Backup old version Failed: %s", errBob)
 						return errBob
 					}
-					errBob = ossupport.BackupOldVersion(ossupport.LostCacheDataPath, ossupport.OldBackupDir)
+					errBob = ossupport.BackupOldVersion(ossupport.LostCacheDataPath, ossupport.OldBackupDir+"rhilex_lostcache.db")
 					if errBob != nil {
 						utils.CLog("[RHILEX BACKUP OLD VERSION] Backup old version Failed: %s", errBob)
 						return errBob
