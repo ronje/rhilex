@@ -40,7 +40,7 @@ func Test_DataToSemtechUdp(t *testing.T) {
 		t.Fatal(err)
 	}
 	defer cancelF1()
-	grpcInend := typex.NewInEnd(typex.GRPC,
+	grpcInend := typex.NewInEnd(typex.GRPC_SERVER,
 		"rhilex Grpc InEnd",
 		"rhilex Grpc InEnd", map[string]interface{}{
 			"host": "127.0.0.1",
