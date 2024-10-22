@@ -137,7 +137,7 @@ func Dlt6452007MasterSheetPageList(c *gin.Context, ruleEngine typex.Rhilex) {
 	// "MeterId", "Tag", "Alias", "Frequency"
 	for _, record := range records {
 		Slot := intercache.GetSlot(deviceUuid)
-		Value, ok := Slot[record.UUID]
+		value, ok := Slot[record.UUID]
 		Vo := Dlt6452007MasterPointVo{
 			UUID:          record.UUID,
 			DeviceUuid:    record.DeviceUuid,
@@ -145,19 +145,19 @@ func Dlt6452007MasterSheetPageList(c *gin.Context, ruleEngine typex.Rhilex) {
 			Tag:           record.Tag,
 			Alias:         record.Alias,
 			Frequency:     record.Frequency,
-			LastFetchTime: Value.LastFetchTime,
-			Value:         Value.Value,
-			ErrMsg:        Value.ErrMsg,
+			LastFetchTime: value.LastFetchTime,
+			Value:         value.Value,
+			ErrMsg:        value.ErrMsg,
 		}
 		if ok {
 			Vo.Status = func() int {
-				if Value.Value == "" {
+				if value.Value == "" || value.Value == "0" {
 					return 0
 				}
 				return 1
 			}()
-			Vo.LastFetchTime = Value.LastFetchTime
-			Vo.Value = Value.Value
+			Vo.LastFetchTime = value.LastFetchTime
+			Vo.Value = value.Value
 			recordsVo = append(recordsVo, Vo)
 		} else {
 			recordsVo = append(recordsVo, Vo)

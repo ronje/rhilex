@@ -371,9 +371,6 @@ func (mdev *GenericModbusMaster) OnWrite(cmd []byte, data []byte) (int, error) {
 	}
 	dataMap := [1]common.RegisterW{RegisterW}
 	for _, r := range dataMap {
-		if mdev.mainConfig.CommonConfig.Mode == "TCP" {
-			mdev.tcpHandler.SlaveId = r.SlaverId
-		}
 		if mdev.mainConfig.CommonConfig.Mode == "UART" {
 			mdev.rtuHandler.SlaveId = r.SlaverId
 		}
@@ -513,11 +510,6 @@ func (mdev *GenericModbusMaster) modbusSingleRead() []ReadRegisterValue {
 	// Modbus收到的数据全部放进这个全局缓冲区内
 	var __modbusReadResult = [256]byte{0} // 放在栈上提高效率
 	for uuid, r := range mdev.Registers {
-		if mdev.mainConfig.CommonConfig.Mode == "TCP" {
-			// 下面这行代码在 SlaveId TCP末实现不会生效
-			// 主要和这个库有关，后期要把这个SlaverId拿到点位表里面去
-			mdev.tcpHandler.SlaveId = r.SlaverId
-		}
 		if mdev.mainConfig.CommonConfig.Mode == "UART" {
 			mdev.rtuHandler.SlaveId = r.SlaverId
 		}
@@ -531,8 +523,8 @@ func (mdev *GenericModbusMaster) modbusSingleRead() []ReadRegisterValue {
 				mdev.retryTimes++
 				intercache.SetValue(mdev.PointId, uuid, intercache.CacheValue{
 					UUID:          uuid,
-					Status:        1,
-					Value:         "",
+					Status:        0,
+					Value:         "0",
 					LastFetchTime: lastTimes,
 					ErrMsg:        err.Error(),
 				})
@@ -552,7 +544,7 @@ func (mdev *GenericModbusMaster) modbusSingleRead() []ReadRegisterValue {
 			RegisterRWs = append(RegisterRWs, Reg)
 			intercache.SetValue(mdev.PointId, uuid, intercache.CacheValue{
 				UUID:          uuid,
-				Status:        0,
+				Status:        1,
 				Value:         Value,
 				LastFetchTime: lastTimes,
 				ErrMsg:        "",
@@ -576,8 +568,8 @@ func (mdev *GenericModbusMaster) modbusSingleRead() []ReadRegisterValue {
 				mdev.retryTimes++
 				intercache.SetValue(mdev.PointId, uuid, intercache.CacheValue{
 					UUID:          uuid,
-					Status:        1,
-					Value:         "",
+					Status:        0,
+					Value:         "0",
 					LastFetchTime: lastTimes,
 					ErrMsg:        err.Error(),
 				})
@@ -596,7 +588,7 @@ func (mdev *GenericModbusMaster) modbusSingleRead() []ReadRegisterValue {
 			RegisterRWs = append(RegisterRWs, Reg)
 			intercache.SetValue(mdev.PointId, uuid, intercache.CacheValue{
 				UUID:          uuid,
-				Status:        0,
+				Status:        1,
 				Value:         Value,
 				LastFetchTime: lastTimes,
 				ErrMsg:        "",
@@ -620,8 +612,8 @@ func (mdev *GenericModbusMaster) modbusSingleRead() []ReadRegisterValue {
 				mdev.retryTimes++
 				intercache.SetValue(mdev.PointId, uuid, intercache.CacheValue{
 					UUID:          uuid,
-					Status:        1,
-					Value:         "",
+					Status:        0,
+					Value:         "0",
 					LastFetchTime: lastTimes,
 					ErrMsg:        err.Error(),
 				})
@@ -641,7 +633,7 @@ func (mdev *GenericModbusMaster) modbusSingleRead() []ReadRegisterValue {
 			RegisterRWs = append(RegisterRWs, Reg)
 			intercache.SetValue(mdev.PointId, uuid, intercache.CacheValue{
 				UUID:          uuid,
-				Status:        0,
+				Status:        1,
 				Value:         Value,
 				LastFetchTime: lastTimes,
 				ErrMsg:        "",
@@ -664,8 +656,8 @@ func (mdev *GenericModbusMaster) modbusSingleRead() []ReadRegisterValue {
 				mdev.retryTimes++
 				intercache.SetValue(mdev.PointId, uuid, intercache.CacheValue{
 					UUID:          uuid,
-					Status:        1,
-					Value:         "",
+					Status:        0,
+					Value:         "0",
 					LastFetchTime: lastTimes,
 					ErrMsg:        err.Error(),
 				})
@@ -684,7 +676,7 @@ func (mdev *GenericModbusMaster) modbusSingleRead() []ReadRegisterValue {
 			RegisterRWs = append(RegisterRWs, Reg)
 			intercache.SetValue(mdev.PointId, uuid, intercache.CacheValue{
 				UUID:          uuid,
-				Status:        0,
+				Status:        1,
 				Value:         Value,
 				LastFetchTime: lastTimes,
 				ErrMsg:        "",
@@ -736,7 +728,7 @@ func (mdev *GenericModbusMaster) modbusGroupRead() []ReadRegisterValue {
 				jsonValueGroups = append(jsonValueGroups, jsonVal)
 				intercache.SetValue(mdev.PointId, uuid, intercache.CacheValue{
 					UUID:          uuid,
-					Status:        0,
+					Status:        1,
 					Value:         strconv.Itoa(int(value)),
 					LastFetchTime: uint64(ts),
 					ErrMsg:        "",
@@ -774,7 +766,7 @@ func (mdev *GenericModbusMaster) modbusGroupRead() []ReadRegisterValue {
 				jsonValueGroups = append(jsonValueGroups, jsonVal)
 				intercache.SetValue(mdev.PointId, uuid, intercache.CacheValue{
 					UUID:          uuid,
-					Status:        0,
+					Status:        1,
 					Value:         strconv.Itoa(int(value)),
 					LastFetchTime: uint64(ts),
 					ErrMsg:        "",
@@ -813,7 +805,7 @@ func (mdev *GenericModbusMaster) modbusGroupRead() []ReadRegisterValue {
 
 				intercache.SetValue(mdev.PointId, uuid, intercache.CacheValue{
 					UUID:          uuid,
-					Status:        0,
+					Status:        1,
 					Value:         Value,
 					LastFetchTime: uint64(ts),
 					ErrMsg:        "",
@@ -852,7 +844,7 @@ func (mdev *GenericModbusMaster) modbusGroupRead() []ReadRegisterValue {
 
 				intercache.SetValue(mdev.PointId, uuid, intercache.CacheValue{
 					UUID:          uuid,
-					Status:        0,
+					Status:        1,
 					Value:         Value,
 					LastFetchTime: uint64(ts),
 					ErrMsg:        "",

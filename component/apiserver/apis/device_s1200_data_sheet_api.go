@@ -167,7 +167,7 @@ func SiemensSheetPageList(c *gin.Context, ruleEngine typex.Rhilex) {
 		}
 		if ok {
 			Vo.Status = func() int {
-				if Value.Value == "" {
+				if Value.Value == "" || Value.Value == "0" {
 					return 0
 				}
 				return 1

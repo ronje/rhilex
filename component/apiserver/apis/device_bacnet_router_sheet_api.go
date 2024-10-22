@@ -198,7 +198,7 @@ func BacnetRouterSheetPageList(c *gin.Context, ruleEngine typex.Rhilex) {
 			}
 			if ok {
 				pointVo.Status = func() uint32 {
-					if value.Value == "" {
+					if value.Value == "" || value.Value == "0" {
 						return 0
 					}
 					return 1

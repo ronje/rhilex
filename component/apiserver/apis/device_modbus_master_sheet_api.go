@@ -157,7 +157,7 @@ func ModbusMasterSheetPageList(c *gin.Context, ruleEngine typex.Rhilex) {
 
 	for _, record := range records {
 		Slot := intercache.GetSlot(deviceUuid)
-		Value, ok := Slot[record.UUID]
+		value, ok := Slot[record.UUID]
 		Vo := ModbusMasterPointVo{
 			UUID:          record.UUID,
 			DeviceUUID:    record.DeviceUuid,
@@ -171,19 +171,19 @@ func ModbusMasterSheetPageList(c *gin.Context, ruleEngine typex.Rhilex) {
 			DataType:      record.DataType,
 			DataOrder:     record.DataOrder,
 			Weight:        record.Weight,
-			LastFetchTime: Value.LastFetchTime, // 运行时
-			Value:         Value.Value,         // 运行时
-			ErrMsg:        Value.ErrMsg,        // 运行时
+			LastFetchTime: value.LastFetchTime, // 运行时
+			Value:         value.Value,         // 运行时
+			ErrMsg:        value.ErrMsg,        // 运行时
 		}
 		if ok {
 			Vo.Status = func() int {
-				if Value.Value == "" {
+				if value.Value == "" || value.Value == "0" {
 					return 0
 				}
 				return 1
 			}() // 运行时
-			Vo.LastFetchTime = Value.LastFetchTime // 运行时
-			Vo.Value = Value.Value                 // 运行时
+			Vo.LastFetchTime = value.LastFetchTime // 运行时
+			Vo.Value = value.Value                 // 运行时
 			recordsVo = append(recordsVo, Vo)
 		} else {
 			recordsVo = append(recordsVo, Vo)
