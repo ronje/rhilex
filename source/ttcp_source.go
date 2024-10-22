@@ -191,10 +191,6 @@ func (tcps *TcpSource) Details() *typex.InEnd {
 	return tcps.RuleEngine.GetInEnd(tcps.PointId)
 }
 
-func (tcps *TcpSource) Test(inEndId string) bool {
-	return true
-}
-
 func (tcps *TcpSource) Init(inEndId string, configMap map[string]interface{}) error {
 	tcps.PointId = inEndId
 	if err := utils.BindSourceConfig(configMap, &tcps.mainConfig); err != nil {
@@ -218,14 +214,4 @@ func (tcps *TcpSource) Stop() {
 			glogger.GLogger.Error(err)
 		}
 	}
-}
-
-// 来自外面的数据
-func (*TcpSource) DownStream([]byte) (int, error) {
-	return 0, nil
-}
-
-// 上行数据
-func (*TcpSource) UpStream([]byte) (int, error) {
-	return 0, nil
 }

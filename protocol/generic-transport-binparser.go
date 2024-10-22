@@ -25,6 +25,8 @@ import (
 
 type ParsedData map[string]interface{}
 
+// "ID:32:int:BE; Name:40:string:BE; Age:16:int:LE"
+
 // ParseBinary function
 func ParseBinary(expr string, data []byte) (ParsedData, error) {
 	parsedData := ParsedData{}

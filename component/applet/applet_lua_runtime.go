@@ -156,8 +156,6 @@ func LoadAppLibGroup(app *Application, e typex.Rhilex) {
 			"ReadDevice":  rhilexlib.ReadDevice(e, app.UUID),
 			"WriteDevice": rhilexlib.WriteDevice(e, app.UUID),
 			"CtrlDevice":  rhilexlib.CtrlDevice(e, app.UUID),
-			"ReadSource":  rhilexlib.ReadSource(e, app.UUID),
-			"WriteSource": rhilexlib.WriteSource(e, app.UUID),
 		}
 		AddAppLibToGroup(app, e, "device", Funcs)
 	}

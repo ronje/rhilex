@@ -629,13 +629,18 @@ func (e *RuleEngine) InitDeviceTypeManager() error {
 *
  */
 func (e *RuleEngine) InitSourceTypeManager() error {
+	e.SourceTypeManager.Register(typex.CUSTOM_PROTOCOL_SERVER,
+		&typex.XConfig{
+			Engine:    e,
+			NewSource: source.NewCustomProtocol,
+		},
+	)
 	e.SourceTypeManager.Register(typex.COMTC_EVENT_FORWARDER,
 		&typex.XConfig{
 			Engine:    e,
 			NewSource: source.NewTransceiverForwarder,
 		},
 	)
-
 	e.SourceTypeManager.Register(typex.HTTP_SERVER,
 		&typex.XConfig{
 			Engine:    e,

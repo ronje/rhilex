@@ -99,18 +99,6 @@ func (cc *coAPInEndSource) Status() typex.SourceState {
 	return cc.status
 }
 
-func (cc *coAPInEndSource) Test(inEndId string) bool {
-	return true
-}
-
 func (cc *coAPInEndSource) Details() *typex.InEnd {
 	return cc.RuleEngine.GetInEnd(cc.PointId)
-}
-
-func (*coAPInEndSource) DownStream([]byte) (int, error) {
-	return 0, nil
-}
-
-func (*coAPInEndSource) UpStream([]byte) (int, error) {
-	return 0, nil
 }

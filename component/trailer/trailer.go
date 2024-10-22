@@ -250,7 +250,7 @@ func runLocalProcess(goodsProcess *GoodsProcess) error {
 	// 迁移到prob,改造成监督进程
 	// Load OS process
 	go func() {
-		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+		ctx, cancel := context.WithTimeout(typex.GCTX, 10*time.Second)
 		defer cancel()
 		for {
 			select {

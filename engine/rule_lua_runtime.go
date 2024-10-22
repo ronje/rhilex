@@ -130,8 +130,6 @@ func LoadRuleLibGroup(r *typex.Rule, e typex.Rhilex) {
 			"ReadDevice":  rhilexlib.ReadDevice(e, r.UUID),
 			"WriteDevice": rhilexlib.WriteDevice(e, r.UUID),
 			"CtrlDevice":  rhilexlib.CtrlDevice(e, r.UUID),
-			"ReadSource":  rhilexlib.ReadSource(e, r.UUID),
-			"WriteSource": rhilexlib.WriteSource(e, r.UUID),
 		}
 		AddRuleLibToGroup(r, e, "device", Funcs)
 	}

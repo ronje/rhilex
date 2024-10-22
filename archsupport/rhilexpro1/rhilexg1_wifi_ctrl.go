@@ -26,6 +26,8 @@ import (
 	"strings"
 	"text/template"
 	"time"
+
+	"github.com/hootrhino/rhilex/typex"
 )
 
 const wifiConfigTemplate = `#
@@ -70,7 +72,7 @@ func SetWifi(iface, ssid, psk string, timeout time.Duration) error {
 	if err != nil {
 		return fmt.Errorf("failed to execute template: %v", err)
 	}
-	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	ctx, cancel := context.WithTimeout(typex.GCTX, timeout)
 	defer cancel()
 	{
 

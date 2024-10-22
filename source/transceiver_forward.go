@@ -75,18 +75,6 @@ func (u *TransceiverForwarder) Details() *typex.InEnd {
 	return u.RuleEngine.GetInEnd(u.PointId)
 }
 
-func (u *TransceiverForwarder) Test(inEndId string) bool {
-	return true
-}
-
-func (*TransceiverForwarder) DownStream([]byte) (int, error) {
-	return 0, nil
-}
-
-func (*TransceiverForwarder) UpStream([]byte) (int, error) {
-	return 0, nil
-}
-
 /*
 *
 * 从内部总线拿数据

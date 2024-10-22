@@ -33,10 +33,13 @@ func NewTransportLayer(config TransporterConfig) *TransportLayer {
 
 func (transport *TransportLayer) Write(data []byte) error {
 	transport.config.Logger.Debug("TransportLayer.Write=", ByteDumpHexString(data))
-	if err := transport.config.Port.SetWriteDeadline(time.Now().Add(
-		transport.config.WriteTimeout * time.Millisecond)); err != nil {
-		return err
+	if transport.config.WriteTimeout != 0 {
+		if err := transport.config.Port.SetWriteDeadline(time.Now().Add(
+			transport.config.WriteTimeout * time.Millisecond)); err != nil {
+			return err
+		}
 	}
+
 	if _, err := transport.config.Port.Write(data); err != nil {
 		return err
 	}
@@ -44,9 +47,11 @@ func (transport *TransportLayer) Write(data []byte) error {
 }
 
 func (transport *TransportLayer) Read() ([]byte, error) {
-	if err := transport.config.Port.SetReadDeadline(time.Now().Add(
-		transport.config.ReadTimeout * time.Millisecond)); err != nil {
-		return nil, err
+	if transport.config.ReadTimeout != 0 {
+		if err := transport.config.Port.SetReadDeadline(time.Now().Add(
+			transport.config.ReadTimeout * time.Millisecond)); err != nil {
+			return nil, err
+		}
 	}
 	responsetHeader := Header{}
 	if err := binary.Read(transport.config.Port, binary.BigEndian,

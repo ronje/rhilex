@@ -83,9 +83,6 @@ func (u *InternalEventSource) Details() *typex.InEnd {
 	return u.RuleEngine.GetInEnd(u.PointId)
 }
 
-func (u *InternalEventSource) Test(inEndId string) bool {
-	return true
-}
 
 // 来自外面的数据
 func (*InternalEventSource) DownStream([]byte) (int, error) {

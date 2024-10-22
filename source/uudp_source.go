@@ -115,10 +115,6 @@ func (udps *udpSource) Details() *typex.InEnd {
 	return udps.RuleEngine.GetInEnd(udps.PointId)
 }
 
-func (udps *udpSource) Test(inEndId string) bool {
-	return true
-}
-
 func (udps *udpSource) Init(inEndId string, configMap map[string]interface{}) error {
 	udps.PointId = inEndId
 	if err := utils.BindSourceConfig(configMap, &udps.mainConfig); err != nil {
@@ -143,14 +139,4 @@ func (udps *udpSource) Stop() {
 		}
 	}
 
-}
-
-// 来自外面的数据
-func (*udpSource) DownStream([]byte) (int, error) {
-	return 0, nil
-}
-
-// 上行数据
-func (*udpSource) UpStream([]byte) (int, error) {
-	return 0, nil
 }

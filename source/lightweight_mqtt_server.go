@@ -115,10 +115,6 @@ func (ms *MqttServer) Status() typex.SourceState {
 	return ms.status
 }
 
-func (ms *MqttServer) Test(inEndId string) bool {
-	return true
-}
-
 func (ms *MqttServer) Details() *typex.InEnd {
 	return ms.RuleEngine.GetInEnd(ms.PointId)
 }

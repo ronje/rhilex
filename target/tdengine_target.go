@@ -73,7 +73,7 @@ func NewTdEngineTarget(e typex.Rhilex) typex.XTarget {
 	return &td
 
 }
-func (td *tdEngineTarget) test() bool {
+func (td *tdEngineTarget) testStatus() bool {
 	if err := execQuery(td.client,
 		td.mainConfig.Username,
 		td.mainConfig.Password,
@@ -84,6 +84,7 @@ func (td *tdEngineTarget) test() bool {
 	}
 	return true
 }
+
 func (td *tdEngineTarget) url() string {
 	return fmt.Sprintf("http://%s:%v/rest/sql/%s",
 		td.mainConfig.Fqdn, td.mainConfig.Port, td.mainConfig.DbName)
@@ -99,7 +100,7 @@ func (td *tdEngineTarget) Init(outEndId string, configMap map[string]interface{}
 	if err := utils.BindSourceConfig(configMap, &td.mainConfig); err != nil {
 		return err
 	}
-	if td.test() {
+	if td.testStatus() {
 		return nil
 	}
 	return errors.New("tdengine connect error")
@@ -130,7 +131,7 @@ func (td *tdEngineTarget) Start(cctx typex.CCTX) error {
 
 // 获取资源状态
 func (td *tdEngineTarget) Status() typex.SourceState {
-	if td.test() {
+	if td.testStatus() {
 		return typex.SOURCE_UP
 	}
 	return typex.SOURCE_DOWN

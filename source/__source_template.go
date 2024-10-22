@@ -46,20 +46,6 @@ func (hh *TemplateSource) Status() typex.SourceState {
 	return hh.status
 }
 
-func (hh *TemplateSource) Test(inEndId string) bool {
-	return true
-}
-
 func (hh *TemplateSource) Details() *typex.InEnd {
 	return hh.RuleEngine.GetInEnd(hh.PointId)
-}
-
-// 来自外面的数据
-func (*TemplateSource) DownStream([]byte) (int, error) {
-	return 0, nil
-}
-
-// 上行数据
-func (*TemplateSource) UpStream([]byte) (int, error) {
-	return 0, nil
 }
