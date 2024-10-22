@@ -17,6 +17,7 @@ package ossupport
 
 import (
 	"fmt"
+	"io"
 	"log"
 	"os"
 	"os/exec"
@@ -135,6 +136,34 @@ func UnzipFirmware(zipFile, destDir string) error {
 		return fmt.Errorf("failed to unzip file: %s, %s", err.Error(), string(out))
 	}
 	return nil
+}
+
+/**
+ * 备份老版本
+ *
+ */
+// BackupOldVersion 备份源文件到目标位置
+// 目前只需备份 rhilex主程序，配置库，和ini配置即可。
+func BackupOldVersion(src, dest string) error {
+	sourceFile, err := os.Open(src)
+	if err != nil {
+		return err
+	}
+	defer sourceFile.Close()
+	destDir := filepath.Dir(dest)
+	if _, err := os.Stat(destDir); os.IsNotExist(err) {
+		err = os.MkdirAll(destDir, 0755)
+		if err != nil {
+			return err
+		}
+	}
+	destFile, err := os.Create(dest)
+	if err != nil {
+		return err
+	}
+	defer destFile.Close()
+	_, err = io.Copy(destFile, sourceFile)
+	return err
 }
 
 /*

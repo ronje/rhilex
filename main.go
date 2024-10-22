@@ -136,6 +136,35 @@ func main() {
 						return nil
 					}
 					utils.CLog("[RHILEX UPGRADE] Unzip Firmware finished")
+					// Move to rollback
+					utils.CLog("[RHILEX BACKUP OLD VERSION] Start backup old version")
+					var errBob error
+					errBob = ossupport.BackupOldVersion(ossupport.MainExePath, ossupport.OldBackupDir)
+					if errBob != nil {
+						utils.CLog("[RHILEX BACKUP OLD VERSION] Backup old version Failed: %s", errBob)
+						return errBob
+					}
+					errBob = ossupport.BackupOldVersion(ossupport.RunConfigPath, ossupport.OldBackupDir)
+					if errBob != nil {
+						utils.CLog("[RHILEX BACKUP OLD VERSION] Backup old version Failed: %s", errBob)
+						return errBob
+					}
+					errBob = ossupport.BackupOldVersion(ossupport.RunDbPath, ossupport.OldBackupDir)
+					if errBob != nil {
+						utils.CLog("[RHILEX BACKUP OLD VERSION] Backup old version Failed: %s", errBob)
+						return errBob
+					}
+					errBob = ossupport.BackupOldVersion(ossupport.DataCenterPath, ossupport.OldBackupDir)
+					if errBob != nil {
+						utils.CLog("[RHILEX BACKUP OLD VERSION] Backup old version Failed: %s", errBob)
+						return errBob
+					}
+					errBob = ossupport.BackupOldVersion(ossupport.LostCacheDataPath, ossupport.OldBackupDir)
+					if errBob != nil {
+						utils.CLog("[RHILEX BACKUP OLD VERSION] Backup old version Failed: %s", errBob)
+						return errBob
+					}
+					utils.CLog("[RHILEX BACKUP OLD VERSION] Start old version finished")
 					// Remove old package
 					utils.CLog("[RHILEX UPGRADE] Remove Firmware")
 					if err := os.Remove(ossupport.FirmwarePath); err != nil {
@@ -143,7 +172,7 @@ func main() {
 						return nil
 					}
 					utils.CLog("[RHILEX UPGRADE] Remove Firmware finished")
-					//
+					// Restart
 					utils.CLog("[RHILEX UPGRADE] Restart rhilex")
 					if err := ossupport.RestartRhilex(); err != nil {
 						utils.CLog("[RHILEX UPGRADE] Restart rhilex error:%s", err.Error())
@@ -151,6 +180,24 @@ func main() {
 					}
 					utils.CLog("[RHILEX UPGRADE] Restart rhilex finished, Upgrade Process Exited")
 					os.Exit(0)
+					return nil
+				},
+			},
+			// 回滚 TODO
+			{
+				Name:   "rollback",
+				Usage:  "! JUST FOR Rollback Old Version",
+				Hidden: true,
+				Flags: []cli.Flag{
+					&cli.BoolFlag{
+						Name:  "rollback",
+						Usage: "! THIS PARAMENT IS JUST FOR Rollback Old Version",
+						Value: false,
+					},
+				},
+				Action: func(c *cli.Context) error {
+					utils.CLog("[RHILEX ROLLBACK] Rollback Process Started")
+					utils.CLog("[RHILEX ROLLBACK] Rollback Process Exited")
 					return nil
 				},
 			},

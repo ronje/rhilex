@@ -23,12 +23,18 @@ package ossupport
 const (
 	// rhilex 工作目录
 	MainWorkDir = "/usr/local/rhilex/"
+	// RHILEX Main
+	MainExePath = MainWorkDir + "rhilex"
+	// RHILEX Config
+	RunConfigPath = MainWorkDir + "rhilex.ini"
+	// RHILEX Database
+	RunDbPath = MainWorkDir + "rhilex.db"
+	// RHILEX 备份回滚
+	OldBackupDir = "/usr/local/rhilex/old/"
 	// 数据中心
 	DataCenterPath = MainWorkDir + "rhilex_datacenter.db"
 	// 离线缓存的数据
 	LostCacheDataPath = MainWorkDir + "rhilex_lostcache.db"
-	// RHILEX 的配置数据库
-	RunDbPath = MainWorkDir + "rhilex.db"
 	// 固件保存路径
 	FirmwarePath = MainWorkDir + "upload/Firmware/Firmware.zip"
 	// 升级日志
