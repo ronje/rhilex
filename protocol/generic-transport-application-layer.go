@@ -21,20 +21,24 @@ import (
 )
 
 type GenericAppLayer struct {
-	datalink *DataLinkLayer
+	errTxCount int32 // 错误包计数器
+	errRxCount int32 // 错误包计数器
+	datalink   *DataLinkLayer
 }
 
 func NewGenericAppLayerAppLayer(config TransporterConfig) *GenericAppLayer {
-	return &GenericAppLayer{datalink: NewDataLinkLayer(config)}
+	return &GenericAppLayer{errTxCount: 0, errRxCount: 0, datalink: NewDataLinkLayer(config)}
 }
 
 func (app *GenericAppLayer) Request(appframe AppLayerFrame) (AppLayerFrame, error) {
 	errWrite := app.Write(appframe)
 	if errWrite != nil {
+		app.errTxCount++
 		return AppLayerFrame{}, errWrite
 	}
 	responseFrame, errRead := app.Read()
 	if errRead != nil {
+		app.errRxCount++
 		return AppLayerFrame{}, errRead
 	}
 	return responseFrame, nil
@@ -43,6 +47,7 @@ func (app *GenericAppLayer) Request(appframe AppLayerFrame) (AppLayerFrame, erro
 func (app *GenericAppLayer) Write(appframe AppLayerFrame) error {
 	appBytes, errEncode := appframe.Encode()
 	if errEncode != nil {
+		app.errTxCount++
 		return errEncode
 	}
 	return app.datalink.Write(appBytes)
@@ -51,9 +56,11 @@ func (app *GenericAppLayer) Write(appframe AppLayerFrame) error {
 func (app *GenericAppLayer) Read() (AppLayerFrame, error) {
 	bytes, errHd := app.datalink.Read()
 	if errHd != nil {
+		app.errRxCount++
 		return AppLayerFrame{}, errHd
 	}
 	if len(bytes) < 4 {
+		app.errRxCount++
 		return AppLayerFrame{}, errors.New("data too short for header")
 	}
 	var responseHeader Header
@@ -70,6 +77,12 @@ func (app *GenericAppLayer) Read() (AppLayerFrame, error) {
 	}, nil
 }
 
+func (app *GenericAppLayer) GetErrTxCount() int32 {
+	return app.errTxCount + app.datalink.errTxCount
+}
+func (app *GenericAppLayer) GetErrRxCount() int32 {
+	return app.errRxCount + app.datalink.errRxCount
+}
 func (app *GenericAppLayer) Status() error {
 	return app.datalink.Status()
 }

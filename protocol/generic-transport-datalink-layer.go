@@ -20,32 +20,42 @@ import (
 )
 
 type DataLinkLayer struct {
-	transport *TransportLayer
+	errTxCount int32 // 错误包计数器
+	errRxCount int32 // 错误包计数器
+	transport  *TransportLayer
 }
 
 func NewDataLinkLayer(config TransporterConfig) *DataLinkLayer {
-	return &DataLinkLayer{transport: NewTransportLayer(config)}
+	return &DataLinkLayer{errTxCount: 0, errRxCount: 0, transport: NewTransportLayer(config)}
 }
 
 func (dll *DataLinkLayer) Write(data []byte) error {
 	crc := dll.checksumCrc8(data)
 	data = append(data, crc)
-	return dll.transport.Write(data)
+	err := dll.transport.Write(data)
+	if err != nil {
+		dll.errTxCount++
+		return err
+	}
+	return nil
 }
 
 func (dll *DataLinkLayer) Read() ([]byte, error) {
 	Bytes, errRead := dll.transport.Read()
 	if errRead != nil {
+		dll.errRxCount++
 		return nil, errRead
 	}
 	ByteLen := len(Bytes)
 	if ByteLen < 5 {
+		dll.errRxCount++
 		return nil, fmt.Errorf("Invalid data length")
 	}
 	Sum1 := Bytes[ByteLen-1]
 	Data := Bytes[:ByteLen-1]
 	Sum2 := dll.checksumCrc8(Data)
 	if Sum1 != Sum2 {
+		dll.errRxCount++
 		return nil, fmt.Errorf("Check sum error, expected:%d, checked: %d", Sum1, Sum2)
 	}
 	return Data, nil
@@ -54,7 +64,12 @@ func (dll *DataLinkLayer) Read() ([]byte, error) {
 func (dll *DataLinkLayer) Status() error {
 	return dll.transport.Status()
 }
-
+func (dll *DataLinkLayer) GetErrTxCount() int32 {
+	return dll.errTxCount
+}
+func (dll *DataLinkLayer) GetErrRxCount() int32 {
+	return dll.errRxCount
+}
 func (dll *DataLinkLayer) Close() error {
 	return dll.transport.Close()
 }
