@@ -118,3 +118,44 @@ func TestGenericProtocolSlaverTest(t *testing.T) {
 		})
 	}
 }
+
+// go test -timeout 30s -run ^TestParseBinaryData github.com/hootrhino/rhilex/test -v -count=1
+
+func TestParseBinaryData(t *testing.T) {
+	{
+		expr := "ID:32:int:BE; Name:40:string:BE; Age:16:int:LE"
+		data := []byte{0x00, 0x00, 0x00, 0x01, 'A', 'l', 'i', 'c', 'e', 0x00, 0x20}
+		t.Log("解析:", data)
+		parsedData, err := protocol.ParseBinary(expr, data)
+		if err != nil {
+			t.Fatal("解析失败:", err)
+			return
+		}
+
+		t.Log("解析结果:", parsedData.String())
+	}
+	{
+		expr := "ID:32:int:BE; Name:40:string:BE; Age:16:int:LE"
+		data := []byte{0x00, 0x00, 0x00, 0x01, 'A', 'l', 'i', 'c', 'e', 0x00, 0x20}
+		t.Log("解析:", data)
+		parsedData, err := protocol.ParseBinary(expr, data)
+		if err != nil {
+			t.Fatal("解析失败:", err)
+			return
+		}
+
+		t.Log("解析结果:", parsedData.String())
+	}
+	{
+		expr := "ID:32:int:BE; Name:40:string:BE; Age:16:int:LE"
+		data := []byte{}
+		t.Log("解析:", data)
+		parsedData, err := protocol.ParseBinary(expr, data)
+		if err != nil {
+			t.Fatal("解析失败:", err)
+			return
+		}
+
+		t.Log("解析结果:", parsedData.String())
+	}
+}
