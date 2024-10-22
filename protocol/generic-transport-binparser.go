@@ -23,15 +23,14 @@ import (
 	"strings"
 )
 
-// 定义一个泛型结构体来存储解析后的数据
 type ParsedData map[string]interface{}
 
-// ParseBinary 函数
+// ParseBinary function
 func ParseBinary(expr string, data []byte) (ParsedData, error) {
 	parsedData := ParsedData{}
 	cursor := 0
 
-	// 分割表达式, 每个表达式形如 Key:Length:Type:Endian
+	// Split the expression; each expression is of the form Key:Length:Type:Endian
 	fields := strings.Split(expr, ";")
 	for _, field := range fields {
 		field = strings.TrimSpace(field)
@@ -39,40 +38,40 @@ func ParseBinary(expr string, data []byte) (ParsedData, error) {
 			continue
 		}
 
-		// 解析表达式中的 Key, Length, Type, Endian
+		// Parse Key, Length, Type, Endian from the expression
 		parts := strings.Split(field, ":")
 		if len(parts) != 4 {
-			return nil, fmt.Errorf("表达式格式错误: %s", field)
+			return nil, fmt.Errorf("expression format error: %s", field)
 		}
 
 		key := parts[0]
-		lengthStr := parts[1] // 长度现在是位数
+		lengthStr := parts[1] // Length is now in bits
 		dataType := parts[2]
 		endian := parts[3]
 
-		// 将 Length（位）转换为位长度，并确保字节对齐
+		// Convert Length (bits) to byte length and ensure byte alignment
 		lengthBits, err := strconv.Atoi(lengthStr)
 		if err != nil {
-			return nil, fmt.Errorf("无效的长度: %s", lengthStr)
+			return nil, fmt.Errorf("invalid length: %s", lengthStr)
 		}
-		lengthBytes := (lengthBits + 7) / 8 // 按字节对齐
+		lengthBytes := (lengthBits + 7) / 8 // Align to bytes
 
-		// 检查是否有足够的数据可供解析
+		// Check if there is enough data to parse
 		if cursor+lengthBytes > len(data) {
-			return nil, fmt.Errorf("数据长度不足以解析 %s", key)
+			return nil, fmt.Errorf("data length insufficient to parse %s", key)
 		}
 
-		// 根据 Endian 设置字节序
+		// Set byte order based on Endian
 		var order binary.ByteOrder
 		if endian == "BE" {
 			order = binary.BigEndian
 		} else if endian == "LE" {
 			order = binary.LittleEndian
 		} else {
-			return nil, fmt.Errorf("不支持的字节序: %s", endian)
+			return nil, fmt.Errorf("unsupported byte order: %s", endian)
 		}
 
-		// 根据 Type 解析数据
+		// Parse data based on Type
 		switch dataType {
 		case "int":
 			if lengthBits == 8 {
@@ -82,7 +81,7 @@ func ParseBinary(expr string, data []byte) (ParsedData, error) {
 			} else if lengthBits == 32 {
 				parsedData[key] = int(order.Uint32(data[cursor : cursor+lengthBytes]))
 			} else {
-				return nil, fmt.Errorf("不支持的 int 长度: %d bits", lengthBits)
+				return nil, fmt.Errorf("unsupported int length: %d bits", lengthBits)
 			}
 		case "string":
 			parsedData[key] = string(data[cursor : cursor+lengthBytes])
@@ -94,13 +93,13 @@ func ParseBinary(expr string, data []byte) (ParsedData, error) {
 				bits := order.Uint64(data[cursor : cursor+lengthBytes])
 				parsedData[key] = float64(bits)
 			} else {
-				return nil, fmt.Errorf("不支持的 float 长度: %d bits", lengthBits)
+				return nil, fmt.Errorf("unsupported float length: %d bits", lengthBits)
 			}
 		default:
-			return nil, fmt.Errorf("不支持的数据类型: %s", dataType)
+			return nil, fmt.Errorf("unsupported data type: %s", dataType)
 		}
 
-		// 移动光标
+		// Move the cursor
 		cursor += lengthBytes
 	}
 
