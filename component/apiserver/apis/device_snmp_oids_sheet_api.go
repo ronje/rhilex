@@ -138,7 +138,7 @@ func SnmpSheetPageList(c *gin.Context, ruleEngine typex.Rhilex) {
 	recordsVo := []SnmpOidVo{}
 	for _, record := range records {
 		Slot := intercache.GetSlot(deviceUuid)
-		Value, ok := Slot[record.UUID]
+		value, ok := Slot[record.UUID]
 		Vo := SnmpOidVo{
 			UUID:       record.UUID,
 			Oid:        record.Oid,
@@ -146,17 +146,17 @@ func SnmpSheetPageList(c *gin.Context, ruleEngine typex.Rhilex) {
 			Tag:        record.Tag,
 			Alias:      record.Alias,
 			Frequency:  &record.Frequency,
-			ErrMsg:     Value.ErrMsg,
+			ErrMsg:     value.ErrMsg,
 		}
 		if ok {
 			Vo.Status = func() int {
-				if Value.Value == "" || Value.Value == "0" {
+				if value.Value == "" {
 					return 0
 				}
 				return 1
 			}() // 运行时
-			Vo.LastFetchTime = Value.LastFetchTime // 运行时
-			Vo.Value = Value.Value                 // 运行时
+			Vo.LastFetchTime = value.LastFetchTime // 运行时
+			Vo.Value = value.Value                 // 运行时
 			recordsVo = append(recordsVo, Vo)
 		} else {
 			recordsVo = append(recordsVo, Vo)

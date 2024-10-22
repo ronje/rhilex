@@ -177,7 +177,7 @@ func ModbusMasterSheetPageList(c *gin.Context, ruleEngine typex.Rhilex) {
 		}
 		if ok {
 			Vo.Status = func() int {
-				if value.Value == "" || value.Value == "0" {
+				if value.Value == "" {
 					return 0
 				}
 				return 1

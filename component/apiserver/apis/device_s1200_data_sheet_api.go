@@ -150,7 +150,7 @@ func SiemensSheetPageList(c *gin.Context, ruleEngine typex.Rhilex) {
 	recordsVo := []SiemensPointVo{}
 	for _, record := range records {
 		Slot := intercache.GetSlot(deviceUuid)
-		Value, ok := Slot[record.UUID]
+		value, ok := Slot[record.UUID]
 		Vo := SiemensPointVo{
 			UUID:           record.UUID,
 			DeviceUUID:     record.DeviceUuid,
@@ -161,19 +161,19 @@ func SiemensSheetPageList(c *gin.Context, ruleEngine typex.Rhilex) {
 			DataType:       record.DataBlockType,
 			DataOrder:      record.DataBlockOrder,
 			Weight:         record.Weight,
-			LastFetchTime:  Value.LastFetchTime, // 运行时
-			Value:          Value.Value,         // 运行时
-			ErrMsg:         Value.ErrMsg,
+			LastFetchTime:  value.LastFetchTime, // 运行时
+			Value:          value.Value,         // 运行时
+			ErrMsg:         value.ErrMsg,
 		}
 		if ok {
 			Vo.Status = func() int {
-				if Value.Value == "" || Value.Value == "0" {
+				if value.Value == "" {
 					return 0
 				}
 				return 1
 			}() // 运行时
-			Vo.LastFetchTime = Value.LastFetchTime // 运行时
-			Vo.Value = Value.Value                 // 运行时
+			Vo.LastFetchTime = value.LastFetchTime // 运行时
+			Vo.Value = value.Value                 // 运行时
 			recordsVo = append(recordsVo, Vo)
 		} else {
 			recordsVo = append(recordsVo, Vo)

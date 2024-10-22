@@ -153,7 +153,7 @@ func Szy2062016MasterSheetPageList(c *gin.Context, ruleEngine typex.Rhilex) {
 		}
 		if ok {
 			Vo.Status = func() int {
-				if Value.Value == "" || Value.Value == "0" {
+				if Value.Value == "" {
 					return 0
 				}
 				return 1

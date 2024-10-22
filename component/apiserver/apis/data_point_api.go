@@ -163,7 +163,7 @@ func DataPointSheetPageList(c *gin.Context, ruleEngine typex.Rhilex) {
 			}
 			if ok {
 				pointVo.Status = func() uint32 {
-					if value.Value == "" || value.Value == "0" {
+					if value.Value == "" {
 						return 0
 					}
 					return 1

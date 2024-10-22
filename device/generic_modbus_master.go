@@ -371,6 +371,9 @@ func (mdev *GenericModbusMaster) OnWrite(cmd []byte, data []byte) (int, error) {
 	}
 	dataMap := [1]common.RegisterW{RegisterW}
 	for _, r := range dataMap {
+		if mdev.mainConfig.CommonConfig.Mode == "TCP" {
+			mdev.tcpHandler.SlaveId = 0x01
+		}
 		if mdev.mainConfig.CommonConfig.Mode == "UART" {
 			mdev.rtuHandler.SlaveId = r.SlaverId
 		}
@@ -512,6 +515,9 @@ func (mdev *GenericModbusMaster) modbusSingleRead() []ReadRegisterValue {
 	for uuid, r := range mdev.Registers {
 		if mdev.mainConfig.CommonConfig.Mode == "UART" {
 			mdev.rtuHandler.SlaveId = r.SlaverId
+		}
+		if mdev.mainConfig.CommonConfig.Mode == "TCP" {
+			mdev.tcpHandler.SlaveId = 0x01
 		}
 		// 1 字节
 		if r.Function == common.READ_COIL {
@@ -700,7 +706,7 @@ func (mdev *GenericModbusMaster) modbusGroupRead() []ReadRegisterValue {
 
 	for _, group := range mdev.RegisterGroups {
 		if mdev.mainConfig.CommonConfig.Mode == "TCP" {
-			mdev.tcpHandler.SlaveId = group.SlaverId
+			mdev.tcpHandler.SlaveId = 0x01
 		}
 		if mdev.mainConfig.CommonConfig.Mode == "UART" {
 			mdev.rtuHandler.SlaveId = group.SlaverId
