@@ -157,7 +157,7 @@ func main() {
 						utils.CLog("[RHILEX BACKUP OLD VERSION] Backup old version Failed: %s", errBob)
 						return errBob
 					}
-					utils.CLog("[RHILEX BACKUP OLD VERSION] Start old version finished")
+					utils.CLog("[RHILEX BACKUP OLD VERSION] Backup old version finished")
 					// unzip Firmware
 					utils.CLog("[RHILEX UPGRADE] Unzip Firmware")
 					if err := ossupport.UnzipFirmware(
