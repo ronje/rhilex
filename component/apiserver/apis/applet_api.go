@@ -61,7 +61,7 @@ func AppDetail(c *gin.Context, ruleEngine typex.Rhilex) {
 		UUID:      appInfo.UUID,
 		Name:      appInfo.Name,
 		Version:   appInfo.Version,
-		AutoStart: appInfo.AutoStart,
+		AutoStart: &appInfo.AutoStart,
 		Type:      "lua",
 		AppState: func() int {
 			if a := applet.GetApp(appInfo.UUID); a != nil {
@@ -83,7 +83,7 @@ func Apps(c *gin.Context, ruleEngine typex.Rhilex) {
 			UUID:      mApp.UUID,
 			Name:      mApp.Name,
 			Version:   mApp.Version,
-			AutoStart: mApp.AutoStart,
+			AutoStart: &mApp.AutoStart,
 			Type:      "lua",
 			AppState: func() int {
 				if a := applet.GetApp(mApp.UUID); a != nil {
@@ -135,7 +135,7 @@ func CreateApp(c *gin.Context, ruleEngine typex.Rhilex) {
 		Version: form.Version,
 		LuaSource: fmt.Sprintf(luaTemplate,
 			newUUID, form.Name, form.Version, form.Description, defaultLuaMain),
-		AutoStart:   form.AutoStart,
+		AutoStart:   *form.AutoStart,
 		Description: form.Description,
 	}
 	if err := service.InsertApp(mAPP); err != nil {
@@ -185,7 +185,7 @@ func UpdateApp(c *gin.Context, ruleEngine typex.Rhilex) {
 		UUID:        form.UUID,
 		Name:        form.Name,
 		Version:     form.Version,
-		AutoStart:   form.AutoStart,
+		AutoStart:   *form.AutoStart,
 		LuaSource:   form.LuaSource,
 		Description: form.Description,
 	}
@@ -204,14 +204,14 @@ func UpdateApp(c *gin.Context, ruleEngine typex.Rhilex) {
 	}
 	// 必须先load后start
 	newAPP := applet.NewApplication(mApp.UUID, mApp.Name, mApp.Version)
-	newAPP.AutoStart = *mApp.AutoStart
+	newAPP.AutoStart = mApp.AutoStart
 	newAPP.Description = mApp.Description
 	if err := applet.LoadApp(newAPP, mApp.LuaSource); err != nil {
 		c.JSON(common.HTTP_OK, common.Error400(err))
 		return
 	}
 	// 自启动
-	if *mApp.AutoStart {
+	if mApp.AutoStart {
 		glogger.GLogger.Debugf("App autoStart allowed:%s-%s-%s", mApp.UUID, mApp.Version, mApp.Name)
 		if err2 := applet.StartApp(mApp.UUID); err2 != nil {
 			glogger.GLogger.Error("App autoStart failed:", err2)

@@ -25,8 +25,8 @@ type MMBusDataPoint struct {
 	Manufacturer string  `gorm:"not null"`
 	Tag          string  `gorm:"not null"`
 	Alias        string  `gorm:"not null"`
-	Frequency    *uint64 `gorm:"not null"`
-	DataLength   *uint64 `gorm:"not null"`
+	Frequency    uint64 `gorm:"not null"`
+	DataLength   uint64 `gorm:"not null"`
 }
 
 func (MMBusDataPoint) TableName() string {

@@ -101,8 +101,8 @@ func MBusMasterPointsExport(c *gin.Context, ruleEngine typex.Rhilex) {
 			record.Manufacturer,
 			record.Tag,
 			record.Alias,
-			fmt.Sprintf("%d", *record.Frequency),
-			fmt.Sprintf("%d", *record.DataLength),
+			fmt.Sprintf("%d", record.Frequency),
+			fmt.Sprintf("%d", record.DataLength),
 		}
 		cell, _ = excelize.CoordinatesToCellName(1, idx+2)
 		xlsx.SetSheetRow("Sheet1", cell, &Row)
@@ -154,8 +154,8 @@ func MBusMasterSheetPageList(c *gin.Context, ruleEngine typex.Rhilex) {
 			Manufacturer:  record.Manufacturer,
 			Tag:           record.Tag,
 			Alias:         record.Alias,
-			Frequency:     record.Frequency,
-			DataLength:    record.DataLength,
+			Frequency:     &record.Frequency,
+			DataLength:    &record.DataLength,
 			LastFetchTime: value.LastFetchTime,
 			Value:         value.Value,
 			ErrMsg:        value.ErrMsg,
@@ -303,8 +303,8 @@ func MBusMasterSheetUpdate(c *gin.Context, ruleEngine typex.Rhilex) {
 				Manufacturer: MBusMasterDataPoint.Manufacturer,
 				Tag:          MBusMasterDataPoint.Tag,
 				Alias:        MBusMasterDataPoint.Alias,
-				Frequency:    MBusMasterDataPoint.Frequency,
-				DataLength:   MBusMasterDataPoint.DataLength,
+				Frequency:    *MBusMasterDataPoint.Frequency,
+				DataLength:   *MBusMasterDataPoint.DataLength,
 			}
 			err0 := service.InsertMBusPoint(NewRow)
 			if err0 != nil {
@@ -320,8 +320,8 @@ func MBusMasterSheetUpdate(c *gin.Context, ruleEngine typex.Rhilex) {
 				Manufacturer: MBusMasterDataPoint.Manufacturer,
 				Tag:          MBusMasterDataPoint.Tag,
 				Alias:        MBusMasterDataPoint.Alias,
-				Frequency:    MBusMasterDataPoint.Frequency,
-				DataLength:   MBusMasterDataPoint.DataLength,
+				Frequency:    *MBusMasterDataPoint.Frequency,
+				DataLength:   *MBusMasterDataPoint.DataLength,
 			}
 			err0 := service.UpdateMBusPoint(OldRow)
 			if err0 != nil {
@@ -479,8 +479,8 @@ func parseMBusMasterPointExcel(r io.Reader, sheetName string,
 			Manufacturer: manufacturer,
 			Tag:          Tag,
 			Alias:        Alias,
-			Frequency:    &Frequency,
-			DataLength:   &DataLength,
+			Frequency:    Frequency,
+			DataLength:   DataLength,
 		}
 		list = append(list, model)
 	}

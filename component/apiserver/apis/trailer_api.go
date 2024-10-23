@@ -93,7 +93,7 @@ func GoodsDetail(c *gin.Context, ruleEngine typex.Rhilex) {
 		Uuid:        mGood.UUID,
 		GoodsType:   mGood.GoodsType,
 		ExecuteType: mGood.ExecuteType,
-		AutoStart:   *mGood.AutoStart,
+		AutoStart:   mGood.AutoStart,
 		LocalPath:   mGood.LocalPath,
 		NetAddr:     mGood.NetAddr,
 		Args:        []string{mGood.Args},
@@ -116,7 +116,7 @@ func GoodsList(c *gin.Context, ruleEngine typex.Rhilex) {
 		vo := goodsVo{
 			Running:     false,
 			Uuid:        mGood.UUID,
-			AutoStart:   *mGood.AutoStart,
+			AutoStart:   mGood.AutoStart,
 			GoodsType:   mGood.GoodsType,
 			ExecuteType: mGood.ExecuteType,
 			LocalPath:   mGood.LocalPath,
@@ -270,14 +270,12 @@ func CreateGoods(c *gin.Context, ruleEngine typex.Rhilex) {
 		UUID:      utils.GoodsUuid(),
 		LocalPath: localSavePath,
 		NetAddr:   NetAddr,
-		AutoStart: func() *bool {
+		AutoStart: func() bool {
 			if AutoStart == "1" ||
 				AutoStart == "true" {
-				r := true
-				return &r
+				return true
 			}
-			r := false
-			return &r
+			return false
 		}(),
 		ExecuteType: ExeType,
 		GoodsType:   "LOCAL", // 默认是LOCAL, 未来根据前端参数决定
@@ -296,7 +294,7 @@ func CreateGoods(c *gin.Context, ruleEngine typex.Rhilex) {
 	}
 	goods := trailer.GoodsInfo{
 		UUID:        mGoods.UUID,
-		AutoStart:   mGoods.AutoStart,
+		AutoStart:   &mGoods.AutoStart,
 		LocalPath:   mGoods.LocalPath,
 		GoodsType:   mGoods.GoodsType,
 		ExecuteType: mGoods.ExecuteType,
@@ -378,14 +376,12 @@ func UpdateGoods(c *gin.Context, ruleEngine typex.Rhilex) {
 	}
 	mGoods := model.MGoods{
 		UUID: Uuid,
-		AutoStart: func() *bool {
+		AutoStart: func() bool {
 			if AutoStart == "1" ||
 				AutoStart == "true" {
-				r := true
-				return &r
+				return true
 			}
-			r := false
-			return &r
+			return false
 		}(),
 		LocalPath:   localSavePath,
 		NetAddr:     NetAddr,
@@ -420,7 +416,7 @@ func UpdateGoods(c *gin.Context, ruleEngine typex.Rhilex) {
 	// 开新进程
 	goods := trailer.GoodsInfo{
 		UUID:        mGoods.UUID,
-		AutoStart:   mGoods.AutoStart,
+		AutoStart:   &mGoods.AutoStart,
 		LocalPath:   mGoods.LocalPath,
 		NetAddr:     mGoods.NetAddr,
 		Args:        mGoods.Args,
@@ -454,7 +450,7 @@ func StartGoods(c *gin.Context, ruleEngine typex.Rhilex) {
 	// 开新进程
 	goods := trailer.GoodsInfo{
 		UUID:        mGoods.UUID,
-		AutoStart:   mGoods.AutoStart,
+		AutoStart:   &mGoods.AutoStart,
 		LocalPath:   mGoods.LocalPath,
 		NetAddr:     mGoods.NetAddr,
 		Args:        mGoods.Args,

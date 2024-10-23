@@ -81,7 +81,7 @@ func initRhilex(engine typex.Rhilex) {
 	for _, mGoods := range service.AllGoods() {
 		newGoods := trailer.GoodsInfo{
 			UUID:        mGoods.UUID,
-			AutoStart:   mGoods.AutoStart,
+			AutoStart:   &mGoods.AutoStart,
 			LocalPath:   mGoods.LocalPath,
 			NetAddr:     mGoods.NetAddr,
 			Args:        mGoods.Args,
@@ -105,7 +105,7 @@ func initRhilex(engine typex.Rhilex) {
 			glogger.GLogger.Error(err)
 			continue
 		}
-		if *mApp.AutoStart {
+		if mApp.AutoStart {
 			glogger.GLogger.Debug("App autoStart allowed:", app.UUID)
 			if err1 := applet.StartApp(app.UUID); err1 != nil {
 				glogger.GLogger.Error("App autoStart failed:", err1)

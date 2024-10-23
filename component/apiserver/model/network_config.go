@@ -28,7 +28,7 @@ type MNetworkConfig struct {
 	Netmask     string
 	Gateway     string
 	DNS         StringList
-	DHCPEnabled *bool
+	DHCPEnabled bool
 	SSID        string `gorm:"column:ssid"`
 	Password    string
 	Security    string // wpa2-psk wpa3-psk

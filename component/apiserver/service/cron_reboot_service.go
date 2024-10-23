@@ -28,7 +28,7 @@ import (
 func GetCronRebootConfig() (*model.MCronRebootConfig, error) {
 	m := new(model.MCronRebootConfig)
 	m.ID = 1
-	m.Enable = new(bool)
+	m.Enable = false
 	m.CronExpr = "0 0 0 0 0"
 	return m, interdb.DB().Model(m).First(m).Error
 }
