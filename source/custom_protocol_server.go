@@ -154,8 +154,11 @@ func validateExpression(expression string) error {
 	}
 	line := strings.Split(expression, ";")
 	for _, fields := range line {
+		if fields == "" {
+			continue
+		}
 		fieldPair := strings.Split(fields, ":")
-		if len(fieldPair) != 4 { //;
+		if len(fieldPair) != 4 {
 			return fmt.Errorf("invalid fields length")
 		}
 		if len(fieldPair[0]) > 64 {
