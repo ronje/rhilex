@@ -107,14 +107,14 @@ func ModbusMasterPointsExport(c *gin.Context, ruleEngine typex.Rhilex) {
 		Row := []string{
 			record.Tag,
 			record.Alias,
-			fmt.Sprintf("%d", record.Function),
-			fmt.Sprintf("%d", record.Frequency),
-			fmt.Sprintf("%d", record.SlaverId),
-			fmt.Sprintf("%d", record.Address),
-			fmt.Sprintf("%d", record.Quantity),
+			fmt.Sprintf("%d", *record.Function),
+			fmt.Sprintf("%d", *record.Frequency),
+			fmt.Sprintf("%d", *record.SlaverId),
+			fmt.Sprintf("%d", *record.Address),
+			fmt.Sprintf("%d", *record.Quantity),
 			record.DataType,
 			record.DataOrder,
-			fmt.Sprintf("%f", record.Weight),
+			fmt.Sprintf("%f", *record.Weight),
 		}
 		cell, _ = excelize.CoordinatesToCellName(1, idx+2)
 		xlsx.SetSheetRow("Sheet1", cell, &Row)
@@ -163,14 +163,14 @@ func ModbusMasterSheetPageList(c *gin.Context, ruleEngine typex.Rhilex) {
 			DeviceUUID:    record.DeviceUuid,
 			Tag:           record.Tag,
 			Alias:         record.Alias,
-			Function:      &record.Function,
-			SlaverId:      &record.SlaverId,
-			Address:       &record.Address,
-			Frequency:     &record.Frequency,
-			Quantity:      &record.Quantity,
+			Function:      record.Function,
+			SlaverId:      record.SlaverId,
+			Address:       record.Address,
+			Frequency:     record.Frequency,
+			Quantity:      record.Quantity,
 			DataType:      record.DataType,
 			DataOrder:     record.DataOrder,
-			Weight:        &record.Weight,
+			Weight:        record.Weight,
 			LastFetchTime: value.LastFetchTime, // 运行时
 			Value:         value.Value,         // 运行时
 			ErrMsg:        value.ErrMsg,        // 运行时
@@ -378,14 +378,14 @@ func ModbusMasterSheetUpdate(c *gin.Context, ruleEngine typex.Rhilex) {
 				DeviceUuid: ModbusMasterDataPoint.DeviceUUID,
 				Tag:        ModbusMasterDataPoint.Tag,
 				Alias:      ModbusMasterDataPoint.Alias,
-				Function:   *ModbusMasterDataPoint.Function,
-				SlaverId:   *ModbusMasterDataPoint.SlaverId,
-				Address:    *ModbusMasterDataPoint.Address,
-				Frequency:  *ModbusMasterDataPoint.Frequency,
-				Quantity:   *ModbusMasterDataPoint.Quantity,
+				Function:   ModbusMasterDataPoint.Function,
+				SlaverId:   ModbusMasterDataPoint.SlaverId,
+				Address:    ModbusMasterDataPoint.Address,
+				Frequency:  ModbusMasterDataPoint.Frequency,
+				Quantity:   ModbusMasterDataPoint.Quantity,
 				DataType:   ModbusMasterDataPoint.DataType,
 				DataOrder:  ModbusMasterDataPoint.DataOrder,
-				Weight:     *utils.HandleZeroValue(ModbusMasterDataPoint.Weight),
+				Weight:     utils.HandleZeroValue(ModbusMasterDataPoint.Weight),
 			}
 			err0 := service.InsertModbusPointPosition(NewRow)
 			if err0 != nil {
@@ -398,14 +398,14 @@ func ModbusMasterSheetUpdate(c *gin.Context, ruleEngine typex.Rhilex) {
 				DeviceUuid: ModbusMasterDataPoint.DeviceUUID,
 				Tag:        ModbusMasterDataPoint.Tag,
 				Alias:      ModbusMasterDataPoint.Alias,
-				Function:   *ModbusMasterDataPoint.Function,
-				SlaverId:   *ModbusMasterDataPoint.SlaverId,
-				Address:    *ModbusMasterDataPoint.Address,
-				Frequency:  *ModbusMasterDataPoint.Frequency,
-				Quantity:   *ModbusMasterDataPoint.Quantity,
+				Function:   ModbusMasterDataPoint.Function,
+				SlaverId:   ModbusMasterDataPoint.SlaverId,
+				Address:    ModbusMasterDataPoint.Address,
+				Frequency:  ModbusMasterDataPoint.Frequency,
+				Quantity:   ModbusMasterDataPoint.Quantity,
 				DataType:   ModbusMasterDataPoint.DataType,
 				DataOrder:  ModbusMasterDataPoint.DataOrder,
-				Weight:     *utils.HandleZeroValue(ModbusMasterDataPoint.Weight),
+				Weight:     utils.HandleZeroValue(ModbusMasterDataPoint.Weight),
 			}
 			err0 := service.UpdateModbusPoint(OldRow)
 			if err0 != nil {
@@ -562,14 +562,14 @@ func parseModbusMasterPointExcel(r io.Reader, sheetName string,
 			DeviceUuid: deviceUuid,
 			Tag:        tag,
 			Alias:      alias,
-			Function:   Function,
-			SlaverId:   SlaverId,
-			Address:    Address,
-			Frequency:  Frequency, //ms
-			Quantity:   Quantity,
+			Function:   &Function,
+			SlaverId:   &SlaverId,
+			Address:    &Address,
+			Frequency:  &Frequency, //ms
+			Quantity:   &Quantity,
 			DataType:   Type,
 			DataOrder:  utils.GetDefaultDataOrder(Type, Order),
-			Weight:     Weight,
+			Weight:     &Weight,
 		}
 		list = append(list, model)
 	}

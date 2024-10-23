@@ -18,16 +18,16 @@ package model
 // modbus数据点位表
 type MModbusDataPoint struct {
 	RhilexModel
-	UUID       string  `gorm:"not null"`
-	DeviceUuid string  `gorm:"not null"`
-	Tag        string  `gorm:"not null"`
-	Alias      string  `gorm:"not null"`
-	Function   int     `gorm:"not null"`
-	SlaverId   byte    `gorm:"not null"`
-	Address    uint16  `gorm:"not null"`
-	Frequency  int64   `gorm:"not null"`
-	Quantity   uint16  `gorm:"not null"`
-	DataType   string  `gorm:"not null"` // 数据类型
-	DataOrder  string  `gorm:"not null"` // 字节序
-	Weight     float64 `gorm:"not null"` // 权重
+	UUID       string   `gorm:"not null"`
+	DeviceUuid string   `gorm:"not null"`
+	Tag        string   `gorm:"not null"`
+	Alias      string   `gorm:"not null"`
+	Function   *int     `gorm:"not null"`
+	SlaverId   *byte    `gorm:"not null"`
+	Address    *uint16  `gorm:"not null"`
+	Frequency  *int64   `gorm:"not null"`
+	Quantity   *uint16  `gorm:"not null"`
+	DataType   string   `gorm:"not null"` // 数据类型
+	DataOrder  string   `gorm:"not null"` // 字节序
+	Weight     *float64 `gorm:"not null"` // 权重
 }

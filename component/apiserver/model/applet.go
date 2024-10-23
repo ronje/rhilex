@@ -25,7 +25,7 @@ type MApplet struct {
 	UUID        string `gorm:"uniqueIndex"` // 名称
 	Name        string `gorm:"not null"`    // 名称
 	Version     string `gorm:"not null"`    // 版本号
-	AutoStart   bool   `gorm:"not null"`    // 允许启动
+	AutoStart   *bool  `gorm:"not null"`    // 允许启动
 	LuaSource   string `gorm:"not null"`    // LuaSource
 	Description string `gorm:"not null"`    // 文件路径, 是相对于main的apps目录
 }

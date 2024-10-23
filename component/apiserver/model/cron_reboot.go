@@ -19,6 +19,6 @@ package model
 
 type MCronRebootConfig struct {
 	RhilexModel
-	Enable   bool   `gorm:"not null"`
+	Enable   *bool  `gorm:"not null"`
 	CronExpr string `gorm:"not null"`
 }

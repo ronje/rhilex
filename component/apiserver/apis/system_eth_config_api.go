@@ -58,7 +58,7 @@ func GetEthNetwork(c *gin.Context, ruleEngine typex.Rhilex) {
 		Netmask:     MNetworkConfig.Netmask,
 		Gateway:     MNetworkConfig.Gateway,
 		DNS:         []string{"8.8.8.8", "114.114.114.114"},
-		DHCPEnabled: &MNetworkConfig.DHCPEnabled,
+		DHCPEnabled: MNetworkConfig.DHCPEnabled,
 	}))
 }
 
@@ -80,7 +80,7 @@ func AllEthNetwork(c *gin.Context, ruleEngine typex.Rhilex) {
 			Netmask:     MNetworkConfig.Netmask,
 			Gateway:     MNetworkConfig.Gateway,
 			DNS:         []string{"8.8.8.8", "114.114.114.114"},
-			DHCPEnabled: &MNetworkConfig.DHCPEnabled,
+			DHCPEnabled: MNetworkConfig.DHCPEnabled,
 		})
 	}
 	c.JSON(common.HTTP_OK, common.OkWithData(NetworkConfigVos))
@@ -133,7 +133,7 @@ func SetEthNetwork(c *gin.Context, ruleEngine typex.Rhilex) {
 		Netmask:     DtoCfg.Netmask,
 		Gateway:     DtoCfg.Gateway,
 		DNS:         DtoCfg.DNS,
-		DHCPEnabled: *DtoCfg.DHCPEnabled,
+		DHCPEnabled: DtoCfg.DHCPEnabled,
 	}
 	if err1 := service.UpdateEthConfig(MNetCfg); err1 != nil {
 		c.JSON(common.HTTP_OK, common.Error400(err1))
@@ -146,7 +146,7 @@ func SetEthNetwork(c *gin.Context, ruleEngine typex.Rhilex) {
 				Address:     MNetCfg.Address,
 				Netmask:     MNetCfg.Netmask,
 				Gateway:     MNetCfg.Gateway,
-				DHCPEnabled: MNetCfg.DHCPEnabled,
+				DHCPEnabled: *MNetCfg.DHCPEnabled,
 			},
 		}
 		errSetWifi := rhilexpro1.SetEthernet(config)
@@ -163,7 +163,7 @@ func SetEthNetwork(c *gin.Context, ruleEngine typex.Rhilex) {
 				Address:     MNetCfg.Address,
 				Netmask:     MNetCfg.Netmask,
 				Gateway:     MNetCfg.Gateway,
-				DHCPEnabled: MNetCfg.DHCPEnabled,
+				DHCPEnabled: *MNetCfg.DHCPEnabled,
 			},
 		}
 		errSetWifi := haas506.SetEthernet(config)
@@ -180,7 +180,7 @@ func SetEthNetwork(c *gin.Context, ruleEngine typex.Rhilex) {
 				Address:     MNetCfg.Address,
 				Netmask:     MNetCfg.Netmask,
 				Gateway:     MNetCfg.Gateway,
-				DHCPEnabled: MNetCfg.DHCPEnabled,
+				DHCPEnabled: *MNetCfg.DHCPEnabled,
 			},
 		}
 		errSetWifi := rhilexg1.SetEthernet(config)

@@ -54,7 +54,7 @@ func GetCronRebootConfig(c *gin.Context, ruleEngine typex.Rhilex) {
 		return
 	}
 	c.JSON(common.HTTP_OK, common.OkWithData(CronRebootConfigVo{
-		Enable:   &Config.Enable,
+		Enable:   Config.Enable,
 		CronExpr: Config.CronExpr,
 	}))
 }
@@ -75,7 +75,7 @@ func SetCronRebootConfig(c *gin.Context, ruleEngine typex.Rhilex) {
 		return
 	}
 	err1 := service.UpdateMCronRebootConfig(&model.MCronRebootConfig{
-		Enable:   *vo.Enable,
+		Enable:   vo.Enable,
 		CronExpr: vo.CronExpr,
 	})
 	if err1 != nil {

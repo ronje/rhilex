@@ -105,8 +105,8 @@ func SiemensPointsExport(c *gin.Context, ruleEngine typex.Rhilex) {
 				record.Alias,
 				record.DataBlockType,
 				record.DataBlockOrder,
-				fmt.Sprintf("%f", record.Weight),
-				fmt.Sprintf("%d", record.Frequency),
+				fmt.Sprintf("%f", *record.Weight),
+				fmt.Sprintf("%d", *record.Frequency),
 			}
 			cell, _ = excelize.CoordinatesToCellName(1, idx+2)
 			xlsx.SetSheetRow("Sheet1", cell, &Row)
@@ -157,10 +157,10 @@ func SiemensSheetPageList(c *gin.Context, ruleEngine typex.Rhilex) {
 			SiemensAddress: record.SiemensAddress,
 			Tag:            record.Tag,
 			Alias:          record.Alias,
-			Frequency:      &record.Frequency,
+			Frequency:      record.Frequency,
 			DataType:       record.DataBlockType,
 			DataOrder:      record.DataBlockOrder,
-			Weight:         &record.Weight,
+			Weight:         record.Weight,
 			LastFetchTime:  value.LastFetchTime, // 运行时
 			Value:          value.Value,         // 运行时
 			ErrMsg:         value.ErrMsg,
@@ -335,7 +335,7 @@ func SiemensSheetUpdate(c *gin.Context, ruleEngine typex.Rhilex) {
 			NewRow.UUID = utils.SiemensPointUUID()
 			NewRow.DataBlockType = SiemensDataPoint.DataType
 			NewRow.DataBlockOrder = SiemensDataPoint.DataOrder
-			NewRow.Weight = *SiemensDataPoint.Weight
+			NewRow.Weight = SiemensDataPoint.Weight
 			err0 := service.InsertSiemensPointPosition(NewRow)
 			if err0 != nil {
 				c.JSON(common.HTTP_OK, common.Error400(err0))
@@ -348,7 +348,7 @@ func SiemensSheetUpdate(c *gin.Context, ruleEngine typex.Rhilex) {
 			OldRow.UUID = SiemensDataPoint.UUID
 			OldRow.DataBlockType = SiemensDataPoint.DataType
 			OldRow.DataBlockOrder = SiemensDataPoint.DataOrder
-			OldRow.Weight = *utils.HandleZeroValue(SiemensDataPoint.Weight)
+			OldRow.Weight = utils.HandleZeroValue(SiemensDataPoint.Weight)
 
 			err0 := service.UpdateSiemensPoint(OldRow)
 			if err0 != nil {
@@ -486,8 +486,8 @@ func parseSiemensPointExcel(
 			Alias:          Alias,
 			DataBlockType:  Type,
 			DataBlockOrder: utils.GetDefaultDataOrder(Type, Order),
-			Frequency:      Frequency,
-			Weight:         Weight,
+			Frequency:      &Frequency,
+			Weight:         &Weight,
 		}
 		list = append(list, model)
 	}
