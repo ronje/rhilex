@@ -68,6 +68,12 @@ func StartXQueue() {
 				case <-ctx.Done():
 					return
 				case Data := <-Queue:
+					if Data.I == nil {
+						continue
+					}
+					if Data.E == nil {
+						continue
+					}
 					Data.E.RunSourceCallbacks(Data.I, Data.Data)
 				case <-time.After(4 * time.Millisecond):
 					continue
@@ -84,9 +90,13 @@ func StartXQueue() {
 				case <-ctx.Done():
 					return
 				case Data := <-Queue:
-					if Data.E != nil {
-						Data.E.RunDeviceCallbacks(Data.D, Data.Data)
+					if Data.D == nil {
+						continue
 					}
+					if Data.E == nil {
+						continue
+					}
+					Data.E.RunDeviceCallbacks(Data.D, Data.Data)
 				case <-time.After(4 * time.Millisecond):
 					continue
 				}
