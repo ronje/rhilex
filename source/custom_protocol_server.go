@@ -73,8 +73,8 @@ func (hh *CustomProtocol) Init(inEndId string, configMap map[string]interface{})
 	if hh.mainConfig.CommonConfig.MaxDataLength > 1024 {
 		return fmt.Errorf("Invalid Max Data Length:%d", hh.mainConfig.CommonConfig.MaxDataLength)
 	}
-	if !validateExpression(hh.mainConfig.CommonConfig.ProtocolExpr) {
-		return fmt.Errorf("Invalid Protocol Expression:%s", hh.mainConfig.CommonConfig.ProtocolExpr)
+	if err := validateExpression(hh.mainConfig.CommonConfig.ProtocolExpr); err != nil {
+		return fmt.Errorf("Invalid Protocol Expression:%s", err)
 	}
 	return nil
 }
@@ -149,14 +149,33 @@ func (hh *CustomProtocol) Details() *typex.InEnd {
 	return hh.RuleEngine.GetInEnd(hh.PointId)
 }
 
-func validateExpression(expression string) bool {
-	fieldPattern := regexp.MustCompile(`(\w+):(\d+):(int|string):(BE|LE);`)
-	fields := strings.Split(expression, ";")
-	for _, field := range fields {
-		if field == "" { //;
-			// TODO
-			continue
+/**
+ * 验证格式
+ *
+ */
+func validateExpression(expression string) error {
+	fieldPattern := regexp.MustCompile(`(\w+):(\d+):(I|S|F|int|string|float):(B|L|BE|LE);`)
+	if !fieldPattern.Match([]byte(expression)) {
+		return fmt.Errorf("Invalid expression syntax")
+	}
+	line := strings.Split(expression, ";")
+	for _, fields := range line {
+		fieldPair := strings.Split(fields, ":")
+		if len(fieldPair) != 4 { //;
+			return fmt.Errorf("invalid fields length")
+		}
+		if len(fieldPair[0]) > 64 {
+			return fmt.Errorf("filed key too large")
+		}
+		if len(fieldPair[1]) > 6 {
+			return fmt.Errorf("filed value too large")
+		}
+		if !utils.SContains([]string{"I", "S", "F", "int", "string", "float"}, fieldPair[2]) {
+			return fmt.Errorf("invalid field type")
+		}
+		if !utils.SContains([]string{"B", "L", "BE", "LE"}, fieldPair[3]) {
+			return fmt.Errorf("invalid field Endian")
 		}
 	}
-	return fieldPattern.Match([]byte(expression))
+	return nil
 }
