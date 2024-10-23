@@ -147,6 +147,16 @@ func main() {
 						utils.CLog("[RHILEX BACKUP OLD VERSION] Backup old version Failed: %s", errBob)
 						return errBob
 					}
+					errBob = ossupport.BackupOldVersion(ossupport.LicenseKeyPath, ossupport.OldBackupDir+"license.key")
+					if errBob != nil {
+						utils.CLog("[RHILEX BACKUP OLD VERSION] Backup old version Failed: %s", errBob)
+						return errBob
+					}
+					errBob = ossupport.BackupOldVersion(ossupport.LicenseLicPath, ossupport.OldBackupDir+"license.lic")
+					if errBob != nil {
+						utils.CLog("[RHILEX BACKUP OLD VERSION] Backup old version Failed: %s", errBob)
+						return errBob
+					}
 					errBob = ossupport.BackupOldVersion(ossupport.DataCenterPath, ossupport.OldBackupDir+"rhilex_datacenter.db")
 					if errBob != nil {
 						utils.CLog("[RHILEX BACKUP OLD VERSION] Backup old version Failed: %s", errBob)
@@ -198,6 +208,42 @@ func main() {
 				},
 				Action: func(c *cli.Context) error {
 					utils.CLog("[RHILEX ROLLBACK] Rollback Process Started")
+					var errBob error
+					errBob = ossupport.BackupOldVersion(ossupport.OldBackupDir+"rhilex", ossupport.MainExePath)
+					if errBob != nil {
+						utils.CLog("[RHILEX ROLLBACK] Rollback Failed: %s", errBob)
+						return errBob
+					}
+					errBob = ossupport.BackupOldVersion(ossupport.OldBackupDir+"rhilex.ini", ossupport.RunConfigPath)
+					if errBob != nil {
+						utils.CLog("[RHILEX ROLLBACK] Rollback Failed: %s", errBob)
+						return errBob
+					}
+					errBob = ossupport.BackupOldVersion(ossupport.OldBackupDir+"rhilex.db", ossupport.RunDbPath)
+					if errBob != nil {
+						utils.CLog("[RHILEX ROLLBACK] Rollback Failed: %s", errBob)
+						return errBob
+					}
+					errBob = ossupport.BackupOldVersion(ossupport.OldBackupDir+"license.key", ossupport.LicenseKeyPath)
+					if errBob != nil {
+						utils.CLog("[RHILEX ROLLBACK] Rollback Failed: %s", errBob)
+						return errBob
+					}
+					errBob = ossupport.BackupOldVersion(ossupport.OldBackupDir+"license.lic", ossupport.LicenseLicPath)
+					if errBob != nil {
+						utils.CLog("[RHILEX ROLLBACK] Rollback Failed: %s", errBob)
+						return errBob
+					}
+					errBob = ossupport.BackupOldVersion(ossupport.OldBackupDir+"rhilex_datacenter.db", ossupport.DataCenterPath)
+					if errBob != nil {
+						utils.CLog("[RHILEX ROLLBACK] Rollback Failed: %s", errBob)
+						return errBob
+					}
+					errBob = ossupport.BackupOldVersion(ossupport.OldBackupDir+"rhilex_lostcache.db", ossupport.LostCacheDataPath)
+					if errBob != nil {
+						utils.CLog("[RHILEX ROLLBACK] Rollback Failed: %s", errBob)
+						return errBob
+					}
 					utils.CLog("[RHILEX ROLLBACK] Rollback Process Exited")
 					return nil
 				},
