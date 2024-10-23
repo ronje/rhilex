@@ -22,20 +22,18 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/hootrhino/rhilex/common"
 	"github.com/hootrhino/rhilex/glogger"
 	"github.com/hootrhino/rhilex/protocol"
 	"github.com/hootrhino/rhilex/typex"
 	"github.com/hootrhino/rhilex/utils"
 )
 
-type CommonConfig struct {
+type CustomProtocolConfig struct {
+	Host          string `json:"host" validate:"required"`
+	Port          int    `json:"port" validate:"required"`
+	Timeout       int    `json:"timeout" validate:"required"`
 	ProtocolExpr  string `json:"protocolExpr" validate:"required"`  // 数据解析表达式
 	MaxDataLength int    `json:"maxDataLength" validate:"required"` // 最长数据1024
-}
-type CustomProtocolConfig struct {
-	CommonConfig CommonConfig      `json:"commonConfig" validate:"required"`
-	HostConfig   common.HostConfig `json:"hostConfig" validate:"required"`
 }
 type CustomProtocol struct {
 	typex.XStatus
@@ -47,15 +45,11 @@ type CustomProtocol struct {
 func NewCustomProtocol(e typex.Rhilex) typex.XSource {
 	h := CustomProtocol{
 		mainConfig: CustomProtocolConfig{
-			CommonConfig: CommonConfig{
-				ProtocolExpr:  "",
-				MaxDataLength: 1024,
-			},
-			HostConfig: common.HostConfig{
-				Host:    "127.0.0.1",
-				Port:    7930,
-				Timeout: 3000,
-			},
+			ProtocolExpr:  "",
+			MaxDataLength: 1024,
+			Host:          "127.0.0.1",
+			Port:          7930,
+			Timeout:       3000,
 		},
 	}
 	h.RuleEngine = e
@@ -67,13 +61,13 @@ func (hh *CustomProtocol) Init(inEndId string, configMap map[string]interface{})
 	if err := utils.BindSourceConfig(configMap, &hh.mainConfig); err != nil {
 		return err
 	}
-	if hh.mainConfig.CommonConfig.MaxDataLength < 1 {
-		return fmt.Errorf("Invalid Max Data Length:%d", hh.mainConfig.CommonConfig.MaxDataLength)
+	if hh.mainConfig.MaxDataLength < 1 {
+		return fmt.Errorf("Invalid Max Data Length:%d", hh.mainConfig.MaxDataLength)
 	}
-	if hh.mainConfig.CommonConfig.MaxDataLength > 1024 {
-		return fmt.Errorf("Invalid Max Data Length:%d", hh.mainConfig.CommonConfig.MaxDataLength)
+	if hh.mainConfig.MaxDataLength > 1024 {
+		return fmt.Errorf("Invalid Max Data Length:%d", hh.mainConfig.MaxDataLength)
 	}
-	if err := validateExpression(hh.mainConfig.CommonConfig.ProtocolExpr); err != nil {
+	if err := validateExpression(hh.mainConfig.ProtocolExpr); err != nil {
 		return fmt.Errorf("Invalid Protocol Expression:%s", err)
 	}
 	return nil
@@ -83,7 +77,7 @@ func (hh *CustomProtocol) Start(cctx typex.CCTX) error {
 	hh.Ctx = cctx.Ctx
 	hh.CancelCTX = cctx.CancelCTX
 	Listener, err := net.Listen("tcp", fmt.Sprintf("%s:%d",
-		hh.mainConfig.HostConfig.Host, hh.mainConfig.HostConfig.Port))
+		hh.mainConfig.Host, hh.mainConfig.Port))
 	if err != nil {
 		glogger.GLogger.Error(err)
 		return err
@@ -115,7 +109,7 @@ func (hh *CustomProtocol) Start(cctx typex.CCTX) error {
 					glogger.GLogger.Error(err)
 					return
 				}
-				ParsedData, errParse := protocol.ParseBinary(hh.mainConfig.CommonConfig.ProtocolExpr, AppLayerFrame.Payload)
+				ParsedData, errParse := protocol.ParseBinary(hh.mainConfig.ProtocolExpr, AppLayerFrame.Payload)
 				if errParse != nil {
 					glogger.GLogger.Error(errParse)
 					return
