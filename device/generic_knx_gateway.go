@@ -29,7 +29,7 @@ type KNXGatewayConfig struct {
 }
 
 type KNXGatewayMainConfig struct {
-	CommonConfig     KNXGatewayCommonConfig `json:"commonConfig"`
+	CommonConfig     KNXGatewayCommonConfig `json:"commonConfig" validate:"required"`
 	KNXGatewayConfig KNXGatewayConfig       `json:"knxConfig"`
 }
 

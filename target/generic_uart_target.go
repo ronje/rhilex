@@ -45,7 +45,7 @@ type GenericUartCommonConfig struct {
 }
 
 type GenericUartMainConfig struct {
-	GenericUartCommonConfig GenericUartCommonConfig `json:"commonConfig"`
+	GenericUartCommonConfig GenericUartCommonConfig `json:"commonConfig" validate:"required"`
 	UartConfig              common.UartConfig       `json:"uartConfig"`
 }
 type GenericUart struct {
@@ -87,7 +87,6 @@ func NewGenericUart(e typex.Rhilex) typex.XTarget {
 
 func (mdev *GenericUart) Init(outEndId string, configMap map[string]interface{}) error {
 	mdev.PointId = outEndId
-	lostcache.CreateLostDataTable(outEndId)
 	if err := utils.BindSourceConfig(configMap, &mdev.mainConfig.GenericUartCommonConfig); err != nil {
 		return err
 	}

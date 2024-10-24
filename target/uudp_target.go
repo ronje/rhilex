@@ -41,6 +41,10 @@ type UdpHostConfig struct {
 	PingPacket       string `json:"pingPacket" validate:"required"`
 }
 
+type UdpHostMainConfig struct {
+	UdpHostConfig UdpHostConfig `json:"commonConfig" validate:"required"`
+}
+
 /*
 *
 * 数据推到UDP
@@ -48,21 +52,23 @@ type UdpHostConfig struct {
  */
 type UUdpTarget struct {
 	typex.XStatus
-	mainConfig UdpHostConfig
+	mainConfig UdpHostMainConfig
 	status     typex.SourceState
 }
 
 func NewUUdpTarget(e typex.Rhilex) typex.XTarget {
 	ut := new(UUdpTarget)
 	ut.RuleEngine = e
-	ut.mainConfig = UdpHostConfig{
-		Host:             "127.0.0.1",
-		Port:             6502,
-		DataMode:         "RAW_STRING",
-		PingPacket:       "rhilex\r\n",
-		Timeout:          3000,
-		AllowPing:        new(bool),
-		CacheOfflineData: new(bool),
+	ut.mainConfig = UdpHostMainConfig{
+		UdpHostConfig: UdpHostConfig{
+			Host:             "127.0.0.1",
+			Port:             6502,
+			DataMode:         "RAW_STRING",
+			PingPacket:       "rhilex\r\n",
+			Timeout:          3000,
+			AllowPing:        new(bool),
+			CacheOfflineData: new(bool),
+		},
 	}
 	ut.status = typex.SOURCE_DOWN
 	return ut
@@ -70,7 +76,6 @@ func NewUUdpTarget(e typex.Rhilex) typex.XTarget {
 
 func (ut *UUdpTarget) Init(outEndId string, configMap map[string]interface{}) error {
 	ut.PointId = outEndId
-	lostcache.CreateLostDataTable(outEndId)
 	if err := utils.BindSourceConfig(configMap, &ut.mainConfig); err != nil {
 		return err
 	}
@@ -80,7 +85,7 @@ func (ut *UUdpTarget) Init(outEndId string, configMap map[string]interface{}) er
 func (ut *UUdpTarget) Start(cctx typex.CCTX) error {
 	ut.Ctx = cctx.Ctx
 	ut.CancelCTX = cctx.CancelCTX
-	if *ut.mainConfig.AllowPing {
+	if *ut.mainConfig.UdpHostConfig.AllowPing {
 		go func(ht *UUdpTarget) {
 			for {
 				select {
@@ -89,8 +94,8 @@ func (ut *UUdpTarget) Start(cctx typex.CCTX) error {
 				default:
 				}
 				socket, err := net.DialUDP("udp", nil, &net.UDPAddr{
-					IP:   net.ParseIP(ut.mainConfig.Host),
-					Port: ut.mainConfig.Port,
+					IP:   net.ParseIP(ut.mainConfig.UdpHostConfig.Host),
+					Port: ut.mainConfig.UdpHostConfig.Port,
 				})
 				if err != nil {
 					glogger.GLogger.Error(err)
@@ -104,7 +109,7 @@ func (ut *UUdpTarget) Start(cctx typex.CCTX) error {
 	}
 	ut.status = typex.SOURCE_UP
 	// 补发数据
-	if *ut.mainConfig.CacheOfflineData {
+	if *ut.mainConfig.UdpHostConfig.CacheOfflineData {
 		if CacheData, err1 := lostcache.GetLostCacheData(ut.PointId); err1 != nil {
 			glogger.GLogger.Error(err1)
 		} else {
@@ -123,7 +128,7 @@ func (ut *UUdpTarget) Start(cctx typex.CCTX) error {
 
 func (ut *UUdpTarget) Status() typex.SourceState {
 	if err := ut.UdpStatus(fmt.Sprintf("%s:%d",
-		ut.mainConfig.Host, ut.mainConfig.Port)); err != nil {
+		ut.mainConfig.UdpHostConfig.Host, ut.mainConfig.UdpHostConfig.Port)); err != nil {
 		return typex.SOURCE_DOWN
 	}
 	return ut.status
@@ -132,8 +137,8 @@ func (ut *UUdpTarget) Status() typex.SourceState {
 
 func (ut *UUdpTarget) To(data interface{}) (interface{}, error) {
 	socket, err := net.DialUDP("udp", nil, &net.UDPAddr{
-		IP:   net.ParseIP(ut.mainConfig.Host),
-		Port: ut.mainConfig.Port,
+		IP:   net.ParseIP(ut.mainConfig.UdpHostConfig.Host),
+		Port: ut.mainConfig.UdpHostConfig.Port,
 	})
 	if err != nil {
 		return 0, err
@@ -143,13 +148,13 @@ func (ut *UUdpTarget) To(data interface{}) (interface{}, error) {
 	case string:
 
 		socket.SetReadDeadline(
-			time.Now().Add((time.Duration(ut.mainConfig.Timeout) *
+			time.Now().Add((time.Duration(ut.mainConfig.UdpHostConfig.Timeout) *
 				time.Millisecond)),
 		)
 		_, err0 := socket.Write([]byte(T + "\r\n"))
 		socket.SetReadDeadline(time.Time{})
 		if err0 != nil {
-			if *ut.mainConfig.CacheOfflineData {
+			if *ut.mainConfig.UdpHostConfig.CacheOfflineData {
 				lostcache.SaveLostCacheData(ut.PointId, lostcache.CacheDataDto{
 					TargetId: ut.PointId,
 					Data:     T,

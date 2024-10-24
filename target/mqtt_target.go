@@ -44,20 +44,30 @@ type MqttTargetConfig struct {
 	SubTopic         string `json:"subTopic" title:"订阅TOPIC" info:"订阅TOPIC"` // 上报数据的 Topic
 	CacheOfflineData *bool  `json:"cacheOfflineData" title:"离线缓存"`
 }
+
+type MqttTargetMainConfig struct {
+	MqttTargetConfig `json:"commonConfig" validate:"required"`
+}
+
 type mqttOutEndTarget struct {
 	typex.XStatus
 	client     mqtt.Client
-	mainConfig MqttTargetConfig
+	mainConfig MqttTargetMainConfig
 	status     typex.SourceState
 }
 
 func NewMqttTarget(e typex.Rhilex) typex.XTarget {
 	m := new(mqttOutEndTarget)
 	m.RuleEngine = e
-	m.mainConfig = MqttTargetConfig{
-		Host:             "127.0.0.1",
-		Port:             1883,
-		CacheOfflineData: new(bool),
+	m.mainConfig = MqttTargetMainConfig{
+		MqttTargetConfig: MqttTargetConfig{
+			Host:             "127.0.0.1",
+			Port:             1883,
+			CacheOfflineData: new(bool),
+			ClientId:         "rhilex",
+			Username:         "rhilex",
+			Password:         "rhilex",
+		},
 	}
 	m.status = typex.SOURCE_DOWN
 	return m
@@ -65,7 +75,6 @@ func NewMqttTarget(e typex.Rhilex) typex.XTarget {
 
 func (mq *mqttOutEndTarget) Init(outEndId string, configMap map[string]interface{}) error {
 	mq.PointId = outEndId
-	lostcache.CreateLostDataTable(outEndId)
 	if err := utils.BindSourceConfig(configMap, &mq.mainConfig); err != nil {
 		return err
 	}
@@ -76,10 +85,10 @@ func (mq *mqttOutEndTarget) Start(cctx typex.CCTX) error {
 	mq.CancelCTX = cctx.CancelCTX
 
 	opts := mqtt.NewClientOptions()
-	opts.AddBroker(fmt.Sprintf("tcp://%s:%v", mq.mainConfig.Host, mq.mainConfig.Port))
-	opts.SetClientID(mq.mainConfig.ClientId)
-	opts.SetUsername(mq.mainConfig.Username)
-	opts.SetPassword(mq.mainConfig.Password)
+	opts.AddBroker(fmt.Sprintf("tcp://%s:%v", mq.mainConfig.MqttTargetConfig.Host, mq.mainConfig.MqttTargetConfig.Port))
+	opts.SetClientID(mq.mainConfig.MqttTargetConfig.ClientId)
+	opts.SetUsername(mq.mainConfig.MqttTargetConfig.Username)
+	opts.SetPassword(mq.mainConfig.MqttTargetConfig.Password)
 	opts.SetOnConnectHandler(func(client mqtt.Client) {
 		glogger.GLogger.Infof("Mqtt Connected Success")
 	})

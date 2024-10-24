@@ -164,6 +164,7 @@ func CreateOutEnd(c *gin.Context, ruleEngine typex.Rhilex) {
 		c.JSON(common.HTTP_OK, common.OkWithMsg(err.Error()))
 		return
 	}
+	lostcache.CreateLostDataTable(newUUID)
 	c.JSON(common.HTTP_OK, common.Ok())
 
 }

@@ -28,7 +28,7 @@ type TemplateDeviceConfig struct {
 }
 
 type TemplateDeviceMainConfig struct {
-	CommonConfig         TemplateDeviceCommonConfig `json:"commonConfig"`
+	CommonConfig         TemplateDeviceCommonConfig `json:"commonConfig" validate:"required"`
 	TemplateDeviceConfig TemplateDeviceConfig       `json:"templateDeviceConfig"`
 }
 

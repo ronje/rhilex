@@ -40,10 +40,13 @@ type TcpHostConfig struct {
 	PingPacket       string `json:"pingPacket" validate:"required"`
 }
 
+type TcpHostMainConfig struct {
+	TcpHostConfig TcpHostConfig `json:"commonConfig" validate:"required"`
+}
 type TTcpTarget struct {
 	typex.XStatus
 	client     *net.TCPConn
-	mainConfig TcpHostConfig
+	mainConfig TcpHostMainConfig
 	status     typex.SourceState
 }
 
@@ -55,14 +58,16 @@ type TTcpTarget struct {
 func NewTTcpTarget(e typex.Rhilex) typex.XTarget {
 	ht := new(TTcpTarget)
 	ht.RuleEngine = e
-	ht.mainConfig = TcpHostConfig{
-		Host:             "127.0.0.1",
-		Port:             6502,
-		DataMode:         "RAW_STRING",
-		PingPacket:       "rhilex\r\n",
-		Timeout:          3000,
-		AllowPing:        new(bool),
-		CacheOfflineData: new(bool),
+	ht.mainConfig = TcpHostMainConfig{
+		TcpHostConfig: TcpHostConfig{
+			Host:             "127.0.0.1",
+			Port:             6502,
+			DataMode:         "RAW_STRING",
+			PingPacket:       "rhilex\r\n",
+			Timeout:          3000,
+			AllowPing:        new(bool),
+			CacheOfflineData: new(bool),
+		},
 	}
 	ht.status = typex.SOURCE_DOWN
 	return ht
@@ -70,7 +75,6 @@ func NewTTcpTarget(e typex.Rhilex) typex.XTarget {
 
 func (ht *TTcpTarget) Init(outEndId string, configMap map[string]interface{}) error {
 	ht.PointId = outEndId
-	lostcache.CreateLostDataTable(outEndId)
 	if err := utils.BindSourceConfig(configMap, &ht.mainConfig); err != nil {
 		return err
 	}
@@ -81,7 +85,7 @@ func (ht *TTcpTarget) Start(cctx typex.CCTX) error {
 	ht.Ctx = cctx.Ctx
 	ht.CancelCTX = cctx.CancelCTX
 	var err error
-	host := fmt.Sprintf("%s:%d", ht.mainConfig.Host, ht.mainConfig.Port)
+	host := fmt.Sprintf("%s:%d", ht.mainConfig.TcpHostConfig.Host, ht.mainConfig.TcpHostConfig.Port)
 	serverAddr, err := net.ResolveTCPAddr("tcp", host)
 	if err != nil {
 		return err
@@ -93,7 +97,7 @@ func (ht *TTcpTarget) Start(cctx typex.CCTX) error {
 	if err != nil {
 		return err
 	}
-	if *ht.mainConfig.AllowPing {
+	if *ht.mainConfig.TcpHostConfig.AllowPing {
 		go func(ht *TTcpTarget) {
 			for {
 				select {
@@ -102,10 +106,10 @@ func (ht *TTcpTarget) Start(cctx typex.CCTX) error {
 				default:
 				}
 				ht.client.SetWriteDeadline(
-					time.Now().Add((time.Duration(ht.mainConfig.Timeout) *
+					time.Now().Add((time.Duration(ht.mainConfig.TcpHostConfig.Timeout) *
 						time.Millisecond)),
 				)
-				_, err1 := ht.client.Write([]byte(ht.mainConfig.PingPacket))
+				_, err1 := ht.client.Write([]byte(ht.mainConfig.TcpHostConfig.PingPacket))
 				ht.client.SetWriteDeadline(time.Time{})
 				if err1 != nil {
 					glogger.GLogger.Error("TTcpTarget Ping Error:", err1)
@@ -118,7 +122,7 @@ func (ht *TTcpTarget) Start(cctx typex.CCTX) error {
 	}
 	ht.status = typex.SOURCE_UP
 	// 补发数据
-	if *ht.mainConfig.CacheOfflineData {
+	if *ht.mainConfig.TcpHostConfig.CacheOfflineData {
 		if CacheData, err1 := lostcache.GetLostCacheData(ht.PointId); err1 != nil {
 			glogger.GLogger.Error(err1)
 		} else {
@@ -156,13 +160,13 @@ func (ht *TTcpTarget) To(data interface{}) (interface{}, error) {
 		switch T := data.(type) {
 		case string:
 			ht.client.SetReadDeadline(
-				time.Now().Add((time.Duration(ht.mainConfig.Timeout) *
+				time.Now().Add((time.Duration(ht.mainConfig.TcpHostConfig.Timeout) *
 					time.Millisecond)),
 			)
 			_, err0 := ht.client.Write([]byte(T + "\r\n"))
 			ht.client.SetReadDeadline(time.Time{})
 			if err0 != nil {
-				if *ht.mainConfig.CacheOfflineData {
+				if *ht.mainConfig.TcpHostConfig.CacheOfflineData {
 					lostcache.SaveLostCacheData(ht.PointId, lostcache.CacheDataDto{
 						TargetId: ht.PointId,
 						Data:     T,
