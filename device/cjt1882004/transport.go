@@ -116,8 +116,8 @@ func (dlt *CJT188SerialTransporter) ReadFrame(rwc typex.GenericRWC) (aduResponse
 		return nil, errors.New("invalid end byte")
 	}
 	aduResponse = append(aduResponse, start)
-	aduResponse = append(aduResponse, address[:]...)
 	aduResponse = append(aduResponse, MeterType)
+	aduResponse = append(aduResponse, address[:]...)
 	aduResponse = append(aduResponse, c)
 	aduResponse = append(aduResponse, l)
 	aduResponse = append(aduResponse, data...)

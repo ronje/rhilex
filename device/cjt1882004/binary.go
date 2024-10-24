@@ -72,8 +72,8 @@ func ByteReverse(bs []byte) []byte {
  * BCD -> BIN
  *
  */
-func BCDBytesToDecimal(bcdBytes []byte) uint {
-	var decimal uint
+func BCDBytesToDecimal(bcdBytes []byte) int64 {
+	var decimal int64
 	for _, b := range bcdBytes {
 		// 检查每个字节是否是有效的BCD编码
 		if b > 0x99 {
@@ -83,7 +83,7 @@ func BCDBytesToDecimal(bcdBytes []byte) uint {
 		upper := (b >> 4) & 0x0F
 		lower := b & 0x0F
 		// 累加到最终的十进制数中
-		decimal = decimal*100 + uint(upper)*10 + uint(lower)
+		decimal = decimal*100 + int64(upper)*10 + int64(lower)
 	}
 	return decimal
 }

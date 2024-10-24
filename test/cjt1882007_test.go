@@ -21,7 +21,9 @@ import (
 	"testing"
 	"time"
 
+	serial "github.com/hootrhino/goserial"
 	"github.com/hootrhino/rhilex/device/cjt1882004"
+	"github.com/hootrhino/rhilex/utils"
 	"github.com/sirupsen/logrus"
 )
 
@@ -103,4 +105,63 @@ func TestCodec_CJT188_2007_Frame(t *testing.T) {
 		t.Fatal(err2)
 	}
 	t.Log(Frame0x01.String())
+}
+
+// go test -timeout 30s -run ^TestCodec_CJT188_2007_Serial github.com/hootrhino/rhilex/test -v -count=1
+
+func TestCodec_CJT188_2007_Serial(t *testing.T) {
+	port, err := serial.Open(&serial.Config{
+		Address:  "COM3",
+		BaudRate: 2400,
+		DataBits: 8,
+		StopBits: 1,
+		Parity:   "E",
+		Timeout:  utils.GiveMeSeconds(3),
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer port.Close()
+	client := cjt1882004.NewCJT188ClientHandler(port)
+	client.SetLogger(logrus.StandardLogger())
+	frame := cjt1882004.CJT188Frame0x01{
+		Start:        cjt1882004.CTRL_CODE_FRAME_START,
+		MeterType:    0x10,
+		Address:      [7]byte{0x01, 0x00, 0x00, 0x05, 0x08, 0x00, 0x00},
+		CtrlCode:     cjt1882004.CTRL_CODE_READ_DATA,
+		DataLength:   0x03,
+		DataType:     [2]byte{0x1F, 0x90},
+		DataArea:     []byte{},
+		SerialNumber: 0x00,
+		End:          cjt1882004.CTRL_CODE_FRAME_END,
+	}
+	t.Log(frame.String())
+	packedFrame, errEncode := frame.Encode()
+	if errEncode != nil {
+		t.Fatal(errEncode)
+	}
+	println("frame.Encode()==")
+	for _, v := range packedFrame {
+		fmt.Printf(" 0x%x", v)
+	}
+	println("\n======================")
+	response, errreq := client.Request(packedFrame)
+	if errreq != nil {
+		t.Fatal(errreq)
+	}
+	println("client.Request()===")
+	for _, v := range response {
+		fmt.Printf(" 0x%02x", v)
+	}
+	println("\n======================")
+	CJT188Frame0x01, errDec := client.DecodeCJT188Frame0x01Response(response)
+	if errDec != nil {
+		t.Fatal(errDec)
+	}
+	t.Log(CJT188Frame0x01.String())
+	if V, err := CJT188Frame0x01.GetData(); err != nil {
+		t.Fatal(err)
+	} else {
+		t.Log(V)
+	}
 }

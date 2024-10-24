@@ -106,16 +106,79 @@ func (frame CJT188Frame0x01) GetData() (int64, error) {
 
 // CJT188Frame0x01Response
 type CJT188Frame0x01Response struct {
-	Start        byte    // 帧起始符
-	MeterType    byte    // 仪表类型
-	Address      [7]byte // 地址域
-	CtrlCode     byte    // 控制码
-	DataLength   byte    // 数据长度域
-	DataType     [2]byte // 数据长度域
-	SerialNumber byte
-	CurData      []byte
-	S1           byte
-	S2           byte
-	CheckSum     byte // 校验码
-	End          byte // 结束符
+	Start        byte      // 帧起始符
+	MeterType    byte      // 仪表类型
+	Address      [7]byte   // 地址域
+	CtrlCode     byte      // 控制码
+	DataLength   byte      // 数据长度域
+	DataType     [2]byte   // 数据长度域
+	SerialNumber byte      // 序列号
+	Data         [][5]byte // 数据域 [4 byte]+1unit
+	Time         [7]byte   // 时间
+	S0           byte      // 状态0
+	S1           byte      // 状态1
+	CheckSum     byte      // 校验码
+	End          byte      // 结束符
+}
+
+func (frame CJT188Frame0x01Response) String() string {
+	var result string
+	result += fmt.Sprintf("CJT188Frame0x01:\n=======\nStart: 0x%02x ", frame.Start)
+	result += fmt.Sprintf("\nMeterType: 0x%02x ", frame.MeterType)
+	result += "\nAddress: "
+	for _, b := range frame.Address {
+		result += fmt.Sprintf("0x%02x ", b)
+	}
+	result += fmt.Sprintf("\nCtrlCode: 0x%02x ", frame.CtrlCode)
+	result += fmt.Sprintf("\nDataLength: 0x%02x ", frame.DataLength)
+	result += "\nDataType: "
+	if len(frame.DataType) == 0 {
+		result += "[]"
+	} else {
+		for _, b := range frame.DataType {
+			result += fmt.Sprintf("0x%02x ", b)
+		}
+	}
+	result += fmt.Sprintf("\nSerialNumber: 0x%02x ", frame.SerialNumber)
+	result += "\nData: "
+	if len(frame.Data) == 0 {
+		result += "[]"
+	} else {
+		for i, row := range frame.Data {
+			result += fmt.Sprintf("\n\tframe.Data[%d] ", i)
+			for _, v := range row {
+				result += fmt.Sprintf("0x%02x ", v)
+			}
+		}
+	}
+	result += "\nDataType: "
+	if len(frame.Data) == 0 {
+		result += "[]"
+	} else {
+		for _, b := range frame.DataType {
+			result += fmt.Sprintf("0x%02x ", b)
+		}
+	}
+	Value, _ := frame.GetData()
+	result += fmt.Sprintf("\nData Value: %v ", Value)
+	result += fmt.Sprintf("\nSN: 0x%02x ", frame.SerialNumber)
+	result += fmt.Sprintf("\nTime: 0x%02x ", frame.Time)
+	result += fmt.Sprintf("\nS0: 0x%02x ", frame.S0)
+	result += fmt.Sprintf("\nS1: 0x%02x ", frame.S1)
+	result += fmt.Sprintf("\nCheckSum: 0x%02x ", frame.CheckSum)
+	result += fmt.Sprintf("\nEnd: 0x%02x\n=======\n", frame.End)
+	return result
+}
+
+/**
+ * 解析数据
+ *
+ */
+func (frame CJT188Frame0x01Response) GetData() ([]int64, error) {
+	result := []int64{}
+	for _, row := range frame.Data {
+		v0 := BCDBytesToDecimal(ByteReverse(row[:4])) // Unit
+		result = append(result, v0)
+	}
+	return result, nil
 }

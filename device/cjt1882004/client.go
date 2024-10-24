@@ -114,6 +114,50 @@ func (handler *CJT188ClientHandler) DecodeCJT188Frame0x01(data []byte) (CJT188Fr
  * 打包帧
  *
  */
-func (handler *CJT188ClientHandler) DecodeCJT188Frame0x01Response(data []byte) (CJT188Frame0x01, error) {
-	return handler.DecodeCJT188Frame0x01(data)
+func (handler *CJT188ClientHandler) DecodeCJT188Frame0x01Response(data []byte) (CJT188Frame0x01Response, error) {
+	handler.logger.Debug("CJT188ClientHandler.DecodeCJT188Frame0x11:", data)
+	frame := CJT188Frame0x01Response{
+		Start:        data[0],
+		MeterType:    data[1],
+		Address:      [7]byte{data[2], data[3], data[4], data[5], data[6], data[7], data[8]},
+		CtrlCode:     data[9],
+		DataLength:   data[10],
+		DataType:     [2]byte{data[11], data[12]},
+		SerialNumber: data[13],
+	}
+	if len(data) < 25 {
+		return frame, errors.New("invalid frame length")
+	}
+	if int(data[10]) > len(data) {
+		return frame, errors.New("invalid frame length")
+	}
+	frame.Data = [][5]byte{}
+	if frame.DataLength > 0 && frame.DataLength >= 9+3 {
+		dataLength := frame.DataLength - 9 - 3
+		chunkCount := dataLength / 5
+		for i := 0; i < int(chunkCount); i++ {
+			startIndex := 14 + i*5
+			frame.Data = append(frame.Data, [5]byte{
+				data[startIndex+0],
+				data[startIndex+1],
+				data[startIndex+2],
+				data[startIndex+3],
+				data[startIndex+4],
+			})
+		}
+	}
+
+	copy(frame.Time[:], data[len(data)-12:len(data)-5])
+	frame.S0 = data[len(data)-3]
+	frame.S1 = data[len(data)-4]
+	frame.CheckSum = data[len(data)-2]
+	frame.End = data[len(data)-1]
+	if frame.Start != 0x68 || frame.End != 0x16 {
+		return frame, fmt.Errorf("invalid start or end byte")
+	}
+	CheckCrcErr := handler.DataLinkLayer.CheckCrc(data[0:len(data)-2], frame.CheckSum)
+	if CheckCrcErr != nil {
+		return frame, CheckCrcErr
+	}
+	return frame, nil
 }

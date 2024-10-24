@@ -191,9 +191,9 @@ END:
  *
  */
 type CJT1882004ReadData struct {
-	Tag     string `json:"tag"`
-	MeterId string `json:"meterId"`
-	Value   int64  `json:"value"`
+	Tag     string  `json:"tag"`
+	MeterId string  `json:"meterId"`
+	Value   []int64 `json:"value"`
 }
 
 func (gw *CJT188_2004_MasterGateway) work(handler *cjt1882004.CJT188ClientHandler) {
@@ -230,7 +230,7 @@ func (gw *CJT188_2004_MasterGateway) work(handler *cjt1882004.CJT188ClientHandle
 			frame := cjt1882004.CJT188Frame0x01{
 				Start:        cjt1882004.CTRL_CODE_FRAME_START,
 				MeterType:    0x10,
-				Address:      [7]byte{Address[0], Address[1], Address[2], Address[3], Address[4], Address[5], Address[6]},
+				Address:      [7]byte{Address[6], Address[5], Address[4], Address[3], Address[2], Address[1], Address[0]},
 				CtrlCode:     cjt1882004.CTRL_CODE_READ_DATA,
 				DataLength:   0x03,
 				DataType:     [2]byte{0x90, 0x1F},
