@@ -39,7 +39,7 @@ type MBusDataPoint struct {
 	Frequency    int64  `json:"frequency"`
 	DataLength   int    `json:"dataLength"`
 }
-type MBusMasterGatewayCommonConfig struct {
+type MBusEn13433MasterGatewayCommonConfig struct {
 	Mode         string `json:"mode" validate:"required"`
 	AutoRequest  *bool  `json:"autoRequest" validate:"required"`
 	BatchRequest *bool  `json:"batchRequest" validate:"required"`
@@ -49,10 +49,10 @@ type MBusConfig struct {
 	HostConfig common.HostConfig `json:"hostConfig"`
 }
 
-type MBusMasterGatewayMainConfig struct {
-	CommonConfig MBusMasterGatewayCommonConfig `json:"commonConfig"`
-	MBusConfig   MBusConfig                    `json:"MBusConfig"`
-	UartConfig   common.UartConfig             `json:"uartConfig"`
+type MBusEn13433MasterGatewayMainConfig struct {
+	CommonConfig MBusEn13433MasterGatewayCommonConfig `json:"commonConfig"`
+	MBusConfig   MBusConfig                           `json:"MBusConfig"`
+	UartConfig   common.UartConfig                    `json:"uartConfig"`
 }
 
 /**
@@ -60,18 +60,18 @@ type MBusMasterGatewayMainConfig struct {
  * Mbus
  */
 
-type MBusMasterGateway struct {
+type MBusEn13433MasterGateway struct {
 	typex.XStatus
 	status         typex.DeviceState
-	mainConfig     MBusMasterGatewayMainConfig
+	mainConfig     MBusEn13433MasterGatewayMainConfig
 	MBusDataPoints map[string]MBusDataPoint
 }
 
-func NewMBusMasterGateway(e typex.Rhilex) typex.XDevice {
-	gw := new(MBusMasterGateway)
+func NewMBusEn13433MasterGateway(e typex.Rhilex) typex.XDevice {
+	gw := new(MBusEn13433MasterGateway)
 	gw.RuleEngine = e
-	gw.mainConfig = MBusMasterGatewayMainConfig{
-		CommonConfig: MBusMasterGatewayCommonConfig{
+	gw.mainConfig = MBusEn13433MasterGatewayMainConfig{
+		CommonConfig: MBusEn13433MasterGatewayCommonConfig{
 			Mode: "UART",
 			AutoRequest: func() *bool {
 				b := false
@@ -101,7 +101,7 @@ func NewMBusMasterGateway(e typex.Rhilex) typex.XDevice {
 	return gw
 }
 
-func (gw *MBusMasterGateway) Init(devId string, configMap map[string]interface{}) error {
+func (gw *MBusEn13433MasterGateway) Init(devId string, configMap map[string]interface{}) error {
 	gw.PointId = devId
 	intercache.RegisterSlot(gw.PointId)
 
@@ -144,7 +144,7 @@ func (gw *MBusMasterGateway) Init(devId string, configMap map[string]interface{}
 	return nil
 }
 
-func (gw *MBusMasterGateway) Start(cctx typex.CCTX) error {
+func (gw *MBusEn13433MasterGateway) Start(cctx typex.CCTX) error {
 	gw.Ctx = cctx.Ctx
 	gw.CancelCTX = cctx.CancelCTX
 
@@ -152,11 +152,11 @@ func (gw *MBusMasterGateway) Start(cctx typex.CCTX) error {
 	return nil
 }
 
-func (gw *MBusMasterGateway) Status() typex.DeviceState {
+func (gw *MBusEn13433MasterGateway) Status() typex.DeviceState {
 	return gw.status
 }
 
-func (gw *MBusMasterGateway) Stop() {
+func (gw *MBusEn13433MasterGateway) Stop() {
 	gw.status = typex.DEV_DOWN
 	if gw.CancelCTX != nil {
 		gw.CancelCTX()
@@ -164,27 +164,27 @@ func (gw *MBusMasterGateway) Stop() {
 	intercache.UnRegisterSlot(gw.PointId)
 }
 
-func (gw *MBusMasterGateway) Details() *typex.Device {
+func (gw *MBusEn13433MasterGateway) Details() *typex.Device {
 	return gw.RuleEngine.GetDevice(gw.PointId)
 }
 
-func (gw *MBusMasterGateway) SetState(status typex.DeviceState) {
+func (gw *MBusEn13433MasterGateway) SetState(status typex.DeviceState) {
 	gw.status = status
 }
 
-func (gw *MBusMasterGateway) OnDCACall(UUID string, Command string, Args interface{}) typex.DCAResult {
+func (gw *MBusEn13433MasterGateway) OnDCACall(UUID string, Command string, Args interface{}) typex.DCAResult {
 	return typex.DCAResult{}
 }
 
-func (gw *MBusMasterGateway) OnCtrl(cmd []byte, args []byte) ([]byte, error) {
+func (gw *MBusEn13433MasterGateway) OnCtrl(cmd []byte, args []byte) ([]byte, error) {
 	return []byte{}, nil
 }
 
-func (gw *MBusMasterGateway) OnRead(cmd []byte, data []byte) (int, error) {
+func (gw *MBusEn13433MasterGateway) OnRead(cmd []byte, data []byte) (int, error) {
 
 	return 0, nil
 }
 
-func (gw *MBusMasterGateway) OnWrite(cmd []byte, b []byte) (int, error) {
+func (gw *MBusEn13433MasterGateway) OnWrite(cmd []byte, b []byte) (int, error) {
 	return 0, nil
 }

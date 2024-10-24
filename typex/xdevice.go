@@ -28,23 +28,23 @@ const (
  *
  */
 const (
-	SIEMENS_PLC            DeviceType = "SIEMENS_PLC"            // SIEMENS-S71200
-	GENERIC_SNMP           DeviceType = "GENERIC_SNMP"           // SNMP 协议支持
-	GENERIC_OPCUA          DeviceType = "GENERIC_OPCUA"          // 通用OPCUA协议
-	GENERIC_CAMERA         DeviceType = "GENERIC_CAMERA"         // 通用摄像头
-	GENERIC_AIS_RECEIVER   DeviceType = "GENERIC_AIS_RECEIVER"   // 通用AIS
-	GENERIC_BACNET_IP      DeviceType = "GENERIC_BACNET_IP"      // 通用Bacnet IP模式
-	BACNET_ROUTER_GW       DeviceType = "BACNET_ROUTER_GW"       // 通用BACNET 路由模式
-	GENERIC_HTTP_DEVICE    DeviceType = "GENERIC_HTTP_DEVICE"    // HTTP采集器
-	TENCENT_IOTHUB_GATEWAY DeviceType = "TENCENT_IOTHUB_GATEWAY" // 腾讯云物联网平台
-	ITHINGS_IOTHUB_GATEWAY DeviceType = "ITHINGS_IOTHUB_GATEWAY" // ITHINGS物联网平台
-	LORA_WAN_GATEWAY       DeviceType = "LORA_WAN_GATEWAY"       // LoraWan
-	KNX_GATEWAY            DeviceType = "KNX_GATEWAY"            // KNX 网关
-	GENERIC_MBUS_MASTER    DeviceType = "GENERIC_MBUS_MASTER"    // 通用 Mbus
-	DLT6452007_MASTER      DeviceType = "DLT6452007_MASTER"      // DLT6452004
-	CJT1882004_MASTER      DeviceType = "CJT1882004_MASTER"      // CJT1882004
-	SZY2062016_MASTER      DeviceType = "SZY2062016_MASTER"      // SZY2062016
-	GENERIC_USER_PROTOCOL  DeviceType = "GENERIC_USER_PROTOCOL"  // 自定义协议
+	SIEMENS_PLC                 DeviceType = "SIEMENS_PLC"                 // SIEMENS-S71200
+	GENERIC_SNMP                DeviceType = "GENERIC_SNMP"                // SNMP 协议支持
+	GENERIC_OPCUA               DeviceType = "GENERIC_OPCUA"               // 通用OPCUA协议
+	GENERIC_CAMERA              DeviceType = "GENERIC_CAMERA"              // 通用摄像头
+	GENERIC_AIS_RECEIVER        DeviceType = "GENERIC_AIS_RECEIVER"        // 通用AIS
+	GENERIC_BACNET_IP           DeviceType = "GENERIC_BACNET_IP"           // 通用Bacnet IP模式
+	BACNET_ROUTER_GW            DeviceType = "BACNET_ROUTER_GW"            // 通用BACNET 路由模式
+	GENERIC_HTTP_DEVICE         DeviceType = "GENERIC_HTTP_DEVICE"         // HTTP采集器
+	TENCENT_IOTHUB_GATEWAY      DeviceType = "TENCENT_IOTHUB_GATEWAY"      // 腾讯云物联网平台
+	ITHINGS_IOTHUB_GATEWAY      DeviceType = "ITHINGS_IOTHUB_GATEWAY"      // ITHINGS物联网平台
+	LORA_WAN_GATEWAY            DeviceType = "LORA_WAN_GATEWAY"            // LoraWan
+	KNX_GATEWAY                 DeviceType = "KNX_GATEWAY"                 // KNX 网关
+	GENERIC_MBUS_EN13433_MASTER DeviceType = "GENERIC_MBUS_EN13433_MASTER" // 通用 Mbus
+	DLT6452007_MASTER           DeviceType = "DLT6452007_MASTER"           // DLT6452004
+	CJT1882004_MASTER           DeviceType = "CJT1882004_MASTER"           // CJT1882004
+	SZY2062016_MASTER           DeviceType = "SZY2062016_MASTER"           // SZY2062016
+	GENERIC_USER_PROTOCOL       DeviceType = "GENERIC_USER_PROTOCOL"       // 自定义协议
 )
 
 type DCAModel struct {

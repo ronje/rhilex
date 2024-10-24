@@ -614,10 +614,10 @@ func (e *RuleEngine) InitDeviceTypeManager() error {
 			NewDevice: device.NewBacnetRouter,
 		},
 	)
-	e.DeviceTypeManager.Register(typex.GENERIC_MBUS_MASTER,
+	e.DeviceTypeManager.Register(typex.GENERIC_MBUS_EN13433_MASTER,
 		&typex.XConfig{
 			Engine:    e,
-			NewDevice: device.NewMBusMasterGateway,
+			NewDevice: device.NewMBusEn13433MasterGateway,
 		},
 	)
 	return nil
