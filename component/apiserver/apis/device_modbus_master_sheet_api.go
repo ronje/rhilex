@@ -183,7 +183,8 @@ func ModbusMasterSheetPageList(c *gin.Context, ruleEngine typex.Rhilex) {
 				return 1
 			}() // 运行时
 			Vo.LastFetchTime = value.LastFetchTime // 运行时
-			Vo.Value = value.Value                 // 运行时
+			types, _ := utils.IsArrayAndGetValueList(value.Value)
+			Vo.Value = types
 			recordsVo = append(recordsVo, Vo)
 		} else {
 			recordsVo = append(recordsVo, Vo)

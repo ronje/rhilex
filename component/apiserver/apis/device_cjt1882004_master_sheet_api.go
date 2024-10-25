@@ -137,6 +137,7 @@ func Cjt1882004MasterSheetPageList(c *gin.Context, ruleEngine typex.Rhilex) {
 	for _, record := range records {
 		Slot := intercache.GetSlot(deviceUuid)
 		value, ok := Slot[record.UUID]
+
 		Vo := Cjt1882004MasterPointVo{
 			UUID:          record.UUID,
 			DeviceUuid:    record.DeviceUuid,
@@ -145,7 +146,6 @@ func Cjt1882004MasterSheetPageList(c *gin.Context, ruleEngine typex.Rhilex) {
 			Alias:         record.Alias,
 			Frequency:     record.Frequency,
 			LastFetchTime: value.LastFetchTime,
-			Value:         value.Value,
 			ErrMsg:        value.ErrMsg,
 		}
 		if ok {
@@ -156,7 +156,8 @@ func Cjt1882004MasterSheetPageList(c *gin.Context, ruleEngine typex.Rhilex) {
 				return 1
 			}()
 			Vo.LastFetchTime = value.LastFetchTime
-			Vo.Value = value.Value
+			types, _ := utils.IsArrayAndGetValueList(value.Value)
+			Vo.Value = types
 			recordsVo = append(recordsVo, Vo)
 		} else {
 			recordsVo = append(recordsVo, Vo)

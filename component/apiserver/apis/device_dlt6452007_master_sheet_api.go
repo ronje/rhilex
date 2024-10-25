@@ -157,7 +157,8 @@ func Dlt6452007MasterSheetPageList(c *gin.Context, ruleEngine typex.Rhilex) {
 				return 1
 			}()
 			Vo.LastFetchTime = value.LastFetchTime
-			Vo.Value = value.Value
+			types, _ := utils.IsArrayAndGetValueList(value.Value)
+			Vo.Value = types
 			recordsVo = append(recordsVo, Vo)
 		} else {
 			recordsVo = append(recordsVo, Vo)

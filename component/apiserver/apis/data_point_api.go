@@ -14,6 +14,7 @@ import (
 	"github.com/hootrhino/rhilex/component/interdb"
 	"github.com/hootrhino/rhilex/glogger"
 	"github.com/hootrhino/rhilex/typex"
+	"github.com/hootrhino/rhilex/utils"
 	"github.com/xuri/excelize/v2"
 )
 
@@ -169,7 +170,8 @@ func DataPointSheetPageList(c *gin.Context, ruleEngine typex.Rhilex) {
 					return 1
 				}()
 				pointVo.LastFetchTime = value.LastFetchTime
-				pointVo.Value = value.Value
+				types, _ := utils.IsArrayAndGetValueList(value.Value)
+				pointVo.Value = types
 				recordsVo = append(recordsVo, pointVo)
 			} else {
 				recordsVo = append(recordsVo, pointVo)
