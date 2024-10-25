@@ -25,7 +25,7 @@ import (
 // 检查串口设备是否被系统进程占用
 func CheckSerialBusy(serialDevice string) error {
 	if runtime.GOOS == "windows" {
-		_, err := os.Open(`\\.\` + serialDevice)
+		f, err := os.Open(`\\.\` + serialDevice)
 		if err != nil {
 			pathErr, ok := err.(*os.PathError)
 			if ok {
@@ -34,6 +34,7 @@ func CheckSerialBusy(serialDevice string) error {
 				}
 			}
 		}
+		defer f.Close()
 	}
 	return nil
 }
