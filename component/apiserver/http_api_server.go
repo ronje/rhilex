@@ -148,7 +148,6 @@ func (hs *ApiServerPlugin) Init(config *ini.Section) error {
 		&model.MBacnetDataPoint{},
 		&model.MBacnetRouterDataPoint{},
 		&model.MMBusDataPoint{},
-		&model.MDataPoint{},
 		&model.MCronRebootConfig{},
 	)
 	// 初始化所有预制参数
@@ -226,8 +225,6 @@ func (hs *ApiServerPlugin) LoadRoute() {
 	apis.InitDataCenterApi()
 	// Transceiver
 	apis.InitTransceiverRoute()
-	// Data Point Route
-	apis.InitDataPointRoute()
 	// Mqtt Server
 	apis.InitMqttSourceServerRoute()
 	// Cron Reboot
