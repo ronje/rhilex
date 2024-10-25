@@ -274,6 +274,7 @@ func (gw *DLT645_2007_MasterGateway) work(handler *dlt6452007.DLT645ClientHandle
 			intercache.SetValue(gw.PointId, DataPoint.UUID, NewValue)
 			if !*gw.mainConfig.CommonConfig.BatchRequest {
 				if bytes, err := json.Marshal(DLT6452007ReadData{
+					Tag:     DataPoint.Tag,
 					MeterId: DataPoint.MeterId,
 					Value:   Value,
 				}); err != nil {

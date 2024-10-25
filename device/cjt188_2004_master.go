@@ -288,6 +288,7 @@ func (gw *CJT188_2004_MasterGateway) work(handler *cjt1882004.CJT188ClientHandle
 			} else {
 				cjt1882004ReadDataList = append(cjt1882004ReadDataList, CJT1882004ReadData{
 					MeterId: DataPoint.MeterId,
+					Tag:     DataPoint.Tag,
 					Value:   Value,
 				})
 			}

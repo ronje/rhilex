@@ -245,8 +245,8 @@ func (gw *GenericUserProtocolDevice) work(handler *userproto.UserProtocolClientH
 				}
 			} else {
 				UserProtocolReadDataList = append(UserProtocolReadDataList, UserProtocolReadData{
-					Command: DataPoint.Command,
 					Tag:     DataPoint.Tag,
+					Command: DataPoint.Command,
 					Value:   Value,
 				})
 			}
