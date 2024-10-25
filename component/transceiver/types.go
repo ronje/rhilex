@@ -21,6 +21,7 @@ import (
 )
 
 type TransceiverConfig struct {
+	Enable            bool   `ini:"enable" json:"enable" validate:"required"`
 	Name              string `ini:"name" json:"name" validate:"required"`
 	Address           string `ini:"address" json:"address" validate:"required"`
 	IOTimeout         int64  `ini:"io_timeout" json:"ioTimeout" validate:"required"`

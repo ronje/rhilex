@@ -18,11 +18,13 @@ package transceiver
 import (
 	"fmt"
 	"os"
+	"strings"
 	"sync"
 	"time"
 
 	core "github.com/hootrhino/rhilex/config"
 	"github.com/hootrhino/rhilex/utils"
+	"gopkg.in/ini.v1"
 
 	"github.com/hootrhino/rhilex/glogger"
 
@@ -41,7 +43,7 @@ func InitTransceiverCommunicatorManager(R typex.Rhilex) {
 		R:            R,
 		Transceivers: sync.Map{},
 	}
-	initDefaultRFModule()
+	LoadTransceiverModules()
 }
 
 func (TM *TransceiverCommunicatorManager) Load(name string, config TransceiverConfig,
@@ -116,20 +118,29 @@ func (TM *TransceiverCommunicatorManager) Status(name string) (TransceiverStatus
 * Load Default Modules
 *
  */
-func initDefaultRFModule() {
-	env := os.Getenv("TRANSCEIVER")
-	if env == "default_transceiver" {
-		Config := TransceiverConfig{}
-		err1 := utils.INIToStruct(core.GlobalConfig.IniPath, fmt.Sprintf("transceiver.%s", env), &Config)
-		if err1 != nil {
-			glogger.GLogger.Fatal(err1)
+func LoadTransceiverModules() {
+	iniConfigFile, _ := ini.ShadowLoad(core.GlobalConfig.IniPath)
+	sections := iniConfigFile.ChildSections("transceiver")
+	for _, section := range sections {
+		name := strings.TrimPrefix(section.Name(), "transceiver.")
+		enable, errGetKey := section.GetKey("enable")
+		if errGetKey != nil {
+			continue
+		}
+		if !enable.MustBool(false) {
+			glogger.GLogger.Warnf("transceiver is disable:%s", name)
+			continue
+		}
+		config := TransceiverConfig{Name: name}
+		errMap := utils.InIMapToStruct(section, &config)
+		if errMap != nil {
+			glogger.GLogger.Fatal(errMap)
 			os.Exit(1)
 		}
-		Config.Name = env
 		Transceiver := NewTransceiver(DefaultTransceiverCommunicatorManager.R)
-		err2 := DefaultTransceiverCommunicatorManager.Load(env, Config, Transceiver)
-		if err2 != nil {
-			glogger.GLogger.Fatal(err2)
+		errLoad := DefaultTransceiverCommunicatorManager.Load(config.Name, config, Transceiver)
+		if errLoad != nil {
+			glogger.GLogger.Fatal(errLoad)
 			os.Exit(1)
 		}
 	}
