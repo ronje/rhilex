@@ -110,14 +110,15 @@ func TestCodec_CJT188_2007_Frame(t *testing.T) {
 // go test -timeout 30s -run ^TestCodec_CJT188_2007_Serial github.com/hootrhino/rhilex/test -v -count=1
 
 func TestCodec_CJT188_2007_Serial(t *testing.T) {
-	port, err := serial.Open(&serial.Config{
+	config := serial.Config{
 		Address:  "COM3",
 		BaudRate: 2400,
 		DataBits: 8,
 		StopBits: 1,
 		Parity:   "E",
 		Timeout:  utils.GiveMeSeconds(3),
-	})
+	}
+	port, err := serial.Open(&config)
 	if err != nil {
 		t.Fatal(err)
 	}

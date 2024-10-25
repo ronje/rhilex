@@ -66,25 +66,28 @@ func (tc *Transceiver) Start(Config TransceiverConfig) error {
 	tc.EventType = "transceiver.up.data"
 	tc.Event = fmt.Sprintf("transceiver.up.data.%s", tc.mainConfig.Name)
 	glogger.GLogger.Info("Transceiver Init:", tc.mainConfig.Name)
-	serialPort, errOpen := serial.Open(&serial.Config{
+	config := serial.Config{
 		Address:  tc.mainConfig.Address,
 		BaudRate: tc.mainConfig.BaudRate,
 		DataBits: tc.mainConfig.DataBits,
 		Parity:   tc.mainConfig.Parity,
 		StopBits: tc.mainConfig.StopBits,
 		Timeout:  time.Duration(tc.mainConfig.IOTimeout) * time.Millisecond,
-	})
+	}
+	serialPort, errOpen := serial.Open(&config)
 	if errOpen != nil {
+		glogger.GLogger.Error("serial port start failed err:", errOpen, ", config:", config)
+
 		return errOpen
 	}
-	config := protocol.TransporterConfig{
+	TransporterConfig := protocol.TransporterConfig{
 		Port:         serialPort,
 		ReadTimeout:  time.Duration(tc.mainConfig.IOTimeout * int64(time.Millisecond)),
 		WriteTimeout: time.Duration(tc.mainConfig.IOTimeout * int64(time.Millisecond)),
 		Logger:       glogger.Logrus,
 	}
 	ctx, cancel := context.WithCancel(context.Background())
-	tc.ProtocolSlaver = protocol.NewGenericProtocolSlaver(ctx, cancel, config)
+	tc.ProtocolSlaver = protocol.NewGenericProtocolSlaver(ctx, cancel, TransporterConfig)
 	go tc.ProtocolSlaver.StartLoop(func(AppLayerFrame protocol.AppLayerFrame, errRead error) {
 		if errRead != nil {
 			glogger.GLogger.Error(errRead)

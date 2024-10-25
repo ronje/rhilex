@@ -159,10 +159,10 @@ func (gw *GenericUserProtocolDevice) Start(cctx typex.CCTX) error {
 			StopBits: gw.mainConfig.UartConfig.StopBits,
 			Timeout:  time.Duration(gw.mainConfig.UartConfig.Timeout) * time.Millisecond,
 		}
-		serialPort, err := serial.Open(&config)
-		if err != nil {
-			glogger.GLogger.Error("serialPort start failed:", err)
-			return err
+		serialPort, errOpen := serial.Open(&config)
+		if errOpen != nil {
+			glogger.GLogger.Error("serial port start failed err:", errOpen, ", config:", config)
+			return errOpen
 		}
 		gw.uartHandler = userproto.NewUserProtocolClientHandler(serialPort)
 		gw.uartHandler.SetLogger(glogger.Logrus)

@@ -158,9 +158,10 @@ func (gw *SZY206_2016_MasterGateway) Start(cctx typex.CCTX) error {
 			Timeout:  time.Duration(gw.mainConfig.UartConfig.Timeout) * time.Millisecond,
 		}
 
-		serialPort, err := serial.Open(&config)
-		if err != nil {
-			return err
+		serialPort, errOpen := serial.Open(&config)
+		if errOpen != nil {
+			glogger.GLogger.Error("serial port start failed err:", errOpen, ", config:", config)
+			return errOpen
 		}
 		gw.uartHandler = szy2062016.NewSZY206ClientHandler(serialPort)
 		gw.uartHandler.SetLogger(glogger.Logrus)

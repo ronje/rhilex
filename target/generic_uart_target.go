@@ -105,7 +105,7 @@ func (mdev *GenericUart) Start(cctx typex.CCTX) error {
 	}
 	serialPort, err := serial.Open(&config)
 	if err != nil {
-		glogger.GLogger.Error(err)
+		glogger.GLogger.Error("serial port start failed err:", err, ", config:", config)
 		return err
 	}
 	if *mdev.mainConfig.GenericUartCommonConfig.AllowPing {
