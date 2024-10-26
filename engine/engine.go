@@ -33,8 +33,8 @@ import (
 	"github.com/hootrhino/rhilex/component/internotify"
 	"github.com/hootrhino/rhilex/component/interqueue"
 	"github.com/hootrhino/rhilex/component/lostcache"
+	"github.com/hootrhino/rhilex/component/luaexecutor"
 	"github.com/hootrhino/rhilex/component/rhilexmanager"
-	"github.com/hootrhino/rhilex/component/ruleengine"
 	"github.com/hootrhino/rhilex/component/security"
 	supervisor "github.com/hootrhino/rhilex/component/supervisor"
 	transceiver "github.com/hootrhino/rhilex/component/transceiver"
@@ -219,7 +219,7 @@ func (e *RuleEngine) RunSourceCallbacks(in *typex.InEnd, callbackArgs string) {
 	// 执行来自资源的脚本
 	for _, rule := range in.BindRules {
 		if rule.Status == typex.RULE_RUNNING {
-			_, errA := ruleengine.ExecuteActions(&rule, lua.LString(callbackArgs))
+			_, errA := luaexecutor.ExecuteActions(&rule, lua.LString(callbackArgs))
 			if errA != nil {
 				Debugger, Ok := rule.LuaVM.GetStack(1)
 				if Ok {
@@ -244,12 +244,8 @@ func (e *RuleEngine) RunSourceCallbacks(in *typex.InEnd, callbackArgs string) {
 						LastCall.Name, errA.Error(),
 					)
 				}
-				// _, err0 := ruleengine.ExecuteFailed(rule.LuaVM, lua.LString(errA.Error()))
-				// if err0 != nil {
-				// 	glogger.GLogger.Error(err0)
-				// }
 			} else {
-				_, errS := ruleengine.ExecuteSuccess(rule.LuaVM)
+				_, errS := luaexecutor.ExecuteSuccess(rule.LuaVM)
 				if errS != nil {
 					glogger.GLogger.Error(errS)
 					return // lua 是规则链，有短路原则，中途出错会中断
@@ -266,7 +262,7 @@ func (e *RuleEngine) RunSourceCallbacks(in *typex.InEnd, callbackArgs string) {
  */
 func (e *RuleEngine) RunDeviceCallbacks(Device *typex.Device, callbackArgs string) {
 	for _, rule := range Device.BindRules {
-		_, errA := ruleengine.ExecuteActions(&rule, lua.LString(callbackArgs))
+		_, errA := luaexecutor.ExecuteActions(&rule, lua.LString(callbackArgs))
 		if errA != nil {
 			Debugger, Ok := rule.LuaVM.GetStack(1)
 			if Ok {
@@ -291,12 +287,8 @@ func (e *RuleEngine) RunDeviceCallbacks(Device *typex.Device, callbackArgs strin
 					LastCall.Name, errA.Error(),
 				)
 			}
-			// _, err1 := ruleengine.ExecuteFailed(rule.LuaVM, lua.LString(errA.Error()))
-			// if err1 != nil {
-			// 	glogger.GLogger.Error(err1)
-			// }
 		} else {
-			_, err2 := ruleengine.ExecuteSuccess(rule.LuaVM)
+			_, err2 := luaexecutor.ExecuteSuccess(rule.LuaVM)
 			if err2 != nil {
 				glogger.GLogger.WithFields(logrus.Fields{
 					"topic": "rule/log/" + rule.UUID,

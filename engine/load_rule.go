@@ -18,7 +18,7 @@ package engine
 import (
 	"sync"
 
-	"github.com/hootrhino/rhilex/component/ruleengine"
+	"github.com/hootrhino/rhilex/component/luaruntime"
 	"github.com/hootrhino/rhilex/glogger"
 	"github.com/hootrhino/rhilex/typex"
 )
@@ -27,18 +27,18 @@ import (
 // 使用MAP来记录RULE的绑定关系, KEY是UUID, Value是规则
 func (e *RuleEngine) LoadRule(r *typex.Rule) error {
 	// 前置语法验证
-	if err := ruleengine.VerifyLuaSyntax(r); err != nil {
+	if err := luaruntime.VerifyLuaSyntax(r); err != nil {
 		return err
 	}
 	// 前置自定义库校验
-	if err := LoadExtLuaLib(e, r); err != nil {
+	if err := luaruntime.LoadExtLuaLib(e, r.LuaVM); err != nil {
 		return err
 	}
 	e.SaveRule(r)
 	//--------------------------------------------------------------
 	// Load LoadBuildInLuaLib
 	//--------------------------------------------------------------
-	LoadRuleLibGroup(r, e)
+	luaruntime.LoadRuleLibGroup(e, r.UUID, r.LuaVM)
 	glogger.GLogger.Infof("Rule [%s, %s] load successfully", r.UUID, r.Name)
 	// 查找输入定义的资源是否存在
 	if in := e.GetInEnd(r.FromSource); in != nil {

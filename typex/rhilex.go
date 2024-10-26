@@ -78,11 +78,6 @@ type Rhilex interface {
 	//
 	RemoveRule(uuid string)
 	//
-	// 运行 lua 回调
-	//
-	RunSourceCallbacks(*InEnd, string)
-	RunDeviceCallbacks(*Device, string)
-	//
 	// 获取版本
 	//
 	Version() VersionInfo

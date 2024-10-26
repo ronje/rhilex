@@ -85,17 +85,6 @@ func NewRule(e Rhilex,
 
 /*
 *
-* 加载外部LUA脚本，方便用户自己写一些东西
-* 需要注意的：
-* - 不要和标准库里面的变量冲突了
-* - 默认加载到 _G 环境里
- */
-func (r *Rule) LoadExternLuaLib(path string) error {
-	return r.LuaVM.DoFile(path)
-}
-
-/*
-*
 * AddLib: 根据 KV形式加载库(推荐)
 *  - Global: 命名空间
 *   - funcName: 函数名称

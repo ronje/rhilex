@@ -7,6 +7,7 @@ import (
 	"github.com/hootrhino/rhilex/component/apiserver/model"
 	"github.com/hootrhino/rhilex/component/apiserver/server"
 	"github.com/hootrhino/rhilex/component/apiserver/service"
+	"github.com/hootrhino/rhilex/component/luaruntime"
 
 	"github.com/gin-gonic/gin"
 	"github.com/hootrhino/rhilex/component/applet"
@@ -177,7 +178,7 @@ func UpdateApp(c *gin.Context, ruleEngine typex.Rhilex) {
 		return
 	}
 	// 校验语法
-	if err1 := applet.ValidateLuaSyntax([]byte(form.LuaSource)); err1 != nil {
+	if err1 := luaruntime.ValidateAppletSyntax([]byte(form.LuaSource)); err1 != nil {
 		c.JSON(common.HTTP_OK, common.Error400(err1))
 		return
 	}

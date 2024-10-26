@@ -13,7 +13,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-package ruleengine
+package luaexecutor
 
 import (
 	"errors"
@@ -80,59 +80,4 @@ func ExecuteActions(rule *typex.Rule, arg lua.LValue) (lua.LValue, error) {
 	}
 	return nil, errors.New("'Actions' not a lua table or not exist")
 
-}
-
-// VerifyLuaSyntax Verify Lua Syntax
-func VerifyLuaSyntax(r *typex.Rule) error {
-	tempVm := lua.NewState(lua.Options{
-		SkipOpenLibs:     true,
-		RegistrySize:     0,
-		RegistryMaxSize:  0,
-		RegistryGrowStep: 0,
-	})
-
-	if err := tempVm.DoString(r.Success); err != nil {
-		return err
-	}
-	if tempVm.GetGlobal(SUCCESS_KEY).Type() != lua.LTFunction {
-		return errors.New("'Success' callback function missed")
-	}
-
-	if err := tempVm.DoString(r.Failed); err != nil {
-		return err
-	}
-	if tempVm.GetGlobal(FAILED_KEY).Type() != lua.LTFunction {
-		return errors.New("'Failed' callback function missed")
-	}
-	if err := tempVm.DoString(r.Actions); err != nil {
-		return err
-	}
-	//
-	// validate lua syntax
-	//
-	actionsTable := tempVm.GetGlobal(ACTIONS_KEY)
-	if actionsTable != nil && actionsTable.Type() == lua.LTTable {
-		valid := true
-		actionsTable.(*lua.LTable).ForEach(func(idx, f lua.LValue) {
-			//
-			// golang function in lua is '*lua.LFunction' type
-			//
-			if !(f.Type() == lua.LTFunction) {
-				valid = false
-			}
-		})
-		if !valid {
-			return errors.New("Invalid function type")
-		}
-	} else {
-		return errors.New("'Actions' must be a functions table")
-	}
-	// 释放语法验证阶段的临时虚拟机
-	tempVm.Close()
-	tempVm = nil
-	// 交给规则脚本
-	r.LuaVM.DoString(r.Success)
-	r.LuaVM.DoString(r.Actions)
-	r.LuaVM.DoString(r.Failed)
-	return nil
 }

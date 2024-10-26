@@ -22,6 +22,7 @@ import (
 	"time"
 
 	lua "github.com/hootrhino/gopher-lua"
+	"github.com/hootrhino/rhilex/component/luaruntime"
 	"github.com/hootrhino/rhilex/glogger"
 	"github.com/hootrhino/rhilex/typex"
 	"github.com/sirupsen/logrus"
@@ -64,7 +65,7 @@ func LoadApp(app *Application, luaSource string) error {
 	app.SetMainFunc(&fMain)
 	// 加载库
 	// LoadAppLib(app, __DefaultappletRuntime.RuleEngine)
-	LoadAppLibGroup(app, __DefaultappletRuntime.RuleEngine)
+	luaruntime.LoadRuleLibGroup(__DefaultappletRuntime.RuleEngine, app.UUID, app.VM())
 	// 加载到内存里
 	__DefaultappletRuntime.Applications[app.UUID] = app
 	return nil
