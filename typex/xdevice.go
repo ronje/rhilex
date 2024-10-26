@@ -6,6 +6,45 @@
 // 因此需要抽象出来一个层专门来描述这些设备
 package typex
 
+type DeviceState int
+
+const (
+	// 设备故障
+	DEV_DOWN DeviceState = 0
+	// 设备启用
+	DEV_UP DeviceState = 1
+	// 暂停，这是个占位值，只为了和其他地方统一值,但是没用
+	_ DeviceState = 2
+	// 外部停止
+	DEV_STOP DeviceState = 3
+	// 准备态
+	DEV_PENDING DeviceState = 4
+	// 被禁用
+	DEV_DISABLE DeviceState = 5
+)
+
+func (s DeviceState) String() string {
+	if s == 0 {
+		return "DOWN"
+	}
+	if s == 1 {
+		return "UP"
+	}
+	if s == 2 {
+		return "PAUSE"
+	}
+	if s == 3 {
+		return "STOP"
+	}
+	if s == 4 {
+		return "PENDING"
+	}
+	if s == 5 {
+		return "DISABLE"
+	}
+	return "ERROR"
+}
+
 type DeviceType string
 
 func (d DeviceType) String() string {
@@ -30,7 +69,6 @@ const (
 const (
 	SIEMENS_PLC                 DeviceType = "SIEMENS_PLC"                 // SIEMENS-S71200
 	GENERIC_SNMP                DeviceType = "GENERIC_SNMP"                // SNMP 协议支持
-	GENERIC_OPCUA               DeviceType = "GENERIC_OPCUA"               // 通用OPCUA协议
 	GENERIC_CAMERA              DeviceType = "GENERIC_CAMERA"              // 通用摄像头
 	GENERIC_AIS_RECEIVER        DeviceType = "GENERIC_AIS_RECEIVER"        // 通用AIS
 	GENERIC_BACNET_IP           DeviceType = "GENERIC_BACNET_IP"           // 通用Bacnet IP模式

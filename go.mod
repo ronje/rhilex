@@ -14,7 +14,6 @@ require (
 	github.com/gin-gonic/gin v1.10.0
 	github.com/go-playground/validator/v10 v10.22.1
 	github.com/google/uuid v1.6.0
-	github.com/gopcua/opcua v0.5.3
 	github.com/gorilla/websocket v1.5.3
 	github.com/gosnmp/gosnmp v1.38.0
 	github.com/hootrhino/beautiful-lua-go v0.1.0
