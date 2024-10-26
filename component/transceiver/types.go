@@ -90,7 +90,7 @@ type TransceiverStatus struct {
 	Error error
 }
 
-type TransceiverCommunicator interface {
+type Transceiver interface {
 	Start(TransceiverConfig) error
 	Ctrl(topic, args []byte, timeout time.Duration) ([]byte, error)
 	Status() TransceiverStatus

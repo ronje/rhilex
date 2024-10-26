@@ -15,14 +15,83 @@
 
 package rhilexmanager
 
-import "github.com/hootrhino/rhilex/typex"
+import (
+	"github.com/hootrhino/rhilex/target"
+	"github.com/hootrhino/rhilex/typex"
+)
+
+var DefaultTargetTypeManager *TargetTypeManager
 
 type TargetTypeManager struct {
-	// K: 资源类型
-	// V: 伪构造函数
 	registry map[typex.TargetType]*typex.XConfig
 }
 
+func InitTargetTypeManager(e typex.Rhilex) {
+	DefaultTargetTypeManager = &TargetTypeManager{
+		registry: map[typex.TargetType]*typex.XConfig{},
+	}
+
+	DefaultTargetTypeManager.Register(typex.SEMTECH_UDP_FORWARDER,
+		&typex.XConfig{
+			Engine:    e,
+			NewTarget: target.NewSemtechUdpForwarder,
+		},
+	)
+	DefaultTargetTypeManager.Register(typex.GENERIC_UART_TARGET,
+		&typex.XConfig{
+			Engine:    e,
+			NewTarget: target.NewGenericUart,
+		},
+	)
+	DefaultTargetTypeManager.Register(typex.MONGO_SINGLE,
+		&typex.XConfig{
+			Engine:    e,
+			NewTarget: target.NewMongoTarget,
+		},
+	)
+	DefaultTargetTypeManager.Register(typex.MQTT_TARGET,
+		&typex.XConfig{
+			Engine:    e,
+			NewTarget: target.NewMqttTarget,
+		},
+	)
+	DefaultTargetTypeManager.Register(typex.HTTP_TARGET,
+		&typex.XConfig{
+			Engine:    e,
+			NewTarget: target.NewHTTPTarget,
+		},
+	)
+	DefaultTargetTypeManager.Register(typex.TDENGINE_TARGET,
+		&typex.XConfig{
+			Engine:    e,
+			NewTarget: target.NewTdEngineTarget,
+		},
+	)
+	DefaultTargetTypeManager.Register(typex.RHILEX_GRPC_TARGET,
+		&typex.XConfig{
+			Engine:    e,
+			NewTarget: target.NewRhilexRpcTarget,
+		},
+	)
+	DefaultTargetTypeManager.Register(typex.UDP_TARGET,
+		&typex.XConfig{
+			Engine:    e,
+			NewTarget: target.NewUUdpTarget,
+		},
+	)
+	DefaultTargetTypeManager.Register(typex.TCP_TRANSPORT,
+		&typex.XConfig{
+			Engine:    e,
+			NewTarget: target.NewTTcpTarget,
+		},
+	)
+	DefaultTargetTypeManager.Register(typex.GREPTIME_DATABASE,
+		&typex.XConfig{
+			Engine:    e,
+			NewTarget: target.NewGrepTimeDbTarget,
+		},
+	)
+}
 func NewTargetTypeManager() *TargetTypeManager {
 	return &TargetTypeManager{
 		registry: map[typex.TargetType]*typex.XConfig{},

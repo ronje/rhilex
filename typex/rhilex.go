@@ -62,14 +62,6 @@ type Rhilex interface {
 	//
 	RemoveOutEnd(string)
 	//
-	// 加载插件
-	//
-	LoadPlugin(string, XPlugin) error
-	//
-	// 所有插件列表
-	//
-	AllPlugins() *sync.Map
-	//
 	// 加载规则
 	//
 	LoadRule(*Rule) error

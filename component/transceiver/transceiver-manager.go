@@ -31,23 +31,23 @@ import (
 	"github.com/hootrhino/rhilex/typex"
 )
 
-var DefaultTransceiverCommunicatorManager *TransceiverCommunicatorManager
+var DefaultTransceiverManager *TransceiverManager
 
-type TransceiverCommunicatorManager struct {
+type TransceiverManager struct {
 	Transceivers sync.Map
 	R            typex.Rhilex
 }
 
-func InitTransceiverCommunicatorManager(R typex.Rhilex) {
-	DefaultTransceiverCommunicatorManager = &TransceiverCommunicatorManager{
+func InitTransceiverManager(R typex.Rhilex) {
+	DefaultTransceiverManager = &TransceiverManager{
 		R:            R,
 		Transceivers: sync.Map{},
 	}
 	LoadTransceiverModules()
 }
 
-func (TM *TransceiverCommunicatorManager) Load(name string, config TransceiverConfig,
-	tc TransceiverCommunicator) error {
+func (TM *TransceiverManager) Load(name string, config TransceiverConfig,
+	tc Transceiver) error {
 	glogger.GLogger.Debugf("Transceiver Communicator Load:(%s, %v, %s)",
 		name, config, tc.Info().String())
 	if _, ok := TM.Transceivers.Load(name); !ok {
@@ -61,11 +61,11 @@ func (TM *TransceiverCommunicatorManager) Load(name string, config TransceiverCo
 	return fmt.Errorf("Transceiver already loaded: %s", name)
 }
 
-func (TM *TransceiverCommunicatorManager) List() []CommunicatorInfo {
+func (TM *TransceiverManager) List() []CommunicatorInfo {
 	List := []CommunicatorInfo{}
 	TM.Transceivers.Range(func(key, value any) bool {
 		switch T := value.(type) {
-		case TransceiverCommunicator:
+		case Transceiver:
 			List = append(List, T.Info())
 		}
 		return true
@@ -73,40 +73,40 @@ func (TM *TransceiverCommunicatorManager) List() []CommunicatorInfo {
 	return List
 }
 
-func (TM *TransceiverCommunicatorManager) Get(name string) TransceiverCommunicator {
+func (TM *TransceiverManager) Get(name string) Transceiver {
 	if value, ok := TM.Transceivers.Load(name); ok {
 		switch T := value.(type) {
-		case TransceiverCommunicator:
+		case Transceiver:
 			return T
 		}
 	}
 	return nil
 }
-func (TM *TransceiverCommunicatorManager) UnLoad(name string) {
+func (TM *TransceiverManager) UnLoad(name string) {
 	if value, ok := TM.Transceivers.Load(name); ok {
 		switch T := value.(type) {
-		case TransceiverCommunicator:
+		case Transceiver:
 			T.Stop()
 			TM.Transceivers.Delete(name)
 		}
 	}
 }
 
-func (TM *TransceiverCommunicatorManager) Ctrl(name string, topic, args []byte,
+func (TM *TransceiverManager) Ctrl(name string, topic, args []byte,
 	timeout time.Duration) ([]byte, error) {
 	if value, ok := TM.Transceivers.Load(name); ok {
 		switch T := value.(type) {
-		case TransceiverCommunicator:
+		case Transceiver:
 			return T.Ctrl(topic, args, timeout)
 		}
 	}
 	return nil, fmt.Errorf("Transceiver not exists: %s", name)
 }
 
-func (TM *TransceiverCommunicatorManager) Status(name string) (TransceiverStatus, error) {
+func (TM *TransceiverManager) Status(name string) (TransceiverStatus, error) {
 	if value, ok := TM.Transceivers.Load(name); ok {
 		switch T := value.(type) {
-		case TransceiverCommunicator:
+		case Transceiver:
 			return T.Status(), nil
 		}
 	}
@@ -137,8 +137,8 @@ func LoadTransceiverModules() {
 			glogger.GLogger.Fatal(errMap)
 			os.Exit(1)
 		}
-		Transceiver := NewTransceiver(DefaultTransceiverCommunicatorManager.R)
-		errLoad := DefaultTransceiverCommunicatorManager.Load(config.Name, config, Transceiver)
+		Transceiver := NewTransceiver(DefaultTransceiverManager.R)
+		errLoad := DefaultTransceiverManager.Load(config.Name, config, Transceiver)
 		if errLoad != nil {
 			glogger.GLogger.Fatal(errLoad)
 			os.Exit(1)

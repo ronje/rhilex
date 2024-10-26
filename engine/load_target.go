@@ -21,13 +21,14 @@ import (
 	"time"
 
 	intercache "github.com/hootrhino/rhilex/component/intercache"
+	"github.com/hootrhino/rhilex/component/rhilexmanager"
 	"github.com/hootrhino/rhilex/glogger"
 	"github.com/hootrhino/rhilex/typex"
 )
 
 func (e *RuleEngine) LoadOutEndWithCtx(in *typex.OutEnd, ctx context.Context,
 	cancelCTX context.CancelFunc) error {
-	if config := e.TargetTypeManager.Find(in.Type); config != nil {
+	if config := rhilexmanager.DefaultTargetTypeManager.Find(in.Type); config != nil {
 		return e.loadTarget(config.NewTarget(e), in, ctx, cancelCTX)
 	}
 	return fmt.Errorf("unsupported Target type:%s", in.Type)

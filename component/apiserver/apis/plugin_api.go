@@ -5,6 +5,7 @@ import (
 
 	common "github.com/hootrhino/rhilex/component/apiserver/common"
 	"github.com/hootrhino/rhilex/component/apiserver/server"
+	"github.com/hootrhino/rhilex/component/rhilexmanager"
 	"github.com/hootrhino/rhilex/typex"
 
 	"github.com/gin-gonic/gin"
@@ -36,8 +37,9 @@ func PluginService(c *gin.Context, ruleEngine typex.Rhilex) {
 		c.JSON(common.HTTP_OK, common.Error400(err))
 		return
 	}
-	plugin, ok := ruleEngine.AllPlugins().Load(form.UUID)
-	if ok {
+
+	plugin := rhilexmanager.DefaultPluginTypeManager.Find(form.UUID)
+	if plugin != nil {
 		result := plugin.(typex.XPlugin).Service(typex.ServiceArg{
 			Name: form.Name,
 			UUID: form.UUID,
@@ -56,10 +58,9 @@ func PluginService(c *gin.Context, ruleEngine typex.Rhilex) {
  */
 func PluginDetail(c *gin.Context, ruleEngine typex.Rhilex) {
 	uuid, _ := c.GetQuery("uuid")
-	plugin, ok := ruleEngine.AllPlugins().Load(uuid)
-	if ok {
-		result := plugin.(typex.XPlugin)
-		c.JSON(common.HTTP_OK, common.OkWithData(result.PluginMetaInfo()))
+	plugin := rhilexmanager.DefaultPluginTypeManager.Find(uuid)
+	if plugin != nil {
+		c.JSON(common.HTTP_OK, common.OkWithData(plugin.PluginMetaInfo()))
 		return
 	}
 	c.JSON(common.HTTP_OK, common.Error400EmptyObj(fmt.Errorf("no such plugin:%s", uuid)))

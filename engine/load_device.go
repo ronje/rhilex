@@ -23,6 +23,7 @@ import (
 	"time"
 
 	intercache "github.com/hootrhino/rhilex/component/intercache"
+	"github.com/hootrhino/rhilex/component/rhilexmanager"
 	"github.com/hootrhino/rhilex/glogger"
 	"github.com/hootrhino/rhilex/typex"
 )
@@ -45,24 +46,18 @@ func (e *RuleEngine) GetDevice(id string) *typex.Device {
 // 0.7.0
 // 更新设备的运行时状态
 func (e *RuleEngine) SetDeviceStatus(uuid string, DeviceState typex.DeviceState) {
-	e.locker.Lock()
-	defer e.locker.Unlock()
 	Device := e.GetDevice(uuid)
 	if Device != nil {
 		Device.State = DeviceState
 	}
 }
 func (e *RuleEngine) SetSourceStatus(uuid string, SourceState typex.SourceState) {
-	e.locker.Lock()
-	defer e.locker.Unlock()
 	Source := e.GetInEnd(uuid)
 	if Source != nil {
 		Source.State = SourceState
 	}
 }
 func (e *RuleEngine) SetTargetStatus(uuid string, SourceState typex.SourceState) {
-	e.locker.Lock()
-	defer e.locker.Unlock()
 	Outend := e.GetOutEnd(uuid)
 	if Outend != nil {
 		Outend.State = SourceState
@@ -100,7 +95,7 @@ func (e *RuleEngine) RemoveDevice(uuid string) {
  */
 func (e *RuleEngine) LoadDeviceWithCtx(deviceInstance *typex.Device,
 	ctx context.Context, cancelCTX context.CancelFunc) error {
-	if config := e.DeviceTypeManager.Find(deviceInstance.Type); config != nil {
+	if config := rhilexmanager.DefaultDeviceTypeManager.Find(deviceInstance.Type); config != nil {
 		return e.loadDevices(config.NewDevice(e), deviceInstance, ctx, cancelCTX)
 	}
 	return fmt.Errorf("unsupported Device type:%s", deviceInstance.Type)

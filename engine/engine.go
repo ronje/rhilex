@@ -39,10 +39,7 @@ import (
 	supervisor "github.com/hootrhino/rhilex/component/supervisor"
 	transceiver "github.com/hootrhino/rhilex/component/transceiver"
 	core "github.com/hootrhino/rhilex/config"
-	"github.com/hootrhino/rhilex/device"
 	"github.com/hootrhino/rhilex/glogger"
-	"github.com/hootrhino/rhilex/source"
-	"github.com/hootrhino/rhilex/target"
 	"github.com/hootrhino/rhilex/typex"
 	"github.com/hootrhino/rhilex/utils"
 	"github.com/shirou/gopsutil/v3/disk"
@@ -58,16 +55,12 @@ var __DefaultRuleEngine *RuleEngine
 
 // 规则引擎
 type RuleEngine struct {
-	locker            sync.Mutex
-	Rules             *sync.Map                        `json:"rules"`
-	Plugins           *sync.Map                        `json:"plugins"`
-	InEnds            *sync.Map                        `json:"inends"`
-	OutEnds           *sync.Map                        `json:"outends"`
-	Devices           *sync.Map                        `json:"devices"`
-	Config            *typex.RhilexConfig              `json:"config"`
-	DeviceTypeManager *rhilexmanager.DeviceTypeManager `json:"-"` // 待迁移组件: component/rhilexmanager
-	SourceTypeManager *rhilexmanager.SourceTypeManager `json:"-"` // 待迁移组件: component/rhilexmanager
-	TargetTypeManager *rhilexmanager.TargetTypeManager `json:"-"` // 待迁移组件: component/rhilexmanager
+	Rules *sync.Map `json:"rules"`
+	// Plugins *sync.Map           `json:"plugins"`
+	InEnds  *sync.Map           `json:"inends"`
+	OutEnds *sync.Map           `json:"outends"`
+	Devices *sync.Map           `json:"devices"`
+	Config  *typex.RhilexConfig `json:"config"`
 }
 
 func MainRuleEngine() *RuleEngine {
@@ -78,16 +71,11 @@ func MainRuleEngine() *RuleEngine {
 }
 func InitRuleEngine(config typex.RhilexConfig) typex.Rhilex {
 	__DefaultRuleEngine = &RuleEngine{
-		locker:            sync.Mutex{},
-		DeviceTypeManager: rhilexmanager.NewDeviceTypeManager(),
-		SourceTypeManager: rhilexmanager.NewSourceTypeManager(),
-		TargetTypeManager: rhilexmanager.NewTargetTypeManager(),
-		Plugins:           &sync.Map{},
-		Rules:             &sync.Map{},
-		InEnds:            &sync.Map{},
-		OutEnds:           &sync.Map{},
-		Devices:           &sync.Map{},
-		Config:            &config,
+		Rules:   &sync.Map{},
+		InEnds:  &sync.Map{},
+		OutEnds: &sync.Map{},
+		Devices: &sync.Map{},
+		Config:  &config,
 	}
 	// Init Security License
 	security.InitSecurityLicense()
@@ -114,8 +102,15 @@ func InitRuleEngine(config typex.RhilexConfig) typex.Rhilex {
 	// Internal Queue
 	interqueue.InitXQueue(__DefaultRuleEngine, core.GlobalConfig.MaxQueueSize)
 	// Init Transceiver Communicator Manager
-	transceiver.InitTransceiverCommunicatorManager(__DefaultRuleEngine)
-
+	transceiver.InitTransceiverManager(__DefaultRuleEngine)
+	// Init Device TypeManager
+	rhilexmanager.InitDeviceTypeManager(__DefaultRuleEngine)
+	// Init Source TypeManager
+	rhilexmanager.InitSourceTypeManager(__DefaultRuleEngine)
+	// Init Target TypeManager
+	rhilexmanager.InitTargetTypeManager(__DefaultRuleEngine)
+	// Init Plugin TypeManager
+	rhilexmanager.InitPluginTypeManager(__DefaultRuleEngine)
 	return __DefaultRuleEngine
 }
 
@@ -125,23 +120,12 @@ func InitRuleEngine(config typex.RhilexConfig) typex.Rhilex {
 *
  */
 func (e *RuleEngine) Start() *typex.RhilexConfig {
-	// Resource Manager
-	e.InitDeviceTypeManager()
-	e.InitSourceTypeManager()
-	e.InitTargetTypeManager()
+	// RuleEngine Cache Slot
 	intercache.RegisterSlot("__DefaultRuleEngine")
 	// Internal BUS
 	interqueue.StartXQueue()
 	return e.Config
 }
-
-func (e *RuleEngine) GetPlugins() *sync.Map {
-	return e.Plugins
-}
-func (e *RuleEngine) AllPlugins() *sync.Map {
-	return e.Plugins
-}
-
 func (e *RuleEngine) Version() typex.VersionInfo {
 	return typex.DefaultVersionInfo
 }
@@ -177,14 +161,6 @@ func (e *RuleEngine) Stop() {
 		}
 		return true
 	})
-	// 停止所有插件
-	e.Plugins.Range(func(key, value interface{}) bool {
-		plugin := value.(typex.XPlugin)
-		glogger.GLogger.Infof("Stop plugin:(%s)", plugin.PluginMetaInfo().Name)
-		plugin.Stop()
-		glogger.GLogger.Infof("Stop plugin:(%s) Successfully", plugin.PluginMetaInfo().Name)
-		return true
-	})
 	// 停止所有设备
 	e.Devices.Range(func(key, value interface{}) bool {
 		Device := value.(*typex.Device)
@@ -207,6 +183,10 @@ func (e *RuleEngine) Stop() {
 	intercache.UnRegisterSlot("__DefaultRuleEngine")
 	// UnRegister __DeviceConfigMap
 	intercache.UnRegisterSlot("__DeviceConfigMap")
+	// Stop PluginType Manager
+	glogger.GLogger.Info("Stop PluginType Manager")
+	rhilexmanager.DefaultPluginTypeManager.Stop()
+	glogger.GLogger.Info("Stop PluginType Successfully")
 	// END
 	glogger.GLogger.Info("[v] Stop rhilex successfully")
 	if err := glogger.Close(); err != nil {
@@ -394,7 +374,6 @@ func (e *RuleEngine) AllOutEnds() *sync.Map {
 func (e *RuleEngine) SnapshotDump() string {
 	inends := []interface{}{}
 	rules := []interface{}{}
-	plugins := []interface{}{}
 	outends := []interface{}{}
 	devices := []interface{}{}
 	e.AllInEnds().Range(func(key, value interface{}) bool {
@@ -403,10 +382,6 @@ func (e *RuleEngine) SnapshotDump() string {
 	})
 	e.AllRules().Range(func(key, value interface{}) bool {
 		rules = append(rules, value)
-		return true
-	})
-	e.AllPlugins().Range(func(key, value interface{}) bool {
-		plugins = append(plugins, (value.(typex.XPlugin)).PluginMetaInfo())
 		return true
 	})
 	e.AllOutEnds().Range(func(key, value interface{}) bool {
@@ -434,7 +409,6 @@ func (e *RuleEngine) SnapshotDump() string {
 	}
 	data := map[string]interface{}{
 		"rules":      rules,
-		"plugins":    plugins,
 		"inends":     inends,
 		"outends":    outends,
 		"devices":    devices,
@@ -488,298 +462,28 @@ func (e *RuleEngine) RestartDevice(uuid string) error {
 }
 
 /*
-*
-* 初始化设备管理器
-*
- */
-
-func (e *RuleEngine) InitDeviceTypeManager() error {
-	e.DeviceTypeManager.Register(typex.SZY2062016_MASTER,
-		&typex.XConfig{
-			Engine:    e,
-			NewDevice: device.NewSZY206_2016_MasterGateway,
-		},
-	)
-	e.DeviceTypeManager.Register(typex.CJT1882004_MASTER,
-		&typex.XConfig{
-			Engine:    e,
-			NewDevice: device.NewCJT188_2004_MasterGateway,
-		},
-	)
-	e.DeviceTypeManager.Register(typex.DLT6452007_MASTER,
-		&typex.XConfig{
-			Engine:    e,
-			NewDevice: device.NewDLT645_2007_MasterGateway,
-		},
-	)
-	e.DeviceTypeManager.Register(typex.KNX_GATEWAY,
-		&typex.XConfig{
-			Engine:    e,
-			NewDevice: device.NewKNXGateway,
-		},
-	)
-	e.DeviceTypeManager.Register(typex.LORA_WAN_GATEWAY,
-		&typex.XConfig{
-			Engine:    e,
-			NewDevice: device.NewLoraGateway,
-		},
-	)
-	e.DeviceTypeManager.Register(typex.TENCENT_IOTHUB_GATEWAY,
-		&typex.XConfig{
-			Engine:    e,
-			NewDevice: device.NewTencentIoTGateway,
-		},
-	)
-	e.DeviceTypeManager.Register(typex.ITHINGS_IOTHUB_GATEWAY,
-		&typex.XConfig{
-			Engine:    e,
-			NewDevice: device.NewIThingsGateway,
-		},
-	)
-	e.DeviceTypeManager.Register(typex.GENERIC_HTTP_DEVICE,
-		&typex.XConfig{
-			Engine:    e,
-			NewDevice: device.NewGenericHttpDevice,
-		},
-	)
-	e.DeviceTypeManager.Register(typex.GENERIC_CAMERA,
-		&typex.XConfig{
-			Engine:    e,
-			NewDevice: device.NewVideoCamera,
-		},
-	)
-	e.DeviceTypeManager.Register(typex.SIEMENS_PLC,
-		&typex.XConfig{
-			Engine:    e,
-			NewDevice: device.NewSIEMENS_PLC,
-		},
-	)
-	e.DeviceTypeManager.Register(typex.GENERIC_MODBUS_MASTER,
-		&typex.XConfig{
-			Engine:    e,
-			NewDevice: device.NewGenericModbusMaster,
-		},
-	)
-	e.DeviceTypeManager.Register(typex.GENERIC_MODBUS_SLAVER,
-		&typex.XConfig{
-			Engine:    e,
-			NewDevice: device.NewGenericModbusSlaver,
-		},
-	)
-	e.DeviceTypeManager.Register(typex.GENERIC_UART_RW,
-		&typex.XConfig{
-			Engine:    e,
-			NewDevice: device.NewGenericUartDevice,
-		},
-	)
-	e.DeviceTypeManager.Register(typex.GENERIC_SNMP,
-		&typex.XConfig{
-			Engine:    e,
-			NewDevice: device.NewGenericSnmpDevice,
-		},
-	)
-	e.DeviceTypeManager.Register(typex.GENERIC_USER_PROTOCOL,
-		&typex.XConfig{
-			Engine:    e,
-			NewDevice: device.NewGenericUserProtocolDevice,
-		},
-	)
-	e.DeviceTypeManager.Register(typex.GENERIC_CAMERA,
-		&typex.XConfig{
-			Engine:    e,
-			NewDevice: device.NewVideoCamera,
-		},
-	)
-	e.DeviceTypeManager.Register(typex.GENERIC_AIS_RECEIVER,
-		&typex.XConfig{
-			Engine:    e,
-			NewDevice: device.NewAISDeviceMaster,
-		},
-	)
-	e.DeviceTypeManager.Register(typex.GENERIC_BACNET_IP,
-		&typex.XConfig{
-			Engine:    e,
-			NewDevice: device.NewGenericBacnetIpDevice,
-		},
-	)
-	e.DeviceTypeManager.Register(typex.BACNET_ROUTER_GW,
-		&typex.XConfig{
-			Engine:    e,
-			NewDevice: device.NewBacnetRouter,
-		},
-	)
-	e.DeviceTypeManager.Register(typex.GENERIC_MBUS_EN13433_MASTER,
-		&typex.XConfig{
-			Engine:    e,
-			NewDevice: device.NewMBusEn13433MasterGateway,
-		},
-	)
-	return nil
-}
-
-/*
-*
-* 初始化输入资源管理器
-*
- */
-func (e *RuleEngine) InitSourceTypeManager() error {
-	e.SourceTypeManager.Register(typex.CUSTOM_PROTOCOL_SERVER,
-		&typex.XConfig{
-			Engine:    e,
-			NewSource: source.NewCustomProtocol,
-		},
-	)
-	e.SourceTypeManager.Register(typex.COMTC_EVENT_FORWARDER,
-		&typex.XConfig{
-			Engine:    e,
-			NewSource: source.NewTransceiverForwarder,
-		},
-	)
-	e.SourceTypeManager.Register(typex.HTTP_SERVER,
-		&typex.XConfig{
-			Engine:    e,
-			NewSource: source.NewHttpInEndSource,
-		},
-	)
-	e.SourceTypeManager.Register(typex.COAP_SERVER,
-		&typex.XConfig{
-			Engine:    e,
-			NewSource: source.NewCoAPInEndSource,
-		},
-	)
-	e.SourceTypeManager.Register(typex.GRPC_SERVER,
-		&typex.XConfig{
-			Engine:    e,
-			NewSource: source.NewGrpcInEndSource,
-		},
-	)
-
-	e.SourceTypeManager.Register(typex.UDP_SERVER,
-		&typex.XConfig{
-			Engine:    e,
-			NewSource: source.NewUdpInEndSource,
-		},
-	)
-	e.SourceTypeManager.Register(typex.TCP_SERVER,
-		&typex.XConfig{
-			Engine:    e,
-			NewSource: source.NewTcpSource,
-		},
-	)
-	e.SourceTypeManager.Register(typex.INTERNAL_EVENT,
-		&typex.XConfig{
-			Engine:    e,
-			NewSource: source.NewInternalEventSource,
-		},
-	)
-	e.SourceTypeManager.Register(typex.GENERIC_MQTT_SERVER,
-		&typex.XConfig{
-			Engine:    e,
-			NewSource: source.NewGenericMqttSource,
-		},
-	)
-	e.SourceTypeManager.Register(typex.GENERIC_MQTT_SERVER,
-		&typex.XConfig{
-			Engine:    e,
-			NewSource: source.NewMqttServer,
-		},
-	)
-	return nil
-}
-
-/*
-*
-* 初始化输出资源管理器
-*
- */
-func (e *RuleEngine) InitTargetTypeManager() error {
-
-	e.TargetTypeManager.Register(typex.SEMTECH_UDP_FORWARDER,
-		&typex.XConfig{
-			Engine:    e,
-			NewTarget: target.NewSemtechUdpForwarder,
-		},
-	)
-	e.TargetTypeManager.Register(typex.GENERIC_UART_TARGET,
-		&typex.XConfig{
-			Engine:    e,
-			NewTarget: target.NewGenericUart,
-		},
-	)
-	e.TargetTypeManager.Register(typex.MONGO_SINGLE,
-		&typex.XConfig{
-			Engine:    e,
-			NewTarget: target.NewMongoTarget,
-		},
-	)
-	e.TargetTypeManager.Register(typex.MQTT_TARGET,
-		&typex.XConfig{
-			Engine:    e,
-			NewTarget: target.NewMqttTarget,
-		},
-	)
-	e.TargetTypeManager.Register(typex.HTTP_TARGET,
-		&typex.XConfig{
-			Engine:    e,
-			NewTarget: target.NewHTTPTarget,
-		},
-	)
-	e.TargetTypeManager.Register(typex.TDENGINE_TARGET,
-		&typex.XConfig{
-			Engine:    e,
-			NewTarget: target.NewTdEngineTarget,
-		},
-	)
-	e.TargetTypeManager.Register(typex.RHILEX_GRPC_TARGET,
-		&typex.XConfig{
-			Engine:    e,
-			NewTarget: target.NewRhilexRpcTarget,
-		},
-	)
-	e.TargetTypeManager.Register(typex.UDP_TARGET,
-		&typex.XConfig{
-			Engine:    e,
-			NewTarget: target.NewUUdpTarget,
-		},
-	)
-	e.TargetTypeManager.Register(typex.TCP_TRANSPORT,
-		&typex.XConfig{
-			Engine:    e,
-			NewTarget: target.NewTTcpTarget,
-		},
-	)
-	e.TargetTypeManager.Register(typex.GREPTIME_DATABASE,
-		&typex.XConfig{
-			Engine:    e,
-			NewTarget: target.NewGrepTimeDbTarget,
-		},
-	)
-	return nil
-}
-
-/*
 *-----------------------------------------------------------------
 * 0.6.8 New Api: 将注册权交给设备
 *-----------------------------------------------------------------
  */
 func RegisterNewDevice(Type typex.DeviceType, Cfg *typex.XConfig) error {
 	Cfg.Engine = __DefaultRuleEngine
-	__DefaultRuleEngine.DeviceTypeManager.Register(Type, Cfg)
+	rhilexmanager.DefaultDeviceTypeManager.Register(Type, Cfg)
 	return nil
 }
 func RegisterNewSource(Type typex.InEndType, Cfg *typex.XConfig) error {
 	Cfg.Engine = __DefaultRuleEngine
-	__DefaultRuleEngine.SourceTypeManager.Register(Type, Cfg)
+	rhilexmanager.DefaultSourceTypeManager.Register(Type, Cfg)
 	return nil
 }
 func RegisterNewTarget(Type typex.TargetType, Cfg *typex.XConfig) error {
 	Cfg.Engine = __DefaultRuleEngine
-	__DefaultRuleEngine.TargetTypeManager.Register(Type, Cfg)
+	rhilexmanager.DefaultTargetTypeManager.Register(Type, Cfg)
 	return nil
 }
 
 func (e *RuleEngine) CheckSourceType(Type typex.InEndType) error {
-	keys := e.SourceTypeManager.AllKeys()
+	keys := rhilexmanager.DefaultSourceTypeManager.AllKeys()
 	if utils.SContains(keys, string(Type)) {
 		return nil
 	}
@@ -787,7 +491,7 @@ func (e *RuleEngine) CheckSourceType(Type typex.InEndType) error {
 }
 
 func (e *RuleEngine) CheckDeviceType(Type typex.DeviceType) error {
-	keys := e.DeviceTypeManager.AllKeys()
+	keys := rhilexmanager.DefaultDeviceTypeManager.AllKeys()
 	if utils.SContains(keys, string(Type)) {
 		return nil
 	}
@@ -795,7 +499,7 @@ func (e *RuleEngine) CheckDeviceType(Type typex.DeviceType) error {
 }
 
 func (e *RuleEngine) CheckTargetType(Type typex.TargetType) error {
-	keys := e.TargetTypeManager.AllKeys()
+	keys := rhilexmanager.DefaultTargetTypeManager.AllKeys()
 	if utils.SContains(keys, string(Type)) {
 		return nil
 	}

@@ -15,12 +15,82 @@
 
 package rhilexmanager
 
-import "github.com/hootrhino/rhilex/typex"
+import (
+	"github.com/hootrhino/rhilex/source"
+	"github.com/hootrhino/rhilex/typex"
+)
+
+var DefaultSourceTypeManager *SourceTypeManager
 
 type SourceTypeManager struct {
-	// K: 资源类型
-	// V: 伪构造函数
 	registry map[typex.InEndType]*typex.XConfig
+}
+
+func InitSourceTypeManager(e typex.Rhilex) {
+	DefaultSourceTypeManager = &SourceTypeManager{
+		registry: map[typex.InEndType]*typex.XConfig{},
+	}
+	DefaultSourceTypeManager.Register(typex.CUSTOM_PROTOCOL_SERVER,
+		&typex.XConfig{
+			Engine:    e,
+			NewSource: source.NewCustomProtocol,
+		},
+	)
+	DefaultSourceTypeManager.Register(typex.COMTC_EVENT_FORWARDER,
+		&typex.XConfig{
+			Engine:    e,
+			NewSource: source.NewTransceiverForwarder,
+		},
+	)
+	DefaultSourceTypeManager.Register(typex.HTTP_SERVER,
+		&typex.XConfig{
+			Engine:    e,
+			NewSource: source.NewHttpInEndSource,
+		},
+	)
+	DefaultSourceTypeManager.Register(typex.COAP_SERVER,
+		&typex.XConfig{
+			Engine:    e,
+			NewSource: source.NewCoAPInEndSource,
+		},
+	)
+	DefaultSourceTypeManager.Register(typex.GRPC_SERVER,
+		&typex.XConfig{
+			Engine:    e,
+			NewSource: source.NewGrpcInEndSource,
+		},
+	)
+
+	DefaultSourceTypeManager.Register(typex.UDP_SERVER,
+		&typex.XConfig{
+			Engine:    e,
+			NewSource: source.NewUdpInEndSource,
+		},
+	)
+	DefaultSourceTypeManager.Register(typex.TCP_SERVER,
+		&typex.XConfig{
+			Engine:    e,
+			NewSource: source.NewTcpSource,
+		},
+	)
+	DefaultSourceTypeManager.Register(typex.INTERNAL_EVENT,
+		&typex.XConfig{
+			Engine:    e,
+			NewSource: source.NewInternalEventSource,
+		},
+	)
+	DefaultSourceTypeManager.Register(typex.GENERIC_MQTT_SERVER,
+		&typex.XConfig{
+			Engine:    e,
+			NewSource: source.NewGenericMqttSource,
+		},
+	)
+	DefaultSourceTypeManager.Register(typex.GENERIC_MQTT_SERVER,
+		&typex.XConfig{
+			Engine:    e,
+			NewSource: source.NewMqttServer,
+		},
+	)
 }
 
 func NewSourceTypeManager() *SourceTypeManager {

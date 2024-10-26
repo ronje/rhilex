@@ -29,7 +29,7 @@ import (
 	"github.com/hootrhino/rhilex/typex"
 )
 
-type Transceiver struct {
+type DefalutTransceiver struct {
 	rhilex         typex.Rhilex
 	locker         sync.Mutex
 	mainConfig     TransceiverConfig
@@ -38,8 +38,8 @@ type Transceiver struct {
 	ProtocolSlaver *protocol.GenericProtocolSlaver
 }
 
-func NewTransceiver(rhilex typex.Rhilex) TransceiverCommunicator {
-	return &Transceiver{
+func NewTransceiver(rhilex typex.Rhilex) Transceiver {
+	return &DefalutTransceiver{
 		rhilex: rhilex,
 		locker: sync.Mutex{},
 		mainConfig: TransceiverConfig{
@@ -61,7 +61,7 @@ func NewTransceiver(rhilex typex.Rhilex) TransceiverCommunicator {
 * Start
 *
  */
-func (tc *Transceiver) Start(Config TransceiverConfig) error {
+func (tc *DefalutTransceiver) Start(Config TransceiverConfig) error {
 	tc.mainConfig = Config
 	tc.EventType = "transceiver.up.data"
 	tc.Event = fmt.Sprintf("transceiver.up.data.%s", tc.mainConfig.Name)
@@ -107,10 +107,10 @@ func (tc *Transceiver) Start(Config TransceiverConfig) error {
 	return nil
 }
 
-func (tc *Transceiver) Ctrl(topic, args []byte, timeout time.Duration) ([]byte, error) {
+func (tc *DefalutTransceiver) Ctrl(topic, args []byte, timeout time.Duration) ([]byte, error) {
 	return []byte("OK"), nil
 }
-func (tc *Transceiver) Info() CommunicatorInfo {
+func (tc *DefalutTransceiver) Info() CommunicatorInfo {
 	return CommunicatorInfo{
 		Name:     tc.mainConfig.Name,
 		Model:    "RHILEX TRANSCEIVERCOM",
@@ -120,7 +120,7 @@ func (tc *Transceiver) Info() CommunicatorInfo {
 		Firmware: "v0.0.1",
 	}
 }
-func (tc *Transceiver) Status() TransceiverStatus {
+func (tc *DefalutTransceiver) Status() TransceiverStatus {
 	if tc.ProtocolSlaver == nil {
 		return TransceiverStatus{
 			Code:  TC_ERROR,
@@ -134,7 +134,7 @@ func (tc *Transceiver) Status() TransceiverStatus {
 	}
 
 }
-func (tc *Transceiver) Stop() {
+func (tc *DefalutTransceiver) Stop() {
 	if tc.ProtocolSlaver != nil {
 		tc.ProtocolSlaver.Stop()
 	}

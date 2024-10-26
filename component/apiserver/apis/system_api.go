@@ -17,6 +17,7 @@ import (
 	"github.com/hootrhino/rhilex/component/apiserver/service"
 	"github.com/hootrhino/rhilex/component/applet"
 	"github.com/hootrhino/rhilex/component/intermetric"
+	"github.com/hootrhino/rhilex/component/rhilexmanager"
 	"github.com/hootrhino/rhilex/component/security"
 	core "github.com/hootrhino/rhilex/config"
 	"github.com/hootrhino/rhilex/glogger"
@@ -93,12 +94,10 @@ func GetSecurityLicense(c *gin.Context, ruleEngine typex.Rhilex) {
 // Get all plugins
 func Plugins(c *gin.Context, ruleEngine typex.Rhilex) {
 	data := []interface{}{}
-	plugins := ruleEngine.AllPlugins()
-	plugins.Range(func(key, value interface{}) bool {
-		pi := value.(typex.XPlugin).PluginMetaInfo()
-		data = append(data, pi)
-		return true
-	})
+	plugins := rhilexmanager.DefaultPluginTypeManager.All()
+	for _, plugin := range plugins {
+		data = append(data, plugin.PluginMetaInfo())
+	}
 	c.JSON(common.HTTP_OK, common.OkWithData(data))
 }
 
@@ -121,9 +120,8 @@ func source_count(e typex.Rhilex) map[string]int {
 	allInEnd := e.AllInEnds()
 	allOutEnd := e.AllOutEnds()
 	allRule := e.AllRules()
-	plugins := e.AllPlugins()
 	devices := e.AllDevices()
-	var c1, c2, c3, c4, c5, c6 int
+	var c1, c2, c3, c5 int
 	allInEnd.Range(func(key, value interface{}) bool {
 		c1 += 1
 		return true
@@ -136,10 +134,6 @@ func source_count(e typex.Rhilex) map[string]int {
 		c3 += 1
 		return true
 	})
-	plugins.Range(func(key, value interface{}) bool {
-		c4 += 1
-		return true
-	})
 	devices.Range(func(key, value interface{}) bool {
 		c5 += 1
 		return true
@@ -148,9 +142,9 @@ func source_count(e typex.Rhilex) map[string]int {
 		"inends":  c1,
 		"outends": c2,
 		"rules":   c3,
-		"plugins": c4,
 		"devices": c5,
-		"goods":   c6,
+		"goods":   0,
+		"plugins": rhilexmanager.DefaultPluginTypeManager.Count(),
 		"apps":    applet.AppCount(),
 	}
 }
@@ -215,8 +209,7 @@ func SourceCount(c *gin.Context, ruleEngine typex.Rhilex) {
 	allInEnd := ruleEngine.AllInEnds()
 	allOutEnd := ruleEngine.AllOutEnds()
 	allRule := ruleEngine.AllRules()
-	plugins := ruleEngine.AllPlugins()
-	var c1, c2, c3, c4 int
+	var c1, c2, c3 int
 	allInEnd.Range(func(key, value interface{}) bool {
 		c1 += 1
 		return true
@@ -229,15 +222,11 @@ func SourceCount(c *gin.Context, ruleEngine typex.Rhilex) {
 		c3 += 1
 		return true
 	})
-	plugins.Range(func(key, value interface{}) bool {
-		c4 += 1
-		return true
-	})
 	c.JSON(common.HTTP_OK, common.OkWithData(map[string]int{
 		"inends":  c1,
 		"outends": c2,
 		"rules":   c3,
-		"plugins": c4,
+		"plugins": rhilexmanager.DefaultPluginTypeManager.Count(),
 	}))
 }
 

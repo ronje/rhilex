@@ -15,14 +15,142 @@
 
 package rhilexmanager
 
-import "github.com/hootrhino/rhilex/typex"
+import (
+	"github.com/hootrhino/rhilex/device"
+	"github.com/hootrhino/rhilex/typex"
+)
+
+var DefaultDeviceTypeManager *DeviceTypeManager
 
 type DeviceTypeManager struct {
-	// K: 资源类型
-	// V: 伪构造函数
 	registry map[typex.DeviceType]*typex.XConfig
 }
 
+func InitDeviceTypeManager(e typex.Rhilex) {
+	DefaultDeviceTypeManager = &DeviceTypeManager{
+		registry: map[typex.DeviceType]*typex.XConfig{},
+	}
+	DefaultDeviceTypeManager.Register(typex.SZY2062016_MASTER,
+		&typex.XConfig{
+			Engine:    e,
+			NewDevice: device.NewSZY206_2016_MasterGateway,
+		},
+	)
+	DefaultDeviceTypeManager.Register(typex.CJT1882004_MASTER,
+		&typex.XConfig{
+			Engine:    e,
+			NewDevice: device.NewCJT188_2004_MasterGateway,
+		},
+	)
+	DefaultDeviceTypeManager.Register(typex.DLT6452007_MASTER,
+		&typex.XConfig{
+			Engine:    e,
+			NewDevice: device.NewDLT645_2007_MasterGateway,
+		},
+	)
+	DefaultDeviceTypeManager.Register(typex.KNX_GATEWAY,
+		&typex.XConfig{
+			Engine:    e,
+			NewDevice: device.NewKNXGateway,
+		},
+	)
+	DefaultDeviceTypeManager.Register(typex.LORA_WAN_GATEWAY,
+		&typex.XConfig{
+			Engine:    e,
+			NewDevice: device.NewLoraGateway,
+		},
+	)
+	DefaultDeviceTypeManager.Register(typex.TENCENT_IOTHUB_GATEWAY,
+		&typex.XConfig{
+			Engine:    e,
+			NewDevice: device.NewTencentIoTGateway,
+		},
+	)
+	DefaultDeviceTypeManager.Register(typex.ITHINGS_IOTHUB_GATEWAY,
+		&typex.XConfig{
+			Engine:    e,
+			NewDevice: device.NewIThingsGateway,
+		},
+	)
+	DefaultDeviceTypeManager.Register(typex.GENERIC_HTTP_DEVICE,
+		&typex.XConfig{
+			Engine:    e,
+			NewDevice: device.NewGenericHttpDevice,
+		},
+	)
+	DefaultDeviceTypeManager.Register(typex.GENERIC_CAMERA,
+		&typex.XConfig{
+			Engine:    e,
+			NewDevice: device.NewVideoCamera,
+		},
+	)
+	DefaultDeviceTypeManager.Register(typex.SIEMENS_PLC,
+		&typex.XConfig{
+			Engine:    e,
+			NewDevice: device.NewSIEMENS_PLC,
+		},
+	)
+	DefaultDeviceTypeManager.Register(typex.GENERIC_MODBUS_MASTER,
+		&typex.XConfig{
+			Engine:    e,
+			NewDevice: device.NewGenericModbusMaster,
+		},
+	)
+	DefaultDeviceTypeManager.Register(typex.GENERIC_MODBUS_SLAVER,
+		&typex.XConfig{
+			Engine:    e,
+			NewDevice: device.NewGenericModbusSlaver,
+		},
+	)
+	DefaultDeviceTypeManager.Register(typex.GENERIC_UART_RW,
+		&typex.XConfig{
+			Engine:    e,
+			NewDevice: device.NewGenericUartDevice,
+		},
+	)
+	DefaultDeviceTypeManager.Register(typex.GENERIC_SNMP,
+		&typex.XConfig{
+			Engine:    e,
+			NewDevice: device.NewGenericSnmpDevice,
+		},
+	)
+	DefaultDeviceTypeManager.Register(typex.GENERIC_USER_PROTOCOL,
+		&typex.XConfig{
+			Engine:    e,
+			NewDevice: device.NewGenericUserProtocolDevice,
+		},
+	)
+	DefaultDeviceTypeManager.Register(typex.GENERIC_CAMERA,
+		&typex.XConfig{
+			Engine:    e,
+			NewDevice: device.NewVideoCamera,
+		},
+	)
+	DefaultDeviceTypeManager.Register(typex.GENERIC_AIS_RECEIVER,
+		&typex.XConfig{
+			Engine:    e,
+			NewDevice: device.NewAISDeviceMaster,
+		},
+	)
+	DefaultDeviceTypeManager.Register(typex.GENERIC_BACNET_IP,
+		&typex.XConfig{
+			Engine:    e,
+			NewDevice: device.NewGenericBacnetIpDevice,
+		},
+	)
+	DefaultDeviceTypeManager.Register(typex.BACNET_ROUTER_GW,
+		&typex.XConfig{
+			Engine:    e,
+			NewDevice: device.NewBacnetRouter,
+		},
+	)
+	DefaultDeviceTypeManager.Register(typex.GENERIC_MBUS_EN13433_MASTER,
+		&typex.XConfig{
+			Engine:    e,
+			NewDevice: device.NewMBusEn13433MasterGateway,
+		},
+	)
+}
 func NewDeviceTypeManager() *DeviceTypeManager {
 	return &DeviceTypeManager{
 		registry: map[typex.DeviceType]*typex.XConfig{},
