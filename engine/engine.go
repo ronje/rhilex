@@ -55,8 +55,7 @@ var __DefaultRuleEngine *RuleEngine
 
 // 规则引擎
 type RuleEngine struct {
-	Rules *sync.Map `json:"rules"`
-	// Plugins *sync.Map           `json:"plugins"`
+	Rules   *sync.Map           `json:"rules"`
 	InEnds  *sync.Map           `json:"inends"`
 	OutEnds *sync.Map           `json:"outends"`
 	Devices *sync.Map           `json:"devices"`
