@@ -16,6 +16,7 @@
 package dataschema
 
 import (
+	"encoding/json"
 	"fmt"
 	"regexp"
 	"slices"
@@ -293,12 +294,17 @@ type StringRule struct {
 	DefaultValue string `json:"defaultValue"`
 }
 
+func (S StringRule) String() string {
+	bytes, _ := json.Marshal(S)
+	return string(bytes)
+}
+
 func (S StringRule) Validate(Value interface{}) error {
 	switch SV := Value.(type) {
 	case string:
 		L := len(SV)
 		if L >= S.MaxLength {
-			return fmt.Errorf("Value exceed Max Length:%v", L)
+			return fmt.Errorf("Value (%s) exceed Max Length:%s", SV, S.String())
 		} else {
 			return nil
 		}
@@ -317,16 +323,23 @@ type IntegerRule struct {
 	Min          int `json:"min"`
 }
 
+func (V IntegerRule) String() string {
+	bytes, _ := json.Marshal(V)
+	return string(bytes)
+}
+
 func (V IntegerRule) Validate(Value interface{}) error {
 	switch T := Value.(type) {
 	case int32:
 		if T < int32(V.Max) && T > int32(V.Min) {
 			return nil
 		}
+		return fmt.Errorf("IntegerRule Validate (%v) failed:%s", V, V.String())
 	case int64:
 		if T < int64(V.Max) && T > int64(V.Min) {
 			return nil
 		}
+		return fmt.Errorf("IntegerRule Validate (%v) failed:%s", V, V.String())
 	}
 	return fmt.Errorf("Invalid Int type:%v", Value)
 }
@@ -343,16 +356,22 @@ type FloatRule struct {
 	Round        int     `json:"round"`
 }
 
+func (V FloatRule) String() string {
+	bytes, _ := json.Marshal(V)
+	return string(bytes)
+}
 func (V FloatRule) Validate(Value interface{}) error {
 	switch T := Value.(type) {
 	case float32:
 		if T < float32(V.Max) && T > float32(V.Min) {
 			return nil
 		}
+		return fmt.Errorf("FloatRule Validate (%v) failed:%s", V, V.String())
 	case float64:
 		if T < float64(V.Max) && T > float64(V.Min) {
 			return nil
 		}
+		return fmt.Errorf("FloatRule Validate (%v) failed:%s", V, V.String())
 	}
 	return fmt.Errorf("Invalid Float type:%v", Value)
 }
@@ -366,6 +385,11 @@ type BoolRule struct {
 	DefaultValue bool   `json:"defaultValue"`
 	TrueLabel    string `json:"trueLabel"`  // UI界面对应的label
 	FalseLabel   string `json:"falseLabel"` // UI界面对应的label
+}
+
+func (V BoolRule) String() string {
+	bytes, _ := json.Marshal(V)
+	return string(bytes)
 }
 
 func (V BoolRule) Validate(Value interface{}) error {
@@ -385,12 +409,18 @@ type GeoRule struct {
 	DefaultValue IoTPropertyGeo `json:"defaultValue"`
 }
 
+func (V GeoRule) String() string {
+	bytes, _ := json.Marshal(V)
+	return string(bytes)
+}
+
 func (V GeoRule) Validate(Value interface{}) error {
 	switch T := Value.(type) {
 	case string:
 		if isValidGEO(T) {
 			return nil
 		}
+		return fmt.Errorf("GeoRule Validate (%v) failed:%s", V, V.String())
 	}
 	return fmt.Errorf("Invalid Coordinate type:%v", Value)
 }
