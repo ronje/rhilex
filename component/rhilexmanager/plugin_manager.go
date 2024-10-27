@@ -17,8 +17,8 @@ package rhilexmanager
 
 import (
 	"fmt"
-	"sync"
 
+	"github.com/hootrhino/rhilex/component/orderedmap"
 	core "github.com/hootrhino/rhilex/config"
 	"github.com/hootrhino/rhilex/glogger"
 	"github.com/hootrhino/rhilex/typex"
@@ -29,36 +29,28 @@ var DefaultPluginTypeManager *PluginTypeManager
 
 type PluginTypeManager struct {
 	e        typex.Rhilex
-	registry sync.Map
+	registry *orderedmap.OrderedMap[string, typex.XPlugin]
 }
 
 func InitPluginTypeManager(e typex.Rhilex) {
 	DefaultPluginTypeManager = &PluginTypeManager{
 		e:        e,
-		registry: sync.Map{},
+		registry: orderedmap.NewOrderedMap[string, typex.XPlugin](),
 	}
 }
 
 func (rm *PluginTypeManager) All() []typex.XPlugin {
-	data := make([]typex.XPlugin, 0)
-	rm.registry.Range(func(key, value any) bool {
-		data = append(data, value.(typex.XPlugin))
-		return true
-	})
-	return data
+	return rm.registry.Values()
 }
+
 func (rm *PluginTypeManager) Count() int {
-	count := int(0)
-	rm.registry.Range(func(key, value any) bool {
-		count++
-		return true
-	})
-	return count
+	return rm.registry.Size()
 }
+
 func (rm *PluginTypeManager) Find(name string) typex.XPlugin {
-	p, ok := rm.registry.Load(name)
+	p, ok := rm.registry.Get(name)
 	if ok {
-		return p.(typex.XPlugin)
+		return p
 	}
 	return nil
 }
@@ -67,7 +59,7 @@ func (rm *PluginTypeManager) LoadPlugin(sectionK string, p typex.XPlugin) error 
 	if err := p.Init(section); err != nil {
 		return err
 	}
-	_, ok := rm.registry.Load(p.PluginMetaInfo().UUID)
+	_, ok := rm.registry.Get(p.PluginMetaInfo().UUID)
 	if ok {
 		return fmt.Errorf("plugin already installed:" + p.PluginMetaInfo().Name)
 	}
@@ -75,18 +67,17 @@ func (rm *PluginTypeManager) LoadPlugin(sectionK string, p typex.XPlugin) error 
 		return err
 	}
 	if p.PluginMetaInfo().UUID != "LicenseManager" {
-		rm.registry.Store(p.PluginMetaInfo().UUID, p)
+		rm.registry.Set(p.PluginMetaInfo().UUID, p)
 		glogger.GLogger.Infof("Plugin start successfully:[%v]", p.PluginMetaInfo().Name)
 	}
 	return nil
 
 }
+
 func (rm *PluginTypeManager) Stop() {
-	rm.registry.Range(func(key, value any) bool {
-		plugin := value.(typex.XPlugin)
+	for _, plugin := range rm.registry.Values() {
 		glogger.GLogger.Infof("Stop plugin:(%s)", plugin.PluginMetaInfo().Name)
 		plugin.Stop()
 		glogger.GLogger.Infof("Stop plugin:(%s) Successfully", plugin.PluginMetaInfo().Name)
-		return true
-	})
+	}
 }

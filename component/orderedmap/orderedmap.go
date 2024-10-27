@@ -80,3 +80,7 @@ func (om *OrderedMap[K, V]) Values() []V {
 	}
 	return values
 }
+
+func (om *OrderedMap[K, V]) Size() int {
+	return len(om.values)
+}

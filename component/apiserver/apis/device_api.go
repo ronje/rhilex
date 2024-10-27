@@ -341,14 +341,11 @@ func CreateDevice(c *gin.Context, ruleEngine typex.Rhilex) {
 	isSingle := false
 	// 内部通知单例模式
 	if form.Type == typex.INTERNAL_EVENT.String() {
-		ruleEngine.AllDevices().Range(func(key, value any) bool {
-			In := value.(*typex.Device)
-			if In.Type.String() == form.Type {
+		for _, device := range ruleEngine.AllDevices() {
+			if device.Type.String() == form.Type {
 				isSingle = true
-				return false
 			}
-			return true
-		})
+		}
 	}
 	if isSingle {
 		msg := fmt.Errorf("The %s is singleton Device, can not create multiple", form.Name)

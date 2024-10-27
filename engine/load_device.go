@@ -19,7 +19,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"sync"
 	"time"
 
 	intercache "github.com/hootrhino/rhilex/component/intercache"
@@ -34,13 +33,11 @@ import (
 
 // 获取设备
 func (e *RuleEngine) GetDevice(id string) *typex.Device {
-	v, ok := e.Devices.Load(id)
+	v, ok := e.Devices.Get(id)
 	if ok {
-		return v.(*typex.Device)
-	} else {
-		return nil
+		return v
 	}
-
+	return nil
 }
 
 // 0.7.0
@@ -66,12 +63,12 @@ func (e *RuleEngine) SetTargetStatus(uuid string, SourceState typex.SourceState)
 
 // 保存设备
 func (e *RuleEngine) SaveDevice(dev *typex.Device) {
-	e.Devices.Store(dev.UUID, dev)
+	e.Devices.Set(dev.UUID, dev)
 }
 
 // 获取所有外挂设备
-func (e *RuleEngine) AllDevices() *sync.Map {
-	return e.Devices
+func (e *RuleEngine) AllDevices() []*typex.Device {
+	return e.Devices.Values()
 
 }
 

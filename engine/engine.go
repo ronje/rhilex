@@ -19,7 +19,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"runtime"
-	"sync"
 
 	lua "github.com/hootrhino/gopher-lua"
 	"github.com/hootrhino/rhilex/component/aibase"
@@ -34,6 +33,7 @@ import (
 	"github.com/hootrhino/rhilex/component/interqueue"
 	"github.com/hootrhino/rhilex/component/lostcache"
 	"github.com/hootrhino/rhilex/component/luaexecutor"
+	"github.com/hootrhino/rhilex/component/orderedmap"
 	"github.com/hootrhino/rhilex/component/rhilexmanager"
 	"github.com/hootrhino/rhilex/component/security"
 	supervisor "github.com/hootrhino/rhilex/component/supervisor"
@@ -55,11 +55,11 @@ var __DefaultRuleEngine *RuleEngine
 
 // 规则引擎
 type RuleEngine struct {
-	Rules   *sync.Map           `json:"rules"`   // 现阶段用的无序Map。后期迁移成OrderMap实现
-	InEnds  *sync.Map           `json:"inends"`  // 现阶段用的无序Map。后期迁移成OrderMap实现
-	OutEnds *sync.Map           `json:"outends"` // 现阶段用的无序Map。后期迁移成OrderMap实现
-	Devices *sync.Map           `json:"devices"` // 现阶段用的无序Map。后期迁移成OrderMap实现
-	Config  *typex.RhilexConfig `json:"config"`
+	Rules   *orderedmap.OrderedMap[string, *typex.Rule]   `json:"rules"`   // 现阶段用的无序Map。后期迁移成OrderMap实现
+	InEnds  *orderedmap.OrderedMap[string, *typex.InEnd]  `json:"inends"`  // 现阶段用的无序Map。后期迁移成OrderMap实现
+	OutEnds *orderedmap.OrderedMap[string, *typex.OutEnd] `json:"outends"` // 现阶段用的无序Map。后期迁移成OrderMap实现
+	Devices *orderedmap.OrderedMap[string, *typex.Device] `json:"devices"` // 现阶段用的无序Map。后期迁移成OrderMap实现
+	Config  *typex.RhilexConfig                           `json:"config"`
 }
 
 func MainRuleEngine() *RuleEngine {
@@ -70,20 +70,20 @@ func MainRuleEngine() *RuleEngine {
 }
 func InitRuleEngine(config typex.RhilexConfig) typex.Rhilex {
 	__DefaultRuleEngine = &RuleEngine{
-		Rules:   &sync.Map{},
-		InEnds:  &sync.Map{},
-		OutEnds: &sync.Map{},
-		Devices: &sync.Map{},
+		Rules:   orderedmap.NewOrderedMap[string, *typex.Rule](),
+		InEnds:  orderedmap.NewOrderedMap[string, *typex.InEnd](),
+		OutEnds: orderedmap.NewOrderedMap[string, *typex.OutEnd](),
+		Devices: orderedmap.NewOrderedMap[string, *typex.Device](),
 		Config:  &config,
 	}
 	// Init Security License
 	security.InitSecurityLicense()
 	// Internal DB
-	interdb.Init(__DefaultRuleEngine)
+	interdb.InitInterDb(__DefaultRuleEngine)
 	// Data center: future version maybe support
 	datacenter.InitDataCenter(__DefaultRuleEngine)
 	// Lost Data Cache
-	lostcache.Init(__DefaultRuleEngine)
+	lostcache.InitLostCacheDb(__DefaultRuleEngine)
 	// Internal kv Store
 	interkv.InitInterKVStore(core.GlobalConfig.MaxKvStoreSize)
 	// SuperVisor Admin
@@ -139,36 +139,29 @@ func (e *RuleEngine) Stop() {
 	crontask.StopCronRebootExecutor()
 	applet.Stop()
 	// 资源
-	e.InEnds.Range(func(key, value interface{}) bool {
-		inEnd := value.(*typex.InEnd)
+	for _, inEnd := range e.InEnds.Values() {
 		if inEnd.Source != nil {
 			glogger.GLogger.Infof("Stop InEnd:(%s,%s)", inEnd.Name, inEnd.UUID)
 			e.GetInEnd(inEnd.UUID).State = typex.SOURCE_STOP
 			inEnd.Source.Stop()
 		}
 		glogger.GLogger.Infof("Stop InEnd:(%s,%s) Successfully", inEnd.Name, inEnd.UUID)
-		return true
-	})
-	// 停止所有外部资源
-	e.OutEnds.Range(func(key, value interface{}) bool {
-		outEnd := value.(*typex.OutEnd)
+	}
+	for _, outEnd := range e.OutEnds.Values() {
 		if outEnd.Target != nil {
 			glogger.GLogger.Infof("Stop NewTarget:(%s,%s)", outEnd.Name, outEnd.UUID)
 			e.GetOutEnd(outEnd.UUID).State = typex.SOURCE_STOP
 			outEnd.Target.Stop()
 			glogger.GLogger.Infof("Stop NewTarget:(%s,%s) Successfully", outEnd.Name, outEnd.UUID)
 		}
-		return true
-	})
-	// 停止所有设备
-	e.Devices.Range(func(key, value interface{}) bool {
-		Device := value.(*typex.Device)
-		glogger.GLogger.Infof("Stop Device:(%s)", Device.Name)
-		e.GetDevice(Device.UUID).State = typex.DEV_STOP
-		Device.Device.Stop()
-		glogger.GLogger.Infof("Stop Device:(%s) Successfully", Device.Name)
-		return true
-	})
+	}
+	for _, device := range e.Devices.Values() {
+		glogger.GLogger.Infof("Stop Device:(%s)", device.Name)
+		e.GetDevice(device.UUID).State = typex.DEV_STOP
+		device.Device.Stop()
+		glogger.GLogger.Infof("Stop Device:(%s) Successfully", device.Name)
+	}
+
 	// Internal Cache
 	glogger.GLogger.Info("Flush Internal Cache")
 	intercache.Flush()
@@ -299,15 +292,15 @@ func (e *RuleEngine) RunDeviceCallbacks(Device *typex.Device, callbackArgs strin
 }
 
 func (e *RuleEngine) GetInEnd(uuid string) *typex.InEnd {
-	v, ok := (e.InEnds).Load(uuid)
+	v, ok := (e.InEnds).Get(uuid)
 	if ok {
-		return v.(*typex.InEnd)
+		return v
 	}
 	return nil
 }
 
 func (e *RuleEngine) SaveInEnd(in *typex.InEnd) {
-	e.InEnds.Store(in.UUID, in)
+	e.InEnds.Set(in.UUID, in)
 }
 
 func (e *RuleEngine) RemoveInEnd(uuid string) {
@@ -323,23 +316,20 @@ func (e *RuleEngine) RemoveInEnd(uuid string) {
 	}
 }
 
-func (e *RuleEngine) AllInEnds() *sync.Map {
-	return e.InEnds
+func (e *RuleEngine) AllInEnds() []*typex.InEnd {
+	return e.InEnds.Values()
 }
 
 func (e *RuleEngine) GetOutEnd(id string) *typex.OutEnd {
-	v, ok := e.OutEnds.Load(id)
+	v, ok := e.OutEnds.Get(id)
 	if ok {
-		return v.(*typex.OutEnd)
-	} else {
-		return nil
+		return v
 	}
-
+	return nil
 }
 
 func (e *RuleEngine) SaveOutEnd(out *typex.OutEnd) {
-	e.OutEnds.Store(out.UUID, out)
-
+	e.OutEnds.Set(out.UUID, out)
 }
 
 func (e *RuleEngine) RemoveOutEnd(uuid string) {
@@ -355,35 +345,14 @@ func (e *RuleEngine) RemoveOutEnd(uuid string) {
 	}
 }
 
-func (e *RuleEngine) AllOutEnds() *sync.Map {
-	return e.OutEnds
+func (e *RuleEngine) AllOutEnds() []*typex.OutEnd {
+	return e.OutEnds.Values()
 }
 
 // -----------------------------------------------------------------
 // 获取运行时快照
 // -----------------------------------------------------------------
 func (e *RuleEngine) SnapshotDump() string {
-	inends := []interface{}{}
-	rules := []interface{}{}
-	outends := []interface{}{}
-	devices := []interface{}{}
-	e.AllInEnds().Range(func(key, value interface{}) bool {
-		inends = append(inends, value)
-		return true
-	})
-	e.AllRules().Range(func(key, value interface{}) bool {
-		rules = append(rules, value)
-		return true
-	})
-	e.AllOutEnds().Range(func(key, value interface{}) bool {
-		outends = append(outends, value)
-		return true
-	})
-	e.AllDevices().Range(func(key, value interface{}) bool {
-		devices = append(devices, value)
-		return true
-	})
-
 	parts, _ := disk.Partitions(true)
 	diskInfo, _ := disk.Usage(parts[0].Mountpoint)
 	// For info on each, see: https://golang.org/pkg/runtime/#MemStats
@@ -399,10 +368,10 @@ func (e *RuleEngine) SnapshotDump() string {
 		"osArch":   runtime.GOOS + "-" + runtime.GOARCH,
 	}
 	data := map[string]interface{}{
-		"rules":      rules,
-		"inends":     inends,
-		"outends":    outends,
-		"devices":    devices,
+		"rules":      e.Rules.Values(),
+		"inends":     e.InEnds.Values(),
+		"outends":    e.OutEnds.Values(),
+		"devices":    e.Devices.Values(),
 		"statistics": intermetric.GetMetric(),
 		"system":     system,
 		"config":     core.GlobalConfig,
@@ -417,8 +386,7 @@ func (e *RuleEngine) SnapshotDump() string {
 
 // 重启源
 func (e *RuleEngine) RestartInEnd(uuid string) error {
-	if Value, ok := e.InEnds.Load(uuid); ok {
-		InEnd := Value.(*typex.InEnd)
+	if InEnd, ok := e.InEnds.Get(uuid); ok {
 		if InEnd.Source != nil {
 			InEnd.Source.Details().State = typex.SOURCE_DOWN // Down 以后会被自动拉起来
 		}
@@ -429,8 +397,7 @@ func (e *RuleEngine) RestartInEnd(uuid string) error {
 
 // 重启目标
 func (e *RuleEngine) RestartOutEnd(uuid string) error {
-	if Value, ok := e.OutEnds.Load(uuid); ok {
-		OutEnd := Value.(*typex.OutEnd)
+	if OutEnd, ok := e.OutEnds.Get(uuid); ok {
 		if OutEnd.Target != nil {
 			OutEnd.Target.Details().State = typex.SOURCE_DOWN // Down 以后会被自动拉起来
 		}
@@ -442,8 +409,7 @@ func (e *RuleEngine) RestartOutEnd(uuid string) error {
 
 // 重启设备
 func (e *RuleEngine) RestartDevice(uuid string) error {
-	if Value, ok := e.Devices.Load(uuid); ok {
-		Device := Value.(*typex.Device)
+	if Device, ok := e.Devices.Get(uuid); ok {
 		if Device.Device != nil {
 			Device.Device.SetState(typex.DEV_DOWN) // Down 以后会被自动拉起来
 		}

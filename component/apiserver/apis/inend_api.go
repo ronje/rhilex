@@ -107,14 +107,11 @@ func CreateInend(c *gin.Context, ruleEngine typex.Rhilex) {
 	isSingle := false
 	// 内部消息总线是单例模式
 	if form.Type == typex.INTERNAL_EVENT.String() {
-		ruleEngine.AllInEnds().Range(func(key, value any) bool {
-			In := value.(*typex.InEnd)
-			if In.Type.String() == form.Type {
+		for _, inend := range ruleEngine.AllInEnds() {
+			if inend.Type.String() == form.Type {
 				isSingle = true
-				return false
 			}
-			return true
-		})
+		}
 	}
 	if isSingle {
 		msg := fmt.Errorf("the %s is singleton Source, can not create again", form.Name)

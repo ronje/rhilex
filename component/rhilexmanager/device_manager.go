@@ -16,6 +16,7 @@
 package rhilexmanager
 
 import (
+	"github.com/hootrhino/rhilex/component/orderedmap"
 	"github.com/hootrhino/rhilex/device"
 	"github.com/hootrhino/rhilex/typex"
 )
@@ -23,13 +24,19 @@ import (
 var DefaultDeviceTypeManager *DeviceTypeManager
 
 type DeviceTypeManager struct {
-	registry map[typex.DeviceType]*typex.XConfig
+	e        typex.Rhilex
+	registry *orderedmap.OrderedMap[typex.DeviceType, *typex.XConfig]
 }
 
 func InitDeviceTypeManager(e typex.Rhilex) {
 	DefaultDeviceTypeManager = &DeviceTypeManager{
-		registry: map[typex.DeviceType]*typex.XConfig{},
+		e:        e,
+		registry: orderedmap.NewOrderedMap[typex.DeviceType, *typex.XConfig](),
 	}
+	LoadAllDeviceType(e)
+}
+
+func LoadAllDeviceType(e typex.Rhilex) {
 	DefaultDeviceTypeManager.Register(typex.SZY2062016_MASTER,
 		&typex.XConfig{
 			Engine:    e,
@@ -151,27 +158,19 @@ func InitDeviceTypeManager(e typex.Rhilex) {
 		},
 	)
 }
-func NewDeviceTypeManager() *DeviceTypeManager {
-	return &DeviceTypeManager{
-		registry: map[typex.DeviceType]*typex.XConfig{},
-	}
-
-}
 func (rm *DeviceTypeManager) Register(name typex.DeviceType, f *typex.XConfig) {
-	rm.registry[name] = f
 	f.Type = string(name)
+	rm.registry.Set(name, f)
 }
 
 func (rm *DeviceTypeManager) Find(name typex.DeviceType) *typex.XConfig {
-
-	return rm.registry[name]
+	if xcfg, ok := rm.registry.Get(name); ok {
+		return xcfg
+	}
+	return nil
 }
 func (rm *DeviceTypeManager) All() []*typex.XConfig {
-	data := make([]*typex.XConfig, 0)
-	for _, v := range rm.registry {
-		data = append(data, v)
-	}
-	return data
+	return rm.registry.Values()
 }
 
 /**
@@ -180,8 +179,11 @@ func (rm *DeviceTypeManager) All() []*typex.XConfig {
  */
 func (rm *DeviceTypeManager) AllKeys() []string {
 	data := []string{}
-	for k := range rm.registry {
+	for _, k := range rm.registry.Keys() {
 		data = append(data, k.String())
 	}
 	return data
+}
+
+func (rm *DeviceTypeManager) Stop() {
 }

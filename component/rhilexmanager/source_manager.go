@@ -16,6 +16,7 @@
 package rhilexmanager
 
 import (
+	"github.com/hootrhino/rhilex/component/orderedmap"
 	"github.com/hootrhino/rhilex/source"
 	"github.com/hootrhino/rhilex/typex"
 )
@@ -23,13 +24,19 @@ import (
 var DefaultSourceTypeManager *SourceTypeManager
 
 type SourceTypeManager struct {
-	registry map[typex.InEndType]*typex.XConfig
+	e        typex.Rhilex
+	registry *orderedmap.OrderedMap[typex.InEndType, *typex.XConfig]
 }
 
 func InitSourceTypeManager(e typex.Rhilex) {
 	DefaultSourceTypeManager = &SourceTypeManager{
-		registry: map[typex.InEndType]*typex.XConfig{},
+		e:        e,
+		registry: orderedmap.NewOrderedMap[typex.InEndType, *typex.XConfig](),
 	}
+	LoadAllSourceType(e)
+}
+
+func LoadAllSourceType(e typex.Rhilex) {
 	DefaultSourceTypeManager.Register(typex.CUSTOM_PROTOCOL_SERVER,
 		&typex.XConfig{
 			Engine:    e,
@@ -93,26 +100,20 @@ func InitSourceTypeManager(e typex.Rhilex) {
 	)
 }
 
-func NewSourceTypeManager() *SourceTypeManager {
-	return &SourceTypeManager{
-		registry: map[typex.InEndType]*typex.XConfig{},
-	}
-
-}
 func (rm *SourceTypeManager) Register(name typex.InEndType, f *typex.XConfig) {
-	rm.registry[name] = f
+	f.Type = string(name)
+	rm.registry.Set(name, f)
 }
 
 func (rm *SourceTypeManager) Find(name typex.InEndType) *typex.XConfig {
-
-	return rm.registry[name]
+	p, ok := rm.registry.Get(name)
+	if ok {
+		return p
+	}
+	return nil
 }
 func (rm *SourceTypeManager) All() []*typex.XConfig {
-	data := make([]*typex.XConfig, 0)
-	for _, v := range rm.registry {
-		data = append(data, v)
-	}
-	return data
+	return rm.registry.Values()
 }
 
 /**
@@ -121,8 +122,11 @@ func (rm *SourceTypeManager) All() []*typex.XConfig {
  */
 func (rm *SourceTypeManager) AllKeys() []string {
 	data := []string{}
-	for k := range rm.registry {
+	for _, k := range rm.registry.Keys() {
 		data = append(data, k.String())
 	}
 	return data
+}
+
+func (rm *SourceTypeManager) Stop() {
 }

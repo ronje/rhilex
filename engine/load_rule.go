@@ -16,8 +16,6 @@
 package engine
 
 import (
-	"sync"
-
 	"github.com/hootrhino/rhilex/component/luaruntime"
 	"github.com/hootrhino/rhilex/glogger"
 	"github.com/hootrhino/rhilex/typex"
@@ -56,47 +54,41 @@ func (e *RuleEngine) LoadRule(r *typex.Rule) error {
 
 // GetRule a rule
 func (e *RuleEngine) GetRule(id string) *typex.Rule {
-	v, ok := (e.Rules).Load(id)
+	v, ok := (e.Rules).Get(id)
 	if ok {
-		return v.(*typex.Rule)
-	} else {
-		return nil
+		return v
 	}
+	return nil
+
 }
 
 func (e *RuleEngine) SaveRule(r *typex.Rule) {
-	e.Rules.Store(r.UUID, r)
+	e.Rules.Set(r.UUID, r)
 }
 
 // RemoveRule and inend--rule bindings
 func (e *RuleEngine) RemoveRule(ruleId string) {
 	if rule := e.GetRule(ruleId); rule != nil {
-		// 清空 InEnd 的 bind 资源
-		e.AllInEnds().Range(func(key, value interface{}) bool {
-			inEnd := value.(*typex.InEnd)
+		for _, inEnd := range e.AllInEnds() {
 			for _, r := range inEnd.BindRules {
 				if rule.UUID == r.UUID {
 					delete(inEnd.BindRules, ruleId)
 				}
 			}
-			return true
-		})
-		// 清空Device的绑定
-		e.AllDevices().Range(func(key, value interface{}) bool {
-			Device := value.(*typex.Device)
-			for _, r := range Device.BindRules {
+		}
+		for _, device := range e.AllDevices() {
+			for _, r := range device.BindRules {
 				glogger.GLogger.Debugf("Unlink rule:[%s, %s]", rule.UUID, rule.Name)
 				if rule.UUID == r.UUID {
-					delete(Device.BindRules, ruleId)
+					delete(device.BindRules, ruleId)
 				}
 			}
-			return true
-		})
+		}
 		e.Rules.Delete(ruleId)
 		glogger.GLogger.Infof("Rule [%s, %s] has been deleted", ruleId, rule.Name)
 	}
 }
 
-func (e *RuleEngine) AllRules() *sync.Map {
-	return e.Rules
+func (e *RuleEngine) AllRules() []*typex.Rule {
+	return e.Rules.Values()
 }

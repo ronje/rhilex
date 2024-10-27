@@ -43,7 +43,7 @@ type SqliteDAO struct {
 * 初始化DAO
 *
  */
-func Init(engine typex.Rhilex) error {
+func InitLostCacheDb(engine typex.Rhilex) error {
 	__Sqlite = &SqliteDAO{name: "Sqlite3", engine: engine}
 
 	var err error

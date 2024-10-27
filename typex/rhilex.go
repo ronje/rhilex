@@ -2,7 +2,6 @@ package typex
 
 import (
 	"context"
-	"sync"
 )
 
 // Rhilex interface
@@ -40,7 +39,7 @@ type Rhilex interface {
 	//
 	// 所有输入列表
 	//
-	AllInEnds() *sync.Map
+	AllInEnds() []*InEnd
 	//
 	// 加载输出
 	//
@@ -48,7 +47,7 @@ type Rhilex interface {
 	//
 	// 所有输出
 	//
-	AllOutEnds() *sync.Map
+	AllOutEnds() []*OutEnd
 	//
 	// 获取输出
 	//
@@ -68,7 +67,7 @@ type Rhilex interface {
 	//
 	// 所有规则列表
 	//
-	AllRules() *sync.Map
+	AllRules() []*Rule
 	//
 	// 获取规则
 	//
@@ -105,7 +104,7 @@ type Rhilex interface {
 	//
 	//
 	//
-	AllDevices() *sync.Map
+	AllDevices() []*Device
 	//
 	// 删除设备
 	//

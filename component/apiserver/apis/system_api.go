@@ -117,32 +117,11 @@ func GetNetInterfaces(c *gin.Context, ruleEngine typex.Rhilex) {
 
 // 计算资源数据
 func source_count(e typex.Rhilex) map[string]int {
-	allInEnd := e.AllInEnds()
-	allOutEnd := e.AllOutEnds()
-	allRule := e.AllRules()
-	devices := e.AllDevices()
-	var c1, c2, c3, c5 int
-	allInEnd.Range(func(key, value interface{}) bool {
-		c1 += 1
-		return true
-	})
-	allOutEnd.Range(func(key, value interface{}) bool {
-		c2 += 1
-		return true
-	})
-	allRule.Range(func(key, value interface{}) bool {
-		c3 += 1
-		return true
-	})
-	devices.Range(func(key, value interface{}) bool {
-		c5 += 1
-		return true
-	})
 	return map[string]int{
-		"inends":  c1,
-		"outends": c2,
-		"rules":   c3,
-		"devices": c5,
+		"inends":  len(e.AllInEnds()),
+		"outends": len(e.AllOutEnds()),
+		"rules":   len(e.AllRules()),
+		"devices": len(e.AllDevices()),
 		"goods":   0,
 		"plugins": rhilexmanager.DefaultPluginTypeManager.Count(),
 		"apps":    applet.AppCount(),
@@ -206,26 +185,11 @@ func Statistics(c *gin.Context, ruleEngine typex.Rhilex) {
 
 // Get statistics data
 func SourceCount(c *gin.Context, ruleEngine typex.Rhilex) {
-	allInEnd := ruleEngine.AllInEnds()
-	allOutEnd := ruleEngine.AllOutEnds()
-	allRule := ruleEngine.AllRules()
-	var c1, c2, c3 int
-	allInEnd.Range(func(key, value interface{}) bool {
-		c1 += 1
-		return true
-	})
-	allOutEnd.Range(func(key, value interface{}) bool {
-		c2 += 1
-		return true
-	})
-	allRule.Range(func(key, value interface{}) bool {
-		c3 += 1
-		return true
-	})
 	c.JSON(common.HTTP_OK, common.OkWithData(map[string]int{
-		"inends":  c1,
-		"outends": c2,
-		"rules":   c3,
+		"inends":  len(ruleEngine.AllInEnds()),
+		"outends": len(ruleEngine.AllOutEnds()),
+		"rules":   len(ruleEngine.AllRules()),
+		"devices": len(ruleEngine.AllDevices()),
 		"plugins": rhilexmanager.DefaultPluginTypeManager.Count(),
 	}))
 }
