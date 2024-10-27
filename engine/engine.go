@@ -55,10 +55,10 @@ var __DefaultRuleEngine *RuleEngine
 
 // 规则引擎
 type RuleEngine struct {
-	Rules   *orderedmap.OrderedMap[string, *typex.Rule]   `json:"rules"`   // 现阶段用的无序Map。后期迁移成OrderMap实现
-	InEnds  *orderedmap.OrderedMap[string, *typex.InEnd]  `json:"inends"`  // 现阶段用的无序Map。后期迁移成OrderMap实现
-	OutEnds *orderedmap.OrderedMap[string, *typex.OutEnd] `json:"outends"` // 现阶段用的无序Map。后期迁移成OrderMap实现
-	Devices *orderedmap.OrderedMap[string, *typex.Device] `json:"devices"` // 现阶段用的无序Map。后期迁移成OrderMap实现
+	Rules   *orderedmap.OrderedMap[string, *typex.Rule]   `json:"rules"`
+	InEnds  *orderedmap.OrderedMap[string, *typex.InEnd]  `json:"inends"`
+	OutEnds *orderedmap.OrderedMap[string, *typex.OutEnd] `json:"outends"`
+	Devices *orderedmap.OrderedMap[string, *typex.Device] `json:"devices"`
 	Config  *typex.RhilexConfig                           `json:"config"`
 }
 
@@ -135,7 +135,7 @@ func (e *RuleEngine) GetConfig() *typex.RhilexConfig {
 
 // Stop
 func (e *RuleEngine) Stop() {
-	glogger.GLogger.Info("[*] Ready to stop rhilex")
+	glogger.GLogger.Info("Ready to stop RHILEX")
 	crontask.StopCronRebootExecutor()
 	applet.Stop()
 	// 资源
@@ -180,10 +180,8 @@ func (e *RuleEngine) Stop() {
 	rhilexmanager.DefaultPluginTypeManager.Stop()
 	glogger.GLogger.Info("Stop PluginType Successfully")
 	// END
-	glogger.GLogger.Info("[v] Stop rhilex successfully")
-	if err := glogger.Close(); err != nil {
-		fmt.Println("Close logger error: ", err)
-	}
+	glogger.GLogger.Info("Stop RHILEX successfully")
+	glogger.Close()
 }
 
 // 核心功能: Work, 主要就是推流进队列
