@@ -3,9 +3,10 @@ package test
 import (
 	"context"
 
-	httpserver "github.com/hootrhino/rhilex/component/apiserver"
-	"github.com/hootrhino/rhilex/glogger"
 	mbserver "github.com/hootrhino/gomodbus-server"
+	httpserver "github.com/hootrhino/rhilex/component/apiserver"
+	"github.com/hootrhino/rhilex/component/rhilexmanager"
+	"github.com/hootrhino/rhilex/glogger"
 
 	"testing"
 	"time"
@@ -22,7 +23,7 @@ func Test_Generic_modbus_device_tcp_mode(t *testing.T) {
 
 	hh := httpserver.NewHttpApiServer(engine)
 	// HttpApiServer loaded default
-	if err := engine.LoadPlugin("plugin.http_server", hh); err != nil {
+	if err := rhilexmanager.DefaultPluginTypeManager.LoadPlugin("plugin.http_server", hh); err != nil {
 		glogger.GLogger.Fatal("Rule load failed:", err)
 		t.Fatal(err)
 	}

@@ -55,10 +55,10 @@ var __DefaultRuleEngine *RuleEngine
 
 // 规则引擎
 type RuleEngine struct {
-	Rules   *sync.Map           `json:"rules"`
-	InEnds  *sync.Map           `json:"inends"`
-	OutEnds *sync.Map           `json:"outends"`
-	Devices *sync.Map           `json:"devices"`
+	Rules   *sync.Map           `json:"rules"`   // 现阶段用的无序Map。后期迁移成OrderMap实现
+	InEnds  *sync.Map           `json:"inends"`  // 现阶段用的无序Map。后期迁移成OrderMap实现
+	OutEnds *sync.Map           `json:"outends"` // 现阶段用的无序Map。后期迁移成OrderMap实现
+	Devices *sync.Map           `json:"devices"` // 现阶段用的无序Map。后期迁移成OrderMap实现
 	Config  *typex.RhilexConfig `json:"config"`
 }
 

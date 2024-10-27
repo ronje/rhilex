@@ -9,6 +9,7 @@ import (
 	"time"
 
 	httpserver "github.com/hootrhino/rhilex/component/apiserver"
+	"github.com/hootrhino/rhilex/component/rhilexmanager"
 
 	"github.com/adrianmo/go-nmea"
 	"github.com/hootrhino/rhilex/typex"
@@ -109,7 +110,7 @@ func Test_generic_ais_txrx_device(t *testing.T) {
 
 	hh := httpserver.NewHttpApiServer(engine)
 	// HttpApiServer loaded default
-	if err := engine.LoadPlugin("plugin.http_server", hh); err != nil {
+	if err := rhilexmanager.DefaultPluginTypeManager.LoadPlugin("plugin.http_server", hh); err != nil {
 		t.Fatal(err)
 	}
 	GENERIC_AIS_RECEIVER := typex.NewDevice(typex.GENERIC_AIS_RECEIVER,

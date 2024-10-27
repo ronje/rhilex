@@ -71,7 +71,7 @@ func RunRhilex(iniPath string) {
 		return
 	}
 	// Load Plugin
-	loadOtherPlugin(engine)
+	loadOtherPlugin()
 	s := <-c
 	glogger.GLogger.Warn("RHILEX Receive Stop Signal: ", s)
 	typex.GCancel()
@@ -80,7 +80,7 @@ func RunRhilex(iniPath string) {
 }
 
 // loadPlugin 根据Ini配置信息，加载插件
-func loadOtherPlugin(engine typex.Rhilex) {
+func loadOtherPlugin() {
 	cfg, _ := ini.ShadowLoad(core.GlobalConfig.IniPath)
 	sections := cfg.ChildSections("plugin")
 	for _, section := range sections {
