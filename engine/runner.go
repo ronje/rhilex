@@ -76,7 +76,6 @@ func RunRhilex(iniPath string) {
 	glogger.GLogger.Warn("RHILEX Receive Stop Signal: ", s)
 	typex.GCancel()
 	engine.Stop()
-	os.Exit(0)
 }
 
 // loadPlugin 根据Ini配置信息，加载插件

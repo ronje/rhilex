@@ -21,6 +21,8 @@ import (
 	"log"
 	"os"
 	"runtime"
+	"strconv"
+	"syscall"
 	"time"
 
 	archsupport "github.com/hootrhino/rhilex/archsupport"
@@ -65,7 +67,7 @@ func main() {
 		Commands: []*cli.Command{
 			{
 				Name:  "run",
-				Usage: "Start rhilex, Must with config: -config=/path/rhilex.ini",
+				Usage: "Start rhilex with config: -config=/path/rhilex.ini",
 				Flags: []cli.Flag{
 					&cli.StringFlag{
 						Name:  "db",
@@ -81,8 +83,55 @@ func main() {
 				Action: func(c *cli.Context) error {
 					utils.CLog(typex.Banner)
 					utils.ShowGGpuAndCpuInfo()
+					pid := os.Getpid()
+					err := os.WriteFile(ossupport.MainExePidPath, []byte(fmt.Sprintf("%d", pid)), 0755)
+					if err != nil {
+						return err
+					}
 					engine.RunRhilex(c.String("config"))
-					fmt.Printf("[RHILEX UPGRADE] Run rhilex successfully.")
+					if utils.PathExists(ossupport.MainExePidPath) {
+						os.Remove(ossupport.MainExePidPath)
+					}
+					utils.CLog("[RHILEX RUN] Stop rhilex successfully.")
+					return nil
+				},
+			},
+			{
+				Name:  "stop",
+				Usage: "Stop rhilex",
+				Flags: []cli.Flag{},
+				Action: func(c *cli.Context) error {
+					bytes, err1 := os.ReadFile(ossupport.MainExePidPath)
+					if err1 != nil {
+						utils.CLog("Error ReadFile:%s", err1)
+						return err1
+					}
+					pid, err2 := strconv.Atoi(string(bytes))
+					if err2 != nil {
+						utils.CLog("Error covert pid:%s", err2)
+						return err2
+					}
+					process, err3 := os.FindProcess(pid)
+					if err3 != nil {
+						utils.CLog("Error finding process(%d):%s", pid, err3)
+						return err3
+					}
+					err4 := process.Signal(syscall.SIGTERM)
+					if err4 != nil {
+						utils.CLog("Error sending signal:%s", err4)
+						return err4
+					}
+					err5 := process.Kill()
+					if err5 != nil {
+						utils.CLog("Error kill process:%s", err5)
+						return err5
+					}
+					err6 := os.Remove(ossupport.MainExePidPath)
+					if err6 != nil {
+						utils.CLog("Error Remove pid:%s", err6)
+						return err6
+					}
+					utils.CLog("[RHILEX STOP] Stop rhilex successfully.")
 					return nil
 				},
 			},
@@ -443,7 +492,6 @@ func main() {
 			},
 		},
 	}
-
 	if err := app.Run(os.Args); err != nil {
 		log.Fatal(err)
 	}

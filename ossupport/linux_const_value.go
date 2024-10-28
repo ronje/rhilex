@@ -22,9 +22,12 @@ package ossupport
  */
 const (
 	// rhilex 工作目录
-	MainWorkDir = "/usr/local/rhilex/"
+	// MainWorkDir = "/usr/local/rhilex/"
+	MainWorkDir = "./"
 	// RHILEX Main
 	MainExePath = MainWorkDir + "rhilex"
+	// Pid file
+	MainExePidPath = MainWorkDir + "rhilex.pid"
 	// RHILEX Config
 	RunConfigPath = MainWorkDir + "rhilex.ini"
 	// RHILEX Database
