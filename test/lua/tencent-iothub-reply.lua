@@ -12,61 +12,52 @@
 --
 -- You should have received a copy of the GNU Affero General Public License
 -- along with this program.  If not, see <https://www.gnu.org/licenses/>.
-
--- 控制
 -- {
---     "method": "control",
---     "msgToken": "token",
---     "params": {
---       "power_switch": 1,
---       "color": 1,
---       "brightness": 66
+--     "method":"report",
+--     "msgToken":"DEVICE62MJLVLS",
+--     "timestamp":1677762028638,
+--     "params":{
+--       "temp":1,
+--       "humi":1,
+--       "oxygen":32
 --     }
 -- }
--- 回复
--- {
---     "method":"controlReply",
---     "msgToken":"123",
---     "code":200,
---     "msg":"some message where error"
--- }
+
 
 Actions = {
     function(args)
-        Debug("[====] Received Ithings Command:" .. args);
+        Debug("[====] Received tciothub Command:" .. args);
         local dataT, errJ2T = json:J2T(args);
         if errJ2T ~= nil then
             Throw("json:J2T error:" .. errJ2T);
             return false, args;
         end;
         if dataT.method == "control" then
-            Debug("[====] Ithings Send Control CMD:" .. args);
-            local errIothub = ithings:CtrlReplySuccess("DEVICEMUNUKCEQ", dataT.msgToken);
+            Debug("[====] tciothub Send Control CMD:" .. args);
+            local errIothub = tciothub:CtrlReplySuccess("DEVICEMUNUKCEQ", dataT.msgToken);
             if errIothub ~= nil then
-                Throw("ithings:CtrlReplySuccess Error:" .. errIothub);
+                Throw("tciothub:CtrlReplySuccess Error:" .. errIothub);
                 return false, args;
             end;
         end;
         if dataT.method == "action" then
-            Debug("[====] Ithings Send Control CMD:" .. args);
-            local errIothub = ithings:ActionReplySuccess("DEVICEMUNUKCEQ", dataT.msgToken);
+            Debug("[====] tciothub Send Control CMD:" .. args);
+            local errIothub = tciothub:ActionReplySuccess("DEVICEMUNUKCEQ", dataT.msgToken);
             if errIothub ~= nil then
-                Throw("ithings:ActionReplySuccess Error:" .. errIothub);
+                Throw("tciothub:ActionReplySuccess Error:" .. errIothub);
                 return false, args;
             end;
         end;
-        if dataT.method == "getReport" then
-            Debug("[====] Ithings Get Status:" .. args)
-            local errIothub = ithings:GetPropertyReply('DEVICE62MJLVLS', {
-                --params1
-                --params2
-                --params...
+        if dataT.method == "get_status" then
+            Debug("[====] tciothub Get Status:" .. args)
+            local errIothub = tciothub:GetPropertyReply('DEVICE62MJLVLS', {
+                key = "value"
             })
             if errIothub ~= nil then
                 Throw("ithings:PropertyReplySuccess Error:" .. errIothub)
                 return false, args
             end
-        end
+        end;
         return true, args;
     end
 };

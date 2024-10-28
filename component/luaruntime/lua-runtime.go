@@ -322,6 +322,8 @@ func LoadRuleLibGroup(e typex.Rhilex, uuid string, LState *lua.LState) {
 	}
 	{
 		Funcs := map[string]func(l *lua.LState) int{
+			"CtrlReplySuccess":     rhilexlib.IthingsCtrlReplySuccess(e),
+			"CtrlReplyFailure":     rhilexlib.IthingsCtrlReplyFailure(e),
 			"ActionReplySuccess":   rhilexlib.IthingsActionReplySuccess(e),
 			"ActionReplyFailure":   rhilexlib.IthingsActionReplyFailure(e),
 			"PropertyReplySuccess": rhilexlib.IthingsPropertyReplySuccess(e),
@@ -333,12 +335,14 @@ func LoadRuleLibGroup(e typex.Rhilex, uuid string, LState *lua.LState) {
 	}
 	{
 		Funcs := map[string]func(l *lua.LState) int{
-			"ActionReplySuccess":   rhilexlib.IthingsActionReplySuccess(e),
-			"ActionReplyFailure":   rhilexlib.IthingsActionReplyFailure(e),
-			"PropertyReplySuccess": rhilexlib.IthingsPropertyReplySuccess(e),
-			"PropertyReplyFailure": rhilexlib.IthingsPropertyReplyFailure(e),
-			"PropertyReport":       rhilexlib.IthingsPropertyReport(e),
-			"GetPropertyReply":     rhilexlib.IthingsGetPropertyReply(e),
+			"CtrlReplySuccess":     rhilexlib.TencentIothubCtrlReplySuccess(e),
+			"CtrlReplyFailure":     rhilexlib.TencentIothubCtrlReplyFailure(e),
+			"ActionReplySuccess":   rhilexlib.TencentIothubActionReplySuccess(e),
+			"ActionReplyFailure":   rhilexlib.TencentIothubActionReplyFailure(e),
+			"PropertyReplySuccess": rhilexlib.TencentIothubPropertyReplySuccess(e),
+			"PropertyReplyFailure": rhilexlib.TencentIothubPropertyReplyFailure(e),
+			"PropertyReport":       rhilexlib.TencentIothubPropertyReport(e),
+			"GetPropertyReply":     rhilexlib.TencentIothubGetPropertyReply(e),
 		}
 		AddRuleLibToGroup(e, LState, "tciothub", Funcs)
 	}

@@ -24,6 +24,47 @@ import (
 )
 
 /**
+ * 控制指令
+ *
+ */
+func IthingsCtrlReplySuccess(rx typex.Rhilex) func(*lua.LState) int {
+	return func(stateStack *lua.LState) int {
+		uuid := stateStack.ToString(2)
+		token := stateStack.ToString(3)
+		Device := rx.GetDevice(uuid)
+		if Device != nil {
+			if Device.Device != nil {
+				_, err := Device.Device.OnWrite([]byte("CtrlReplySuccess"), []byte(token))
+				if err != nil {
+					stateStack.Push(lua.LString(err.Error()))
+					return 1
+				}
+			}
+		}
+		stateStack.Push(lua.LNil)
+		return 1
+	}
+}
+func IthingsCtrlReplyFailure(rx typex.Rhilex) func(*lua.LState) int {
+	return func(stateStack *lua.LState) int {
+		uuid := stateStack.ToString(2)
+		token := stateStack.ToString(3)
+		Device := rx.GetDevice(uuid)
+		if Device != nil {
+			if Device.Device != nil {
+				_, err := Device.Device.OnWrite([]byte("CtrlReplyFailure"), []byte(token))
+				if err != nil {
+					stateStack.Push(lua.LString(err.Error()))
+					return 1
+				}
+			}
+		}
+		stateStack.Push(lua.LNil)
+		return 1
+	}
+}
+
+/**
  * 动作成功
  *
  */
