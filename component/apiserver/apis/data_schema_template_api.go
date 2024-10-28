@@ -157,11 +157,11 @@ func _Template_TEMP_HUMIDITY(schemaId string) error {
 INSERT INTO m_iot_properties (created_at, schema_id, uuid, label, name, type, rw, unit, rule, description)
 VALUES
 (CURRENT_TIMESTAMP, '%s', '%s', '设备id', 'device_id', 'STRING', 'R', '-',
-	'{"defaultValue":"0","max":0,"min":0,"round":2}', '设备id'),
+	'{"defaultValue":"0","max":64,"min":0,"round":2}', '设备id'),
 (CURRENT_TIMESTAMP, '%s', '%s', '温度', 'temperature', 'FLOAT', 'R', '℃',
-	'{"defaultValue":"0","max":0,"min":0,"round":2}', '温度值'),
+	'{"defaultValue":"0","max":1000,"min":0,"round":2}', '温度值'),
 (CURRENT_TIMESTAMP, '%s', '%s', '湿度', 'humidity', 'FLOAT', 'R', '%%',
-	'{"defaultValue":"0","max":0,"min":0,"round":2}', '湿度值');
+	'{"defaultValue":"0","max":1000,"min":0,"round":2}', '湿度值');
 `
 	return tx.Exec(fmt.Sprintf(sql, schemaId, uuid1, schemaId, uuid2, schemaId, uuid3)).Error
 }
@@ -179,9 +179,9 @@ func _Template_SWITCH_STATUS(schemaId string) error {
 INSERT INTO m_iot_properties (created_at, schema_id, uuid, label, name, type, rw, unit, rule, description)
 VALUES
 (CURRENT_TIMESTAMP, '%s', '%s', '设备id', 'device_id', 'STRING', 'R', '-',
-	'{"defaultValue":"0","max":0,"min":0,"round":2}', '设备id'),
+	'{"defaultValue":"0","max":1000,"min":0,"round":2}', '设备id'),
 (CURRENT_TIMESTAMP, '%s', '%s', '开关状态', 'status', 'BOOL', 'RW', '-',
-    '{"defaultValue":"0","max":0,"min":0,"trueLabel":"开","falseLabel":"关","round":2}', 'true 为开, false 为关');
+    '{"defaultValue":"0","max":1000,"min":0,"trueLabel":"开","falseLabel":"关","round":2}', 'true 为开, false 为关');
 `
 	uuid1 := utils.MakeUUID("PROP")
 	uuid2 := utils.MakeUUID("PROP")
@@ -203,17 +203,17 @@ func _Template_WATER_QUALITY(schemaId string) error {
 INSERT INTO m_iot_properties (created_at, schema_id, uuid, label, name, type, rw, unit, rule, description)
 VALUES
 (CURRENT_TIMESTAMP, '%s', '%s', '设备id', 'device_id', 'STRING', 'R', '-',
-	'{"defaultValue":"0","max":0,"min":0,"round":2}', '设备id'),
+	'{"defaultValue":"0","max":1000,"min":0,"round":2}', '设备id'),
 (CURRENT_TIMESTAMP, '%s', '%s', 'pH值', 'ph', 'FLOAT', 'R', 'mol/μl',
-    '{"defaultValue":"0","max":0,"min":0,"round":2}', 'pH值'),
+    '{"defaultValue":"0","max":1000,"min":0,"round":2}', 'pH值'),
 (CURRENT_TIMESTAMP, '%s', '%s', '浊度', 'turbidity', 'FLOAT', 'R', 'NTU',
-    '{"defaultValue":"0","max":0,"min":0,"round":2}', '浊度'),
+    '{"defaultValue":"0","max":1000,"min":0,"round":2}', '浊度'),
 (CURRENT_TIMESTAMP, '%s', '%s', '溶解氧', 'dissolved_oxygen', 'FLOAT', 'R', 'mg/L',
-    '{"defaultValue":"0","max":0,"min":0,"round":2}', '溶解氧'),
+    '{"defaultValue":"0","max":1000,"min":0,"round":2}', '溶解氧'),
 (CURRENT_TIMESTAMP, '%s', '%s', '电导率', 'conductivity', 'FLOAT', 'R', 'μS/cm',
-    '{"defaultValue":"0","max":0,"min":0,"round":2}', '电导率'),
+    '{"defaultValue":"0","max":1000,"min":0,"round":2}', '电导率'),
 (CURRENT_TIMESTAMP, '%s', '%s', '水温', 'temperature', 'FLOAT', 'R', '摄氏度',
-    '{"defaultValue":"0","max":0,"min":0,"round":2}', '水温');
+    '{"defaultValue":"0","max":1000,"min":0,"round":2}', '水温');
 `
 	uuid1 := utils.MakeUUID("PROP")
 	uuid2 := utils.MakeUUID("PROP")
@@ -244,19 +244,19 @@ func _Template_AIR_QUALITY(schemaId string) error {
 INSERT INTO m_iot_properties (created_at, schema_id, uuid, label, name, type, rw, unit, rule, description)
 VALUES
 (CURRENT_TIMESTAMP, '%s', '%s', '设备id', 'device_id', 'STRING', 'R', '-',
-	'{"defaultValue":"0","max":0,"min":0,"round":2}', '设备id'),
+	'{"defaultValue":"0","max":1000,"min":0,"round":2}', '设备id'),
 (CURRENT_TIMESTAMP, '%s', '%s', 'PM2.5浓度', 'pm25', 'FLOAT', 'R', 'μg/m³',
-    '{"defaultValue":"0","max":0,"min":0,"round":2}' , 'PM2.5浓度'),
+    '{"defaultValue":"0","max":1000,"min":0,"round":2}' , 'PM2.5浓度'),
 (CURRENT_TIMESTAMP, '%s', '%s', 'PM10浓度', 'pm10', 'FLOAT', 'R', 'μg/m³',
-    '{"defaultValue":"0","max":0,"min":0,"round":2}' , 'PM10浓度'),
+    '{"defaultValue":"0","max":1000,"min":0,"round":2}' , 'PM10浓度'),
 (CURRENT_TIMESTAMP, '%s', '%s', 'CO2浓度', 'co2', 'INT', 'R', 'ppm',
-    '{"defaultValue":"0","max":0,"min":0,"round":2}' , 'CO2浓度'),
+    '{"defaultValue":"0","max":1000,"min":0,"round":2}' , 'CO2浓度'),
 (CURRENT_TIMESTAMP, '%s', '%s', '总挥发性有机化合物', 'tvoc', 'FLOAT', 'R', 'ppb',
-    '{"defaultValue":"0","max":0,"min":0,"round":2}' , '总挥发性有机化合物'),
+    '{"defaultValue":"0","max":1000,"min":0,"round":2}' , '总挥发性有机化合物'),
 (CURRENT_TIMESTAMP, '%s', '%s', '温度', 'temperature', 'FLOAT', 'R', '℃',
-    '{"defaultValue":"0","max":0,"min":0,"round":2}' , '温度'),
+    '{"defaultValue":"0","max":1000,"min":0,"round":2}' , '温度'),
 (CURRENT_TIMESTAMP, '%s', '%s', '湿度', 'humidity', 'FLOAT', 'R', '%%',
-    '{"defaultValue":"0","max":0,"min":0,"round":2}' , '湿度');
+    '{"defaultValue":"0","max":1000,"min":0,"round":2}' , '湿度');
 `
 	uuid1 := utils.MakeUUID("PROP")
 	uuid2 := utils.MakeUUID("PROP")
@@ -289,13 +289,13 @@ func _Template_MOTION_SENSOR(schemaId string) error {
 INSERT INTO m_iot_properties (created_at, schema_id, uuid, label, name, type, rw, unit, rule, description)
 VALUES
 (CURRENT_TIMESTAMP, '%s', '%s', '设备id', 'device_id', 'STRING', 'R', '-',
-	'{"defaultValue":"0","max":0,"min":0,"round":2}', '设备id'),
+	'{"defaultValue":"0","max":1000,"min":0,"round":2}', '设备id'),
 (CURRENT_TIMESTAMP, '%s', '%s', '运动状态', 'detected', 'BOOL', 'R', '-',
-    '{"defaultValue":"0","max":0,"min":0,"round":2}', '是否检测到运动'),
+    '{"defaultValue":"0","max":1000,"min":0,"round":2}', '是否检测到运动'),
 (CURRENT_TIMESTAMP, '%s', '%s', '运动强度', 'intensity', 'INTEGER', 'R', '-',
-    '{"defaultValue":"0","max":0,"min":0,"round":2}', '运动强度'),
+    '{"defaultValue":"0","max":1000,"min":0,"round":2}', '运动强度'),
 (CURRENT_TIMESTAMP, '%s', '%s', '电池电量', 'battery', 'INTEGER', 'R', '%%',
-    '{"defaultValue":"0","max":0,"min":0,"round":2}', '电池电量');
+    '{"defaultValue":"0","max":1000,"min":0,"round":2}', '电池电量');
 `
 	uuid1 := utils.MakeUUID("PROP")
 	uuid2 := utils.MakeUUID("PROP")
@@ -322,15 +322,15 @@ func _Template_SMART_METER(schemaId string) error {
 INSERT INTO m_iot_properties (created_at, schema_id, uuid, label, name, type, rw, unit, rule, description)
 VALUES
 (CURRENT_TIMESTAMP, '%s', '%s', '设备id', 'device_id', 'STRING', 'R', '-',
-	'{"defaultValue":"0","max":0,"min":0,"round":2}', '设备id'),
+	'{"defaultValue":"0","max":1000,"min":0,"round":2}', '设备id'),
 (CURRENT_TIMESTAMP, '%s', '%s', '能源消耗', 'energy_consumption', 'FLOAT', 'R', 'kWh',
-   '{"defaultValue":"0","max":0,"min":0,"round":2}', '能源消耗'),
+   '{"defaultValue":"0","max":1000,"min":0,"round":2}', '能源消耗'),
 (CURRENT_TIMESTAMP, '%s', '%s', '电流', 'current', 'FLOAT', 'R', 'A',
-    '{"defaultValue":"0","max":0,"min":0,"round":2}', '电流'),
+    '{"defaultValue":"0","max":1000,"min":0,"round":2}', '电流'),
 (CURRENT_TIMESTAMP, '%s', '%s', '电压', 'voltage', 'FLOAT', 'R', 'V',
-    '{"defaultValue":"0","max":0,"min":0,"round":2}', '电压'),
+    '{"defaultValue":"0","max":1000,"min":0,"round":2}', '电压'),
 (CURRENT_TIMESTAMP, '%s', '%s', '功率因数', 'power_factor', 'FLOAT', 'R', '-',
-    '{"defaultValue":"0","max":0,"min":0,"round":2}', '功率因数');
+    '{"defaultValue":"0","max":1000,"min":0,"round":2}', '功率因数');
 `
 	uuid1 := utils.MakeUUID("PROP")
 	uuid2 := utils.MakeUUID("PROP")
@@ -359,13 +359,13 @@ func _Template_SOIL_MOISTURE(schemaId string) error {
 INSERT INTO m_iot_properties (created_at, schema_id, uuid, label, name, type, rw, unit, rule, description)
 VALUES
 (CURRENT_TIMESTAMP, '%s', '%s', '设备id', 'device_id', 'STRING', 'R', '-',
-	'{"defaultValue":"0","max":0,"min":0,"round":2}', '设备id'),
+	'{"defaultValue":"0","max":1000,"min":0,"round":2}', '设备id'),
 (CURRENT_TIMESTAMP, '%s', '%s', '土壤湿度', 'moisture', 'FLOAT', 'R', '%%',
-    '{"defaultValue":"0","max":0,"min":0,"round":2}', '土壤湿度'),
+    '{"defaultValue":"0","max":1000,"min":0,"round":2}', '土壤湿度'),
 (CURRENT_TIMESTAMP, '%s', '%s', '土壤温度', 'temperature', 'FLOAT', 'R', '℃',
-    '{"defaultValue":"0","max":0,"min":0,"round":2}', '土壤温度'),
+    '{"defaultValue":"0","max":1000,"min":0,"round":2}', '土壤温度'),
 (CURRENT_TIMESTAMP, '%s', '%s', '电导率', 'ec', 'FLOAT', 'R', 'mS/cm',
-    '{"defaultValue":"0","max":0,"min":0,"round":2}', '土壤电导率'),
+    '{"defaultValue":"0","max":1000,"min":0,"round":2}', '土壤电导率'),
 `
 	uuid1 := utils.MakeUUID("PROP")
 	uuid2 := utils.MakeUUID("PROP")
@@ -391,12 +391,12 @@ func _Template_GPS_TRACKER(schemaId string) error {
 	sql := `
 INSERT INTO m_iot_properties (created_at, schema_id, uuid, label, name, type, rw, unit, rule, description)
 VALUES
-(CURRENT_TIMESTAMP, '%s', '%s', '设备id', 'device_id', 'STRING', 'R', '-', '{"defaultValue":"0","max":0,"min":0,"round":2}', '设备id'),
-(CURRENT_TIMESTAMP, '%s', '%s', '纬度', 'latitude', 'FLOAT', 'R', '°', '{"defaultValue":"0","max":0,"min":0,"round":2}', '设备的纬度'),
-(CURRENT_TIMESTAMP, '%s', '%s', '经度', 'longitude', 'FLOAT', 'R', '°', '{"defaultValue":"0","max":0,"min":0,"round":2}', '设备的经度'),
-(CURRENT_TIMESTAMP, '%s', '%s', '海拔', 'altitude', 'FLOAT', 'R', '米', '{"defaultValue":"0","max":0,"min":0,"round":2}', '设备的海拔高度'),
-(CURRENT_TIMESTAMP, '%s', '%s', '速度', 'speed', 'FLOAT', 'R', 'km/h', '{"defaultValue":"0","max":0,"min":0,"round":2}', '设备移动速度'),
-(CURRENT_TIMESTAMP, '%s', '%s', '电池电量百分比', 'battery', 'FLOAT', 'R', '%%', '{"defaultValue":"0","max":0,"min":0,"round":2}', '电池电量百分比');
+(CURRENT_TIMESTAMP, '%s', '%s', '设备id', 'device_id', 'STRING', 'R', '-', '{"defaultValue":"0","max":1000,"min":0,"round":2}', '设备id'),
+(CURRENT_TIMESTAMP, '%s', '%s', '纬度', 'latitude', 'FLOAT', 'R', '°', '{"defaultValue":"0","max":1000,"min":0,"round":2}', '设备的纬度'),
+(CURRENT_TIMESTAMP, '%s', '%s', '经度', 'longitude', 'FLOAT', 'R', '°', '{"defaultValue":"0","max":1000,"min":0,"round":2}', '设备的经度'),
+(CURRENT_TIMESTAMP, '%s', '%s', '海拔', 'altitude', 'FLOAT', 'R', '米', '{"defaultValue":"0","max":1000,"min":0,"round":2}', '设备的海拔高度'),
+(CURRENT_TIMESTAMP, '%s', '%s', '速度', 'speed', 'FLOAT', 'R', 'km/h', '{"defaultValue":"0","max":1000,"min":0,"round":2}', '设备移动速度'),
+(CURRENT_TIMESTAMP, '%s', '%s', '电池电量百分比', 'battery', 'FLOAT', 'R', '%%', '{"defaultValue":"0","max":1000,"min":0,"round":2}', '电池电量百分比');
 `
 	uuid1 := utils.MakeUUID("PROP")
 	uuid2 := utils.MakeUUID("PROP")
@@ -426,11 +426,11 @@ func _Template_SMOKE_DETECTOR(schemaId string) error {
 	sql := `
 INSERT INTO m_iot_properties (created_at, schema_id, uuid, label, name, type, rw, unit, rule, description)
 VALUES
-(CURRENT_TIMESTAMP, '%s', '%s', '设备id', 'device_id', 'STRING', 'R', '-', '{"defaultValue":"0","max":0,"min":0,"round":2}', '设备id'),
-(CURRENT_TIMESTAMP, '%s', '%s', '烟雾检测状态', 'smoke_detected', 'BOOLEAN', 'R', '-', '{"defaultValue":"0","max":0,"min":0,"round":2}', '是否检测到烟雾'),
-(CURRENT_TIMESTAMP, '%s', '%s', '一氧化碳水平', 'co_level', 'FLOAT', 'R', 'ppm', '{"defaultValue":"0","max":0,"min":0,"round":2}', '一氧化碳浓度'),
-(CURRENT_TIMESTAMP, '%s', '%s', '电池电量百分比', 'battery', 'FLOAT', 'R', '%%', '{"defaultValue":"0","max":0,"min":0,"round":2}', '电池电量百分比'),
-(CURRENT_TIMESTAMP, '%s', '%s', '上次测试时间', 'last_tested', 'TIMESTAMP', 'R', '-', '{"defaultValue":"0","max":0,"min":0,"round":2}', '上次测试时间');
+(CURRENT_TIMESTAMP, '%s', '%s', '设备id', 'device_id', 'STRING', 'R', '-', '{"defaultValue":"0","max":1000,"min":0,"round":2}', '设备id'),
+(CURRENT_TIMESTAMP, '%s', '%s', '烟雾检测状态', 'smoke_detected', 'BOOLEAN', 'R', '-', '{"defaultValue":"0","max":1000,"min":0,"round":2}', '是否检测到烟雾'),
+(CURRENT_TIMESTAMP, '%s', '%s', '一氧化碳水平', 'co_level', 'FLOAT', 'R', 'ppm', '{"defaultValue":"0","max":1000,"min":0,"round":2}', '一氧化碳浓度'),
+(CURRENT_TIMESTAMP, '%s', '%s', '电池电量百分比', 'battery', 'FLOAT', 'R', '%%', '{"defaultValue":"0","max":1000,"min":0,"round":2}', '电池电量百分比'),
+(CURRENT_TIMESTAMP, '%s', '%s', '上次测试时间', 'last_tested', 'TIMESTAMP', 'R', '-', '{"defaultValue":"0","max":1000,"min":0,"round":2}', '上次测试时间');
 `
 	uuid1 := utils.MakeUUID("PROP")
 	uuid2 := utils.MakeUUID("PROP")
@@ -458,11 +458,11 @@ func _Template_SMART_LOCK(schemaId string) error {
 	sql := `
 INSERT INTO m_iot_properties (created_at, schema_id, uuid, label, name, type, rw, unit, rule, description)
 VALUES
-(CURRENT_TIMESTAMP, '%s', '%s', '设备id', 'device_id', 'STRING', 'R', '-', '{"defaultValue":"0","max":0,"min":0,"round":2}', '设备id'),
-(CURRENT_TIMESTAMP, '%s', '%s', '锁状态', 'lock_status', 'BOOLEAN', 'RW', '-', '{"defaultValue":"0","max":0,"min":0,"round":2}', '锁的状态'),
-(CURRENT_TIMESTAMP, '%s', '%s', '访问方法', 'access_method', 'VARCHAR(20)', 'RW', '-', '{"defaultValue":"0","max":0,"min":0,"round":2}', '访问方式'),
-(CURRENT_TIMESTAMP, '%s', '%s', '操作用户ID', 'user_id', 'STRING', 'RW', '-', '{"defaultValue":"0","max":0,"min":0,"round":2}', '操作用户ID'),
-(CURRENT_TIMESTAMP, '%s', '%s', '电池电量百分比', 'battery', 'FLOAT', 'R', '%%', '{"defaultValue":"0","max":0,"min":0,"round":2}', '电池电量百分比');
+(CURRENT_TIMESTAMP, '%s', '%s', '设备id', 'device_id', 'STRING', 'R', '-', '{"defaultValue":"0","max":1000,"min":0,"round":2}', '设备id'),
+(CURRENT_TIMESTAMP, '%s', '%s', '锁状态', 'lock_status', 'BOOLEAN', 'RW', '-', '{"defaultValue":"0","max":1000,"min":0,"round":2}', '锁的状态'),
+(CURRENT_TIMESTAMP, '%s', '%s', '访问方法', 'access_method', 'VARCHAR(20)', 'RW', '-', '{"defaultValue":"0","max":1000,"min":0,"round":2}', '访问方式'),
+(CURRENT_TIMESTAMP, '%s', '%s', '操作用户ID', 'user_id', 'STRING', 'RW', '-', '{"defaultValue":"0","max":1000,"min":0,"round":2}', '操作用户ID'),
+(CURRENT_TIMESTAMP, '%s', '%s', '电池电量百分比', 'battery', 'FLOAT', 'R', '%%', '{"defaultValue":"0","max":1000,"min":0,"round":2}', '电池电量百分比');
 `
 	uuid1 := utils.MakeUUID("PROP")
 	uuid2 := utils.MakeUUID("PROP")
@@ -490,15 +490,15 @@ func _Template_SIX_AXIS_ACCELEROMETER(schemaId string) error {
 	sql := `
 INSERT INTO m_iot_properties (created_at, schema_id, uuid, label, name, type, rw, unit, rule, description)
 VALUES
-(CURRENT_TIMESTAMP, '%s', '%s', '设备id', 'device_id', 'STRING', 'R', '-', '{"defaultValue":"0","max":0,"min":0,"round":2}', '设备id'),
-(CURRENT_TIMESTAMP, '%s', '%s', 'X轴加速度', 'accel_x', 'FLOAT', 'R', 'g', '{"defaultValue":"0","max":0,"min":0,"round":2}', 'X轴方向的加速度'),
-(CURRENT_TIMESTAMP, '%s', '%s', 'Y轴加速度', 'accel_y', 'FLOAT', 'R', 'g', '{"defaultValue":"0","max":0,"min":0,"round":2}', 'Y轴方向的加速度'),
-(CURRENT_TIMESTAMP, '%s', '%s', 'Z轴加速度', 'accel_z', 'FLOAT', 'R', 'g', '{"defaultValue":"0","max":0,"min":0,"round":2}', 'Z轴方向的加速度'),
-(CURRENT_TIMESTAMP, '%s', '%s', 'X轴角速度', 'gyro_x', 'FLOAT', 'R', 'deg/s', '{"defaultValue":"0","max":0,"min":0,"round":2}', 'X轴方向的角速度'),
-(CURRENT_TIMESTAMP, '%s', '%s', 'Y轴角速度', 'gyro_y', 'FLOAT', 'R', 'deg/s', '{"defaultValue":"0","max":0,"min":0,"round":2}', 'Y轴方向的角速度'),
-(CURRENT_TIMESTAMP, '%s', '%s', 'Z轴角速度', 'gyro_z', 'FLOAT', 'R', 'deg/s', '{"defaultValue":"0","max":0,"min":0,"round":2}', 'Z轴方向的角速度'),
-(CURRENT_TIMESTAMP, '%s', '%s', '传感器温度', 'temperature', 'FLOAT', 'R', '℃', '{"defaultValue":"0","max":0,"min":0,"round":2}', '传感器的温度'),
-(CURRENT_TIMESTAMP, '%s', '%s', '电池电量百分比', 'battery', 'FLOAT', 'R', '%%', '{"defaultValue":"0","max":0,"min":0,"round":2}', '电池电量百分比');
+(CURRENT_TIMESTAMP, '%s', '%s', '设备id', 'device_id', 'STRING', 'R', '-', '{"defaultValue":"0","max":1000,"min":0,"round":2}', '设备id'),
+(CURRENT_TIMESTAMP, '%s', '%s', 'X轴加速度', 'accel_x', 'FLOAT', 'R', 'g', '{"defaultValue":"0","max":1000,"min":0,"round":2}', 'X轴方向的加速度'),
+(CURRENT_TIMESTAMP, '%s', '%s', 'Y轴加速度', 'accel_y', 'FLOAT', 'R', 'g', '{"defaultValue":"0","max":1000,"min":0,"round":2}', 'Y轴方向的加速度'),
+(CURRENT_TIMESTAMP, '%s', '%s', 'Z轴加速度', 'accel_z', 'FLOAT', 'R', 'g', '{"defaultValue":"0","max":1000,"min":0,"round":2}', 'Z轴方向的加速度'),
+(CURRENT_TIMESTAMP, '%s', '%s', 'X轴角速度', 'gyro_x', 'FLOAT', 'R', 'deg/s', '{"defaultValue":"0","max":1000,"min":0,"round":2}', 'X轴方向的角速度'),
+(CURRENT_TIMESTAMP, '%s', '%s', 'Y轴角速度', 'gyro_y', 'FLOAT', 'R', 'deg/s', '{"defaultValue":"0","max":1000,"min":0,"round":2}', 'Y轴方向的角速度'),
+(CURRENT_TIMESTAMP, '%s', '%s', 'Z轴角速度', 'gyro_z', 'FLOAT', 'R', 'deg/s', '{"defaultValue":"0","max":1000,"min":0,"round":2}', 'Z轴方向的角速度'),
+(CURRENT_TIMESTAMP, '%s', '%s', '传感器温度', 'temperature', 'FLOAT', 'R', '℃', '{"defaultValue":"0","max":1000,"min":0,"round":2}', '传感器的温度'),
+(CURRENT_TIMESTAMP, '%s', '%s', '电池电量百分比', 'battery', 'FLOAT', 'R', '%%', '{"defaultValue":"0","max":1000,"min":0,"round":2}', '电池电量百分比');
 `
 	uuid1 := utils.MakeUUID("PROP")
 	uuid2 := utils.MakeUUID("PROP")
