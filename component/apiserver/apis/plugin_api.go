@@ -40,7 +40,7 @@ func PluginService(c *gin.Context, ruleEngine typex.Rhilex) {
 
 	plugin := rhilexmanager.DefaultPluginTypeManager.Find(form.UUID)
 	if plugin != nil {
-		result := plugin.(typex.XPlugin).Service(typex.ServiceArg{
+		result := plugin.Service(typex.ServiceArg{
 			Name: form.Name,
 			UUID: form.UUID,
 			Args: form.Args,
