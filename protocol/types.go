@@ -26,7 +26,15 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
+type TransportMode int32
+
+const (
+	FIX_HEADER TransportMode = 1 // 固定头，默认模式
+	RAW        TransportMode = 2 // 透传
+)
+
 type TransporterConfig struct {
+	// Mode         TransportMode
 	Port         GenericPort
 	ReadTimeout  time.Duration
 	WriteTimeout time.Duration
