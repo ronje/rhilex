@@ -23,7 +23,11 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"runtime"
+	"strconv"
 	"strings"
+	"syscall"
+	"time"
 )
 
 /*
@@ -32,32 +36,44 @@ import (
 *
  */
 func StopRhilex() error {
-	pid, err1 := GetEarliestProcessPID("rhilex")
+	bytes, err1 := os.ReadFile(MainExePidPath)
 	if err1 != nil {
 		return err1
 	}
-	err2 := KillProcess(pid)
+	pid, err2 := strconv.Atoi(string(bytes))
 	if err2 != nil {
 		return err2
 	}
+	process, err3 := os.FindProcess(pid)
+	if err3 != nil {
+		return err3
+	}
+	err4 := process.Signal(syscall.SIGINT)
+	if err4 != nil {
+		err4 = process.Signal(syscall.SIGTERM)
+	}
+	if err4 != nil {
+		return err4
+	}
+	time.Sleep(1 * time.Second)
+	// 检查进程是否还在运行
+	if process != nil {
+		err5 := process.Kill()
+		if err5 != nil {
+			return err5
+		}
+	}
+
 	return nil
 }
 
 /*
 *
-* 重启, 依赖于守护进程脚本, 因此这个不是通用的
+* 重启
 *
  */
 func RestartRhilex() error {
-	cmd := exec.Command("/etc/init.d/rhilex.service", "restart")
-	cmd.SysProcAttr = NewSysProcAttr()
-	cmd.Env = os.Environ()
-	err := cmd.Start()
-	if err != nil {
-		log.Println("Restart rhilex Failed:", err)
-		return err
-	}
-	return nil
+	return StopRhilex()
 }
 
 /*
@@ -74,6 +90,20 @@ func RestartRhilex() error {
 func FileExists(filename string) bool {
 	_, err := os.Stat(filename)
 	return !os.IsNotExist(err)
+}
+
+/**
+ * 兼容Linux、Windows的文件名
+ *
+ */
+func GetExePath() string {
+	if runtime.GOOS == "linux" {
+		return "rhilex"
+	}
+	if runtime.GOOS == "windows" {
+		return "rhilex.exe"
+	}
+	return ""
 }
 
 /*
@@ -98,8 +128,14 @@ func StartRecoverProcess() {
 * 启用升级进程
 *
  */
-func StartUpgradeProcess() {
-	cmd := exec.Command("./rhilex", "upgrade", "-upgrade=true")
+func StartUpgradeProcess(s1, s2, s3, s4 string) {
+	cmd := exec.Command("./rhilex", "upgrade",
+		"-upgrade=true",
+		fmt.Sprintf("-inipath=%s", s1),
+		fmt.Sprintf("-licpath=%s", s2),
+		fmt.Sprintf("-keypath=%s", s3),
+		fmt.Sprintf("-rundbpath=%s", s4),
+	)
 	cmd.SysProcAttr = NewSysProcAttr()
 	cmd.Env = os.Environ()
 	err := cmd.Start()
@@ -161,8 +197,7 @@ func UnzipFirmware(zipFile, destDir string) error {
  * 备份老版本
  *
  */
-// BackupOldVersion 备份源文件到目标位置
-// 目前只需备份 rhilex主程序，配置库，和ini配置即可。
+
 func BackupOldVersion(src, dest string) error {
 	sourceFile, err := os.Open(src)
 	if err != nil {

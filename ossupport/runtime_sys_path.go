@@ -22,14 +22,13 @@ package ossupport
  */
 const (
 	// rhilex 工作目录
-	// MainWorkDir = "/usr/local/rhilex/"
 	MainWorkDir = "./"
 	// RHILEX Main
 	MainExePath = MainWorkDir + "rhilex"
 	// Pid file
 	MainExePidPath = MainWorkDir + "rhilex.pid"
 	// RHILEX Config
-	RunConfigPath = MainWorkDir + "rhilex.ini"
+	RunIniPath = MainWorkDir + "rhilex.ini"
 	// RHILEX Database
 	RunDbPath = MainWorkDir + "rhilex.db"
 	// 证书公钥位置
@@ -37,13 +36,13 @@ const (
 	// 证书位置
 	LicenseLicPath = MainWorkDir + "license.lic"
 	// RHILEX 备份回滚目录
-	OldBackupDir = "/usr/local/rhilex/old/"
+	OldBackupDir = MainWorkDir + "zold/"
 	// 数据中心
 	DataCenterPath = MainWorkDir + "rhilex_datacenter.db"
 	// 离线缓存的数据
 	LostCacheDataPath = MainWorkDir + "rhilex_lostcache.db"
 	// 固件保存路径
-	FirmwarePath = MainWorkDir + "upload/Firmware/Firmware.zip"
+	FirmwarePath = MainWorkDir + "zupgrade/firmware.zip"
 	// 升级日志
 	UpgradeLogPath = MainWorkDir + "rhilex-upgrade-log.txt"
 	// 运行时日志
@@ -51,11 +50,11 @@ const (
 	// 数据恢复日志
 	RecoverLogPath = MainWorkDir + "rhilex-recover-log.txt"
 	// 备份锁
-	BackupLockPath = "/var/run/rhilex-upgrade.lock"
+	BackupLockPath = MainWorkDir + "rhilex-upgrade.lock"
 	// 升级锁
 	UpgradeLockPath = BackupLockPath
 	// 数据备份
-	RecoverBackupPath = MainWorkDir + "upload/Backup/"
+	RecoverBackupPath = MainWorkDir + "zbackup/"
 	// 备份数据库
 	RecoveryDbPath = RecoverBackupPath + "rhilex.db"
 	// 数据中心库

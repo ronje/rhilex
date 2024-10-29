@@ -27,3 +27,9 @@ go.sum
 component/apiserver/server/www/*
 *encrypt.p*
 *.pid
+upgrade/
+old/
+backup/
+zold/
+zbackup/
+zupgrade*

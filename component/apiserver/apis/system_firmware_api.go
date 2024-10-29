@@ -34,35 +34,32 @@ import (
 	"github.com/hootrhino/rhilex/ossupport"
 	"github.com/hootrhino/rhilex/typex"
 	"github.com/hootrhino/rhilex/utils"
+	"gopkg.in/ini.v1"
 )
 
 /*
 *
-  - 上传最新固件, 必须是ZIP包, 固件保存在:./upload/Firmware/Firmware.zip
-    压缩包内就是rhilex发布的最新版本
+  - 上传最新固件, 必须是ZIP包
 
 *
 */
 func UploadFirmWare(c *gin.Context, ruleEngine typex.Rhilex) {
-	if runtime.GOOS == "windows" {
-		c.JSON(common.HTTP_OK, common.Error("Not support windows!"))
-		return
-	}
 	file, err := c.FormFile("file")
 	if err != nil {
 		c.JSON(common.HTTP_OK, common.Error400(err))
 		return
 	}
-	saveDir := "./upload/Firmware/"
-	if err := os.MkdirAll(filepath.Dir(saveDir), os.ModePerm); err != nil {
+	saveDir := "./zupgrade/"
+	if !utils.PathExists(saveDir) {
+		if err := os.MkdirAll(filepath.Dir(saveDir), os.ModePerm); err != nil {
+			c.JSON(common.HTTP_OK, common.Error400(err))
+			return
+		}
+	}
+	if err := c.SaveUploadedFile(file, ossupport.FirmwarePath); err != nil {
 		c.JSON(common.HTTP_OK, common.Error400(err))
 		return
 	}
-	if err := c.SaveUploadedFile(file, saveDir+"Firmware.zip"); err != nil {
-		c.JSON(common.HTTP_OK, common.Error400(err))
-		return
-	}
-
 	c.JSON(common.HTTP_OK, common.Ok())
 }
 
@@ -72,10 +69,6 @@ func UploadFirmWare(c *gin.Context, ruleEngine typex.Rhilex) {
 *
  */
 func UpgradeFirmWare(c *gin.Context, ruleEngine typex.Rhilex) {
-	if runtime.GOOS == "windows" {
-		c.JSON(common.HTTP_OK, common.Error("Not support windows!"))
-		return
-	}
 	file, errOpenFile := os.Create(ossupport.UpgradeLogPath)
 	if errOpenFile != nil {
 		glogger.GLogger.Error(errOpenFile)
@@ -87,9 +80,8 @@ func UpgradeFirmWare(c *gin.Context, ruleEngine typex.Rhilex) {
 	os.Stderr = file
 
 	utils.CLog("[RHILEX UPGRADE] Current Version: %s", typex.MainVersion)
-	uploadPath := "./upload/Firmware/" // 固定路径
+	uploadPath := "./zupgrade/"        // 固定路径
 	tempPath := uploadPath + "temp001" // 固定路径
-	Firmware := "Firmware.zip"         // 固定路径
 	errMkdirAll := os.MkdirAll(tempPath, os.ModePerm)
 	if errMkdirAll != nil {
 		utils.CLog("[RHILEX UPGRADE] %s", errMkdirAll.Error())
@@ -97,19 +89,20 @@ func UpgradeFirmWare(c *gin.Context, ruleEngine typex.Rhilex) {
 		return
 	}
 	// 提前解压文件
-	if errUnzip := trailer.Unzip(uploadPath+Firmware, tempPath); errUnzip != nil {
+	if errUnzip := trailer.Unzip(ossupport.FirmwarePath, tempPath); errUnzip != nil {
 		utils.CLog("[RHILEX UPGRADE] %s", errUnzip.Error())
 		c.JSON(common.HTTP_OK, common.Error400(errUnzip))
 		return
 	}
 	// 检查 /tmp/temp001/rhilex 的Md5
-	md51, errSumMD5 := sumMD5(tempPath + "/rhilex")
+	md51, errSumMD5 := sumMD5(tempPath + "/" + ossupport.GetExePath())
 	if errSumMD5 != nil {
 		utils.CLog("[RHILEX UPGRADE] %s", errSumMD5.Error())
 		c.JSON(common.HTTP_OK, common.Error400(errSumMD5))
 		return
 	}
-	errCheckFileType := CheckFileType(tempPath + "/rhilex")
+
+	errCheckFileType := CheckFileType(tempPath + "/" + ossupport.GetExePath())
 	if errCheckFileType != nil {
 		utils.CLog("[RHILEX UPGRADE] %s", errCheckFileType.Error())
 		c.JSON(common.HTTP_OK, common.Error400(errCheckFileType))
@@ -129,14 +122,31 @@ func UpgradeFirmWare(c *gin.Context, ruleEngine typex.Rhilex) {
 		c.JSON(common.HTTP_OK, common.Error("Invalid sum md5!"))
 		return
 	}
-	if errRemoveAll := os.RemoveAll(tempPath); errRemoveAll != nil {
-		utils.CLog("[RHILEX UPGRADE] %s", errRemoveAll.Error())
-		c.JSON(common.HTTP_OK, common.Error400(errRemoveAll))
+	glogger.GLogger.Infof("Remove Temp File")
+	utils.CLog("[RHILEX UPGRADE] Remove Temp File:%s", tempPath)
+	os.RemoveAll(tempPath)
+	c.JSON(common.HTTP_OK, common.Ok())
+	c.Writer.Flush()
+	time.Sleep(2 * time.Second)
+	IniPath := ruleEngine.GetConfig().IniPath
+	mainCfg, errLoad := ini.Load(IniPath)
+	if errLoad != nil {
+		c.JSON(common.HTTP_OK, common.Error(errLoad.Error()))
 		return
 	}
-	c.JSON(common.HTTP_OK, common.Ok())
-	time.Sleep(1 * time.Second)
-	ossupport.StartUpgradeProcess()
+	section := mainCfg.Section("plugin.license_manager")
+	license_path, err1 := section.GetKey("license_path")
+	if err1 != nil {
+		c.JSON(common.HTTP_OK, common.Error(err1.Error()))
+		return
+	}
+	key_path, err2 := section.GetKey("key_path")
+	if err2 != nil {
+		c.JSON(common.HTTP_OK, common.Error(err2.Error()))
+		return
+	}
+	ossupport.StartUpgradeProcess(IniPath,
+		license_path.String(), key_path.String(), "./rhilex.db")
 
 }
 
@@ -213,9 +223,9 @@ func CheckFileType(filePath string) error {
 			return fmt.Errorf("ELF architecture mismatch: %s != %s", elfArch, currentArch)
 		}
 	case CheckPEFileMagic(magicNumber):
-		return fmt.Errorf("not support windows PE Format")
+		return nil //fmt.Errorf("not support windows PE Format")
 	case CheckDOSHeaderMagic(magicNumber):
-		return fmt.Errorf("not support windows DOS Format")
+		return nil //fmt.Errorf("not support windows DOS Format")
 	default:
 		return fmt.Errorf("unknown file type")
 	}

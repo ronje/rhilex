@@ -127,6 +127,7 @@ staticcheck:
 .PHONY: clean
 clean:
 	go clean
-	rm -rf _release \
+	rm -rf _release zold zbackup zupgrade* \
 	    ${APP}-arm* ${APP}-riscv* ${APP}-mips* \
-		*.db *.txt *.txt.gz
+		*.exe *.db *.txt *.txt.gz .encrypt.p* rhilex.pid \
+

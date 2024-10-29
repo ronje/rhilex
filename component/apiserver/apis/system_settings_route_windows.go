@@ -18,8 +18,17 @@ import "github.com/hootrhino/rhilex/component/apiserver/server"
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 func LoadSystemSettingsAPI() {
+	// 固件
 	settingsFirmware := server.RouteGroup(server.ContextUrl("/firmware"))
-	settingsFirmware.GET("/vendorKey", server.AddRoute(GetVendorKey))
+	{
+		// settingsFirmware.POST("/reboot", server.AddRoute(Reboot))
+		// settingsFirmware.POST("/recoverNew", server.AddRoute(RecoverNew))
+		// settingsFirmware.POST("/restartRhilex", server.AddRoute(ReStartRhilex))
+		// settingsFirmware.POST("/upload", server.AddRoute(UploadFirmWare))
+		// settingsFirmware.POST("/upgrade", server.AddRoute(UpgradeFirmWare))
+		// settingsFirmware.GET("/upgradeLog", server.AddRoute(GetUpGradeLog))
+		settingsFirmware.GET("/vendorKey", server.AddRoute(GetVendorKey))
+	}
 	iFacesApi := server.RouteGroup(server.ContextUrl("/settings"))
 	{
 		iFacesApi.GET(("/ctrlTree"), server.AddRoute(GetDeviceCtrlTree))
