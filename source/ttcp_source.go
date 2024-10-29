@@ -7,13 +7,45 @@ import (
 	"fmt"
 	"hash/crc32"
 	"net"
+	"sync"
 	"time"
 	"unicode/utf8"
 
+	"github.com/google/uuid"
 	"github.com/hootrhino/rhilex/glogger"
 	"github.com/hootrhino/rhilex/typex"
 	"github.com/hootrhino/rhilex/utils"
 )
+
+type TcpConnectionManager struct {
+	connections map[string]net.Conn
+	mu          sync.Mutex
+}
+
+func NewConnectionManager() *TcpConnectionManager {
+	return &TcpConnectionManager{
+		connections: make(map[string]net.Conn),
+	}
+}
+
+func (cm *TcpConnectionManager) AddConnection(conn net.Conn) string {
+	cm.mu.Lock()
+	defer cm.mu.Unlock()
+	id := uuid.New().String()
+	cm.connections[id] = conn
+	glogger.GLogger.Info("TcpConnectionManager Add Connection:", id)
+	return id
+}
+
+func (cm *TcpConnectionManager) RemoveConnection(id string) {
+	cm.mu.Lock()
+	defer cm.mu.Unlock()
+	glogger.GLogger.Info("TcpConnectionManager Remove Connection:", id)
+	if conn, ok := cm.connections[id]; ok {
+		conn.Close()
+		delete(cm.connections, id)
+	}
+}
 
 type RHILEXTcpConfig struct {
 	Host          string `json:"host" validate:"required"`
@@ -23,9 +55,10 @@ type RHILEXTcpConfig struct {
 }
 type TcpSource struct {
 	typex.XStatus
-	tCPListener *net.TCPListener
-	mainConfig  RHILEXTcpConfig
-	status      typex.SourceState
+	tCPListener       *net.TCPListener
+	mainConfig        RHILEXTcpConfig
+	connectionManager *TcpConnectionManager
+	status            typex.SourceState
 }
 
 func NewTcpSource(e typex.Rhilex) typex.XSource {
@@ -36,6 +69,7 @@ func NewTcpSource(e typex.Rhilex) typex.XSource {
 		MaxDataLength: 1024,
 		KeepAlive:     5000,
 	}
+	tcps.connectionManager = NewConnectionManager()
 	tcps.RuleEngine = e
 	return &tcps
 }
@@ -68,7 +102,7 @@ func (tcps *TcpSource) Start(cctx typex.CCTX) error {
 				continue
 			}
 			glogger.GLogger.Debug("Tcp Client Connected:", conn.RemoteAddr())
-			go tcps.handleClient(conn)
+			go tcps.handleClient(tcps.connectionManager.AddConnection(conn), conn)
 		}
 	}(tcps.Ctx, tcps)
 	tcps.status = typex.SOURCE_UP
@@ -111,14 +145,13 @@ func ByteToUint16(b []byte) uint16 {
 }
 
 const (
-	headerSize = 6    // LENGTH|CRC4 CRC3 CRC2 CRC1
-	bufferSize = 1024 // 设置缓冲区大小
+	headerSize = 2
+	bufferSize = 1024
 )
 
 // 处理客户端连接
-func (tcps *TcpSource) handleClient(conn net.Conn) {
-	defer conn.Close()
-
+func (tcps *TcpSource) handleClient(id string, conn net.Conn) {
+	defer tcps.connectionManager.RemoveConnection(id)
 	header := make([]byte, headerSize)
 	buffer := make([]byte, bufferSize)
 	for {
@@ -141,30 +174,22 @@ func (tcps *TcpSource) handleClient(conn net.Conn) {
 		}
 		conn.SetReadDeadline(time.Time{})
 		data := buffer[:N]
-		calculatedCRC := calculateCRC(data)
-		dataCrc := ByteToUint32([]byte{header[2], header[3], header[4], header[5]})
-		if calculatedCRC != dataCrc {
-			glogger.GLogger.Error("CRC check failed")
-			return
-		}
 		ClientData := tcp_client_data{
 			ClientAddr: conn.RemoteAddr().String(),
+			Data:       hex.EncodeToString(data),
 		}
 		if utf8.Valid(data) {
-			ClientData.Data = string(data)
+			glogger.GLogger.Debug("TCP Server Received:", string(data))
 		} else {
-			ClientData.Data = hex.EncodeToString(data)
+			glogger.GLogger.Debug("TCP Server Received:", hex.EncodeToString(data))
 		}
-		glogger.GLogger.Debug("TCP Server Received:", ClientData)
 		tcpClientDataBytes, _ := json.Marshal(ClientData)
 		work, err := tcps.RuleEngine.WorkInEnd(tcps.RuleEngine.GetInEnd(tcps.PointId),
 			string(tcpClientDataBytes))
 		if !work {
 			glogger.GLogger.Error(err)
 		}
-		// return ok
-		_, err = conn.Write([]byte("ok"))
-		if err != nil {
+		if _, err = conn.Write([]byte("ok\r\n")); err != nil {
 			glogger.GLogger.Error(err)
 		}
 	}

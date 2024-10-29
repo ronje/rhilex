@@ -76,11 +76,12 @@ func (udps *udpSource) Start(cctx typex.CCTX) error {
 func (udps *udpSource) handleClient(data []byte, remoteAddr *net.UDPAddr) {
 	ClientData := udp_client_data{
 		ClientAddr: remoteAddr.String(),
+		Data:       hex.EncodeToString(data),
 	}
 	if utf8.Valid(data) {
-		ClientData.Data = string(data)
+		glogger.GLogger.Debug("TCP Server Received:", string(data))
 	} else {
-		ClientData.Data = hex.EncodeToString(data)
+		glogger.GLogger.Debug("TCP Server Received:", hex.EncodeToString(data))
 	}
 	ClientDataBytes, _ := json.Marshal(ClientData)
 	work, err := udps.RuleEngine.WorkInEnd(udps.RuleEngine.GetInEnd(udps.PointId), string(ClientDataBytes))
@@ -88,7 +89,7 @@ func (udps *udpSource) handleClient(data []byte, remoteAddr *net.UDPAddr) {
 		glogger.GLogger.Error(err)
 	}
 	// return ok
-	_, err = udps.UdpConn.WriteToUDP([]byte("ok"), remoteAddr)
+	_, err = udps.UdpConn.WriteToUDP([]byte("ok\r\n"), remoteAddr)
 	if err != nil {
 		glogger.GLogger.Error(err)
 	}
