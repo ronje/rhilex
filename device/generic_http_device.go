@@ -123,7 +123,7 @@ func (hd *GenericHttpDevice) OnWrite(cmd []byte, b []byte) (int, error) {
 
 // 设备当前状态
 func (hd *GenericHttpDevice) Status() typex.DeviceState {
-	return typex.DEV_UP
+	return hd.status
 }
 
 // 停止设备

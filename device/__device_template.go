@@ -28,7 +28,7 @@ type TemplateDeviceConfig struct {
 }
 
 type TemplateDeviceMainConfig struct {
-	CommonConfig         TemplateDeviceCommonConfig `json:"commonConfig"`
+	CommonConfig         TemplateDeviceCommonConfig `json:"commonConfig" validate:"required"`
 	TemplateDeviceConfig TemplateDeviceConfig       `json:"templateDeviceConfig"`
 }
 
@@ -63,7 +63,7 @@ func (hd *TemplateDevice) Start(cctx typex.CCTX) error {
 }
 
 func (hd *TemplateDevice) Status() typex.DeviceState {
-	return typex.DEV_UP
+	return hd.Status
 }
 
 func (hd *TemplateDevice) Stop() {

@@ -16,7 +16,6 @@
 package apis
 
 import (
-	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
@@ -27,6 +26,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	common "github.com/hootrhino/rhilex/component/apiserver/common"
+	"github.com/hootrhino/rhilex/component/apiserver/dto"
 	"github.com/hootrhino/rhilex/component/apiserver/model"
 	"github.com/hootrhino/rhilex/component/apiserver/server"
 	"github.com/hootrhino/rhilex/component/apiserver/service"
@@ -157,7 +157,7 @@ func ModbusMasterSheetPageList(c *gin.Context, ruleEngine typex.Rhilex) {
 
 	for _, record := range records {
 		Slot := intercache.GetSlot(deviceUuid)
-		Value, ok := Slot[record.UUID]
+		value, ok := Slot[record.UUID]
 		Vo := ModbusMasterPointVo{
 			UUID:          record.UUID,
 			DeviceUUID:    record.DeviceUuid,
@@ -171,19 +171,20 @@ func ModbusMasterSheetPageList(c *gin.Context, ruleEngine typex.Rhilex) {
 			DataType:      record.DataType,
 			DataOrder:     record.DataOrder,
 			Weight:        record.Weight,
-			LastFetchTime: Value.LastFetchTime, // 运行时
-			Value:         Value.Value,         // 运行时
-			ErrMsg:        Value.ErrMsg,        // 运行时
+			LastFetchTime: value.LastFetchTime, // 运行时
+			Value:         value.Value,         // 运行时
+			ErrMsg:        value.ErrMsg,        // 运行时
 		}
 		if ok {
 			Vo.Status = func() int {
-				if Value.Value == "" {
+				if value.Value == "" {
 					return 0
 				}
 				return 1
 			}() // 运行时
-			Vo.LastFetchTime = Value.LastFetchTime // 运行时
-			Vo.Value = Value.Value                 // 运行时
+			Vo.LastFetchTime = value.LastFetchTime // 运行时
+			types, _ := utils.IsArrayAndGetValueList(value.Value)
+			Vo.Value = types
 			recordsVo = append(recordsVo, Vo)
 		} else {
 			recordsVo = append(recordsVo, Vo)
@@ -262,10 +263,10 @@ func CheckModbusMasterDataPoints(M ModbusMasterPointVo) error {
 	}
 
 	// Check required string fields
-	if err := checkStringLength(M.Tag, "tag", 256); err != nil {
+	if err := checkStringLength(M.Tag, "tag", 64); err != nil {
 		return err
 	}
-	if err := checkStringLength(M.Alias, "alias", 256); err != nil {
+	if err := checkStringLength(M.Alias, "alias", 64); err != nil {
 		return err
 	}
 
@@ -356,7 +357,7 @@ func CheckModbusMasterDataPoints(M ModbusMasterPointVo) error {
 func ModbusMasterSheetUpdate(c *gin.Context, ruleEngine typex.Rhilex) {
 	type Form struct {
 		DeviceUUID             string                `json:"device_uuid"`
-		ModbusMasterDataPoints []ModbusMasterPointVo `json:"modbus_data_points"`
+		ModbusMasterDataPoints []ModbusMasterPointVo `json:"data_points"`
 	}
 	//  ModbusMasterDataPoints := [] ModbusMasterPointVo{}
 	form := Form{}
@@ -419,22 +420,6 @@ func ModbusMasterSheetUpdate(c *gin.Context, ruleEngine typex.Rhilex) {
 
 }
 
-type ModbusDeviceDto struct {
-	UUID   string
-	Name   string
-	Type   string
-	Config string
-}
-
-func (md ModbusDeviceDto) GetConfig() map[string]interface{} {
-	result := make(map[string]interface{})
-	err := json.Unmarshal([]byte(md.Config), &result)
-	if err != nil {
-		return map[string]interface{}{}
-	}
-	return result
-}
-
 // ModbusMasterSheetImport 上传Excel文件
 func ModbusMasterSheetImport(c *gin.Context, ruleEngine typex.Rhilex) {
 	// 解析 multipart/form-data 类型的请求体
@@ -453,16 +438,21 @@ func ModbusMasterSheetImport(c *gin.Context, ruleEngine typex.Rhilex) {
 	defer file.Close()
 	deviceUuid := c.Request.Form.Get("device_uuid")
 
-	Device := ModbusDeviceDto{}
+	Device := dto.RhilexDeviceDto{}
 	errDb := interdb.DB().Table("m_devices").
 		Where("uuid=?", deviceUuid).Find(&Device).Error
 	if errDb != nil {
 		c.JSON(common.HTTP_OK, common.Error400(errDb))
 		return
 	}
+	if Device.Type == "" {
+		c.JSON(common.HTTP_OK,
+			common.Error("Device Not Exists"))
+		return
+	}
 	if Device.Type != typex.GENERIC_MODBUS_MASTER.String() {
 		c.JSON(common.HTTP_OK,
-			common.Error("Invalid Device Type, Only Support Import  ModbusMaster Device"))
+			common.Error("Invalid Device Type, Only Support Import ModbusMaster Device"))
 		return
 	}
 

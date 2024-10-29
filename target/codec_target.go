@@ -39,20 +39,25 @@ type GrpcConfig struct {
 	CacheOfflineData *bool  `json:"cacheOfflineData" title:"离线缓存"`
 }
 
+type GrpcMainConfig struct {
+	GrpcConfig GrpcConfig `json:"commonConfig" validate:"required"`
+}
 type RhilexRpcTarget struct {
 	typex.XStatus
 	client        rhilexrpc.RhilexRpcClient
 	rpcConnection *grpc.ClientConn
-	mainConfig    GrpcConfig
+	mainConfig    GrpcMainConfig
 	status        typex.SourceState
 }
 
 func NewRhilexRpcTarget(rx typex.Rhilex) typex.XTarget {
 	ct := &RhilexRpcTarget{}
-	ct.mainConfig = GrpcConfig{
-		Host:             "127.0.0.1",
-		Port:             2581,
-		CacheOfflineData: new(bool),
+	ct.mainConfig = GrpcMainConfig{
+		GrpcConfig: GrpcConfig{
+			Host:             "127.0.0.1",
+			Port:             2581,
+			CacheOfflineData: new(bool),
+		},
 	}
 	ct.RuleEngine = rx
 	ct.status = typex.SOURCE_DOWN
@@ -62,7 +67,6 @@ func NewRhilexRpcTarget(rx typex.Rhilex) typex.XTarget {
 // 用来初始化传递资源配置
 func (ct *RhilexRpcTarget) Init(outEndId string, configMap map[string]interface{}) error {
 	ct.PointId = outEndId
-	lostcache.CreateLostDataTable(outEndId)
 	//
 	if err := utils.BindSourceConfig(configMap, &ct.mainConfig); err != nil {
 		return err
@@ -75,7 +79,8 @@ func (ct *RhilexRpcTarget) Start(cctx typex.CCTX) error {
 	ct.Ctx = cctx.Ctx
 	ct.CancelCTX = cctx.CancelCTX
 	//
-	rpcConnection, err := grpc.NewClient(fmt.Sprintf("%s:%d", ct.mainConfig.Host, ct.mainConfig.Port),
+	rpcConnection, err := grpc.NewClient(fmt.Sprintf("%s:%d",
+		ct.mainConfig.GrpcConfig.Host, ct.mainConfig.GrpcConfig.Port),
 		grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		return err
@@ -84,7 +89,7 @@ func (ct *RhilexRpcTarget) Start(cctx typex.CCTX) error {
 	ct.client = rhilexrpc.NewRhilexRpcClient(rpcConnection)
 	ct.status = typex.SOURCE_UP
 	// 补发数据
-	if *ct.mainConfig.CacheOfflineData {
+	if *ct.mainConfig.GrpcConfig.CacheOfflineData {
 		if CacheData, err1 := lostcache.GetLostCacheData(ct.PointId); err1 != nil {
 			glogger.GLogger.Error(err1)
 		} else {
@@ -125,7 +130,7 @@ func (ct *RhilexRpcTarget) To(data interface{}) (interface{}, error) {
 		_, err = ct.client.Request(ct.Ctx, dataRequest)
 
 		if err != nil {
-			if *ct.mainConfig.CacheOfflineData {
+			if *ct.mainConfig.GrpcConfig.CacheOfflineData {
 				lostcache.SaveLostCacheData(ct.PointId, lostcache.CacheDataDto{
 					TargetId: ct.PointId,
 					Data:     data.(string),

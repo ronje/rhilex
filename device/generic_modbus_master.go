@@ -30,20 +30,31 @@ import (
 	"github.com/hootrhino/rhilex/common"
 	intercache "github.com/hootrhino/rhilex/component/intercache"
 	"github.com/hootrhino/rhilex/component/interdb"
-	"github.com/hootrhino/rhilex/component/uartctrl"
 
 	modbus "github.com/hootrhino/gomodbus"
 	core "github.com/hootrhino/rhilex/config"
-	modbus_device "github.com/hootrhino/rhilex/device/modbus"
 
 	"github.com/hootrhino/rhilex/glogger"
 	"github.com/hootrhino/rhilex/typex"
 	"github.com/hootrhino/rhilex/utils"
 )
 
+type ModbusPoint struct {
+	UUID      string  `json:"uuid,omitempty"` // 当UUID为空时新建
+	Tag       string  `json:"tag"`
+	Alias     string  `json:"alias"`
+	Function  int     `json:"function"`
+	SlaverId  byte    `json:"slaverId"`
+	Address   uint16  `json:"address"`
+	Frequency int64   `json:"frequency"`
+	Quantity  uint16  `json:"quantity"`
+	Value     string  `json:"value,omitempty"` // 运行时数据
+	DataType  string  `json:"dataType"`        // 运行时数据
+	DataOrder string  `json:"dataOrder"`       // 运行时数据
+	Weight    float64 `json:"weight"`          // 权重
+}
+
 // 这是个通用Modbus采集器, 主要用来在通用场景下采集数据，因此需要配合规则引擎来使用
-//
-// Modbus 采集到的数据如下, LUA 脚本可做解析, 示例脚本可参照 generic_modbus_parse.lua
 //
 //	{
 //	    "d1":{
@@ -54,14 +65,6 @@ import (
 //	        "quantity":2,
 //	        "value":"..."
 //	    },
-//	    "d2":{
-//	        "tag":"d2",
-//	        "function":3,
-//	        "slaverId":2,
-//	        "address":0,
-//	        "quantity":2,
-//	        "value":"..."
-//	    }
 //	}
 type ModbusMasterCommonConfig struct {
 	Mode           string `json:"mode" validate:"required"`
@@ -73,7 +76,7 @@ type ModbusMasterCommonConfig struct {
 type ModbusMasterConfig struct {
 	CommonConfig ModbusMasterCommonConfig `json:"commonConfig" validate:"required"`
 	HostConfig   common.HostConfig        `json:"hostConfig"`
-	PortUuid     string                   `json:"portUuid"`
+	UartConfig   common.UartConfig        `json:"uartConfig"`
 }
 
 type ModbusMasterGroupedTag struct {
@@ -106,7 +109,6 @@ type GenericModbusMaster struct {
 	//
 	mainConfig     ModbusMasterConfig
 	retryTimes     int
-	uartConfig     uartctrl.UartConfig
 	Registers      map[string]*common.RegisterRW
 	RegisterGroups []*ModbusMasterGroupedTag
 }
@@ -135,8 +137,19 @@ func NewGenericModbusMaster(e typex.Rhilex) typex.XDevice {
 			}(),
 			MaxRegNum: 32,
 		},
-		PortUuid:   "/dev/ttyS0",
-		HostConfig: common.HostConfig{Host: "127.0.0.1", Port: 502, Timeout: 3000},
+		HostConfig: common.HostConfig{
+			Host:    "127.0.0.1",
+			Port:    502,
+			Timeout: 3000,
+		},
+		UartConfig: common.UartConfig{
+			Timeout:  3000,
+			Uart:     "/dev/ttyS1",
+			BaudRate: 9600,
+			DataBits: 8,
+			Parity:   "N",
+			StopBits: 1,
+		},
 	}
 	mdev.Registers = map[string]*common.RegisterRW{}
 	mdev.Busy = false
@@ -156,7 +169,7 @@ func (mdev *GenericModbusMaster) Init(devId string, configMap map[string]interfa
 		return errors.New("unsupported mode, only can be one of 'TCP' or 'UART'")
 	}
 	// 合并数据库里面的点位表
-	var ModbusPointList []modbus_device.ModbusPoint
+	var ModbusPointList []ModbusPoint
 	modbusPointLoadErr := interdb.DB().Table("m_modbus_data_points").
 		Where("device_uuid=?", devId).Find(&ModbusPointList).Error
 	if modbusPointLoadErr != nil {
@@ -203,25 +216,7 @@ func (mdev *GenericModbusMaster) Init(devId string, configMap map[string]interfa
 			glogger.GLogger.Infof("RegisterGroups%v %v", i, v)
 		}
 	}
-	if mdev.mainConfig.CommonConfig.Mode == "UART" {
-		uartPort, err := uartctrl.GetUart(mdev.mainConfig.PortUuid)
-		if err != nil {
-			return err
-		}
-		if uartPort.Busy {
-			return fmt.Errorf("UART is busying now, Occupied By:%s", uartPort.OccupyBy)
-		}
-		switch tCfg := uartPort.Config.(type) {
-		case uartctrl.UartConfig:
-			{
-				mdev.uartConfig = tCfg
-			}
-		default:
-			{
-				return fmt.Errorf("Invalid config:%s", uartPort.Config)
-			}
-		}
-	}
+
 	return nil
 }
 
@@ -289,21 +284,12 @@ func (mdev *GenericModbusMaster) Start(cctx typex.CCTX) error {
 	mdev.CancelCTX = cctx.CancelCTX
 	mdev.retryTimes = 0
 	if mdev.mainConfig.CommonConfig.Mode == "UART" {
-		uartPort, err := uartctrl.GetUart(mdev.mainConfig.PortUuid)
-		if err != nil {
-			return err
-		}
-		if uartPort.Busy {
-			return fmt.Errorf("UART is busying now, Occupied By:%s", uartPort.OccupyBy)
-		}
-
-		mdev.rtuHandler = modbus.NewRTUClientHandler(uartPort.Name)
-		mdev.rtuHandler.BaudRate = mdev.uartConfig.BaudRate
-		mdev.rtuHandler.DataBits = mdev.uartConfig.DataBits
-		mdev.rtuHandler.Parity = mdev.uartConfig.Parity
-		mdev.rtuHandler.StopBits = mdev.uartConfig.StopBits
-		// timeout 最大不能超过20, 不然无意义
-		mdev.rtuHandler.Timeout = time.Duration(mdev.uartConfig.Timeout) * time.Millisecond
+		mdev.rtuHandler = modbus.NewRTUClientHandler(mdev.mainConfig.UartConfig.Uart)
+		mdev.rtuHandler.BaudRate = mdev.mainConfig.UartConfig.BaudRate
+		mdev.rtuHandler.DataBits = mdev.mainConfig.UartConfig.DataBits
+		mdev.rtuHandler.Parity = mdev.mainConfig.UartConfig.Parity
+		mdev.rtuHandler.StopBits = mdev.mainConfig.UartConfig.StopBits
+		mdev.rtuHandler.Timeout = time.Duration(mdev.mainConfig.UartConfig.Timeout) * time.Millisecond
 		if core.GlobalConfig.AppDebugMode {
 			mdev.rtuHandler.Logger = golog.New(glogger.GLogger.Writer(),
 				"Modbus RTU Mode: "+mdev.PointId+": ", golog.LstdFlags)
@@ -312,11 +298,6 @@ func (mdev *GenericModbusMaster) Start(cctx typex.CCTX) error {
 		if err := mdev.rtuHandler.Connect(); err != nil {
 			return err
 		}
-		uartctrl.SetInterfaceBusy(mdev.mainConfig.PortUuid, uartctrl.UartOccupy{
-			UUID: mdev.PointId,
-			Type: "DEVICE",
-			Name: mdev.Details().Name,
-		})
 		mdev.Client = modbus.NewClient(mdev.rtuHandler)
 	}
 	if mdev.mainConfig.CommonConfig.Mode == "TCP" {
@@ -391,7 +372,7 @@ func (mdev *GenericModbusMaster) OnWrite(cmd []byte, data []byte) (int, error) {
 	dataMap := [1]common.RegisterW{RegisterW}
 	for _, r := range dataMap {
 		if mdev.mainConfig.CommonConfig.Mode == "TCP" {
-			mdev.tcpHandler.SlaveId = r.SlaverId
+			mdev.tcpHandler.SlaveId = 0x01
 		}
 		if mdev.mainConfig.CommonConfig.Mode == "UART" {
 			mdev.rtuHandler.SlaveId = r.SlaverId
@@ -465,7 +446,6 @@ func (mdev *GenericModbusMaster) Stop() {
 		mdev.CancelCTX()
 	}
 	if mdev.mainConfig.CommonConfig.Mode == "UART" {
-		uartctrl.FreeInterfaceBusy(mdev.mainConfig.PortUuid)
 		if mdev.rtuHandler != nil {
 			mdev.rtuHandler.Close()
 		}
@@ -533,13 +513,11 @@ func (mdev *GenericModbusMaster) modbusSingleRead() []ReadRegisterValue {
 	// Modbus收到的数据全部放进这个全局缓冲区内
 	var __modbusReadResult = [256]byte{0} // 放在栈上提高效率
 	for uuid, r := range mdev.Registers {
-		if mdev.mainConfig.CommonConfig.Mode == "TCP" {
-			// 下面这行代码在 SlaveId TCP末实现不会生效
-			// 主要和这个库有关，后期要把这个SlaverId拿到点位表里面去
-			mdev.tcpHandler.SlaveId = r.SlaverId
-		}
 		if mdev.mainConfig.CommonConfig.Mode == "UART" {
 			mdev.rtuHandler.SlaveId = r.SlaverId
+		}
+		if mdev.mainConfig.CommonConfig.Mode == "TCP" {
+			mdev.tcpHandler.SlaveId = 0x01
 		}
 		// 1 字节
 		if r.Function == common.READ_COIL {
@@ -551,8 +529,8 @@ func (mdev *GenericModbusMaster) modbusSingleRead() []ReadRegisterValue {
 				mdev.retryTimes++
 				intercache.SetValue(mdev.PointId, uuid, intercache.CacheValue{
 					UUID:          uuid,
-					Status:        1,
-					Value:         "",
+					Status:        0,
+					Value:         "0",
 					LastFetchTime: lastTimes,
 					ErrMsg:        err.Error(),
 				})
@@ -572,7 +550,7 @@ func (mdev *GenericModbusMaster) modbusSingleRead() []ReadRegisterValue {
 			RegisterRWs = append(RegisterRWs, Reg)
 			intercache.SetValue(mdev.PointId, uuid, intercache.CacheValue{
 				UUID:          uuid,
-				Status:        0,
+				Status:        1,
 				Value:         Value,
 				LastFetchTime: lastTimes,
 				ErrMsg:        "",
@@ -596,8 +574,8 @@ func (mdev *GenericModbusMaster) modbusSingleRead() []ReadRegisterValue {
 				mdev.retryTimes++
 				intercache.SetValue(mdev.PointId, uuid, intercache.CacheValue{
 					UUID:          uuid,
-					Status:        1,
-					Value:         "",
+					Status:        0,
+					Value:         "0",
 					LastFetchTime: lastTimes,
 					ErrMsg:        err.Error(),
 				})
@@ -616,7 +594,7 @@ func (mdev *GenericModbusMaster) modbusSingleRead() []ReadRegisterValue {
 			RegisterRWs = append(RegisterRWs, Reg)
 			intercache.SetValue(mdev.PointId, uuid, intercache.CacheValue{
 				UUID:          uuid,
-				Status:        0,
+				Status:        1,
 				Value:         Value,
 				LastFetchTime: lastTimes,
 				ErrMsg:        "",
@@ -640,8 +618,8 @@ func (mdev *GenericModbusMaster) modbusSingleRead() []ReadRegisterValue {
 				mdev.retryTimes++
 				intercache.SetValue(mdev.PointId, uuid, intercache.CacheValue{
 					UUID:          uuid,
-					Status:        1,
-					Value:         "",
+					Status:        0,
+					Value:         "0",
 					LastFetchTime: lastTimes,
 					ErrMsg:        err.Error(),
 				})
@@ -661,7 +639,7 @@ func (mdev *GenericModbusMaster) modbusSingleRead() []ReadRegisterValue {
 			RegisterRWs = append(RegisterRWs, Reg)
 			intercache.SetValue(mdev.PointId, uuid, intercache.CacheValue{
 				UUID:          uuid,
-				Status:        0,
+				Status:        1,
 				Value:         Value,
 				LastFetchTime: lastTimes,
 				ErrMsg:        "",
@@ -684,8 +662,8 @@ func (mdev *GenericModbusMaster) modbusSingleRead() []ReadRegisterValue {
 				mdev.retryTimes++
 				intercache.SetValue(mdev.PointId, uuid, intercache.CacheValue{
 					UUID:          uuid,
-					Status:        1,
-					Value:         "",
+					Status:        0,
+					Value:         "0",
 					LastFetchTime: lastTimes,
 					ErrMsg:        err.Error(),
 				})
@@ -704,7 +682,7 @@ func (mdev *GenericModbusMaster) modbusSingleRead() []ReadRegisterValue {
 			RegisterRWs = append(RegisterRWs, Reg)
 			intercache.SetValue(mdev.PointId, uuid, intercache.CacheValue{
 				UUID:          uuid,
-				Status:        0,
+				Status:        1,
 				Value:         Value,
 				LastFetchTime: lastTimes,
 				ErrMsg:        "",
@@ -728,7 +706,7 @@ func (mdev *GenericModbusMaster) modbusGroupRead() []ReadRegisterValue {
 
 	for _, group := range mdev.RegisterGroups {
 		if mdev.mainConfig.CommonConfig.Mode == "TCP" {
-			mdev.tcpHandler.SlaveId = group.SlaverId
+			mdev.tcpHandler.SlaveId = 0x01
 		}
 		if mdev.mainConfig.CommonConfig.Mode == "UART" {
 			mdev.rtuHandler.SlaveId = group.SlaverId
@@ -756,7 +734,7 @@ func (mdev *GenericModbusMaster) modbusGroupRead() []ReadRegisterValue {
 				jsonValueGroups = append(jsonValueGroups, jsonVal)
 				intercache.SetValue(mdev.PointId, uuid, intercache.CacheValue{
 					UUID:          uuid,
-					Status:        0,
+					Status:        1,
 					Value:         strconv.Itoa(int(value)),
 					LastFetchTime: uint64(ts),
 					ErrMsg:        "",
@@ -794,7 +772,7 @@ func (mdev *GenericModbusMaster) modbusGroupRead() []ReadRegisterValue {
 				jsonValueGroups = append(jsonValueGroups, jsonVal)
 				intercache.SetValue(mdev.PointId, uuid, intercache.CacheValue{
 					UUID:          uuid,
-					Status:        0,
+					Status:        1,
 					Value:         strconv.Itoa(int(value)),
 					LastFetchTime: uint64(ts),
 					ErrMsg:        "",
@@ -833,7 +811,7 @@ func (mdev *GenericModbusMaster) modbusGroupRead() []ReadRegisterValue {
 
 				intercache.SetValue(mdev.PointId, uuid, intercache.CacheValue{
 					UUID:          uuid,
-					Status:        0,
+					Status:        1,
 					Value:         Value,
 					LastFetchTime: uint64(ts),
 					ErrMsg:        "",
@@ -872,7 +850,7 @@ func (mdev *GenericModbusMaster) modbusGroupRead() []ReadRegisterValue {
 
 				intercache.SetValue(mdev.PointId, uuid, intercache.CacheValue{
 					UUID:          uuid,
-					Status:        0,
+					Status:        1,
 					Value:         Value,
 					LastFetchTime: uint64(ts),
 					ErrMsg:        "",

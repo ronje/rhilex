@@ -8,6 +8,7 @@ import (
 	"time"
 
 	httpserver "github.com/hootrhino/rhilex/component/apiserver"
+	"github.com/hootrhino/rhilex/component/rhilexmanager"
 	"github.com/hootrhino/rhilex/component/trailer"
 	"github.com/hootrhino/rhilex/glogger"
 	"google.golang.org/grpc"
@@ -28,7 +29,7 @@ func Test_Trailer_load(t *testing.T) {
 
 	hh := httpserver.NewHttpApiServer(engine)
 	// HttpApiServer loaded default
-	if err := engine.LoadPlugin("plugin.http_server", hh); err != nil {
+	if err := rhilexmanager.DefaultPluginTypeManager.LoadPlugin("plugin.http_server", hh); err != nil {
 		glogger.GLogger.Fatal("Rule load failed:", err)
 	}
 	path := "script/_temp/trailer-demo-app/trailer-demo-app"

@@ -19,10 +19,10 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"sync"
 	"time"
 
 	intercache "github.com/hootrhino/rhilex/component/intercache"
+	"github.com/hootrhino/rhilex/component/rhilexmanager"
 	"github.com/hootrhino/rhilex/glogger"
 	"github.com/hootrhino/rhilex/typex"
 )
@@ -33,36 +33,28 @@ import (
 
 // 获取设备
 func (e *RuleEngine) GetDevice(id string) *typex.Device {
-	v, ok := e.Devices.Load(id)
+	v, ok := e.Devices.Get(id)
 	if ok {
-		return v.(*typex.Device)
-	} else {
-		return nil
+		return v
 	}
-
+	return nil
 }
 
 // 0.7.0
 // 更新设备的运行时状态
 func (e *RuleEngine) SetDeviceStatus(uuid string, DeviceState typex.DeviceState) {
-	e.locker.Lock()
-	defer e.locker.Unlock()
 	Device := e.GetDevice(uuid)
 	if Device != nil {
 		Device.State = DeviceState
 	}
 }
 func (e *RuleEngine) SetSourceStatus(uuid string, SourceState typex.SourceState) {
-	e.locker.Lock()
-	defer e.locker.Unlock()
 	Source := e.GetInEnd(uuid)
 	if Source != nil {
 		Source.State = SourceState
 	}
 }
 func (e *RuleEngine) SetTargetStatus(uuid string, SourceState typex.SourceState) {
-	e.locker.Lock()
-	defer e.locker.Unlock()
 	Outend := e.GetOutEnd(uuid)
 	if Outend != nil {
 		Outend.State = SourceState
@@ -71,12 +63,12 @@ func (e *RuleEngine) SetTargetStatus(uuid string, SourceState typex.SourceState)
 
 // 保存设备
 func (e *RuleEngine) SaveDevice(dev *typex.Device) {
-	e.Devices.Store(dev.UUID, dev)
+	e.Devices.Set(dev.UUID, dev)
 }
 
 // 获取所有外挂设备
-func (e *RuleEngine) AllDevices() *sync.Map {
-	return e.Devices
+func (e *RuleEngine) AllDevices() []*typex.Device {
+	return e.Devices.Values()
 
 }
 
@@ -100,7 +92,7 @@ func (e *RuleEngine) RemoveDevice(uuid string) {
  */
 func (e *RuleEngine) LoadDeviceWithCtx(deviceInstance *typex.Device,
 	ctx context.Context, cancelCTX context.CancelFunc) error {
-	if config := e.DeviceTypeManager.Find(deviceInstance.Type); config != nil {
+	if config := rhilexmanager.DefaultDeviceTypeManager.Find(deviceInstance.Type); config != nil {
 		return e.loadDevices(config.NewDevice(e), deviceInstance, ctx, cancelCTX)
 	}
 	return fmt.Errorf("unsupported Device type:%s", deviceInstance.Type)

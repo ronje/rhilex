@@ -150,7 +150,7 @@ func SiemensSheetPageList(c *gin.Context, ruleEngine typex.Rhilex) {
 	recordsVo := []SiemensPointVo{}
 	for _, record := range records {
 		Slot := intercache.GetSlot(deviceUuid)
-		Value, ok := Slot[record.UUID]
+		value, ok := Slot[record.UUID]
 		Vo := SiemensPointVo{
 			UUID:           record.UUID,
 			DeviceUUID:     record.DeviceUuid,
@@ -161,19 +161,20 @@ func SiemensSheetPageList(c *gin.Context, ruleEngine typex.Rhilex) {
 			DataType:       record.DataBlockType,
 			DataOrder:      record.DataBlockOrder,
 			Weight:         record.Weight,
-			LastFetchTime:  Value.LastFetchTime, // 运行时
-			Value:          Value.Value,         // 运行时
-			ErrMsg:         Value.ErrMsg,
+			LastFetchTime:  value.LastFetchTime, // 运行时
+			Value:          value.Value,         // 运行时
+			ErrMsg:         value.ErrMsg,
 		}
 		if ok {
 			Vo.Status = func() int {
-				if Value.Value == "" {
+				if value.Value == "" {
 					return 0
 				}
 				return 1
 			}() // 运行时
-			Vo.LastFetchTime = Value.LastFetchTime // 运行时
-			Vo.Value = Value.Value                 // 运行时
+			Vo.LastFetchTime = value.LastFetchTime // 运行时
+			types, _ := utils.IsArrayAndGetValueList(value.Value)
+			Vo.Value = types
 			recordsVo = append(recordsVo, Vo)
 		} else {
 			recordsVo = append(recordsVo, Vo)
@@ -245,13 +246,13 @@ func CheckSiemensDataPoints(M SiemensPointVo) error {
 	}
 
 	// Check required string fields
-	if err := checkStringLength(M.Tag, "tag", 256); err != nil {
+	if err := checkStringLength(M.Tag, "tag", 64); err != nil {
 		return err
 	}
-	if err := checkStringLength(M.Alias, "alias", 256); err != nil {
+	if err := checkStringLength(M.Alias, "alias", 64); err != nil {
 		return err
 	}
-	if err := checkStringLength(M.SiemensAddress, "address", 256); err != nil { // Assuming a max length of 256 for SiemensAddress
+	if err := checkStringLength(M.SiemensAddress, "address", 64); err != nil { // Assuming a max length of 256 for SiemensAddress
 		return err
 	}
 
@@ -312,7 +313,7 @@ func CheckSiemensDataPoints(M SiemensPointVo) error {
 func SiemensSheetUpdate(c *gin.Context, ruleEngine typex.Rhilex) {
 	type Form struct {
 		DeviceUUID        string           `json:"device_uuid"`
-		SiemensDataPoints []SiemensPointVo `json:"siemens_data_points"`
+		SiemensDataPoints []SiemensPointVo `json:"data_points"`
 	}
 	form := Form{}
 	// SiemensDataPoints := []SiemensPointVo{}
@@ -389,6 +390,11 @@ func SiemensSheetImport(c *gin.Context, ruleEngine typex.Rhilex) {
 		Where("uuid=?", deviceUuid).Find(&Device).Error
 	if errDb != nil {
 		c.JSON(common.HTTP_OK, common.Error400(errDb))
+		return
+	}
+	if Device.Type == "" {
+		c.JSON(common.HTTP_OK,
+			common.Error("Device Not Exists"))
 		return
 	}
 	if Device.Type != typex.SIEMENS_PLC.String() {

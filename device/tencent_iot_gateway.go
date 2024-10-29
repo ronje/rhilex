@@ -243,15 +243,29 @@ func (hd *TencentIoTGateway) OnRead(cmd []byte, data []byte) (int, error) {
 	return 0, nil
 }
 
+// CtrlReplySuccess
+// CtrlReplyFailure
 // ActionReplySuccess
 // ActionReplyFailure
 // PropertyReplySuccess
 // PropertyReplyFailure
-// LUA 调用接口
 func (hd *TencentIoTGateway) OnWrite(cmd []byte, b []byte) (int, error) {
 	Cmd := string(cmd)
-	ActionResp := `{"method": "control_reply","clientToken": "%s","code": 200,"msg":"success"}`
-	PropertyResp := `{"method": "reportReply","clientToken": "%s","code": 200,"msg":"success"}`
+	CtrlResp := `{"method": "control_reply","clientToken": "%s","code": 200,"msg":"success"}`
+	ActionResp := `{"method": "action_reply","clientToken": "%s","code": 200,"msg":"success"}`
+	PropertyResp := `{"method": "report_reply","clientToken": "%s","code": 200,"msg":"success"}`
+	if Cmd == "CtrlReplySuccess" {
+		Token := string(b)
+		msg := fmt.Sprintf(CtrlResp, Token)
+		hd.client.Publish(hd.actionUpTopic, 1, false, msg)
+		goto END
+	}
+	if Cmd == "CtrlReplyFailure" {
+		Token := string(b)
+		msg := fmt.Sprintf(CtrlResp, Token)
+		hd.client.Publish(hd.actionUpTopic, 1, false, msg)
+		goto END
+	}
 	if Cmd == "ActionReplySuccess" {
 		Token := string(b)
 		msg := fmt.Sprintf(ActionResp, Token)

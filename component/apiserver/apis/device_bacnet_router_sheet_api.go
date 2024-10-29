@@ -85,6 +85,11 @@ func BacnetRouterSheetImport(c *gin.Context, ruleEngine typex.Rhilex) {
 		c.JSON(common.HTTP_OK, common.Error400(errDb))
 		return
 	}
+	if Device.Type == "" {
+		c.JSON(common.HTTP_OK,
+			common.Error("Device Not Exists"))
+		return
+	}
 	if Device.Type != typex.BACNET_ROUTER_GW.String() {
 		c.JSON(common.HTTP_OK,
 			common.Error("Invalid Device Type, Only Support Import BacnetRouter Device"))
@@ -199,7 +204,8 @@ func BacnetRouterSheetPageList(c *gin.Context, ruleEngine typex.Rhilex) {
 					return 1
 				}()
 				pointVo.LastFetchTime = value.LastFetchTime
-				pointVo.Value = value.Value
+				types, _ := utils.IsArrayAndGetValueList(value.Value)
+				pointVo.Value = types
 				recordsVo = append(recordsVo, pointVo)
 			} else {
 				recordsVo = append(recordsVo, pointVo)
@@ -253,7 +259,7 @@ func BacnetRouterSheetDeleteAll(c *gin.Context, ruleEngine typex.Rhilex) {
 func BacnetRouterSheetCreateOrUpdate(c *gin.Context, ruleEngine typex.Rhilex) {
 	type Form struct {
 		DeviceUUID string                                    `json:"device_uuid"`
-		Points     []dto.BacnetRouterDataPointCreateOrUpdate `json:"points"`
+		Points     []dto.BacnetRouterDataPointCreateOrUpdate `json:"data_points"`
 	}
 	form := Form{}
 	err := c.ShouldBindJSON(&form)

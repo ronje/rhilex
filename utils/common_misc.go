@@ -61,3 +61,11 @@ func XOR(src []byte) int {
 	}
 	return int(r)
 }
+
+func ChecksumCrc8(data []byte) byte {
+	var checksum byte
+	for _, b := range data {
+		checksum += b
+	}
+	return checksum
+}

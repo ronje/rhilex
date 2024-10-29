@@ -83,7 +83,7 @@ func (hd *LoraGateway) Start(cctx typex.CCTX) error {
 }
 
 func (hd *LoraGateway) Status() typex.DeviceState {
-	return typex.DEV_UP
+	return hd.status
 }
 
 func (hd *LoraGateway) Stop() {

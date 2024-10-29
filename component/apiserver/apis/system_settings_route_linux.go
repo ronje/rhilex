@@ -25,7 +25,6 @@ func LoadSystemSettingsAPI() {
 	iFacesApi := server.RouteGroup(server.ContextUrl("/settings"))
 	{
 		iFacesApi.GET(("/ctrlTree"), server.AddRoute(GetDeviceCtrlTree))
-		iFacesApi.GET(("/uarts"), server.AddRoute(GetUartList))
 		iFacesApi.GET(("/netStatus"), server.AddRoute(GetNetworkStatus))
 	}
 	// ethernet
@@ -54,10 +53,9 @@ func LoadSystemSettingsAPI() {
 	// 4g module
 	settings4GApi := server.RouteGroup(server.ContextUrl("/mn4g"))
 	{
-		settings4GApi.GET("/info", server.AddRoute(Get4GBaseInfo))
-		settings4GApi.POST("/restart", server.AddRoute(EC200ARestart4G))
-		settings4GApi.GET("/apn", server.AddRoute(GetAPN))
-		settings4GApi.POST("/apn", server.AddRoute(SetAPN))
+		settings4GApi.POST(("/turnon"), server.AddRoute(Turnon4g))
+		settings4GApi.POST(("/turnoff"), server.AddRoute(Turnoff4g))
+		settings4GApi.GET(("/info"), server.AddRoute(Get4GBaseInfo))
 	}
 	// 固件
 	settingsFirmware := server.RouteGroup(server.ContextUrl("/firmware"))

@@ -29,7 +29,7 @@ type KNXGatewayConfig struct {
 }
 
 type KNXGatewayMainConfig struct {
-	CommonConfig     KNXGatewayCommonConfig `json:"commonConfig"`
+	CommonConfig     KNXGatewayCommonConfig `json:"commonConfig" validate:"required"`
 	KNXGatewayConfig KNXGatewayConfig       `json:"knxConfig"`
 }
 
@@ -69,7 +69,7 @@ func (hd *KNXGateway) Start(cctx typex.CCTX) error {
 }
 
 func (hd *KNXGateway) Status() typex.DeviceState {
-	return typex.DEV_UP
+	return hd.status
 }
 
 func (hd *KNXGateway) Stop() {

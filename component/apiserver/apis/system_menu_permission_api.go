@@ -85,7 +85,7 @@ func GetDistConfigMenus(c *gin.Context, ruleEngine typex.Rhilex) {
 				{Id: 1, Key: "netStatus", Access: true},
 				{Id: 2, Key: "network", Access: true},
 				{Id: 3, Key: "wifi", Access: true},
-				{Id: 4, Key: "net4g", Access: false},
+				{Id: 4, Key: "net4g", Access: true},
 				{Id: 5, Key: "net5g", Access: false},
 				{Id: 6, Key: "can", Access: false},
 			},

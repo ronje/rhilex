@@ -15,6 +15,8 @@
 
 package model
 
+import "encoding/json"
+
 // 设备元数据
 type MDevice struct {
 	RhilexModel
@@ -25,4 +27,13 @@ type MDevice struct {
 	Config      string
 	BindRules   StringList `json:"bindRules"` // 与之关联的规则表["A","B","C"]
 	Description string
+}
+
+func (md MDevice) GetConfig() map[string]interface{} {
+	result := make(map[string]interface{})
+	err := json.Unmarshal([]byte(md.Config), &result)
+	if err != nil {
+		return map[string]interface{}{}
+	}
+	return result
 }

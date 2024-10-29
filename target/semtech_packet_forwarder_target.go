@@ -38,9 +38,13 @@ type SemtechUdpForwarderConfig struct {
 	Port             int    `json:"port"`
 	CacheOfflineData *bool  `json:"cacheOfflineData" title:"离线缓存"`
 }
+
+type SemtechUdpForwarderMainConfig struct {
+	SemtechUdpForwarderConfig SemtechUdpForwarderConfig `json:"commonConfig" validate:"required"`
+}
 type SemtechUdpForwarder struct {
 	typex.XStatus
-	mainConfig SemtechUdpForwarderConfig
+	mainConfig SemtechUdpForwarderMainConfig
 	status     typex.SourceState
 	addr       *net.UDPAddr
 	mac        [8]byte
@@ -49,11 +53,13 @@ type SemtechUdpForwarder struct {
 func NewSemtechUdpForwarder(e typex.Rhilex) typex.XTarget {
 	ht := new(SemtechUdpForwarder)
 	ht.RuleEngine = e
-	ht.mainConfig = SemtechUdpForwarderConfig{
-		Host:             "127.0.0.1",
-		Port:             1700,
-		GwMac:            "0102030405060708",
-		CacheOfflineData: new(bool),
+	ht.mainConfig = SemtechUdpForwarderMainConfig{
+		SemtechUdpForwarderConfig: SemtechUdpForwarderConfig{
+			Host:             "127.0.0.1",
+			Port:             1700,
+			GwMac:            "0102030405060708",
+			CacheOfflineData: new(bool),
+		},
 	}
 	ht.status = typex.SOURCE_DOWN
 	return ht
@@ -61,23 +67,23 @@ func NewSemtechUdpForwarder(e typex.Rhilex) typex.XTarget {
 
 func (ht *SemtechUdpForwarder) Init(outEndId string, configMap map[string]interface{}) error {
 	ht.PointId = outEndId
-	lostcache.CreateLostDataTable(outEndId)
 	if err := utils.BindSourceConfig(configMap, &ht.mainConfig); err != nil {
 		return err
 	}
-	GwMacByte, err1 := hex.DecodeString(ht.mainConfig.GwMac)
+	GwMacByte, err1 := hex.DecodeString(ht.mainConfig.SemtechUdpForwarderConfig.GwMac)
 	if err1 != nil {
 		return err1
 	}
 	if len(GwMacByte) != 8 {
-		return fmt.Errorf("invalid mac addr:%s", ht.mainConfig.GwMac)
+		return fmt.Errorf("invalid mac addr:%s", ht.mainConfig.SemtechUdpForwarderConfig.GwMac)
 	}
 	copy(ht.mac[:], GwMacByte)
-	Ip := net.ParseIP(ht.mainConfig.Host)
+	Ip := net.ParseIP(ht.mainConfig.SemtechUdpForwarderConfig.Host)
 	if Ip == nil {
-		return fmt.Errorf("invalid host format:%v", ht.mainConfig.Host)
+		return fmt.Errorf("invalid host format:%v", ht.mainConfig.SemtechUdpForwarderConfig.Host)
 	}
-	addr, err := net.ResolveUDPAddr("udp", fmt.Sprintf("%s:%d", ht.mainConfig.Host, ht.mainConfig.Port))
+	addr, err := net.ResolveUDPAddr("udp", fmt.Sprintf("%s:%d",
+		ht.mainConfig.SemtechUdpForwarderConfig.Host, ht.mainConfig.SemtechUdpForwarderConfig.Port))
 	if err != nil {
 		return err
 	}
@@ -91,7 +97,7 @@ func (ht *SemtechUdpForwarder) Start(cctx typex.CCTX) error {
 	//
 	ht.status = typex.SOURCE_UP
 	// 补发数据
-	if *ht.mainConfig.CacheOfflineData {
+	if *ht.mainConfig.SemtechUdpForwarderConfig.CacheOfflineData {
 		if CacheData, err1 := lostcache.GetLostCacheData(ht.PointId); err1 != nil {
 			glogger.GLogger.Error(err1)
 		} else {
@@ -124,7 +130,7 @@ func (ht *SemtechUdpForwarder) To(data interface{}) (interface{}, error) {
 		SemtechPushMessageByte, err1 := SemtechPushMessage.MarshalBinary()
 		if err1 != nil {
 			glogger.GLogger.Error(err1)
-			if *ht.mainConfig.CacheOfflineData {
+			if *ht.mainConfig.SemtechUdpForwarderConfig.CacheOfflineData {
 				lostcache.SaveLostCacheData(ht.PointId, lostcache.CacheDataDto{
 					TargetId: ht.PointId,
 					Data:     T,
@@ -136,7 +142,7 @@ func (ht *SemtechUdpForwarder) To(data interface{}) (interface{}, error) {
 		PushAck, errAck := ht.SendUdpData(SemtechPushMessageByte)
 		if errAck != nil {
 			glogger.GLogger.Error(errAck)
-			if *ht.mainConfig.CacheOfflineData {
+			if *ht.mainConfig.SemtechUdpForwarderConfig.CacheOfflineData {
 				lostcache.SaveLostCacheData(ht.PointId, lostcache.CacheDataDto{
 					TargetId: ht.PointId,
 					Data:     T,
@@ -146,7 +152,7 @@ func (ht *SemtechUdpForwarder) To(data interface{}) (interface{}, error) {
 		}
 		if errCheckAck := checkAck(PushAck); errCheckAck != nil {
 			glogger.GLogger.Error(errCheckAck)
-			if *ht.mainConfig.CacheOfflineData {
+			if *ht.mainConfig.SemtechUdpForwarderConfig.CacheOfflineData {
 				lostcache.SaveLostCacheData(ht.PointId, lostcache.CacheDataDto{
 					TargetId: ht.PointId,
 					Data:     T,

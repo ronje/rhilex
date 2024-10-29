@@ -35,9 +35,8 @@ import (
 // 应用调用设备行为或服务端响应设备请求执行结果 Topic： $thing/down/action/{ProductID}/{DeviceName}
 const (
 	// 属性
-	_ithings_PropertyUpTopic    = "$thing/up/property/%v/%v"
-	_ithings_PropertyTopic      = "$thing/down/property/%v/%v"
-	_ithings_PropertyReplyTopic = "$thing/down/property/%v/%v"
+	_ithings_PropertyUpTopic = "$thing/up/property/%v/%v"
+	_ithings_PropertyTopic   = "$thing/down/property/%v/%v"
 	// 动作
 	_ithings_ActionTopic   = "$thing/down/action/%v/%v"
 	_ithings_ActionUpTopic = "$thing/up/action/%v/%v"
@@ -69,17 +68,16 @@ type IThingsSubDevice struct {
 // 腾讯云物联网平台网关
 type IThingsGateway struct {
 	typex.XStatus
-	status             typex.DeviceState
-	mainConfig         IThingsGatewayMainConfig
-	client             mqtt.Client
-	authInfo           IThingsMQTTAuthInfo
-	propertyUpTopic    string
-	propertyDownTopic  string
-	propertyReplyTopic string
-	actionUpTopic      string
-	actionDownTopic    string
-	topologyTopicUp    string
-	topologyTopicDown  string
+	status            typex.DeviceState
+	mainConfig        IThingsGatewayMainConfig
+	client            mqtt.Client
+	authInfo          IThingsMQTTAuthInfo
+	propertyUpTopic   string
+	propertyDownTopic string
+	actionUpTopic     string
+	actionDownTopic   string
+	topologyTopicUp   string
+	topologyTopicDown string
 	//
 	IThingsSubDevices []IThingsSubDevice
 }
@@ -140,8 +138,6 @@ func (hd *IThingsGateway) Start(cctx typex.CCTX) error {
 	hd.propertyDownTopic = fmt.Sprintf(_ithings_PropertyTopic,
 		hd.mainConfig.CommonConfig.ProductId, hd.mainConfig.CommonConfig.DeviceName)
 	hd.propertyUpTopic = fmt.Sprintf(_ithings_PropertyUpTopic,
-		hd.mainConfig.CommonConfig.ProductId, hd.mainConfig.CommonConfig.DeviceName)
-	hd.propertyReplyTopic = fmt.Sprintf(_ithings_PropertyReplyTopic,
 		hd.mainConfig.CommonConfig.ProductId, hd.mainConfig.CommonConfig.DeviceName)
 	// 动作
 	hd.actionDownTopic = fmt.Sprintf(_ithings_ActionTopic,
@@ -272,15 +268,29 @@ func (hd *IThingsGateway) OnRead(cmd []byte, data []byte) (int, error) {
 	return 0, nil
 }
 
+// CtrlReplySuccess
+// CtrlReplyFailure
 // ActionReplySuccess
 // ActionReplyFailure
 // PropertyReplySuccess
 // PropertyReplyFailure
-// LUA 调用接口
 func (hd *IThingsGateway) OnWrite(cmd []byte, b []byte) (int, error) {
 	Cmd := string(cmd)
-	ActionResp := `{"method": "actionReply","msgToken": "%s","code": 200,"msg":"success"}`
 	PropertyResp := `{"method": "reportReply","msgToken": "%s","code": 200,"msg":"success"}`
+	CtrlResp := `{"method": "controlReply","msgToken": "%s","code": 200,"msg":"success"}`
+	ActionResp := `{"method": "actionReply","msgToken": "%s","code": 200,"msg":"success"}`
+	if Cmd == "CtrlReplySuccess" {
+		Token := string(b)
+		msg := fmt.Sprintf(CtrlResp, Token)
+		hd.client.Publish(hd.propertyUpTopic, 1, false, msg)
+		goto END
+	}
+	if Cmd == "CtrlReplyFailure" {
+		Token := string(b)
+		msg := fmt.Sprintf(CtrlResp, Token)
+		hd.client.Publish(hd.propertyUpTopic, 1, false, msg)
+		goto END
+	}
 	if Cmd == "ActionReplySuccess" {
 		Token := string(b)
 		msg := fmt.Sprintf(ActionResp, Token)
@@ -333,7 +343,7 @@ func (hd *IThingsGateway) OnWrite(cmd []byte, b []byte) (int, error) {
 			Data:      params,
 			Msg:       "success",
 		}
-		hd.client.Publish(hd.propertyReplyTopic, 1, false, IthingsGetPropertyReply.String())
+		hd.client.Publish(hd.propertyUpTopic, 1, false, IthingsGetPropertyReply.String())
 		goto END
 	}
 END:

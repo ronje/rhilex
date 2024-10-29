@@ -20,7 +20,7 @@ func Test_DataToHttp(t *testing.T) {
 	engine.Start()
 
 	// Grpc Inend
-	grpcInend := typex.NewInEnd(typex.GRPC, "GRPC", "GRPC", map[string]interface{}{
+	grpcInend := typex.NewInEnd(typex.GRPC_SERVER, "GRPC", "GRPC", map[string]interface{}{
 		"port": 2581,
 		"host": "127.0.0.1",
 	})

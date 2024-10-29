@@ -14,7 +14,6 @@ require (
 	github.com/gin-gonic/gin v1.10.0
 	github.com/go-playground/validator/v10 v10.22.1
 	github.com/google/uuid v1.6.0
-	github.com/gopcua/opcua v0.5.3
 	github.com/gorilla/websocket v1.5.3
 	github.com/gosnmp/gosnmp v1.38.0
 	github.com/hootrhino/beautiful-lua-go v0.1.0
@@ -23,7 +22,7 @@ require (
 	github.com/hootrhino/gomodbus v0.2.5
 	github.com/hootrhino/gomodbus-server v0.1.10
 	github.com/hootrhino/gopher-lua v1.0.3
-	github.com/hootrhino/goserial v0.2.1
+	github.com/hootrhino/goserial v0.2.2
 	github.com/hootrhino/wmi v0.0.0-20230603082700-cfa077a8cf01
 	github.com/itchyny/gojq v0.12.16
 	github.com/jinzhu/copier v0.4.0
@@ -50,11 +49,11 @@ require (
 	golang.ngrok.com/ngrok v1.10.0
 	golang.org/x/exp v0.0.0-20241004190924-225e2abe05e6
 	golang.org/x/sys v0.26.0
+	golang.org/x/text v0.17.0
 	google.golang.org/grpc v1.67.1
 	google.golang.org/protobuf v1.35.1
 	gopkg.in/ini.v1 v1.67.0
 	gopkg.in/natefinch/lumberjack.v2 v2.2.1
-	gopkg.in/square/go-jose.v2 v2.6.0
 	gorm.io/driver/sqlite v1.5.6
 	gorm.io/gorm v1.25.12
 )
@@ -126,7 +125,6 @@ require (
 	golang.org/x/net v0.28.0 // indirect
 	golang.org/x/sync v0.8.0 // indirect
 	golang.org/x/term v0.23.0 // indirect
-	golang.org/x/text v0.17.0 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20240814211410-ddb44dafa142 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect

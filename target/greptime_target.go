@@ -40,25 +40,31 @@ type GrepTimeDbTargetConfig struct {
 	// 离线缓存
 	CacheOfflineData *bool `json:"cacheOfflineData" title:"离线缓存"`
 }
+
+type GrepTimeDbTargetMainConfig struct {
+	GrepTimeDbTargetConfig GrepTimeDbTargetConfig `json:"commonConfig" validate:"required"`
+}
 type GrepTimeDbTarget struct {
 	typex.XStatus
 	client     *greptime.Client
-	mainConfig GrepTimeDbTargetConfig
+	mainConfig GrepTimeDbTargetMainConfig
 	status     typex.SourceState
 }
 
 func NewGrepTimeDbTarget(e typex.Rhilex) typex.XTarget {
 	grep := new(GrepTimeDbTarget)
 	grep.RuleEngine = e
-	grep.mainConfig = GrepTimeDbTargetConfig{
-		GwSn:             "rhilex",
-		Host:             "127.0.0.1",
-		Port:             4001,
-		Username:         "rhilex",
-		Password:         "rhilex",
-		DataBase:         "public",
-		Table:            "rhilex",
-		CacheOfflineData: new(bool),
+	grep.mainConfig = GrepTimeDbTargetMainConfig{
+		GrepTimeDbTargetConfig: GrepTimeDbTargetConfig{
+			GwSn:             "rhilex",
+			Host:             "127.0.0.1",
+			Port:             4001,
+			Username:         "rhilex",
+			Password:         "rhilex",
+			DataBase:         "public",
+			Table:            "rhilex",
+			CacheOfflineData: new(bool),
+		},
 	}
 	grep.status = typex.SOURCE_DOWN
 	return grep
@@ -66,7 +72,6 @@ func NewGrepTimeDbTarget(e typex.Rhilex) typex.XTarget {
 
 func (grep *GrepTimeDbTarget) Init(outEndId string, configMap map[string]interface{}) error {
 	grep.PointId = outEndId
-	lostcache.CreateLostDataTable(outEndId)
 	if err := utils.BindSourceConfig(configMap, &grep.mainConfig); err != nil {
 		return err
 	}
@@ -77,9 +82,9 @@ func (grep *GrepTimeDbTarget) Start(cctx typex.CCTX) error {
 	grep.Ctx = cctx.Ctx
 	grep.CancelCTX = cctx.CancelCTX
 	//
-	cfg := greptime.NewConfig(grep.mainConfig.Host).WithPort(grep.mainConfig.Port).
-		WithAuth(grep.mainConfig.Username, grep.mainConfig.Password).
-		WithDatabase(grep.mainConfig.DataBase)
+	cfg := greptime.NewConfig(grep.mainConfig.GrepTimeDbTargetConfig.Host).WithPort(grep.mainConfig.GrepTimeDbTargetConfig.Port).
+		WithAuth(grep.mainConfig.GrepTimeDbTargetConfig.Username, grep.mainConfig.GrepTimeDbTargetConfig.Password).
+		WithDatabase(grep.mainConfig.GrepTimeDbTargetConfig.DataBase)
 	cfg.WithKeepalive(time.Second*10, time.Second*5)
 	client, err := greptime.NewClient(cfg)
 	if err != nil {
@@ -89,7 +94,7 @@ func (grep *GrepTimeDbTarget) Start(cctx typex.CCTX) error {
 	grep.client = client
 	grep.status = typex.SOURCE_UP
 	// 补发数据
-	if *grep.mainConfig.CacheOfflineData {
+	if *grep.mainConfig.GrepTimeDbTargetConfig.CacheOfflineData {
 		if CacheData, err1 := lostcache.GetLostCacheData(grep.PointId); err1 != nil {
 			glogger.GLogger.Error(err1)
 		} else {
@@ -130,14 +135,14 @@ func (grep *GrepTimeDbTarget) To(data interface{}) (interface{}, error) {
 			glogger.GLogger.Error(errUnmarshal)
 			return 0, errUnmarshal
 		}
-		Table, errNew := table.New(grep.mainConfig.Table)
+		Table, errNew := table.New(grep.mainConfig.GrepTimeDbTargetConfig.Table)
 		if errNew != nil {
 			glogger.GLogger.Error(errNew)
 			return 0, errNew
 		}
 		Table.AddTimestampColumn("ts", types.TIMESTAMP_MILLISECOND)
 		Table.AddTagColumn("gateway_sn", types.STRING)
-		values := []interface{}{time.Now().UnixMilli(), grep.mainConfig.GwSn}
+		values := []interface{}{time.Now().UnixMilli(), grep.mainConfig.GrepTimeDbTargetConfig.GwSn}
 		for k, v := range Map {
 			switch VT := v.(type) {
 			case bool:
@@ -168,7 +173,7 @@ func (grep *GrepTimeDbTarget) To(data interface{}) (interface{}, error) {
 		glogger.GLogger.Debug("grep.client.Write: ", values)
 		if errWrite != nil {
 			glogger.GLogger.Error(errWrite)
-			if *grep.mainConfig.CacheOfflineData {
+			if *grep.mainConfig.GrepTimeDbTargetConfig.CacheOfflineData {
 				lostcache.SaveLostCacheData(grep.PointId, lostcache.CacheDataDto{
 					TargetId: grep.PointId,
 					Data:     T,

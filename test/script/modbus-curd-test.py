@@ -28,8 +28,7 @@ payload = json.dumps({
       "mode": "UART",
       "autoRequest": True,
       "enableOptimize": False
-    },
-    "portUuid": "COM12"
+    }
   },
   "schemaId": ""
 })

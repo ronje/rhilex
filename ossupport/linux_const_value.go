@@ -22,13 +22,26 @@ package ossupport
  */
 const (
 	// rhilex 工作目录
-	MainWorkDir = "/usr/local/rhilex/"
+	// MainWorkDir = "/usr/local/rhilex/"
+	MainWorkDir = "./"
+	// RHILEX Main
+	MainExePath = MainWorkDir + "rhilex"
+	// Pid file
+	MainExePidPath = MainWorkDir + "rhilex.pid"
+	// RHILEX Config
+	RunConfigPath = MainWorkDir + "rhilex.ini"
+	// RHILEX Database
+	RunDbPath = MainWorkDir + "rhilex.db"
+	// 证书公钥位置
+	LicenseKeyPath = MainWorkDir + "license.key"
+	// 证书位置
+	LicenseLicPath = MainWorkDir + "license.lic"
+	// RHILEX 备份回滚目录
+	OldBackupDir = "/usr/local/rhilex/old/"
 	// 数据中心
 	DataCenterPath = MainWorkDir + "rhilex_datacenter.db"
 	// 离线缓存的数据
 	LostCacheDataPath = MainWorkDir + "rhilex_lostcache.db"
-	// RHILEX 的配置数据库
-	RunDbPath = MainWorkDir + "rhilex.db"
 	// 固件保存路径
 	FirmwarePath = MainWorkDir + "upload/Firmware/Firmware.zip"
 	// 升级日志
@@ -42,9 +55,9 @@ const (
 	// 升级锁
 	UpgradeLockPath = BackupLockPath
 	// 数据备份
-	DataBackupPath = MainWorkDir + "upload/Backup/"
+	RecoverBackupPath = MainWorkDir + "upload/Backup/"
 	// 备份数据库
-	RecoveryDbPath = DataBackupPath + "rhilex.db"
+	RecoveryDbPath = RecoverBackupPath + "rhilex.db"
 	// 数据中心库
-	RecoveryDataCenterPath = DataBackupPath + "rhilex_datacenter.db"
+	RecoveryDataCenterPath = RecoverBackupPath + "rhilex_datacenter.db"
 )

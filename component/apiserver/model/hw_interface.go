@@ -14,7 +14,7 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 package model
 
-import "gopkg.in/square/go-jose.v2/json"
+import "encoding/json"
 
 type MUart struct {
 	RhilexModel

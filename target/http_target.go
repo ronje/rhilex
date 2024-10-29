@@ -29,31 +29,36 @@ import (
 )
 
 type HTTPTargetConfig struct {
-	Url        string            `json:"url" validate:"required" title:"URL"`
-	Headers    map[string]string `json:"headers" validate:"required" title:"HTTP Headers"`
-	AllowPing  *bool             `json:"allowPing"`
-	PingPacket string            `json:"pingPacket"`
-	Timeout    int               `json:"timeout"`
-	// 离线缓存
-	CacheOfflineData *bool `json:"cacheOfflineData" title:"离线缓存"`
+	Url              string            `json:"url" validate:"required" title:"URL"`
+	Headers          map[string]string `json:"headers" validate:"required" title:"HTTP Headers"`
+	AllowPing        *bool             `json:"allowPing"`
+	PingPacket       string            `json:"pingPacket"`
+	Timeout          int               `json:"timeout"`
+	CacheOfflineData *bool             `json:"cacheOfflineData" title:"离线缓存"`
+}
+
+type HTTPTargetMainConfig struct {
+	HTTPTargetConfig HTTPTargetConfig `json:"commonConfig" validate:"required"`
 }
 type HTTPTarget struct {
 	typex.XStatus
 	client     http.Client
-	mainConfig HTTPTargetConfig
+	mainConfig HTTPTargetMainConfig
 	status     typex.SourceState
 }
 
 func NewHTTPTarget(e typex.Rhilex) typex.XTarget {
 	ht := new(HTTPTarget)
 	ht.RuleEngine = e
-	ht.mainConfig = HTTPTargetConfig{
-		Url:              "http://127.0.0.1",
-		PingPacket:       "rhilex",
-		Timeout:          3000,
-		AllowPing:        new(bool),
-		Headers:          map[string]string{},
-		CacheOfflineData: new(bool),
+	ht.mainConfig = HTTPTargetMainConfig{
+		HTTPTargetConfig: HTTPTargetConfig{
+			Url:              "http://127.0.0.1",
+			PingPacket:       "rhilex",
+			Timeout:          3000,
+			AllowPing:        new(bool),
+			Headers:          map[string]string{},
+			CacheOfflineData: new(bool),
+		},
 	}
 	ht.status = typex.SOURCE_DOWN
 	return ht
@@ -61,7 +66,6 @@ func NewHTTPTarget(e typex.Rhilex) typex.XTarget {
 
 func (ht *HTTPTarget) Init(outEndId string, configMap map[string]interface{}) error {
 	ht.PointId = outEndId
-	lostcache.CreateLostDataTable(outEndId)
 	if err := utils.BindSourceConfig(configMap, &ht.mainConfig); err != nil {
 		return err
 	}
@@ -74,7 +78,7 @@ func (ht *HTTPTarget) Start(cctx typex.CCTX) error {
 	ht.CancelCTX = cctx.CancelCTX
 	ht.client = http.Client{}
 	ht.status = typex.SOURCE_UP
-	if *ht.mainConfig.AllowPing {
+	if *ht.mainConfig.HTTPTargetConfig.AllowPing {
 		go func(ht *HTTPTarget) {
 			for {
 				select {
@@ -82,19 +86,19 @@ func (ht *HTTPTarget) Start(cctx typex.CCTX) error {
 					return
 				default:
 				}
-				_, err := utils.Post(ht.client, ht.mainConfig.PingPacket,
-					ht.mainConfig.Url, ht.mainConfig.Headers)
+				_, err := utils.Post(ht.client, ht.mainConfig.HTTPTargetConfig.PingPacket,
+					ht.mainConfig.HTTPTargetConfig.Url, ht.mainConfig.HTTPTargetConfig.Headers)
 				if err != nil {
 					glogger.GLogger.Error(err)
 					ht.status = typex.SOURCE_DOWN
 					continue
 				}
-				time.Sleep(time.Duration(ht.mainConfig.Timeout) * time.Millisecond)
+				time.Sleep(time.Duration(ht.mainConfig.HTTPTargetConfig.Timeout) * time.Millisecond)
 			}
 		}(ht)
 	}
 	// 补发数据
-	if *ht.mainConfig.CacheOfflineData {
+	if *ht.mainConfig.HTTPTargetConfig.CacheOfflineData {
 		if CacheData, err1 := lostcache.GetLostCacheData(ht.PointId); err1 != nil {
 			glogger.GLogger.Error(err1)
 		} else {
@@ -123,10 +127,11 @@ func (ht *HTTPTarget) To(data interface{}) (interface{}, error) {
 	switch T := data.(type) {
 	case string:
 
-		_, err := utils.Post(ht.client, T, ht.mainConfig.Url, ht.mainConfig.Headers)
+		_, err := utils.Post(ht.client, T,
+			ht.mainConfig.HTTPTargetConfig.Url, ht.mainConfig.HTTPTargetConfig.Headers)
 		if err != nil {
 			glogger.GLogger.Error(err)
-			if *ht.mainConfig.CacheOfflineData {
+			if *ht.mainConfig.HTTPTargetConfig.CacheOfflineData {
 				lostcache.SaveLostCacheData(ht.PointId, lostcache.CacheDataDto{
 					TargetId: ht.PointId,
 					Data:     T,
@@ -151,7 +156,7 @@ func (ht *HTTPTarget) prob() error {
 	d := net.Dialer{
 		Timeout: 3 * time.Second,
 	}
-	Url, err := url.Parse(ht.mainConfig.Url)
+	Url, err := url.Parse(ht.mainConfig.HTTPTargetConfig.Url)
 	if err != nil {
 		return err
 	}

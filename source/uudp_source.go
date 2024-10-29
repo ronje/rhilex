@@ -76,11 +76,12 @@ func (udps *udpSource) Start(cctx typex.CCTX) error {
 func (udps *udpSource) handleClient(data []byte, remoteAddr *net.UDPAddr) {
 	ClientData := udp_client_data{
 		ClientAddr: remoteAddr.String(),
+		Data:       hex.EncodeToString(data),
 	}
 	if utf8.Valid(data) {
-		ClientData.Data = string(data)
+		glogger.GLogger.Debug("TCP Server Received:", string(data))
 	} else {
-		ClientData.Data = hex.EncodeToString(data)
+		glogger.GLogger.Debug("TCP Server Received:", hex.EncodeToString(data))
 	}
 	ClientDataBytes, _ := json.Marshal(ClientData)
 	work, err := udps.RuleEngine.WorkInEnd(udps.RuleEngine.GetInEnd(udps.PointId), string(ClientDataBytes))
@@ -88,7 +89,7 @@ func (udps *udpSource) handleClient(data []byte, remoteAddr *net.UDPAddr) {
 		glogger.GLogger.Error(err)
 	}
 	// return ok
-	_, err = udps.UdpConn.WriteToUDP([]byte("ok"), remoteAddr)
+	_, err = udps.UdpConn.WriteToUDP([]byte("ok\r\n"), remoteAddr)
 	if err != nil {
 		glogger.GLogger.Error(err)
 	}
@@ -115,10 +116,6 @@ func (udps *udpSource) Details() *typex.InEnd {
 	return udps.RuleEngine.GetInEnd(udps.PointId)
 }
 
-func (udps *udpSource) Test(inEndId string) bool {
-	return true
-}
-
 func (udps *udpSource) Init(inEndId string, configMap map[string]interface{}) error {
 	udps.PointId = inEndId
 	if err := utils.BindSourceConfig(configMap, &udps.mainConfig); err != nil {
@@ -143,14 +140,4 @@ func (udps *udpSource) Stop() {
 		}
 	}
 
-}
-
-// 来自外面的数据
-func (*udpSource) DownStream([]byte) (int, error) {
-	return 0, nil
-}
-
-// 上行数据
-func (*udpSource) UpStream([]byte) (int, error) {
-	return 0, nil
 }

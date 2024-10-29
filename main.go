@@ -21,6 +21,8 @@ import (
 	"log"
 	"os"
 	"runtime"
+	"strconv"
+	"syscall"
 	"time"
 
 	archsupport "github.com/hootrhino/rhilex/archsupport"
@@ -65,24 +67,98 @@ func main() {
 		Commands: []*cli.Command{
 			{
 				Name:  "run",
-				Usage: "Start rhilex, Must with config: -config=/path/rhilex.ini",
+				Usage: "Start rhilex with config: -config=/path/rhilex.ini",
 				Flags: []cli.Flag{
+					&cli.BoolFlag{
+						Name:  "daemon",
+						Usage: "Run rhilex with daemon",
+						Value: false,
+					},
 					&cli.StringFlag{
 						Name:  "db",
-						Usage: "Database of rhilex",
+						Usage: "rhilex database",
 						Value: "rhilex.db",
 					},
 					&cli.StringFlag{
 						Name:  "config",
-						Usage: "Config of rhilex",
+						Usage: "rhilex config",
 						Value: "rhilex.ini",
 					},
 				},
 				Action: func(c *cli.Context) error {
 					utils.CLog(typex.Banner)
 					utils.ShowGGpuAndCpuInfo()
-					engine.RunRhilex(c.String("config"))
-					fmt.Printf("[RHILEX UPGRADE] Run rhilex successfully.")
+					pid := os.Getpid()
+					err := os.WriteFile(ossupport.MainExePidPath, []byte(fmt.Sprintf("%d", pid)), 0755)
+					if err != nil {
+						return err
+					}
+					if !c.Bool("daemon") {
+						engine.RunRhilex(c.String("config"))
+						if utils.PathExists(ossupport.MainExePidPath) {
+							os.Remove(ossupport.MainExePidPath)
+						}
+					} else {
+						// TODO
+						utils.CLog("[RHILEX RUN] Nothing to do, pid: %d", pid)
+					}
+					utils.CLog("[RHILEX RUN] Stop rhilex successfully.")
+					return nil
+				},
+			},
+			{
+				Name:  "service",
+				Usage: "rhilex service control",
+				Flags: []cli.Flag{
+					&cli.StringFlag{
+						Name:  "stype",
+						Usage: "service type <install|uninstall|status|restart>",
+						Value: "status",
+					},
+				},
+				Action: func(c *cli.Context) error {
+					// TODO
+					utils.CLog("[RHILEX RUN] Nothing to do.")
+					return nil
+				},
+			},
+
+			{
+				Name:  "stop",
+				Usage: "Stop rhilex",
+				Flags: []cli.Flag{},
+				Action: func(c *cli.Context) error {
+					bytes, err1 := os.ReadFile(ossupport.MainExePidPath)
+					if err1 != nil {
+						utils.CLog("Error ReadFile:%s", err1)
+						return err1
+					}
+					pid, err2 := strconv.Atoi(string(bytes))
+					if err2 != nil {
+						utils.CLog("Error covert pid:%s", err2)
+						return err2
+					}
+					process, err3 := os.FindProcess(pid)
+					if err3 != nil {
+						utils.CLog("Error finding process(%d):%s", pid, err3)
+						return err3
+					}
+					err4 := process.Signal(syscall.SIGTERM)
+					if err4 != nil {
+						utils.CLog("Error sending signal:%s", err4)
+						return err4
+					}
+					err5 := process.Kill()
+					if err5 != nil {
+						utils.CLog("Error kill process:%s", err5)
+						return err5
+					}
+					err6 := os.Remove(ossupport.MainExePidPath)
+					if err6 != nil {
+						utils.CLog("Error Remove pid:%s", err6)
+						return err6
+					}
+					utils.CLog("[RHILEX STOP] Stop rhilex successfully.")
 					return nil
 				},
 			},
@@ -128,6 +204,46 @@ func main() {
 						utils.CLog("[RHILEX UPGRADE] Nothing todo")
 						return nil
 					}
+
+					// Move to rollback
+					utils.CLog("[RHILEX BACKUP OLD VERSION] Start backup old version")
+					var errBob error
+					errBob = ossupport.BackupOldVersion(ossupport.MainExePath, ossupport.OldBackupDir+"rhilex")
+					if errBob != nil {
+						utils.CLog("[RHILEX BACKUP OLD VERSION] Backup old version Failed: %s", errBob)
+						return errBob
+					}
+					errBob = ossupport.BackupOldVersion(ossupport.RunConfigPath, ossupport.OldBackupDir+"rhilex.ini")
+					if errBob != nil {
+						utils.CLog("[RHILEX BACKUP OLD VERSION] Backup old version Failed: %s", errBob)
+						return errBob
+					}
+					errBob = ossupport.BackupOldVersion(ossupport.RunDbPath, ossupport.OldBackupDir+"rhilex.db")
+					if errBob != nil {
+						utils.CLog("[RHILEX BACKUP OLD VERSION] Backup old version Failed: %s", errBob)
+						return errBob
+					}
+					errBob = ossupport.BackupOldVersion(ossupport.LicenseKeyPath, ossupport.OldBackupDir+"license.key")
+					if errBob != nil {
+						utils.CLog("[RHILEX BACKUP OLD VERSION] Backup old version Failed: %s", errBob)
+						return errBob
+					}
+					errBob = ossupport.BackupOldVersion(ossupport.LicenseLicPath, ossupport.OldBackupDir+"license.lic")
+					if errBob != nil {
+						utils.CLog("[RHILEX BACKUP OLD VERSION] Backup old version Failed: %s", errBob)
+						return errBob
+					}
+					errBob = ossupport.BackupOldVersion(ossupport.DataCenterPath, ossupport.OldBackupDir+"rhilex_datacenter.db")
+					if errBob != nil {
+						utils.CLog("[RHILEX BACKUP OLD VERSION] Backup old version Failed: %s", errBob)
+						return errBob
+					}
+					errBob = ossupport.BackupOldVersion(ossupport.LostCacheDataPath, ossupport.OldBackupDir+"rhilex_lostcache.db")
+					if errBob != nil {
+						utils.CLog("[RHILEX BACKUP OLD VERSION] Backup old version Failed: %s", errBob)
+						return errBob
+					}
+					utils.CLog("[RHILEX BACKUP OLD VERSION] Backup old version finished")
 					// unzip Firmware
 					utils.CLog("[RHILEX UPGRADE] Unzip Firmware")
 					if err := ossupport.UnzipFirmware(
@@ -143,7 +259,7 @@ func main() {
 						return nil
 					}
 					utils.CLog("[RHILEX UPGRADE] Remove Firmware finished")
-					//
+					// Restart
 					utils.CLog("[RHILEX UPGRADE] Restart rhilex")
 					if err := ossupport.RestartRhilex(); err != nil {
 						utils.CLog("[RHILEX UPGRADE] Restart rhilex error:%s", err.Error())
@@ -151,6 +267,60 @@ func main() {
 					}
 					utils.CLog("[RHILEX UPGRADE] Restart rhilex finished, Upgrade Process Exited")
 					os.Exit(0)
+					return nil
+				},
+			},
+			// 回滚 TODO
+			{
+				Name:   "rollback",
+				Usage:  "! JUST FOR Rollback Old Version",
+				Hidden: true,
+				Flags: []cli.Flag{
+					&cli.BoolFlag{
+						Name:  "rollback",
+						Usage: "! THIS PARAMENT IS JUST FOR Rollback Old Version",
+						Value: false,
+					},
+				},
+				Action: func(c *cli.Context) error {
+					utils.CLog("[RHILEX ROLLBACK] Rollback Process Started")
+					var errBob error
+					errBob = ossupport.BackupOldVersion(ossupport.OldBackupDir+"rhilex", ossupport.MainExePath)
+					if errBob != nil {
+						utils.CLog("[RHILEX ROLLBACK] Rollback Failed: %s", errBob)
+						return errBob
+					}
+					errBob = ossupport.BackupOldVersion(ossupport.OldBackupDir+"rhilex.ini", ossupport.RunConfigPath)
+					if errBob != nil {
+						utils.CLog("[RHILEX ROLLBACK] Rollback Failed: %s", errBob)
+						return errBob
+					}
+					errBob = ossupport.BackupOldVersion(ossupport.OldBackupDir+"rhilex.db", ossupport.RunDbPath)
+					if errBob != nil {
+						utils.CLog("[RHILEX ROLLBACK] Rollback Failed: %s", errBob)
+						return errBob
+					}
+					errBob = ossupport.BackupOldVersion(ossupport.OldBackupDir+"license.key", ossupport.LicenseKeyPath)
+					if errBob != nil {
+						utils.CLog("[RHILEX ROLLBACK] Rollback Failed: %s", errBob)
+						return errBob
+					}
+					errBob = ossupport.BackupOldVersion(ossupport.OldBackupDir+"license.lic", ossupport.LicenseLicPath)
+					if errBob != nil {
+						utils.CLog("[RHILEX ROLLBACK] Rollback Failed: %s", errBob)
+						return errBob
+					}
+					errBob = ossupport.BackupOldVersion(ossupport.OldBackupDir+"rhilex_datacenter.db", ossupport.DataCenterPath)
+					if errBob != nil {
+						utils.CLog("[RHILEX ROLLBACK] Rollback Failed: %s", errBob)
+						return errBob
+					}
+					errBob = ossupport.BackupOldVersion(ossupport.OldBackupDir+"rhilex_lostcache.db", ossupport.LostCacheDataPath)
+					if errBob != nil {
+						utils.CLog("[RHILEX ROLLBACK] Rollback Failed: %s", errBob)
+						return errBob
+					}
+					utils.CLog("[RHILEX ROLLBACK] Rollback Process Exited")
 					return nil
 				},
 			},
@@ -349,7 +519,6 @@ func main() {
 			},
 		},
 	}
-
 	if err := app.Run(os.Args); err != nil {
 		log.Fatal(err)
 	}

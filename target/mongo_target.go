@@ -42,21 +42,26 @@ type MongoConfig struct {
 	CacheOfflineData *bool  `json:"cacheOfflineData" title:"离线缓存"`
 }
 
+type MongoMainConfig struct {
+	MongoConfig MongoConfig `json:"commonConfig" validate:"required"`
+}
 type mongoTarget struct {
 	typex.XStatus
 	client     *mongo.Client
 	collection *mongo.Collection
-	mainConfig MongoConfig
+	mainConfig MongoMainConfig
 	status     typex.SourceState
 }
 
 func NewMongoTarget(e typex.Rhilex) typex.XTarget {
 	mg := new(mongoTarget)
-	mg.mainConfig = MongoConfig{
-		MongoUrl:         "mongodb://rhilex:rhilex@localhost:27017/rhilex",
-		Database:         "rhilex",
-		Collection:       "rhilex",
-		CacheOfflineData: new(bool),
+	mg.mainConfig = MongoMainConfig{
+		MongoConfig: MongoConfig{
+			MongoUrl:         "mongodb://rhilex:rhilex@localhost:27017/rhilex",
+			Database:         "rhilex",
+			Collection:       "rhilex",
+			CacheOfflineData: new(bool),
+		},
 	}
 	mg.RuleEngine = e
 	mg.status = typex.SOURCE_DOWN
@@ -65,7 +70,6 @@ func NewMongoTarget(e typex.Rhilex) typex.XTarget {
 
 func (m *mongoTarget) Init(outEndId string, configMap map[string]interface{}) error {
 	m.PointId = outEndId
-	lostcache.CreateLostDataTable(outEndId)
 	if err := utils.BindSourceConfig(configMap, &m.mainConfig); err != nil {
 		return err
 	}
@@ -74,19 +78,20 @@ func (m *mongoTarget) Init(outEndId string, configMap map[string]interface{}) er
 func (m *mongoTarget) Start(cctx typex.CCTX) error {
 	m.Ctx = cctx.Ctx
 	m.CancelCTX = cctx.CancelCTX
-	clientOptions := options.Client().ApplyURI(m.mainConfig.MongoUrl)
+	clientOptions := options.Client().ApplyURI(m.mainConfig.MongoConfig.MongoUrl)
 	clientOptions.SetConnectTimeout(3 * time.Second)
 	// clientOptions.SetDirect(true)
 	client, err0 := mongo.Connect(m.Ctx, clientOptions)
 	if err0 != nil {
 		return err0
 	}
-	m.collection = client.Database(m.mainConfig.Database).Collection(m.mainConfig.Collection)
+	m.collection = client.Database(m.mainConfig.MongoConfig.Database).
+		Collection(m.mainConfig.MongoConfig.Collection)
 	m.client = client
 	m.Enable = true
 	m.status = typex.SOURCE_UP
 	// 补发数据
-	if *m.mainConfig.CacheOfflineData {
+	if *m.mainConfig.MongoConfig.CacheOfflineData {
 		if CacheData, err1 := lostcache.GetLostCacheData(m.PointId); err1 != nil {
 			glogger.GLogger.Error(err1)
 		} else {
@@ -132,7 +137,7 @@ func (m *mongoTarget) To(data interface{}) (interface{}, error) {
 
 		if err := bson.UnmarshalExtJSON([]byte(T), false, &data); err != nil {
 			glogger.GLogger.Error("Mongo To Failed:", err)
-			if *m.mainConfig.CacheOfflineData {
+			if *m.mainConfig.MongoConfig.CacheOfflineData {
 				lostcache.SaveLostCacheData(m.PointId, lostcache.CacheDataDto{
 					TargetId: m.PointId,
 					Data:     T,
@@ -143,7 +148,7 @@ func (m *mongoTarget) To(data interface{}) (interface{}, error) {
 		r, err := m.collection.InsertOne(m.Ctx, data)
 		if err != nil {
 			glogger.GLogger.Error("Mongo To Failed:", err)
-			if *m.mainConfig.CacheOfflineData {
+			if *m.mainConfig.MongoConfig.CacheOfflineData {
 				lostcache.SaveLostCacheData(m.PointId, lostcache.CacheDataDto{
 					TargetId: m.PointId,
 					Data:     T,

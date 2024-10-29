@@ -92,9 +92,11 @@
 ```ini
 KEY=value
 ```
-其中KEY是模块的名称，value是ini里面的配置，比如下面这个：
+其中`KEY`是模块的名称，`value`是ini里面的`transceiver.*`配置，比如下面这个：
 ```ini
-[transceiver.atk01]
+[transceiver.default_transceiver]
+# Device Name
+name = default_transceiver
 # Address: Device is on COM3 serial port for communication
 address = /dev/ttyUSB0
 # io_timeout: Timeout for I/O ops (30 sec), prevents indefinite waiting
@@ -112,4 +114,98 @@ stop_bits = 1
 # Transport Protocol: 1|2|3, goto homepage for detail
 transport_protocol = 1
 ```
-表示启用atk01这个模块，设备位于`/dev/ttyUSB0`下，使用的是固定报文协议格式。更多请参考文档。
+启动指令 `TRANSCEIVER=default_transceiver` 表示启用atk01这个模块，设备位于`/dev/ttyUSB0`下，使用的是固定报文协议格式。更多请参考文档。
+
+## 数据协议
+### 协议结构
+```c
+#define HEADER_SIZE 4 // 2 bytes for Type + 2 bytes for Length
+#define PAYLOAD_MAX_SIZE 256 // Maximum payload size
+
+// Header structure
+typedef struct {
+    uint8_t Type[2];
+    uint8_t Length[2];
+} Header;
+
+// AppLayerFrame structure
+typedef struct {
+    Header header;
+    uint8_t payload[PAYLOAD_MAX_SIZE];
+    uint8_t crc; // CRC-8 checksum
+} AppLayerFrame;
+
+```
+
+## Arduino示例
+要在Arduino中实现一个基于上述结构体定义的简单协议，用于上报A0和A1模拟引脚的数据，你可以参考以下代码实例。这里假设你使用的是标准的Arduino Uno板，它具有A0和A1模拟输入引脚。
+
+```cpp
+#include <Arduino.h>
+#include <Wire.h> // For I2C communication
+
+#define HEADER_SIZE 4
+#define PAYLOAD_MAX_SIZE 256
+
+// Header structure
+typedef struct {
+    uint8_t Type[2];
+    uint8_t Length[2];
+} Header;
+
+// AppLayerFrame structure
+typedef struct {
+    Header header;
+    uint8_t payload[PAYLOAD_MAX_SIZE];
+    uint8_t crc; // CRC-8 checksum
+} AppLayerFrame;
+
+// Function to calculate the CRC8 of a buffer
+uint8_t crc8(const uint8_t* data, size_t len);
+
+void setup() {
+    Serial.begin(9600); // Initialize serial for debugging
+    Wire.begin(); // Initialize I2C for communication
+}
+
+void loop() {
+    static int counter = 0; // Counter to simulate data change
+    AppLayerFrame frame;
+
+    // Prepare frame header
+    frame.header.Type[0] = 'D'; // Data type identifier
+    frame.header.Type[1] = 'T';
+    frame.header.Length[0] = 2; // Payload length
+    frame.header.Length[1] = 0;
+
+    // Prepare payload
+    frame.payload[0] = analogRead(A0); // Read A0
+    frame.payload[1] = analogRead(A1); // Read A1
+    frame.crc = crc8((uint8_t*)&frame, HEADER_SIZE + 2); // Calculate CRC8 over header and payload
+
+    // Send frame via I2C
+    Wire.write((uint8_t*)&frame, HEADER_SIZE + PAYLOAD_MAX_SIZE + 1); // Send full frame
+
+    delay(1000); // Delay to avoid flooding the bus
+    counter++; // Increment counter
+}
+
+uint8_t crc8(const uint8_t* data, size_t len) {
+    const uint8_t POLYNOMIAL = 0x07; // CRC-8 polynomial
+    uint8_t crc = 0;
+
+    for (size_t pos = 0; pos < len; pos++) {
+        crc ^= *data++;
+        for (uint8_t bit = 0x80; bit > 0; bit >>= 1) {
+            if (crc & bit)
+                crc = (crc << 1) ^ POLYNOMIAL;
+            else
+                crc <<= 1;
+        }
+    }
+
+    return crc;
+}
+```
+
+在这个示例中，我们定义了结构体`Header`和`AppLayerFrame`。在`loop`函数内，我们读取A0和A1模拟引脚的数据，并将其放入`payload`字段。然后计算CRC-8校验值并存储在`crc`字段中。最后通过I2C发送整个帧。

@@ -1,6 +1,7 @@
 package httpserver
 
 import (
+	"fmt"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -40,6 +41,9 @@ func OkWithMsg(msg string) R {
 }
 func Error(s string) R {
 	return R{4000, s, []EmptyObj{}}
+}
+func Errorf(f, s string) R {
+	return R{4000, fmt.Sprintf(f, s), []EmptyObj{}}
 }
 func Error400(e error) R {
 	return R{4001, e.Error(), []EmptyObj{}}

@@ -9,8 +9,9 @@ import (
 	"github.com/hootrhino/rhilex/typex"
 	"github.com/hootrhino/rhilex/utils"
 
+	"encoding/json"
+
 	"github.com/gin-gonic/gin"
-	"gopkg.in/square/go-jose.v2/json"
 )
 
 func InitOutEndRoute() {
@@ -145,6 +146,10 @@ func CreateOutEnd(c *gin.Context, ruleEngine typex.Rhilex) {
 		c.JSON(common.HTTP_OK, common.Error400(err1))
 		return
 	}
+	if err := ruleEngine.CheckTargetType(typex.TargetType(form.Type)); err != nil {
+		c.JSON(common.HTTP_OK, common.Error400(err))
+		return
+	}
 	newUUID := utils.OutUuid()
 	if err := service.InsertMOutEnd(&model.MOutEnd{
 		UUID:        newUUID,
@@ -160,6 +165,7 @@ func CreateOutEnd(c *gin.Context, ruleEngine typex.Rhilex) {
 		c.JSON(common.HTTP_OK, common.OkWithMsg(err.Error()))
 		return
 	}
+	lostcache.CreateLostDataTable(newUUID)
 	c.JSON(common.HTTP_OK, common.Ok())
 
 }

@@ -135,11 +135,9 @@ func SetEthNetwork(c *gin.Context, ruleEngine typex.Rhilex) {
 		DNS:         DtoCfg.DNS,
 		DHCPEnabled: DtoCfg.DHCPEnabled,
 	}
-	if err := service.UpdateEthConfig(MNetCfg); err != nil {
-		if err != nil {
-			c.JSON(common.HTTP_OK, common.Error400(err))
-			return
-		}
+	if err1 := service.UpdateEthConfig(MNetCfg); err1 != nil {
+		c.JSON(common.HTTP_OK, common.Error400(err1))
+		return
 	}
 	if typex.DefaultVersionInfo.Product == "RHILEXPRO1" {
 		config := []rhilexpro1.NetworkInterfaceConfig{

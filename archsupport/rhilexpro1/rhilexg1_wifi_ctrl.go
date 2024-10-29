@@ -19,11 +19,15 @@ import (
 	"bufio"
 	"context"
 	"fmt"
+	"math"
 	"os"
 	"os/exec"
+	"strconv"
 	"strings"
 	"text/template"
 	"time"
+
+	"github.com/hootrhino/rhilex/typex"
 )
 
 const wifiConfigTemplate = `#
@@ -68,7 +72,7 @@ func SetWifi(iface, ssid, psk string, timeout time.Duration) error {
 	if err != nil {
 		return fmt.Errorf("failed to execute template: %v", err)
 	}
-	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	ctx, cancel := context.WithTimeout(typex.GCTX, timeout)
 	defer cancel()
 	{
 
@@ -118,8 +122,9 @@ iw dev %s scan | awk '
 		if len(parts) == 2 {
 			ssid := parts[0]
 			signal := parts[1]
+			number, _ := strconv.ParseFloat(signal, 64)
 			if ssid != "" {
-				wifiList = append(wifiList, [2]string{ssid, signal})
+				wifiList = append(wifiList, [2]string{ssid, fmt.Sprintf("%v", math.Abs(number))})
 			}
 		}
 	}

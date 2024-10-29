@@ -4,7 +4,7 @@ import (
 	"database/sql/driver"
 	"time"
 
-	"gopkg.in/square/go-jose.v2/json"
+	"encoding/json"
 )
 
 type RhilexModel struct {

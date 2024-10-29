@@ -33,28 +33,40 @@
 
 Actions = {
     function(args)
-        Debug("[====] Received Remote Data:" .. args)
-        local dataT, errJ2T = json:J2T(args)
-        if (errJ2T ~= nil) then
-            Throw('json:J2T error:' .. errJ2T)
-            return false, args
-        end
+        Debug("[====] Received Ithings Command:" .. args);
+        local dataT, errJ2T = json:J2T(args);
+        if errJ2T ~= nil then
+            Throw("json:J2T error:" .. errJ2T);
+            return false, args;
+        end;
         if dataT.method == "control" then
-            Debug("[====] Ithings Send Control CMD:" .. args)
-            local errIothub = ithings:ActionReplySuccess('DEVICE62MJLVLS', dataT.msgToken)
+            Debug("[====] Ithings Send Control CMD:" .. args);
+            local errIothub = ithings:CtrlReplySuccess("DEVICEMUNUKCEQ", dataT.msgToken);
             if errIothub ~= nil then
-                Throw("ithings:ActionReplySuccess Error:" .. errIothub)
-                return false, args
-            end
-        end
-        if dataT.method == "property" then
-            Debug("[====] Ithings Send Property CMD:" .. args)
-            local errIothub = ithings:PropertyReplySuccess('DEVICE62MJLVLS', dataT.msgToken)
+                Throw("ithings:CtrlReplySuccess Error:" .. errIothub);
+                return false, args;
+            end;
+        end;
+        if dataT.method == "action" then
+            Debug("[====] Ithings Send Control CMD:" .. args);
+            local errIothub = ithings:ActionReplySuccess("DEVICEMUNUKCEQ", dataT.msgToken);
+            if errIothub ~= nil then
+                Throw("ithings:ActionReplySuccess Error:" .. errIothub);
+                return false, args;
+            end;
+        end;
+        if dataT.method == "getReport" then
+            Debug("[====] Ithings Get Status:" .. args)
+            local errIothub = ithings:GetPropertyReply('DEVICE62MJLVLS', {
+                --params1
+                --params2
+                --params...
+            })
             if errIothub ~= nil then
                 Throw("ithings:PropertyReplySuccess Error:" .. errIothub)
                 return false, args
             end
         end
-        return true, args
+        return true, args;
     end
-}
+};

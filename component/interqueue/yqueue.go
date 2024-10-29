@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/hootrhino/rhilex/component/intermetric"
+	"github.com/hootrhino/rhilex/component/luaexecutor"
 	"github.com/hootrhino/rhilex/glogger"
 	"github.com/hootrhino/rhilex/typex"
 )
@@ -71,7 +72,7 @@ func StartYQueue() {
 				switch T := listE.Value.(type) {
 				case QueueData:
 					if T.I != nil {
-						T.E.RunSourceCallbacks(T.I, T.Data)
+						luaexecutor.RunSourceCallbacks(T.I, T.Data)
 					}
 					queue.InQueue.Remove(listE)
 				}
@@ -94,7 +95,7 @@ func StartYQueue() {
 				switch T := listE.Value.(type) {
 				case QueueData:
 					if T.D != nil {
-						T.E.RunDeviceCallbacks(T.D, T.Data)
+						luaexecutor.RunDeviceCallbacks(T.D, T.Data)
 					}
 					queue.DeviceQueue.Remove(listE)
 				}

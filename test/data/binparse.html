@@ -1,0 +1,140 @@
+<!--
+ Copyright (C) 2024 wwhai
+
+ This program is free software: you can redistribute it and/or modify
+ it under the terms of the GNU Affero General Public License as
+ published by the Free Software Foundation, either version 3 of the
+ License, or (at your option) any later version.
+
+ This program is distributed in the hope that it will be useful,
+ but WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ GNU Affero General Public License for more details.
+
+ You should have received a copy of the GNU Affero General Public License
+ along with this program.  If not, see <https://www.gnu.org/licenses/>.
+-->
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>二进制数据解析器代码生成器</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+
+        h1 {
+            font-size: 24px;
+        }
+
+        .field-input {
+            margin-bottom: 10px;
+        }
+
+        .field-input label {
+            display: inline-block;
+            width: 120px;
+        }
+
+        .field-input input,
+        select {
+            padding: 5px;
+            width: 200px;
+        }
+
+        #fields-container {
+            margin-bottom: 20px;
+        }
+
+        #expression-output {
+            margin-top: 20px;
+            font-size: 18px;
+            padding: 10px;
+            background-color: #f9f9f9;
+            border: 1px solid #ccc;
+            white-space: pre-wrap;
+        }
+    </style>
+</head>
+
+<body>
+
+    <h1>二进制数据解析器代码生成器</h1>
+
+    <div id="fields-container"></div>
+
+    <button onclick="addField()">添加字段</button>
+    <button onclick="generateCode()">生成代码</button>
+
+    <div id="expression-output"></div>
+
+    <script>
+        let fieldCount = 0;
+
+        function addField() {
+            fieldCount++;
+            const container = document.getElementById('fields-container');
+            const div = document.createElement('div');
+            div.className = 'field-input';
+            div.id = `field-${fieldCount}`;
+            div.innerHTML = `
+      <label for="key-${fieldCount}">字段名称：</label>
+      <input type="text" id="key-${fieldCount}" placeholder="如: ID" required>
+
+      <label for="length-${fieldCount}">长度(位)：</label>
+      <input type="number" id="length-${fieldCount}" placeholder="如: 32" min="1" required>
+
+      <label for="type-${fieldCount}">类型：</label>
+      <select id="type-${fieldCount}">
+        <option value="int">int</option>
+        <option value="float">float</option>
+        <option value="string">string</option>
+      </select>
+
+      <label for="endian-${fieldCount}">字节序：</label>
+      <select id="endian-${fieldCount}">
+        <option value="BE">BE (大端)</option>
+        <option value="LE">LE (小端)</option>
+      </select>
+      <button onclick="removeField(${fieldCount})">删除</button>
+    `;
+            container.appendChild(div);
+        }
+
+        function removeField(id) {
+            const field = document.getElementById(`field-${id}`);
+            field.remove();
+        }
+
+        function generateCode() {
+            const fields = document.querySelectorAll('.field-input');
+            let expression = '';
+            let debugLines = '';
+
+            fields.forEach((field, index) => {
+                const key = field.querySelector(`#key-${index + 1}`).value;
+                const length = field.querySelector(`#length-${index + 1}`).value;
+                const type = field.querySelector(`#type-${index + 1}`).value;
+                const endian = field.querySelector(`#endian-${index + 1}`).value;
+
+                if (key && length && type && endian) {
+                    expression += `${key}:${length}:${type}:${endian}; `;
+                    debugLines += `Debug("${key}: ", Table.${key})\n`;
+                }
+            });
+
+            // 将表达式生成代码模板
+            const codeTemplate = `local Table,error = bin:Parse("${expression.trim()}", BinData)\nif error ~=nil then\n\tThrow(error)\nend\n${debugLines}`;
+
+            document.getElementById('expression-output').textContent = codeTemplate;
+        }
+    </script>
+
+</body>
+
+</html>

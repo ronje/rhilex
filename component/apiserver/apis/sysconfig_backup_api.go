@@ -103,21 +103,21 @@ func UploadSqlite(c *gin.Context, ruleEngine typex.Rhilex) {
 		return
 	}
 	fileName := "recovery.zip"
-	if err := os.MkdirAll(filepath.Dir(ossupport.DataBackupPath), os.ModePerm); err != nil {
+	if err := os.MkdirAll(filepath.Dir(ossupport.RecoverBackupPath), os.ModePerm); err != nil {
 		c.JSON(common.HTTP_OK, common.OkWithData(err))
 		return
 	}
-	if err := c.SaveUploadedFile(file, ossupport.DataBackupPath+fileName); err != nil {
+	if err := c.SaveUploadedFile(file, ossupport.RecoverBackupPath+fileName); err != nil {
 		c.JSON(common.HTTP_OK, common.OkWithData(err))
 		return
 	}
-	if ok, err := IsValidZip(ossupport.DataBackupPath + fileName); !ok {
-		os.Remove(ossupport.DataBackupPath + fileName)
+	if ok, err := IsValidZip(ossupport.RecoverBackupPath + fileName); !ok {
+		os.Remove(ossupport.RecoverBackupPath + fileName)
 		c.JSON(common.HTTP_OK, common.OkWithData(err))
 		return
 	}
 	// 解压
-	if err := utils.Unzip(ossupport.DataBackupPath+fileName, ossupport.DataBackupPath); err != nil {
+	if err := utils.Unzip(ossupport.RecoverBackupPath+fileName, ossupport.RecoverBackupPath); err != nil {
 		c.JSON(common.HTTP_OK, common.OkWithData(err))
 		return
 	}

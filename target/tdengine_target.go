@@ -43,6 +43,10 @@ type TDEngineConfig struct {
 	CacheOfflineData *bool  `json:"cacheOfflineData" title:"离线缓存"`
 }
 
+type TDEngineMainConfig struct {
+	TDEngineConfig TDEngineConfig `json:"commonConfig" validate:"required"`
+}
+
 /*
 *
 * TDengine 的资源输出支持,当前暂时支持HTTP接口的形式，后续逐步会增加UDP、TCP模式
@@ -52,7 +56,7 @@ type TDEngineConfig struct {
 type tdEngineTarget struct {
 	typex.XStatus
 	client     http.Client
-	mainConfig TDEngineConfig
+	mainConfig TDEngineMainConfig
 	status     typex.SourceState
 }
 type tdHttpResult struct {
@@ -64,8 +68,15 @@ type tdHttpResult struct {
 func NewTdEngineTarget(e typex.Rhilex) typex.XTarget {
 	td := tdEngineTarget{
 		client: http.Client{Timeout: 2000 * time.Millisecond},
-		mainConfig: TDEngineConfig{
-			CacheOfflineData: new(bool),
+		mainConfig: TDEngineMainConfig{
+			TDEngineConfig: TDEngineConfig{
+				Fqdn:             "127.0.0.1",
+				Port:             6400,
+				Username:         "taos",
+				Password:         "root",
+				DbName:           "rhilex",
+				CacheOfflineData: new(bool),
+			},
 		},
 	}
 	td.RuleEngine = e
@@ -73,10 +84,10 @@ func NewTdEngineTarget(e typex.Rhilex) typex.XTarget {
 	return &td
 
 }
-func (td *tdEngineTarget) test() bool {
+func (td *tdEngineTarget) testStatus() bool {
 	if err := execQuery(td.client,
-		td.mainConfig.Username,
-		td.mainConfig.Password,
+		td.mainConfig.TDEngineConfig.Username,
+		td.mainConfig.TDEngineConfig.Password,
 		"SELECT CLIENT_VERSION();",
 		td.url()); err != nil {
 		glogger.GLogger.Error(err)
@@ -84,9 +95,11 @@ func (td *tdEngineTarget) test() bool {
 	}
 	return true
 }
+
 func (td *tdEngineTarget) url() string {
 	return fmt.Sprintf("http://%s:%v/rest/sql/%s",
-		td.mainConfig.Fqdn, td.mainConfig.Port, td.mainConfig.DbName)
+		td.mainConfig.TDEngineConfig.Fqdn,
+		td.mainConfig.TDEngineConfig.Port, td.mainConfig.TDEngineConfig.DbName)
 }
 
 //
@@ -95,11 +108,10 @@ func (td *tdEngineTarget) url() string {
 
 func (td *tdEngineTarget) Init(outEndId string, configMap map[string]interface{}) error {
 	td.PointId = outEndId
-	lostcache.CreateLostDataTable(outEndId)
 	if err := utils.BindSourceConfig(configMap, &td.mainConfig); err != nil {
 		return err
 	}
-	if td.test() {
+	if td.testStatus() {
 		return nil
 	}
 	return errors.New("tdengine connect error")
@@ -112,7 +124,7 @@ func (td *tdEngineTarget) Start(cctx typex.CCTX) error {
 	//
 	td.status = typex.SOURCE_UP
 	// 补发数据
-	if *td.mainConfig.CacheOfflineData {
+	if *td.mainConfig.TDEngineConfig.CacheOfflineData {
 		if CacheData, err1 := lostcache.GetLostCacheData(td.PointId); err1 != nil {
 			glogger.GLogger.Error(err1)
 		} else {
@@ -130,7 +142,7 @@ func (td *tdEngineTarget) Start(cctx typex.CCTX) error {
 
 // 获取资源状态
 func (td *tdEngineTarget) Status() typex.SourceState {
-	if td.test() {
+	if td.testStatus() {
 		return typex.SOURCE_UP
 	}
 	return typex.SOURCE_DOWN
@@ -211,11 +223,11 @@ func (td *tdEngineTarget) To(data interface{}) (interface{}, error) {
 	switch T := data.(type) {
 	case string:
 		{
-			errQuery := execQuery(td.client, td.mainConfig.Username,
-				td.mainConfig.Password, T, td.url())
+			errQuery := execQuery(td.client, td.mainConfig.TDEngineConfig.Username,
+				td.mainConfig.TDEngineConfig.Password, T, td.url())
 			glogger.GLogger.Error(errQuery)
 			if errQuery != nil {
-				if *td.mainConfig.CacheOfflineData {
+				if *td.mainConfig.TDEngineConfig.CacheOfflineData {
 					lostcache.SaveLostCacheData(td.PointId, lostcache.CacheDataDto{
 						TargetId: td.PointId,
 						Data:     T,

@@ -33,7 +33,6 @@ Modbus协议是一种简单且易于实现的协议，广泛应用于工业自�
             "port": 6005,
             "timeout": 3000
         },
-        "portUuid": "/dev/ttyS1",
     }
 }
 ```

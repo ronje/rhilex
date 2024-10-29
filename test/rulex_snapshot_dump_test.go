@@ -10,6 +10,7 @@ import (
 	"time"
 
 	httpserver "github.com/hootrhino/rhilex/component/apiserver"
+	"github.com/hootrhino/rhilex/component/rhilexmanager"
 	"github.com/hootrhino/rhilex/component/rhilexrpc"
 	core "github.com/hootrhino/rhilex/config"
 	"github.com/hootrhino/rhilex/engine"
@@ -34,11 +35,11 @@ func Test_snapshot_dump(t *testing.T) {
 	hh := httpserver.NewHttpApiServer(engine)
 
 	// HttpApiServer loaded default
-	if err := engine.LoadPlugin("plugin.http_server", hh); err != nil {
+	if err := rhilexmanager.DefaultPluginTypeManager.LoadPlugin("plugin.http_server", hh); err != nil {
 		glogger.GLogger.Fatal("Rule load failed:", err)
 	}
 	// Load a demo plugin
-	if err := engine.LoadPlugin("plugin.demo", demo_plugin.NewDemoPlugin()); err != nil {
+	if err := rhilexmanager.DefaultPluginTypeManager.LoadPlugin("plugin.demo", demo_plugin.NewDemoPlugin()); err != nil {
 		glogger.GLogger.Error("Rule load failed:", err)
 	}
 	// Grpc Inend

@@ -21,7 +21,9 @@ import (
 )
 
 type TransceiverConfig struct {
-	Address           string `ini:"address" json:"uart" validate:"required"`
+	Enable            bool   `ini:"enable" json:"enable" validate:"required"`
+	Name              string `ini:"name" json:"name" validate:"required"`
+	Address           string `ini:"address" json:"address" validate:"required"`
 	IOTimeout         int64  `ini:"io_timeout" json:"ioTimeout" validate:"required"`
 	ATTimeout         int64  `ini:"at_timeout" json:"atRwTimeout" validate:"required"`
 	BaudRate          int    `ini:"baudrate" json:"baudRate" validate:"required"`
@@ -88,7 +90,7 @@ type TransceiverStatus struct {
 	Error error
 }
 
-type TransceiverCommunicator interface {
+type Transceiver interface {
 	Start(TransceiverConfig) error
 	Ctrl(topic, args []byte, timeout time.Duration) ([]byte, error)
 	Status() TransceiverStatus

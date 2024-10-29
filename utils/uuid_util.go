@@ -57,21 +57,41 @@ func MBusPointUUID() string {
 
 // MakeUUID
 func ModbusPointUUID() string {
-	return MakeUUID("MDTB")
+	return MakeUUID("MDTBUS")
 }
 
 // MakeUUID
 func SiemensPointUUID() string {
-	return MakeUUID("SIMTB")
+	return MakeUUID("SIMENS")
 }
 
 // MakeUUID
 func SnmpOidUUID() string {
-	return MakeUUID("SNMP")
+	return MakeUUID("SNMPOID")
 }
 
 func BacnetPointUUID() string {
-	return MakeUUID("BACN")
+	return MakeUUID("BACNET")
+}
+
+func Dlt6452007PointUUID() string {
+	return MakeUUID("DLT645")
+}
+
+func Cjt1882004PointUUID() string {
+	return MakeUUID("CJT188")
+}
+
+func Szy2062016PointUUID() string {
+	return MakeUUID("SZY206")
+}
+
+func UserProtocolPointUUID() string {
+	return MakeUUID("USERPT")
+}
+
+func UnionPointUUID() string {
+	return MakeUUID("UNION")
 }
 
 // MakeUUID

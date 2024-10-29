@@ -29,17 +29,12 @@ func getEthList() ([]net.Interface, error) {
 	if err != nil {
 		return nil, err
 	}
-
 	var ethIfaces []net.Interface
 	for _, iface := range ifaces {
-		// Skip the interface if it is a wireless interface
 		if isWirelessInterface(iface.Name) {
 			continue
 		}
-		if iface.Flags.String() == "loopback" {
-			continue
-		}
-		if iface.Flags.String() == "usb0" {
+		if iface.Name == "lo" {
 			continue
 		}
 		ethIfaces = append(ethIfaces, iface)

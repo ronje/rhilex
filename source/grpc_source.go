@@ -98,10 +98,6 @@ func (g *grpcInEndSource) Status() typex.SourceState {
 	return g.status
 }
 
-func (g *grpcInEndSource) Test(inEndId string) bool {
-	return true
-}
-
 func (g *grpcInEndSource) Details() *typex.InEnd {
 	return g.RuleEngine.GetInEnd(g.PointId)
 }
@@ -122,14 +118,4 @@ func (r *RhilexRpcServer) Request(ctx context.Context, in *rhilexrpc.RpcRequest)
 		Message: err.Error(),
 	}, err
 
-}
-
-// 来自外面的数据
-func (*grpcInEndSource) DownStream([]byte) (int, error) {
-	return 0, nil
-}
-
-// 上行数据
-func (*grpcInEndSource) UpStream([]byte) (int, error) {
-	return 0, nil
 }

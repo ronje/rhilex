@@ -52,5 +52,5 @@ func Ifconfig() (string, error) {
 		return string(decodedOutput), nil
 
 	}
-	return string(out.Bytes()), nil
+	return out.String(), nil
 }

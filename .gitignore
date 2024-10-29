@@ -25,3 +25,5 @@ test/script/_temp/*
 upload/*
 go.sum
 component/apiserver/server/www/*
+*encrypt.p*
+*.pid

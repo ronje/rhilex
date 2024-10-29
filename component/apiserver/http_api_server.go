@@ -8,7 +8,6 @@ import (
 	"github.com/hootrhino/rhilex/component/crontask"
 	dataschema "github.com/hootrhino/rhilex/component/dataschema"
 	"github.com/hootrhino/rhilex/component/internotify"
-	"github.com/hootrhino/rhilex/component/uartctrl"
 	"github.com/shirou/gopsutil/cpu"
 
 	"github.com/hootrhino/rhilex/component/apiserver/apis"
@@ -53,12 +52,6 @@ func NewHttpApiServer(ruleEngine typex.Rhilex) *ApiServerPlugin {
  */
 func initRhilex(engine typex.Rhilex) {
 	go GetCpuUsage()
-	/*
-	*
-	* 加载Port
-	*
-	 */
-	loadAllPortConfig()
 	//
 	// Load inend from sqlite
 	//
@@ -122,43 +115,6 @@ func initRhilex(engine typex.Rhilex) {
 
 }
 
-/*
-*
-* 从数据库拿端口配置
-*
- */
-func loadAllPortConfig() {
-	MUarts, err := service.AllUart()
-	if err != nil {
-		glogger.GLogger.Fatal(err)
-		return
-	}
-	for _, MUart := range MUarts {
-		Port := uartctrl.SystemUart{
-			UUID:        MUart.UUID,
-			Name:        MUart.Name,
-			Type:        MUart.Type,
-			Alias:       MUart.Alias,
-			Description: MUart.Description,
-		}
-		// 串口
-		if MUart.Type == "UART" {
-			config := uartctrl.UartConfig{}
-			if err := utils.BindSourceConfig(MUart.GetConfig(), &config); err != nil {
-				glogger.GLogger.Error(err)
-				continue
-			}
-			Port.Config = config
-			uartctrl.SetUart(Port)
-		}
-		// 未知接口参数为空，以后扩展，比如FD
-		if MUart.Type != "UART" {
-			Port.Config = "NULL"
-			uartctrl.SetUart(Port)
-		}
-	}
-}
-
 func (hs *ApiServerPlugin) Init(config *ini.Section) error {
 	if err := utils.InIMapToStruct(config, &hs.mainConfig); err != nil {
 		return err
@@ -185,10 +141,13 @@ func (hs *ApiServerPlugin) Init(config *ini.Section) error {
 		&model.MModbusDataPoint{},
 		&model.MSiemensDataPoint{},
 		&model.MSnmpOid{},
+		&model.MCjt1882004DataPoint{},
+		&model.MDlt6452007DataPoint{},
+		&model.MSzy2062016DataPoint{},
+		&model.MUserProtocolDataPoint{},
 		&model.MBacnetDataPoint{},
 		&model.MBacnetRouterDataPoint{},
 		&model.MMBusDataPoint{},
-		&model.MDataPoint{},
 		&model.MCronRebootConfig{},
 	)
 	// 初始化所有预制参数
@@ -218,8 +177,7 @@ func (hs *ApiServerPlugin) LoadRoute() {
 	apis.InitRulesRoute()
 	// Out End
 	apis.InitOutEndRoute()
-
-	// 网络适配器列表
+	// System API
 	apis.InitSystemRoute()
 	// backup
 	apis.InitBackupRoute()
@@ -237,8 +195,6 @@ func (hs *ApiServerPlugin) LoadRoute() {
 	apis.InitGroupRoute()
 	// 用户LUA代码段管理
 	apis.InitUserLuaRoute()
-	// 硬件接口API
-	apis.InitHwIfaceRoute()
 	// System Permission
 	apis.InitSysMenuPermissionRoute()
 	// System Settings
@@ -247,6 +203,14 @@ func (hs *ApiServerPlugin) LoadRoute() {
 	apis.InitModbusRoute()
 	// Mbus
 	apis.InitMBusRoute()
+	// DLT645
+	apis.InitDlt6452007Route()
+	// CJT188-2004
+	apis.InitCjt1882004Route()
+	// Szy206
+	apis.InitSzy2062016Route()
+	// User Protocol
+	apis.InitUserProtocolRoute()
 	// Init Internal Notify Route
 	apis.InitInternalNotifyRoute()
 	// Snmp Route
@@ -261,8 +225,6 @@ func (hs *ApiServerPlugin) LoadRoute() {
 	apis.InitDataCenterApi()
 	// Transceiver
 	apis.InitTransceiverRoute()
-	// Data Point Route
-	apis.InitDataPointRoute()
 	// Mqtt Server
 	apis.InitMqttSourceServerRoute()
 	// Cron Reboot
@@ -285,7 +247,7 @@ func (hs *ApiServerPlugin) Stop() error {
 func (hs *ApiServerPlugin) PluginMetaInfo() typex.XPluginMetaInfo {
 	return typex.XPluginMetaInfo{
 		UUID:        hs.uuid,
-		Name:        "Api Server",
+		Name:        "RHILEX HTTP RESTFul Api Server",
 		Version:     "v1.0.0",
 		Description: "RHILEX HTTP RESTFul Api Server",
 	}

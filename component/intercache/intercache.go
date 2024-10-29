@@ -23,7 +23,7 @@ import (
 
 type CacheValue struct {
 	UUID          string
-	Status        int // 0 正常；1 错误，填充 ErrMsg
+	Status        int // 1 正常；0 错误，填充 ErrMsg
 	ErrMsg        string
 	LastFetchTime uint64
 	Value         interface{}

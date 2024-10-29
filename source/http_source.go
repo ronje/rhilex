@@ -89,20 +89,6 @@ func (hh *httpInEndSource) Status() typex.SourceState {
 	return hh.status
 }
 
-func (hh *httpInEndSource) Test(inEndId string) bool {
-	return true
-}
-
 func (hh *httpInEndSource) Details() *typex.InEnd {
 	return hh.RuleEngine.GetInEnd(hh.PointId)
-}
-
-// 来自外面的数据
-func (*httpInEndSource) DownStream([]byte) (int, error) {
-	return 0, nil
-}
-
-// 上行数据
-func (*httpInEndSource) UpStream([]byte) (int, error) {
-	return 0, nil
 }

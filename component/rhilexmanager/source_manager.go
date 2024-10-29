@@ -15,32 +15,118 @@
 
 package rhilexmanager
 
-import "github.com/hootrhino/rhilex/typex"
+import (
+	"github.com/hootrhino/rhilex/component/orderedmap"
+	"github.com/hootrhino/rhilex/source"
+	"github.com/hootrhino/rhilex/typex"
+)
+
+var DefaultSourceTypeManager *SourceTypeManager
 
 type SourceTypeManager struct {
-	// K: 资源类型
-	// V: 伪构造函数
-	registry map[typex.InEndType]*typex.XConfig
+	e        typex.Rhilex
+	registry *orderedmap.OrderedMap[typex.InEndType, *typex.XConfig]
 }
 
-func NewSourceTypeManager() *SourceTypeManager {
-	return &SourceTypeManager{
-		registry: map[typex.InEndType]*typex.XConfig{},
+func InitSourceTypeManager(e typex.Rhilex) {
+	DefaultSourceTypeManager = &SourceTypeManager{
+		e:        e,
+		registry: orderedmap.NewOrderedMap[typex.InEndType, *typex.XConfig](),
 	}
-
+	LoadAllSourceType(e)
 }
+
+func LoadAllSourceType(e typex.Rhilex) {
+	DefaultSourceTypeManager.Register(typex.CUSTOM_PROTOCOL_SERVER,
+		&typex.XConfig{
+			Engine:    e,
+			NewSource: source.NewCustomProtocol,
+		},
+	)
+	DefaultSourceTypeManager.Register(typex.COMTC_EVENT_FORWARDER,
+		&typex.XConfig{
+			Engine:    e,
+			NewSource: source.NewTransceiverForwarder,
+		},
+	)
+	DefaultSourceTypeManager.Register(typex.HTTP_SERVER,
+		&typex.XConfig{
+			Engine:    e,
+			NewSource: source.NewHttpInEndSource,
+		},
+	)
+	DefaultSourceTypeManager.Register(typex.COAP_SERVER,
+		&typex.XConfig{
+			Engine:    e,
+			NewSource: source.NewCoAPInEndSource,
+		},
+	)
+	DefaultSourceTypeManager.Register(typex.GRPC_SERVER,
+		&typex.XConfig{
+			Engine:    e,
+			NewSource: source.NewGrpcInEndSource,
+		},
+	)
+
+	DefaultSourceTypeManager.Register(typex.UDP_SERVER,
+		&typex.XConfig{
+			Engine:    e,
+			NewSource: source.NewUdpInEndSource,
+		},
+	)
+	DefaultSourceTypeManager.Register(typex.TCP_SERVER,
+		&typex.XConfig{
+			Engine:    e,
+			NewSource: source.NewTcpSource,
+		},
+	)
+	DefaultSourceTypeManager.Register(typex.INTERNAL_EVENT,
+		&typex.XConfig{
+			Engine:    e,
+			NewSource: source.NewInternalEventSource,
+		},
+	)
+	DefaultSourceTypeManager.Register(typex.GENERIC_MQTT_SERVER,
+		&typex.XConfig{
+			Engine:    e,
+			NewSource: source.NewGenericMqttSource,
+		},
+	)
+	DefaultSourceTypeManager.Register(typex.GENERIC_MQTT_SERVER,
+		&typex.XConfig{
+			Engine:    e,
+			NewSource: source.NewMqttServer,
+		},
+	)
+}
+
 func (rm *SourceTypeManager) Register(name typex.InEndType, f *typex.XConfig) {
-	rm.registry[name] = f
+	f.Type = string(name)
+	rm.registry.Set(name, f)
 }
 
 func (rm *SourceTypeManager) Find(name typex.InEndType) *typex.XConfig {
-
-	return rm.registry[name]
+	p, ok := rm.registry.Get(name)
+	if ok {
+		return p
+	}
+	return nil
 }
 func (rm *SourceTypeManager) All() []*typex.XConfig {
-	data := make([]*typex.XConfig, 0)
-	for _, v := range rm.registry {
-		data = append(data, v)
+	return rm.registry.Values()
+}
+
+/**
+ * 获取所有类型
+ *
+ */
+func (rm *SourceTypeManager) AllKeys() []string {
+	data := []string{}
+	for _, k := range rm.registry.Keys() {
+		data = append(data, k.String())
 	}
 	return data
+}
+
+func (rm *SourceTypeManager) Stop() {
 }

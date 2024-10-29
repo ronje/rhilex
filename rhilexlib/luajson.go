@@ -18,10 +18,6 @@ import (
 type JsonEncodeLib struct {
 }
 
-func NewJsonEncodeLib() typex.XLib {
-	return &JsonEncodeLib{}
-}
-
 func (l *JsonEncodeLib) Name() string {
 	return "JsonEncode"
 }
@@ -35,10 +31,6 @@ func (l *JsonEncodeLib) LibFun(rx typex.Rhilex, uuid string) func(*lua.LState) i
 *
  */
 type JsonDecodeLib struct {
-}
-
-func NewJsonDecodeLib() typex.XLib {
-	return &JsonDecodeLib{}
 }
 
 func (l *JsonDecodeLib) Name() string {

@@ -2,7 +2,6 @@ package source
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"time"
 
@@ -34,13 +33,6 @@ func NewGenericMqttSource(e typex.Rhilex) typex.XSource {
 	src.RuleEngine = e
 	src.status = typex.SOURCE_DOWN
 	return src
-}
-
-func (tc *genericMqttSource) Test(inEndId string) bool {
-	if tc.client != nil {
-		return tc.client.IsConnected()
-	}
-	return false
 }
 
 func (tc *genericMqttSource) Init(inEndId string, configMap map[string]interface{}) error {
@@ -127,7 +119,6 @@ func (tc *genericMqttSource) onMessage(client mqtt.Client, message mqtt.Message)
 	}
 }
 
-
 func (tc *genericMqttSource) Status() typex.SourceState {
 	if tc.client != nil {
 		if tc.client.IsConnectionOpen() {
@@ -149,12 +140,4 @@ func (tc *genericMqttSource) Stop() {
 		tc.client.Disconnect(1000)
 	}
 	tc.status = typex.SOURCE_DOWN
-}
-
-func (tc *genericMqttSource) DownStream(bytes []byte) (int, error) {
-	return 0, errors.New("no implement")
-}
-
-func (tc *genericMqttSource) UpStream(bytes []byte) (int, error) {
-	return 0, errors.New("no implement")
 }

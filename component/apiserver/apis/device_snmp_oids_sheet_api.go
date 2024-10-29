@@ -138,7 +138,7 @@ func SnmpSheetPageList(c *gin.Context, ruleEngine typex.Rhilex) {
 	recordsVo := []SnmpOidVo{}
 	for _, record := range records {
 		Slot := intercache.GetSlot(deviceUuid)
-		Value, ok := Slot[record.UUID]
+		value, ok := Slot[record.UUID]
 		Vo := SnmpOidVo{
 			UUID:       record.UUID,
 			Oid:        record.Oid,
@@ -146,17 +146,18 @@ func SnmpSheetPageList(c *gin.Context, ruleEngine typex.Rhilex) {
 			Tag:        record.Tag,
 			Alias:      record.Alias,
 			Frequency:  &record.Frequency,
-			ErrMsg:     Value.ErrMsg,
+			ErrMsg:     value.ErrMsg,
 		}
 		if ok {
 			Vo.Status = func() int {
-				if Value.Value == "" {
+				if value.Value == "" {
 					return 0
 				}
 				return 1
 			}() // 运行时
-			Vo.LastFetchTime = Value.LastFetchTime // 运行时
-			Vo.Value = Value.Value                 // 运行时
+			Vo.LastFetchTime = value.LastFetchTime // 运行时
+			types, _ := utils.IsArrayAndGetValueList(value.Value)
+			Vo.Value = types
 			recordsVo = append(recordsVo, Vo)
 		} else {
 			recordsVo = append(recordsVo, Vo)
@@ -244,7 +245,7 @@ func checkSnmpOids(M SnmpOidVo) error {
 func SnmpSheetUpdate(c *gin.Context, ruleEngine typex.Rhilex) {
 	type Form struct {
 		DeviceUUID string      `json:"device_uuid"`
-		SnmpOids   []SnmpOidVo `json:"snmp_oids"`
+		SnmpOids   []SnmpOidVo `json:"data_points"`
 	}
 	// SnmpOids := []SnmpOidVo{}
 	form := Form{}
@@ -322,6 +323,11 @@ func SnmpSheetImport(c *gin.Context, ruleEngine typex.Rhilex) {
 		Where("uuid=?", deviceUuid).Find(&Device).Error
 	if errDb != nil {
 		c.JSON(common.HTTP_OK, common.Error400(errDb))
+		return
+	}
+	if Device.Type == "" {
+		c.JSON(common.HTTP_OK,
+			common.Error("Device Not Exists"))
 		return
 	}
 	if Device.Type != typex.GENERIC_SNMP.String() {

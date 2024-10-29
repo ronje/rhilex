@@ -31,6 +31,7 @@ import (
 	ini "gopkg.in/ini.v1"
 
 	apiServer "github.com/hootrhino/rhilex/component/apiserver"
+	"github.com/hootrhino/rhilex/component/rhilexmanager"
 	core "github.com/hootrhino/rhilex/config"
 	glogger "github.com/hootrhino/rhilex/glogger"
 	icmpsender "github.com/hootrhino/rhilex/plugin/icmp_sender"
@@ -60,26 +61,25 @@ func RunRhilex(iniPath string) {
 	engine := InitRuleEngine(mainConfig)
 	engine.Start()
 	license_manager := license_manager.NewLicenseManager(engine)
-	if err := engine.LoadPlugin("plugin.license_manager", license_manager); err != nil {
+	if err := rhilexmanager.DefaultPluginTypeManager.LoadPlugin("plugin.license_manager", license_manager); err != nil {
 		glogger.GLogger.Error(err)
 		return
 	}
 	apiServer := apiServer.NewHttpApiServer(engine)
-	if err := engine.LoadPlugin("plugin.http_server", apiServer); err != nil {
+	if err := rhilexmanager.DefaultPluginTypeManager.LoadPlugin("plugin.http_server", apiServer); err != nil {
 		glogger.GLogger.Error(err)
 		return
 	}
 	// Load Plugin
-	loadOtherPlugin(engine)
+	loadOtherPlugin()
 	s := <-c
 	glogger.GLogger.Warn("RHILEX Receive Stop Signal: ", s)
 	typex.GCancel()
 	engine.Stop()
-	os.Exit(0)
 }
 
 // loadPlugin 根据Ini配置信息，加载插件
-func loadOtherPlugin(engine typex.Rhilex) {
+func loadOtherPlugin() {
 	cfg, _ := ini.ShadowLoad(core.GlobalConfig.IniPath)
 	sections := cfg.ChildSections("plugin")
 	for _, section := range sections {
@@ -118,7 +118,7 @@ func loadOtherPlugin(engine typex.Rhilex) {
 			plugin = telemetry.NewTelemetry()
 		}
 		if plugin != nil {
-			if err := engine.LoadPlugin(section.Name(), plugin); err != nil {
+			if err := rhilexmanager.DefaultPluginTypeManager.LoadPlugin(section.Name(), plugin); err != nil {
 				glogger.GLogger.Error(err)
 			}
 		}

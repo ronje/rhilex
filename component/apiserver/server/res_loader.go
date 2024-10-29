@@ -4,10 +4,11 @@ import (
 	"errors"
 	"sync"
 
+	"encoding/json"
+
 	"github.com/hootrhino/rhilex/component/apiserver/service"
 	"github.com/hootrhino/rhilex/glogger"
 	"github.com/hootrhino/rhilex/typex"
-	"gopkg.in/square/go-jose.v2/json"
 )
 
 /*
@@ -39,8 +40,6 @@ func LoadNewestInEnd(uuid string, ruleEngine typex.Rhilex) error {
 		mInEnd.Name, mInEnd.Description, mInEnd.GetConfig())
 	// Important !!!!!!!! in.Id = mInEnd.UUID
 	in.UUID = mInEnd.UUID
-	// 未来会支持XDataModel数据模型, 目前暂时留空
-	in.DataModelsMap = map[string]typex.XDataModel{}
 	BindRules := map[string]typex.Rule{}
 	for _, ruleId := range mInEnd.BindRules {
 		if ruleId == "" {

@@ -42,13 +42,9 @@ func (qd QueueData) String() string {
 
 func ProcessOutQueueData(qd QueueData, e typex.Rhilex) {
 	if qd.O != nil {
-		v, ok := e.AllOutEnds().Load(qd.O.UUID)
-		if ok {
-			target := v.(*typex.OutEnd).Target
-			if target == nil {
-				return
-			}
-			if _, err := target.To(qd.Data); err != nil {
+		target := e.GetOutEnd(qd.O.UUID)
+		if target != nil {
+			if _, err := target.Target.To(qd.Data); err != nil {
 				glogger.GLogger.Error(err)
 				intermetric.IncOutFailed()
 			} else {

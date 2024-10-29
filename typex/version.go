@@ -15,6 +15,7 @@ type VersionInfo struct {
 }
 
 var License = utils.LocalLicense{
+	Type:              "FREETRIAL",
 	DeviceID:          "",
 	AuthorizeAdmin:    "",
 	AuthorizePassword: "",
@@ -26,10 +27,10 @@ var License = utils.LocalLicense{
 
 var DefaultVersionInfo = VersionInfo{
 	Product:     "COMMON",
-	ReleaseTime: "2024-10-11 14:33:56",
+	ReleaseTime: "2024-10-28 17:19:28",
 }
 var Banner = `
   <<  RHILEX System.©                              -·
-<<·   Version: v0.7.3-d60f5301             -·
+<<·   Version: v0.7.4-8f9707b0             -·
   <<  More information: https://www.hootrhino.com  -·
 `

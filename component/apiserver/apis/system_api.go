@@ -17,14 +17,15 @@ import (
 	"github.com/hootrhino/rhilex/component/apiserver/service"
 	"github.com/hootrhino/rhilex/component/applet"
 	"github.com/hootrhino/rhilex/component/intermetric"
+	"github.com/hootrhino/rhilex/component/rhilexmanager"
+	"github.com/hootrhino/rhilex/component/security"
 	core "github.com/hootrhino/rhilex/config"
 	"github.com/hootrhino/rhilex/glogger"
 	"github.com/hootrhino/rhilex/ossupport"
 	"github.com/hootrhino/rhilex/utils"
 
-	"github.com/hootrhino/rhilex/typex"
-
 	"github.com/gin-gonic/gin"
+	"github.com/hootrhino/rhilex/typex"
 	"github.com/shirou/gopsutil/v3/cpu"
 	"github.com/shirou/gopsutil/v3/disk"
 )
@@ -32,13 +33,16 @@ import (
 func InitSystemRoute() {
 	osApi := server.RouteGroup(server.ContextUrl("/os"))
 	{
+		osApi.GET(("/netInterfaces"), server.AddRoute(GetNetInterfaces))
 		osApi.GET(("/osRelease"), server.AddRoute(CatOsRelease))
 		osApi.GET(("/system"), server.AddRoute(System))
+		osApi.GET(("/uarts"), server.AddRoute(GetUartList))
 		osApi.GET(("/startedAt"), server.AddRoute(StartedAt))
 		osApi.GET(("/getVideos"), server.AddRoute(GetVideos))
 		osApi.GET(("/getGpuInfo"), server.AddRoute(GetGpuInfo))
 		osApi.GET(("/sysConfig"), server.AddRoute(GetSysConfig))
 		osApi.POST(("/resetInterMetric"), server.AddRoute(ResetInterMetric))
+		osApi.GET(("/getSecurityLicense"), server.AddRoute(GetSecurityLicense))
 	}
 	systemApi := server.RouteGroup(server.ContextUrl("/"))
 	{
@@ -48,8 +52,6 @@ func InitSystemRoute() {
 		GET(server.ContextUrl("statistics"), server.AddRoute(Statistics))
 	server.DefaultApiServer.Route().
 		POST(server.ContextUrl("login"), server.AddRoute(Login))
-	server.DefaultApiServer.Route().
-		GET(server.ContextUrl("info"), server.AddRoute(Info))
 	server.DefaultApiServer.Route().
 		POST(server.ContextUrl("validateRule"), server.AddRoute(ValidateLuaSyntax))
 }
@@ -66,53 +68,62 @@ func Ping(c *gin.Context, ruleEngine typex.Rhilex) {
 	c.JSON(common.HTTP_OK, common.OkWithData("PONG"))
 }
 
+/**
+ * 前端证书
+ *
+ */
+//
+type SecurityLiscnse struct {
+	PublicKey string `json:"public_key"`
+}
+
+func GetSecurityLicense(c *gin.Context, ruleEngine typex.Rhilex) {
+	if !security.CheckLicense() {
+		security.InitSecurityLicense()
+	}
+	_, pub, err := security.ReadLocalKeys()
+	if err != nil {
+		c.JSON(common.HTTP_OK, common.Error400(err))
+	} else {
+		c.JSON(common.HTTP_OK, common.OkWithData(SecurityLiscnse{
+			PublicKey: pub,
+		}))
+	}
+}
+
 // Get all plugins
 func Plugins(c *gin.Context, ruleEngine typex.Rhilex) {
 	data := []interface{}{}
-	plugins := ruleEngine.AllPlugins()
-	plugins.Range(func(key, value interface{}) bool {
-		pi := value.(typex.XPlugin).PluginMetaInfo()
-		data = append(data, pi)
-		return true
-	})
+	plugins := rhilexmanager.DefaultPluginTypeManager.All()
+	for _, plugin := range plugins {
+		data = append(data, plugin.PluginMetaInfo())
+	}
 	c.JSON(common.HTTP_OK, common.OkWithData(data))
+}
+
+/*
+*
+* 本地网卡
+*
+ */
+func GetNetInterfaces(c *gin.Context, ruleEngine typex.Rhilex) {
+	interfaces, err := ossupport.GetAvailableInterfaces()
+	if err != nil {
+		c.JSON(common.HTTP_OK, common.Error400(err))
+	} else {
+		c.JSON(common.HTTP_OK, common.OkWithData(interfaces))
+	}
 }
 
 // 计算资源数据
 func source_count(e typex.Rhilex) map[string]int {
-	allInEnd := e.AllInEnds()
-	allOutEnd := e.AllOutEnds()
-	allRule := e.AllRules()
-	plugins := e.AllPlugins()
-	devices := e.AllDevices()
-	var c1, c2, c3, c4, c5, c6 int
-	allInEnd.Range(func(key, value interface{}) bool {
-		c1 += 1
-		return true
-	})
-	allOutEnd.Range(func(key, value interface{}) bool {
-		c2 += 1
-		return true
-	})
-	allRule.Range(func(key, value interface{}) bool {
-		c3 += 1
-		return true
-	})
-	plugins.Range(func(key, value interface{}) bool {
-		c4 += 1
-		return true
-	})
-	devices.Range(func(key, value interface{}) bool {
-		c5 += 1
-		return true
-	})
 	return map[string]int{
-		"inends":  c1,
-		"outends": c2,
-		"rules":   c3,
-		"plugins": c4,
-		"devices": c5,
-		"goods":   c6,
+		"inends":  len(e.AllInEnds()),
+		"outends": len(e.AllOutEnds()),
+		"rules":   len(e.AllRules()),
+		"devices": len(e.AllDevices()),
+		"goods":   0,
+		"plugins": rhilexmanager.DefaultPluginTypeManager.Count(),
 		"apps":    applet.AppCount(),
 	}
 }
@@ -174,32 +185,12 @@ func Statistics(c *gin.Context, ruleEngine typex.Rhilex) {
 
 // Get statistics data
 func SourceCount(c *gin.Context, ruleEngine typex.Rhilex) {
-	allInEnd := ruleEngine.AllInEnds()
-	allOutEnd := ruleEngine.AllOutEnds()
-	allRule := ruleEngine.AllRules()
-	plugins := ruleEngine.AllPlugins()
-	var c1, c2, c3, c4 int
-	allInEnd.Range(func(key, value interface{}) bool {
-		c1 += 1
-		return true
-	})
-	allOutEnd.Range(func(key, value interface{}) bool {
-		c2 += 1
-		return true
-	})
-	allRule.Range(func(key, value interface{}) bool {
-		c3 += 1
-		return true
-	})
-	plugins.Range(func(key, value interface{}) bool {
-		c4 += 1
-		return true
-	})
 	c.JSON(common.HTTP_OK, common.OkWithData(map[string]int{
-		"inends":  c1,
-		"outends": c2,
-		"rules":   c3,
-		"plugins": c4,
+		"inends":  len(ruleEngine.AllInEnds()),
+		"outends": len(ruleEngine.AllOutEnds()),
+		"rules":   len(ruleEngine.AllRules()),
+		"devices": len(ruleEngine.AllDevices()),
+		"plugins": rhilexmanager.DefaultPluginTypeManager.Count(),
 	}))
 }
 

@@ -45,3 +45,20 @@ func InIMapToStruct(section *ini.Section, s interface{}) error {
 	}
 	return section.StrictMapTo(s)
 }
+
+// Section 映射成一个结构体
+func InISectionToValues(iniPath string, sectionName string, s interface{}) error {
+	iniFile, err1 := ini.Load(iniPath)
+	if err1 != nil {
+		return err1
+	}
+	if reflect.ValueOf(s).Kind() != reflect.Ptr {
+		return errors.New("config must be a pointer type")
+	}
+	section, err2 := iniFile.GetSection(sectionName)
+	if err2 != nil {
+		return err2
+	}
+	return section.StrictMapTo(s)
+
+}

@@ -135,7 +135,7 @@ func CLog(format string, v ...interface{}) {
 func ReadInLeastTimeout(ctx context.Context,
 	io io.ReadWriteCloser, timeout time.Duration) (int, []byte) {
 	var responseData [256]byte
-	CtxR, Cancel := context.WithTimeout(context.Background(), timeout)
+	CtxR, Cancel := context.WithTimeout(ctx, timeout)
 	acc := 0
 	defer Cancel()
 	for {

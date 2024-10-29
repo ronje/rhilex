@@ -15,32 +15,118 @@
 
 package rhilexmanager
 
-import "github.com/hootrhino/rhilex/typex"
+import (
+	"github.com/hootrhino/rhilex/component/orderedmap"
+	"github.com/hootrhino/rhilex/target"
+	"github.com/hootrhino/rhilex/typex"
+)
+
+var DefaultTargetTypeManager *TargetTypeManager
 
 type TargetTypeManager struct {
-	// K: 资源类型
-	// V: 伪构造函数
-	registry map[typex.TargetType]*typex.XConfig
+	e        typex.Rhilex
+	registry *orderedmap.OrderedMap[typex.TargetType, *typex.XConfig]
 }
 
-func NewTargetTypeManager() *TargetTypeManager {
-	return &TargetTypeManager{
-		registry: map[typex.TargetType]*typex.XConfig{},
+func InitTargetTypeManager(e typex.Rhilex) {
+	DefaultTargetTypeManager = &TargetTypeManager{
+		e:        e,
+		registry: orderedmap.NewOrderedMap[typex.TargetType, *typex.XConfig](),
 	}
-
+	LoadAllTargetType(e)
 }
+
+func LoadAllTargetType(e typex.Rhilex) {
+
+	DefaultTargetTypeManager.Register(typex.SEMTECH_UDP_FORWARDER,
+		&typex.XConfig{
+			Engine:    e,
+			NewTarget: target.NewSemtechUdpForwarder,
+		},
+	)
+	DefaultTargetTypeManager.Register(typex.GENERIC_UART_TARGET,
+		&typex.XConfig{
+			Engine:    e,
+			NewTarget: target.NewGenericUart,
+		},
+	)
+	DefaultTargetTypeManager.Register(typex.MONGO_SINGLE,
+		&typex.XConfig{
+			Engine:    e,
+			NewTarget: target.NewMongoTarget,
+		},
+	)
+	DefaultTargetTypeManager.Register(typex.MQTT_TARGET,
+		&typex.XConfig{
+			Engine:    e,
+			NewTarget: target.NewMqttTarget,
+		},
+	)
+	DefaultTargetTypeManager.Register(typex.HTTP_TARGET,
+		&typex.XConfig{
+			Engine:    e,
+			NewTarget: target.NewHTTPTarget,
+		},
+	)
+	DefaultTargetTypeManager.Register(typex.TDENGINE_TARGET,
+		&typex.XConfig{
+			Engine:    e,
+			NewTarget: target.NewTdEngineTarget,
+		},
+	)
+	DefaultTargetTypeManager.Register(typex.RHILEX_GRPC_TARGET,
+		&typex.XConfig{
+			Engine:    e,
+			NewTarget: target.NewRhilexRpcTarget,
+		},
+	)
+	DefaultTargetTypeManager.Register(typex.UDP_TARGET,
+		&typex.XConfig{
+			Engine:    e,
+			NewTarget: target.NewUUdpTarget,
+		},
+	)
+	DefaultTargetTypeManager.Register(typex.TCP_TRANSPORT,
+		&typex.XConfig{
+			Engine:    e,
+			NewTarget: target.NewTTcpTarget,
+		},
+	)
+	DefaultTargetTypeManager.Register(typex.GREPTIME_DATABASE,
+		&typex.XConfig{
+			Engine:    e,
+			NewTarget: target.NewGrepTimeDbTarget,
+		},
+	)
+}
+
 func (rm *TargetTypeManager) Register(name typex.TargetType, f *typex.XConfig) {
-	rm.registry[name] = f
+	f.Type = string(name)
+	rm.registry.Set(name, f)
 }
 
 func (rm *TargetTypeManager) Find(name typex.TargetType) *typex.XConfig {
-
-	return rm.registry[name]
+	p, ok := rm.registry.Get(name)
+	if ok {
+		return p
+	}
+	return nil
 }
 func (rm *TargetTypeManager) All() []*typex.XConfig {
-	data := make([]*typex.XConfig, 0)
-	for _, v := range rm.registry {
-		data = append(data, v)
+	return rm.registry.Values()
+}
+
+/**
+ * 获取所有类型
+ *
+ */
+func (rm *TargetTypeManager) AllKeys() []string {
+	data := []string{}
+	for _, k := range rm.registry.Keys() {
+		data = append(data, k.String())
 	}
 	return data
+}
+
+func (rm *TargetTypeManager) Stop() {
 }

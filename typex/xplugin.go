@@ -1,6 +1,16 @@
 package typex
 
-import "gopkg.in/ini.v1"
+import (
+	"fmt"
+
+	"gopkg.in/ini.v1"
+)
+
+type PluginType int
+
+func (s PluginType) String() string {
+	return fmt.Sprintf("%d", s)
+}
 
 //
 // 插件开发步骤：
