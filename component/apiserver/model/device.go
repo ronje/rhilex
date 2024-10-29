@@ -15,7 +15,7 @@
 
 package model
 
-import "gopkg.in/square/go-jose.v2/json"
+import "encoding/json"
 
 // 设备元数据
 type MDevice struct {

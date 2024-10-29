@@ -14,8 +14,9 @@ import (
 	"github.com/hootrhino/rhilex/typex"
 	"github.com/hootrhino/rhilex/utils"
 
+	"encoding/json"
+
 	"github.com/gin-gonic/gin"
-	"gopkg.in/square/go-jose.v2/json"
 )
 
 func InitDeviceRoute() {

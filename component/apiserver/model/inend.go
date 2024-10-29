@@ -15,7 +15,7 @@
 
 package model
 
-import "gopkg.in/square/go-jose.v2/json"
+import "encoding/json"
 
 type MInEnd struct {
 	RhilexModel

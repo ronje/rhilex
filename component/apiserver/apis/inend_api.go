@@ -3,6 +3,8 @@ package apis
 import (
 	"fmt"
 
+	"encoding/json"
+
 	"github.com/gin-gonic/gin"
 	common "github.com/hootrhino/rhilex/component/apiserver/common"
 	"github.com/hootrhino/rhilex/component/apiserver/model"
@@ -10,7 +12,6 @@ import (
 	"github.com/hootrhino/rhilex/component/apiserver/service"
 	"github.com/hootrhino/rhilex/typex"
 	"github.com/hootrhino/rhilex/utils"
-	"gopkg.in/square/go-jose.v2/json"
 )
 
 func InitInEndRoute() {

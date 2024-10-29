@@ -15,8 +15,9 @@
 package model
 
 import (
+	"encoding/json"
+
 	"github.com/hootrhino/rhilex/component/apiserver/dto"
-	"gopkg.in/square/go-jose.v2/json"
 )
 
 /*

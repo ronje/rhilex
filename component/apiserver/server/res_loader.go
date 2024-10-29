@@ -4,10 +4,11 @@ import (
 	"errors"
 	"sync"
 
+	"encoding/json"
+
 	"github.com/hootrhino/rhilex/component/apiserver/service"
 	"github.com/hootrhino/rhilex/glogger"
 	"github.com/hootrhino/rhilex/typex"
-	"gopkg.in/square/go-jose.v2/json"
 )
 
 /*
