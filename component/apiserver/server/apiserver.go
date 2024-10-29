@@ -150,18 +150,6 @@ func AddRoute(f func(c *gin.Context,
 	}
 }
 
-// AddRouteV2: Only for cron，It's redundant API， will refactor in feature
-func AddRouteV2(f func(*gin.Context, typex.Rhilex) (any, error)) func(*gin.Context) {
-	return func(c *gin.Context) {
-		data, err := f(c, DefaultApiServer.ruleEngine)
-		if err != nil {
-			c.JSON(response.HTTP_OK, response.Error400(err))
-		} else {
-			c.JSON(response.HTTP_OK, response.OkWithData(data))
-		}
-	}
-}
-
 func (s *RhilexApiServer) GetGroup(name string) *gin.RouterGroup {
 	return s.ginEngine.Group(name)
 }
