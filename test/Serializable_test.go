@@ -21,6 +21,24 @@ import (
 	"github.com/hootrhino/rhilex/protocol"
 )
 
+// go test -timeout 30s -run ^TestGenerateGenericFrameCode github.com/hootrhino/rhilex/test -v -count=1
+func TestGenerateGenericFrameCode(t *testing.T) {
+	type CJT188Frame0x01 struct {
+		Start        byte    // 帧起始符
+		MeterType    byte    // 仪表类型
+		Address      [7]byte // 地址域
+		CtrlCode     byte    // 控制码
+		DataLength   byte    // 数据长度域
+		DataType     [2]byte // 数据长度域
+		DataArea     []byte  // 数据域
+		SerialNumber byte
+		CheckSum     byte // 校验码
+		End          byte // 结束符
+	}
+	f := CJT188Frame0x01{}
+	t.Log("============\n", protocol.GenerateCode(f))
+}
+
 // 示例结构体
 type Person struct {
 	Name string

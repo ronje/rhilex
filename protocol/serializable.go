@@ -100,57 +100,88 @@ func (g *GenericFrame[T]) Deserialize(data []byte) error {
 	return g.Data.Validate()
 }
 
-// 生成 Getter、Setter 和 New 方法
-func generateGetSetMethods(v interface{}) string {
-	t := reflect.TypeOf(v)
-	var buf bytes.Buffer
+/**
+ * 生成通用序列化代码
+ *
+ */
+func generateCode(v interface{}) string {
+	val := reflect.ValueOf(v)
+	typ := val.Type()
 
-	// 生成 New 函数
-	buf.WriteString(fmt.Sprintf("func New%s(", t.Name()))
-	for i := 0; i < t.NumField(); i++ {
-		field := t.Field(i)
-		fieldName := field.Name
-		fieldType := field.Type
-
-		if i > 0 {
-			buf.WriteString(", ")
-		}
-		buf.WriteString(fmt.Sprintf("%s %s", strings.ToLower(string(fieldName[0])), fieldType))
-	}
-	buf.WriteString(fmt.Sprintf(") *%s {\n", t.Name()))
-	buf.WriteString(fmt.Sprintf("    return &%s{\n", t.Name()))
-	for i := 0; i < t.NumField(); i++ {
-		field := t.Field(i)
-		fieldName := field.Name
-		buf.WriteString(fmt.Sprintf("        %s: %s,\n", fieldName, strings.ToLower(string(fieldName[0]))))
-	}
-	buf.WriteString("    }\n")
-	buf.WriteString("}\n\n")
-
-	// 生成 Getter 和 Setter
-	for i := 0; i < t.NumField(); i++ {
-		field := t.Field(i)
-		fieldName := field.Name
-		fieldType := field.Type
-
-		// 生成 Getter
-		getterName := "Get" + fieldName
-		buf.WriteString(fmt.Sprintf("func (p *%s) %s() %s {\n", t.Name(), getterName, fieldType))
-		buf.WriteString(fmt.Sprintf("    return p.%s\n", fieldName))
-		buf.WriteString("}\n\n")
-
-		// 生成 Setter
-		setterName := "Set" + fieldName
-		buf.WriteString(fmt.Sprintf("func (p *%s) %s(value %s) {\n", t.Name(), setterName, fieldType))
-		buf.WriteString(fmt.Sprintf("    p.%s = value\n", fieldName))
-		buf.WriteString("}\n\n")
+	if typ.Kind() != reflect.Struct {
+		return "Error: provided value is not a struct"
 	}
 
-	return buf.String()
+	structName := typ.Name()
+	var sb strings.Builder
+
+	// 结构体定义
+	sb.WriteString(fmt.Sprintf("type %s struct {\n", structName))
+	for i := 0; i < val.NumField(); i++ {
+		field := typ.Field(i)
+		sb.WriteString(fmt.Sprintf("    %s %s\n", field.Name, Uint8ToByte(field.Type)))
+	}
+	sb.WriteString("}\n\n")
+
+	// Get 和 Set 方法
+	for i := 0; i < val.NumField(); i++ {
+		field := typ.Field(i)
+
+		// Get 方法
+		sb.WriteString(fmt.Sprintf("func (f *%s) Get%s() %s {\n", structName, field.Name, Uint8ToByte(field.Type)))
+		sb.WriteString(fmt.Sprintf("    return f.%s\n", field.Name))
+		sb.WriteString("}\n\n")
+
+		// Set 方法
+		sb.WriteString(fmt.Sprintf("func (f *%s) Set%s(value %s) {\n", structName, field.Name, Uint8ToByte(field.Type)))
+		sb.WriteString(fmt.Sprintf("    f.%s = value\n", field.Name))
+		sb.WriteString("}\n\n")
+	}
+
+	// String 方法
+	sb.WriteString(fmt.Sprintf("func (f %s) String() string {\n", structName))
+	sb.WriteString("    bytes, _ := json.Marshal(f)\n")
+	sb.WriteString("    return string(bytes)\n")
+	sb.WriteString("}\n\n")
+
+	// Validate 方法
+	sb.WriteString(fmt.Sprintf("func (f %s) Validate() error {\n", structName))
+	sb.WriteString("    return nil\n")
+	sb.WriteString("}\n\n")
+
+	// Serialize 方法
+	sb.WriteString(fmt.Sprintf("func (f %s) Serialize() ([]byte, error) {\n", structName))
+	sb.WriteString(fmt.Sprintf("    genericStruct := protocol.GenericFrame[%s]{Data: f}\n", structName))
+	sb.WriteString("    return genericStruct.Serialize()\n")
+	sb.WriteString("}\n\n")
+
+	// DeSerialize 函数
+	sb.WriteString(fmt.Sprintf("func DeSerialize%s(b []byte) (%s, error) {\n", structName, structName))
+	sb.WriteString(fmt.Sprintf("    f := %s{}\n", structName))
+	sb.WriteString(fmt.Sprintf("    genericStruct := protocol.GenericFrame[%s]{Data: f}\n", structName))
+	sb.WriteString("    return f, genericStruct.Deserialize(b)\n")
+	sb.WriteString("}\n")
+
+	return sb.String()
 }
 
+/**
+ * uint8 -> byte
+ *
+ */
+func Uint8ToByte(Type reflect.Type) string {
+	if Type.Kind() == reflect.Uint8 {
+		return "byte"
+	}
+	return Type.Name()
+}
+
+/**
+ * 输出格式化后的代码
+ *
+ */
 func GenerateCode(v interface{}) string {
-	code := generateGetSetMethods(v)
+	code := generateCode(v)
 	formattedCode, err := format.Source([]byte(code))
 	if err != nil {
 		log.Fatalf("Failed to format code: %v", err)
