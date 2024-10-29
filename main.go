@@ -69,14 +69,19 @@ func main() {
 				Name:  "run",
 				Usage: "Start rhilex with config: -config=/path/rhilex.ini",
 				Flags: []cli.Flag{
+					&cli.BoolFlag{
+						Name:  "daemon",
+						Usage: "Run rhilex with daemon",
+						Value: false,
+					},
 					&cli.StringFlag{
 						Name:  "db",
-						Usage: "Database of rhilex",
+						Usage: "rhilex database",
 						Value: "rhilex.db",
 					},
 					&cli.StringFlag{
 						Name:  "config",
-						Usage: "Config of rhilex",
+						Usage: "rhilex config",
 						Value: "rhilex.ini",
 					},
 				},
@@ -88,14 +93,36 @@ func main() {
 					if err != nil {
 						return err
 					}
-					engine.RunRhilex(c.String("config"))
-					if utils.PathExists(ossupport.MainExePidPath) {
-						os.Remove(ossupport.MainExePidPath)
+					if !c.Bool("daemon") {
+						engine.RunRhilex(c.String("config"))
+						if utils.PathExists(ossupport.MainExePidPath) {
+							os.Remove(ossupport.MainExePidPath)
+						}
+					} else {
+						// TODO
+						utils.CLog("[RHILEX RUN] Nothing to do, pid: %d", pid)
 					}
 					utils.CLog("[RHILEX RUN] Stop rhilex successfully.")
 					return nil
 				},
 			},
+			{
+				Name:  "service",
+				Usage: "rhilex service control",
+				Flags: []cli.Flag{
+					&cli.StringFlag{
+						Name:  "stype",
+						Usage: "service type <install|uninstall|status|restart>",
+						Value: "status",
+					},
+				},
+				Action: func(c *cli.Context) error {
+					// TODO
+					utils.CLog("[RHILEX RUN] Nothing to do.")
+					return nil
+				},
+			},
+
 			{
 				Name:  "stop",
 				Usage: "Stop rhilex",

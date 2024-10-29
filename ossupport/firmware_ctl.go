@@ -16,12 +16,14 @@
 package ossupport
 
 import (
+	"archive/zip"
 	"fmt"
 	"io"
 	"log"
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strings"
 )
 
 /*
@@ -108,33 +110,50 @@ func StartUpgradeProcess() {
 	os.Exit(0)
 }
 
-/*
-*
-* 直接重启Linux
-*
- */
 func Reboot() error {
-	cmd := exec.Command("reboot")
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-	if err := cmd.Run(); err != nil {
-		return err
-	}
-	return nil
+	return RebootLocal()
 }
 
-/*
-*
-* 解压安装包
-*
+/**
+ * 解压文件
+ *
  */
 func UnzipFirmware(zipFile, destDir string) error {
-	// unzip -o -d /usr/local /usr/local/upload/Firmware/Firmware.zip
-	cmd := exec.Command("unzip", "-o", "-d", destDir, zipFile)
-	out, err := cmd.CombinedOutput()
+	r, err := zip.OpenReader(zipFile)
 	if err != nil {
-		return fmt.Errorf("failed to unzip file: %s, %s", err.Error(), string(out))
+		return fmt.Errorf("failed to open zip file: %w", err)
 	}
+	defer r.Close()
+	for _, f := range r.File {
+		fpath := filepath.Join(destDir, f.Name)
+		// 检查文件路径是否安全，防止 zip slip 攻击
+		if !strings.HasPrefix(fpath, filepath.Clean(destDir)+string(os.PathSeparator)) {
+			return fmt.Errorf("illegal file path: %s", fpath)
+		}
+
+		if f.FileInfo().IsDir() {
+			// 创建目录
+			os.MkdirAll(fpath, os.ModePerm)
+			continue
+		}
+		// 创建文件
+		outFile, err := os.OpenFile(fpath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, f.Mode())
+		if err != nil {
+			return fmt.Errorf("failed to create file: %w", err)
+		}
+		defer outFile.Close()
+		// 解压文件内容
+		rc, err := f.Open()
+		if err != nil {
+			return fmt.Errorf("failed to open file in zip: %w", err)
+		}
+		defer rc.Close()
+		_, err = io.Copy(outFile, rc)
+		if err != nil {
+			return fmt.Errorf("failed to copy file content: %w", err)
+		}
+	}
+
 	return nil
 }
 
