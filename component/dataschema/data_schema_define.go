@@ -334,12 +334,12 @@ func (V IntegerRule) Validate(Value interface{}) error {
 		if T < int32(V.Max) && T > int32(V.Min) {
 			return nil
 		}
-		return fmt.Errorf("IntegerRule Validate (%v) failed:%s", V, V.String())
+		return fmt.Errorf("IntegerRule Validate (%v) failed, rule: %s", T, V.String())
 	case int64:
 		if T < int64(V.Max) && T > int64(V.Min) {
 			return nil
 		}
-		return fmt.Errorf("IntegerRule Validate (%v) failed:%s", V, V.String())
+		return fmt.Errorf("IntegerRule Validate (%v) failed, rule: %s", T, V.String())
 	}
 	return fmt.Errorf("Invalid Int type:%v", Value)
 }
@@ -366,12 +366,12 @@ func (V FloatRule) Validate(Value interface{}) error {
 		if T < float32(V.Max) && T > float32(V.Min) {
 			return nil
 		}
-		return fmt.Errorf("FloatRule Validate (%v) failed:%s", V, V.String())
+		return fmt.Errorf("FloatRule Validate (%v) failed, rule: %s", T, V.String())
 	case float64:
 		if T < float64(V.Max) && T > float64(V.Min) {
 			return nil
 		}
-		return fmt.Errorf("FloatRule Validate (%v) failed:%s", V, V.String())
+		return fmt.Errorf("FloatRule Validate (%v) failed, rule: %s", T, V.String())
 	}
 	return fmt.Errorf("Invalid Float type:%v", Value)
 }
@@ -420,7 +420,7 @@ func (V GeoRule) Validate(Value interface{}) error {
 		if isValidGEO(T) {
 			return nil
 		}
-		return fmt.Errorf("GeoRule Validate (%v) failed:%s", V, V.String())
+		return fmt.Errorf("GeoRule Validate (%v) failed, rule: %s", T, V.String())
 	}
 	return fmt.Errorf("Invalid Coordinate type:%v", Value)
 }
