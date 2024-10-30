@@ -157,12 +157,7 @@ func main() {
 						utils.CLog("[RHILEX UPGRADE] Nothing todo")
 						return nil
 					}
-					// Move to rollback
 					utils.CLog("[RHILEX BACKUP] Start backup ")
-					bytes, err1 := os.ReadFile("./rhilex.pid")
-					if err1 != nil {
-						return err1
-					}
 					var errBob error
 					errBob = ossupport.BackupOldVersion(ossupport.MainWorkDir+ossupport.GetExePath(),
 						ossupport.OldBackupDir+ossupport.GetExePath())
@@ -201,15 +196,13 @@ func main() {
 						return errBob
 					}
 					utils.CLog("[RHILEX BACKUP] Backup finished")
-					utils.CLog("[RHILEX BACKUP] Stop Rhilex Pid=%s, Current Pid=%d", string(bytes), os.Getpid())
-					if errStop := ossupport.StopRhilex(); errStop != nil {
-						utils.CLog("[RHILEX BACKUP] Stop Rhilex Failed: %s", errStop)
-						return errStop
-					}
-					// unzip Firmware
 					utils.CLog("[RHILEX UPGRADE] Unzip Firmware")
-					if err := ossupport.UnzipFirmware(
-						ossupport.FirmwarePath, ossupport.MainWorkDir); err != nil {
+					cwd, err := os.Getwd()
+					if err != nil {
+						utils.CLog("[RHILEX UPGRADE] Getwd error: %v", err)
+						return err
+					}
+					if err := ossupport.UnzipFirmware(ossupport.FirmwarePath, cwd); err != nil {
 						utils.CLog("[RHILEX UPGRADE] Unzip Firmware error:%s", err.Error())
 						return nil
 					}

@@ -17,6 +17,7 @@ package ossupport
 
 import (
 	"archive/zip"
+	"debug/elf"
 	"fmt"
 	"io"
 	"log"
@@ -32,35 +33,55 @@ import (
 
 /*
 *
+* 给Linux下 ELF 文件增加可执行权限
+*
+ */
+func ChmodX(filePath string) error {
+	file, err := elf.Open(filePath)
+	if err != nil {
+		return err
+	}
+	elfHeader := file.FileHeader
+	file.Close()
+	if elfHeader.Type == elf.ET_EXEC {
+		if err := os.Chmod(filePath, 0755); err != nil {
+			return err
+		}
+		return nil
+	}
+	return nil
+}
+
+/*
+*
 * Stop RHILEX
 *
  */
 func StopRhilex() error {
 	bytes, err1 := os.ReadFile(MainExePidPath)
 	if err1 != nil {
-		return err1
+		return fmt.Errorf("ReadFile error: %s", err1)
 	}
 	pid, err2 := strconv.Atoi(string(bytes))
 	if err2 != nil {
-		return err2
+		return fmt.Errorf("strconv error: %s", err2)
 	}
 	process, err3 := os.FindProcess(pid)
 	if err3 != nil {
-		return err3
+		return fmt.Errorf("FindProcess error: %s", err3)
 	}
 	err4 := process.Signal(syscall.SIGINT)
 	if err4 != nil {
 		err4 = process.Signal(syscall.SIGTERM)
 	}
 	if err4 != nil {
-		return err4
+		return fmt.Errorf("Signal error: %d", err4)
 	}
 	time.Sleep(1 * time.Second)
-	// 检查进程是否还在运行
 	if process != nil {
 		err5 := process.Kill()
 		if err5 != nil {
-			return err5
+			return fmt.Errorf("Kill error: %d", err5)
 		}
 	}
 
@@ -105,6 +126,15 @@ func GetExePath() string {
 	}
 	return ""
 }
+func GetUpgraderPath() string {
+	if runtime.GOOS == "linux" {
+		return "rhilex-upgrader"
+	}
+	if runtime.GOOS == "windows" {
+		return "rhilex-upgrader.exe"
+	}
+	return ""
+}
 
 /*
 *
@@ -129,7 +159,7 @@ func StartRecoverProcess() {
 *
  */
 func StartUpgradeProcess(s1, s2, s3, s4 string) {
-	cmd := exec.Command("./rhilex", "upgrade",
+	cmd := exec.Command(MainWorkDir+GetUpgraderPath(), "upgrade",
 		"-upgrade=true",
 		fmt.Sprintf("-inipath=%s", s1),
 		fmt.Sprintf("-licpath=%s", s2),
@@ -190,6 +220,21 @@ func UnzipFirmware(zipFile, destDir string) error {
 		}
 	}
 
+	return nil
+}
+
+/*
+*
+  - Unzip 指令包装,不通用
+
+unzip -o -d /usr/local ./zupload/firmware.zip
+*/
+func Unzip(zipFile, destDir string) error {
+	cmd := exec.Command("unzip", "-o", "-d", destDir, zipFile)
+	out, err := cmd.CombinedOutput()
+	if err != nil {
+		return fmt.Errorf("failed to unzip file: %s, %s", err.Error(), string(out))
+	}
 	return nil
 }
 

@@ -119,12 +119,12 @@ func Paginate(pageNum int, pageSize int, sliceLength int) (int, int) {
 * 自定义日志
 *
  */
-func CLog(format string, v ...interface{}) {
+func CLog(format string, v ...interface{}) string {
 	timestamp := time.Now().UTC().Format("2006/01/02 15:04:05")
 	logMsg := fmt.Sprintf(format, v...)
-	logLine := fmt.Sprintf("[%s] %s", timestamp, logMsg)
+	logLine := fmt.Sprintf("[%s] %s\n", timestamp, logMsg)
 	fmt.Print(logLine)
-	fmt.Println()
+	return logLine
 }
 
 /*
