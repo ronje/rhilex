@@ -417,6 +417,7 @@ func main() {
 					}
 					keyFile.Write([]byte(key))
 					utils.CLog("[LICENCE ACTIVE]: Get License success. save to ./license.key, ./license.lic")
+					utils.CLog("[LICENCE ACTIVE]: Warning: Freetrial license is only valid for 30 days, and a MAC address can only be applied for once")
 					defer licFile.Close()
 					defer keyFile.Close()
 					return nil
@@ -436,6 +437,7 @@ func main() {
 						Usage: "license path",
 					},
 				},
+				// rhilex validate -lic ./license.lic -key ./license.key
 				Action: func(c *cli.Context) error {
 					keyPath := c.String("key")
 					if keyPath == "" {

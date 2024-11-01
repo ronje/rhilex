@@ -22,7 +22,6 @@ import (
 
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
-	"google.golang.org/grpc/status"
 )
 
 /**
@@ -32,11 +31,7 @@ import (
 func GetLicense(Host, Sn, Iface, Mac, U, P string) (string, string, error) {
 	conn, err := grpc.NewClient(Host, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
-		Status, ok := status.FromError(err)
-		if !ok {
-			return "", "", fmt.Errorf("Dail to Server %s Error", Host)
-		}
-		return "", "", fmt.Errorf(Status.Message())
+		return "", "", fmt.Errorf("Dail to Server %s Error", Host)
 	}
 	defer conn.Close()
 	client := NewDeviceActivationClient(conn)
@@ -51,14 +46,10 @@ func GetLicense(Host, Sn, Iface, Mac, U, P string) (string, string, error) {
 	}
 	resp, err1 := client.ActivateDevice(ctx, req)
 	if err1 != nil {
-		Status, ok := status.FromError(err1)
-		if !ok {
-			return "", "", fmt.Errorf("Activate Device error")
-		}
-		return "", "", fmt.Errorf(Status.Message())
+		return "", "", fmt.Errorf("Activate Device error, check your network status")
 	}
 	if !resp.Success {
-		return "", "", fmt.Errorf("Activate Device failed")
+		return "", "", fmt.Errorf("Activate Device failed, maybe server is panic")
 	}
 	return resp.Key, resp.License, nil
 }
