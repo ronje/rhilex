@@ -399,25 +399,25 @@ func main() {
 						return fmt.Errorf("[LICENCE ACTIVE]: missing admin 'P' parameter")
 					}
 
-					key, lic, errGetLicense := activation.GetLicense(host, sn, iface, mac, U, P)
+					pubKey, lic, errGetLicense := activation.GetLicense(host, sn, iface, mac, U, P)
 					if errGetLicense != nil {
 						utils.CLog("[LICENCE ACTIVE]: Get License failed:%s", errGetLicense)
 						return nil
 					}
-					licFile, err1 := os.Create("./license.lic")
+					licFile, err1 := os.Create("./license.key")
 					if err1 != nil {
 						utils.CLog("[LICENCE ACTIVE]: Create License failed:%s", err1)
 						return nil
 					}
-					licFile.Write([]byte(lic))
-					keyFile, err2 := os.Create("./license.key")
+					licFile.Write([]byte(pubKey))
+					keyFile, err2 := os.Create("./license.lic")
 					if err2 != nil {
 						utils.CLog("[LICENCE ACTIVE]: Create Key failed:%s", err2)
 						return nil
 					}
-					keyFile.Write([]byte(key))
+					keyFile.Write([]byte(lic))
 					utils.CLog("[LICENCE ACTIVE]: Get License success. save to ./license.key, ./license.lic")
-					utils.CLog("[LICENCE ACTIVE]: Warning: Freetrial license is only valid for 30 days, and a MAC address can only be applied for once")
+					utils.CLog("[LICENCE ACTIVE]: ! Warning: Freetrial license is only valid for 30 days, and a MAC address can only be applied for once")
 					defer licFile.Close()
 					defer keyFile.Close()
 					return nil
@@ -452,7 +452,7 @@ func main() {
 					// rhilex validate -lic ./license.lic -key ./license.key
 					LocalLicense, err := utils.ValidateLicense(keyPath, licPath)
 					if err != nil {
-						utils.CLog("[LICENCE ACTIVE]: Validate License Failed: %s", err.Error())
+						utils.CLog("[LICENCE ACTIVE]: Validate License Failed")
 						return nil
 					}
 					fmt.Println(LocalLicense.ToString())

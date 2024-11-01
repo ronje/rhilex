@@ -51,5 +51,5 @@ func GetLicense(Host, Sn, Iface, Mac, U, P string) (string, string, error) {
 	if !resp.Success {
 		return "", "", fmt.Errorf("Activate Device failed, maybe server is panic")
 	}
-	return resp.Key, resp.License, nil
+	return resp.Publickey, resp.License, nil
 }
