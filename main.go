@@ -81,6 +81,7 @@ func main() {
 				Action: func(c *cli.Context) error {
 					utils.CLog(typex.Banner)
 					utils.ShowGGpuAndCpuInfo()
+					utils.ShowIpAddress()
 					pid := os.Getpid()
 					err := os.WriteFile(ossupport.MainExePidPath, []byte(fmt.Sprintf("%d", pid)), 0755)
 					if err != nil {

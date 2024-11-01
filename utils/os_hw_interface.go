@@ -6,6 +6,7 @@ import (
 	"runtime"
 
 	archsupport "github.com/hootrhino/rhilex/archsupport"
+	"github.com/hootrhino/rhilex/ossupport"
 )
 
 /*
@@ -109,5 +110,23 @@ func ShowGGpuAndCpuInfo() {
 			}
 			fmt.Println()
 		}
+	}
+
+}
+
+/**
+ * print all ips
+ *
+ */
+func ShowIpAddress() {
+	ipList, err := ossupport.GetAllIps()
+	if err != nil {
+		fmt.Println("x Get Ip Failed")
+	} else {
+		fmt.Printf("* Quick Access Address:\n")
+		for _, ip := range ipList {
+			fmt.Printf("-- %s\n", ip)
+		}
+		println()
 	}
 }

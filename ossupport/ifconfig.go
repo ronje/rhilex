@@ -17,7 +17,9 @@ package ossupport
 
 import (
 	"bytes"
+	"fmt"
 	"io"
+	"net"
 	"os/exec"
 	"runtime"
 
@@ -53,4 +55,39 @@ func Ifconfig() (string, error) {
 
 	}
 	return out.String(), nil
+}
+
+// GetAllIps returns a slice of all non-loopback IPv4 addresses on the system.
+func GetAllIps() ([]string, error) {
+	var ips []string
+	ifaces, err := net.Interfaces()
+	if err != nil {
+		return nil, err
+	}
+
+	for _, iface := range ifaces {
+		addrs, err := iface.Addrs()
+		if err != nil {
+			return nil, err
+		}
+		for _, addr := range addrs {
+			var ip net.IP
+			switch v := addr.(type) {
+			case *net.IPNet:
+				ip = v.IP
+			case *net.IPAddr:
+				ip = v.IP
+			}
+			if ip == nil || ip.IsLoopback() {
+				continue
+			}
+			ip = ip.To4()
+			if ip == nil {
+				continue // not an ipv4 address
+			}
+			ips = append(ips, fmt.Sprintf("[%s] http://%s:2580", iface.Name, ip.String()))
+		}
+	}
+
+	return ips, nil
 }
