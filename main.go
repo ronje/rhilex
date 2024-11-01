@@ -24,6 +24,7 @@ import (
 	"time"
 
 	archsupport "github.com/hootrhino/rhilex/archsupport"
+	"github.com/hootrhino/rhilex/component/activation"
 	"github.com/hootrhino/rhilex/engine"
 	"github.com/hootrhino/rhilex/ossupport"
 	"github.com/hootrhino/rhilex/typex"
@@ -85,16 +86,12 @@ func main() {
 					pid := os.Getpid()
 					err := os.WriteFile(ossupport.MainExePidPath, []byte(fmt.Sprintf("%d", pid)), 0755)
 					if err != nil {
-						return err
+						utils.CLog("[RHILEX RUN] Write Pid File Failed:%s", err)
+						return nil
 					}
-					if !c.Bool("daemon") {
-						engine.RunRhilex(c.String("config"))
-						if utils.PathExists(ossupport.MainExePidPath) {
-							os.Remove(ossupport.MainExePidPath)
-						}
-					} else {
-						// TODO
-						utils.CLog("[RHILEX RUN] Nothing to do, pid: %d", pid)
+					engine.RunRhilex(c.String("config"))
+					if utils.PathExists(ossupport.MainExePidPath) {
+						os.Remove(ossupport.MainExePidPath)
 					}
 					utils.CLog("[RHILEX RUN] Stop rhilex successfully.")
 					return nil
@@ -164,44 +161,44 @@ func main() {
 						ossupport.OldBackupDir+ossupport.GetExePath())
 					if errBob != nil {
 						utils.CLog("[RHILEX BACKUP] Backup rhilex Failed: %s", errBob)
-						return errBob
+						return nil
 					}
 					errBob = ossupport.BackupOldVersion(c.String("inipath"), ossupport.OldBackupDir+"rhilex.ini")
 					if errBob != nil {
 						utils.CLog("[RHILEX BACKUP] Backup rhilex.ini Failed: %s", errBob)
-						return errBob
+						return nil
 					}
 					errBob = ossupport.BackupOldVersion(c.String("rundbpath"), ossupport.OldBackupDir+"rhilex.db")
 					if errBob != nil {
 						utils.CLog("[RHILEX BACKUP] Backup rhilex.db Failed: %s", errBob)
-						return errBob
+						return nil
 					}
 					errBob = ossupport.BackupOldVersion(c.String("keypath"), ossupport.OldBackupDir+"license.key")
 					if errBob != nil {
 						utils.CLog("[RHILEX BACKUP] Backup License.Key Failed: %s", errBob)
-						return errBob
+						return nil
 					}
 					errBob = ossupport.BackupOldVersion(c.String("licpath"), ossupport.OldBackupDir+"license.lic")
 					if errBob != nil {
 						utils.CLog("[RHILEX BACKUP] Backup License.Lic Failed: %s", errBob)
-						return errBob
+						return nil
 					}
 					errBob = ossupport.BackupOldVersion(ossupport.DataCenterPath, ossupport.OldBackupDir+"rhilex_datacenter.db")
 					if errBob != nil {
 						utils.CLog("[RHILEX BACKUP] Backup DataCenter Failed: %s", errBob)
-						return errBob
+						return nil
 					}
 					errBob = ossupport.BackupOldVersion(ossupport.LostCacheDataPath, ossupport.OldBackupDir+"rhilex_lostcache.db")
 					if errBob != nil {
 						utils.CLog("[RHILEX BACKUP] Backup LostCacheData Failed: %s", errBob)
-						return errBob
+						return nil
 					}
 					utils.CLog("[RHILEX BACKUP] Backup finished")
 					utils.CLog("[RHILEX UPGRADE] Unzip Firmware")
 					cwd, err := os.Getwd()
 					if err != nil {
 						utils.CLog("[RHILEX UPGRADE] Getwd error: %v", err)
-						return err
+						return nil
 					}
 					if err := ossupport.UnzipFirmware(ossupport.FirmwarePath, cwd); err != nil {
 						utils.CLog("[RHILEX UPGRADE] Unzip Firmware error:%s", err.Error())
@@ -230,37 +227,37 @@ func main() {
 					errBob = ossupport.BackupOldVersion(ossupport.OldBackupDir+ossupport.GetExePath(), ossupport.GetExePath())
 					if errBob != nil {
 						utils.CLog("[RHILEX ROLLBACK] Rollback Failed: %s", errBob)
-						return errBob
+						return nil
 					}
 					errBob = ossupport.BackupOldVersion(ossupport.OldBackupDir+"rhilex.ini", ossupport.RunIniPath)
 					if errBob != nil {
 						utils.CLog("[RHILEX ROLLBACK] Rollback Failed: %s", errBob)
-						return errBob
+						return nil
 					}
 					errBob = ossupport.BackupOldVersion(ossupport.OldBackupDir+"rhilex.db", ossupport.RunDbPath)
 					if errBob != nil {
 						utils.CLog("[RHILEX ROLLBACK] Rollback Failed: %s", errBob)
-						return errBob
+						return nil
 					}
 					errBob = ossupport.BackupOldVersion(ossupport.OldBackupDir+"license.key", ossupport.LicenseKeyPath)
 					if errBob != nil {
 						utils.CLog("[RHILEX ROLLBACK] Rollback Failed: %s", errBob)
-						return errBob
+						return nil
 					}
 					errBob = ossupport.BackupOldVersion(ossupport.OldBackupDir+"license.lic", ossupport.LicenseLicPath)
 					if errBob != nil {
 						utils.CLog("[RHILEX ROLLBACK] Rollback Failed: %s", errBob)
-						return errBob
+						return nil
 					}
 					errBob = ossupport.BackupOldVersion(ossupport.OldBackupDir+"rhilex_datacenter.db", ossupport.DataCenterPath)
 					if errBob != nil {
 						utils.CLog("[RHILEX ROLLBACK] Rollback Failed: %s", errBob)
-						return errBob
+						return nil
 					}
 					errBob = ossupport.BackupOldVersion(ossupport.OldBackupDir+"rhilex_lostcache.db", ossupport.LostCacheDataPath)
 					if errBob != nil {
 						utils.CLog("[RHILEX ROLLBACK] Rollback Failed: %s", errBob)
-						return errBob
+						return nil
 					}
 					utils.CLog("[RHILEX ROLLBACK] Rollback Process Exited")
 					return nil
@@ -347,28 +344,32 @@ func main() {
 			},
 			{
 				Name:   "active",
-				Usage:  "active -H host -U [username] -P [password] -IF [IFACE NAME]",
+				Usage:  "active -H ${HOST} --SN ${SN} -U ${Username} -P ${Password} -IF ${Iface name} -MAC ${MAC Address}",
 				Hidden: true,
 				Flags: []cli.Flag{
 					&cli.StringFlag{
 						Name:  "H",
-						Usage: "active server ip",
+						Usage: "server ip",
 					},
 					&cli.StringFlag{
 						Name:  "SN",
-						Usage: "device serial number",
+						Usage: "serial number",
 					},
 					&cli.StringFlag{
 						Name:  "U",
-						Usage: "active admin username",
+						Usage: "admin username",
 					},
 					&cli.StringFlag{
 						Name:  "P",
-						Usage: "active admin password",
+						Usage: "admin password",
 					},
 					&cli.StringFlag{
 						Name:  "IF",
-						Usage: "active interface name",
+						Usage: "interface name",
+					},
+					&cli.StringFlag{
+						Name:  "MAC",
+						Usage: "mac address",
 					},
 				},
 
@@ -381,33 +382,44 @@ func main() {
 					if sn == "" {
 						return fmt.Errorf("[LICENCE ACTIVE]: missing 'SN' parameter")
 					}
-					username := c.String("U")
-					if username == "" {
-						return fmt.Errorf("[LICENCE ACTIVE]: missing admin 'username' parameter")
-					}
-					password := c.String("P")
-					if password == "" {
-						return fmt.Errorf("[LICENCE ACTIVE]: missing admin 'password' parameter")
-					}
 					iface := c.String("IF")
 					if iface == "" {
-						return fmt.Errorf("[LICENCE ACTIVE]: missing admin 'iface' parameter")
+						return fmt.Errorf("[LICENCE ACTIVE]: missing admin 'IF' parameter")
 					}
-					// linux
-					if runtime.GOOS == "linux" {
-						// rhilex active \
-						//     -H https://127.0.0.1/api/v1/device-active \
-						//     -U admin -P 123456 -IF eth0 \
-						//     -H: Active Server Host \
-						//     -U: Active Server Account \
-						//     -P: Active Server Password \
-						//     -IF: Active IFace name
-						return fmt.Errorf("[LICENCE ACTIVE]: Operation Not Permission!")
+					mac := c.String("MAC")
+					if iface == "" {
+						return fmt.Errorf("[LICENCE ACTIVE]: missing admin 'MAC' parameter")
 					}
-					if runtime.GOOS == "windows" {
-						return fmt.Errorf("[LICENCE ACTIVE]: Operation Not Permission!")
+					U := c.String("U")
+					if U == "" {
+						return fmt.Errorf("[LICENCE ACTIVE]: missing admin 'U' parameter")
 					}
-					return fmt.Errorf("[LICENCE ACTIVE]: Active not supported on current distribution.")
+					P := c.String("P")
+					if P == "" {
+						return fmt.Errorf("[LICENCE ACTIVE]: missing admin 'P' parameter")
+					}
+
+					key, lic, errGetLicense := activation.GetLicense(host, sn, iface, mac, U, P)
+					if errGetLicense != nil {
+						utils.CLog("[LICENCE ACTIVE]: Get License failed:%s", errGetLicense)
+						return nil
+					}
+					licFile, err1 := os.Create("./license.lic")
+					if err1 != nil {
+						utils.CLog("[LICENCE ACTIVE]: Create License failed:%s", err1)
+						return nil
+					}
+					licFile.Write([]byte(lic))
+					keyFile, err2 := os.Create("./license.key")
+					if err2 != nil {
+						utils.CLog("[LICENCE ACTIVE]: Create Key failed:%s", err2)
+						return nil
+					}
+					keyFile.Write([]byte(key))
+					utils.CLog("[LICENCE ACTIVE]: Get License success. save to ./license.key, ./license.lic")
+					defer licFile.Close()
+					defer keyFile.Close()
+					return nil
 				},
 			},
 			{
@@ -427,16 +439,19 @@ func main() {
 				Action: func(c *cli.Context) error {
 					keyPath := c.String("key")
 					if keyPath == "" {
-						return fmt.Errorf("[LICENCE ACTIVE]: missing admin 'key' parameter")
+						utils.CLog("[LICENCE ACTIVE]: missing admin 'key' parameter")
+						return nil
 					}
 					licPath := c.String("lic")
 					if licPath == "" {
-						return fmt.Errorf("[LICENCE ACTIVE]: missing admin 'lic' parameter")
+						utils.CLog("[LICENCE ACTIVE]: missing admin 'lic' parameter")
+						return nil
 					}
 					// rhilex validate -lic ./license.lic -key ./license.key
 					LocalLicense, err := utils.ValidateLicense(keyPath, licPath)
 					if err != nil {
-						return fmt.Errorf("[LICENCE ACTIVE]: Validate License Failed: %s", err.Error())
+						utils.CLog("[LICENCE ACTIVE]: Validate License Failed: %s", err.Error())
+						return nil
 					}
 					fmt.Println(LocalLicense.ToString())
 					return nil
@@ -455,7 +470,7 @@ func main() {
 				Action: func(*cli.Context) error {
 					version := fmt.Sprintf("[%v-%v-%v]",
 						runtime.GOOS, runtime.GOARCH, typex.MainVersion)
-					utils.CLog("[*] rhilex Version: " + version)
+					utils.CLog("[*] Version: " + version)
 					return nil
 				},
 			},

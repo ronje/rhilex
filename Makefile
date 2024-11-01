@@ -129,5 +129,6 @@ clean:
 	go clean
 	rm -rf _release zold zbackup zupgrade* \
 	    ${APP}-arm* ${APP}-riscv* ${APP}-mips* \
+		license.* \
 		*.exe *.db *.txt *.txt.gz .encrypt.p* rhilex.pid \
 

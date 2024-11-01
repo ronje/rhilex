@@ -33,3 +33,5 @@ backup/
 zold/
 zbackup/
 zupgrade*
+license.key
+license.lic
