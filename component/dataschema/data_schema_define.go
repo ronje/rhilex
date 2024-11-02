@@ -329,17 +329,10 @@ func (V IntegerRule) String() string {
 }
 
 func (V IntegerRule) Validate(Value interface{}) error {
-	switch T := Value.(type) {
-	case int32:
-		if T <= int32(V.Max) && T >= int32(V.Min) {
+	if ok, T := isNumber(Value); ok {
+		if T <= float64(V.Max) && T >= float64(V.Min) {
 			return nil
 		}
-		return fmt.Errorf("IntegerRule Validate (%v) failed, rule: %s", T, V.String())
-	case int64:
-		if T <= int64(V.Max) && T >= int64(V.Min) {
-			return nil
-		}
-		return fmt.Errorf("IntegerRule Validate (%v) failed, rule: %s", T, V.String())
 	}
 	return fmt.Errorf("Invalid Int type:%v", Value)
 }
@@ -361,19 +354,48 @@ func (V FloatRule) String() string {
 	return string(bytes)
 }
 func (V FloatRule) Validate(Value interface{}) error {
-	switch T := Value.(type) {
-	case float32:
-		if T <= float32(V.Max) && T >= float32(V.Min) {
-			return nil
-		}
-		return fmt.Errorf("FloatRule Validate (%v) failed, rule: %s", T, V.String())
-	case float64:
+	if ok, T := isNumber(Value); ok {
 		if T <= float64(V.Max) && T >= float64(V.Min) {
 			return nil
 		}
-		return fmt.Errorf("FloatRule Validate (%v) failed, rule: %s", T, V.String())
 	}
 	return fmt.Errorf("Invalid Float type:%v", Value)
+}
+func isNumber(i any) (bool, float64) {
+	switch v := i.(type) {
+	case int:
+		return true, float64(v)
+	case int8:
+		return true, float64(v)
+	case int16:
+		return true, float64(v)
+	case int32:
+		return true, float64(v)
+	case int64:
+		return true, float64(v)
+	case uint:
+		return true, float64(v)
+	case uint8:
+		return true, float64(v)
+	case uint16:
+		return true, float64(v)
+	case uint32:
+		return true, float64(v)
+	case uint64:
+		return true, float64(v)
+	case float32:
+		return true, float64(v)
+	case float64:
+		return true, v
+	case string:
+		f, err := strconv.ParseFloat(v, 64)
+		if err == nil {
+			return true, f
+		}
+	default:
+		return false, 0
+	}
+	return false, 0 // 默认返回值，实际上不会执行到这里
 }
 
 /*
