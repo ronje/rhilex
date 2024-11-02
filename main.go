@@ -23,6 +23,7 @@ import (
 	"runtime"
 	"time"
 
+	"github.com/hootrhino/rhilex-common-misc/misc"
 	archsupport "github.com/hootrhino/rhilex/archsupport"
 	"github.com/hootrhino/rhilex/component/activation"
 	"github.com/hootrhino/rhilex/engine"
@@ -466,6 +467,11 @@ func main() {
 						utils.CLog("[LICENCE ACTIVE]: missing admin 'lic' parameter")
 						return nil
 					}
+					certPath := c.String("cert")
+					if certPath == "" {
+						utils.CLog("[LICENCE ACTIVE]: missing admin 'cert' parameter")
+						return nil
+					}
 					// rhilex validate -lic ./license.lic -key ./license.key
 					LocalLicense, err := utils.ValidateLicense(keyPath, licPath)
 					if err != nil {
@@ -473,7 +479,12 @@ func main() {
 						return nil
 					}
 					utils.BeautyPrintInfo("License Info", LocalLicense.ToString())
-					certInfo, err := utils.ValidateCertificateAuthorityInfo(c.String("cert"))
+					certBytes, err1 := os.ReadFile(certPath)
+					if err1 != nil {
+						utils.CLog("[LICENCE ACTIVE]: Load Certificate Failed: %s", err)
+						return nil
+					}
+					certInfo, err := misc.ParseCertificateAuthorityInfo(certBytes)
 					if err != nil {
 						utils.CLog("[LICENCE ACTIVE]: Validate Certificate Failed: %s", err)
 						return nil
