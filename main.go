@@ -399,27 +399,37 @@ func main() {
 						return fmt.Errorf("[LICENCE ACTIVE]: missing admin 'P' parameter")
 					}
 
-					pubKey, lic, errGetLicense := activation.GetLicense(host, sn, iface, mac, U, P)
+					Certificate, Privatekey, License, errGetLicense := activation.GetLicense(host, sn, iface, mac, U, P)
 					if errGetLicense != nil {
 						utils.CLog("[LICENCE ACTIVE]: Get License failed:%s", errGetLicense)
 						return nil
 					}
-					licFile, err1 := os.Create("./license.key")
+					// cert
+					CertificateFile, err1 := os.Create("./license.cert")
 					if err1 != nil {
-						utils.CLog("[LICENCE ACTIVE]: Create License failed:%s", err1)
+						utils.CLog("[LICENCE ACTIVE]: Create Certificate failed:%s", err1)
 						return nil
 					}
-					licFile.Write([]byte(pubKey))
-					keyFile, err2 := os.Create("./license.lic")
+					CertificateFile.Write([]byte(Certificate))
+					// key
+					PrivatekeyFile, err2 := os.Create("./license.key")
 					if err2 != nil {
 						utils.CLog("[LICENCE ACTIVE]: Create Key failed:%s", err2)
 						return nil
 					}
-					keyFile.Write([]byte(lic))
+					PrivatekeyFile.Write([]byte(Privatekey))
+					// lic
+					LicenseFile, err3 := os.Create("./license.lic")
+					if err3 != nil {
+						utils.CLog("[LICENCE ACTIVE]: Create License failed:%s", err3)
+						return nil
+					}
+					LicenseFile.Write([]byte(License))
 					utils.CLog("[LICENCE ACTIVE]: Get License success. save to ./license.key, ./license.lic")
 					utils.CLog("[LICENCE ACTIVE]: ! Warning: Freetrial license is only valid for 30 days, and a MAC address can only be applied for once")
-					defer licFile.Close()
-					defer keyFile.Close()
+					defer PrivatekeyFile.Close()
+					defer CertificateFile.Close()
+					defer LicenseFile.Close()
 					return nil
 				},
 			},
@@ -431,10 +441,17 @@ func main() {
 					&cli.StringFlag{
 						Name:  "key",
 						Usage: "license key path",
+						Value: "./license.key",
 					},
 					&cli.StringFlag{
 						Name:  "lic",
 						Usage: "license path",
+						Value: "./license.lic",
+					},
+					&cli.StringFlag{
+						Name:  "cert",
+						Usage: "certificate path",
+						Value: "./license.cert",
 					},
 				},
 				// rhilex validate -lic ./license.lic -key ./license.key
@@ -452,10 +469,16 @@ func main() {
 					// rhilex validate -lic ./license.lic -key ./license.key
 					LocalLicense, err := utils.ValidateLicense(keyPath, licPath)
 					if err != nil {
-						utils.CLog("[LICENCE ACTIVE]: Validate License Failed")
+						utils.CLog("[LICENCE ACTIVE]: Validate License Failed: %s", err)
 						return nil
 					}
-					fmt.Println(LocalLicense.ToString())
+					utils.BeautyPrintInfo("License Info", LocalLicense.ToString())
+					certInfo, err := utils.ValidateCertificateAuthorityInfo(c.String("cert"))
+					if err != nil {
+						utils.CLog("[LICENCE ACTIVE]: Validate Certificate Failed: %s", err)
+						return nil
+					}
+					utils.BeautyPrintInfo("Certificate Info", certInfo)
 					return nil
 				},
 			},

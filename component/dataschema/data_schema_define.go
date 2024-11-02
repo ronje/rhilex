@@ -331,12 +331,12 @@ func (V IntegerRule) String() string {
 func (V IntegerRule) Validate(Value interface{}) error {
 	switch T := Value.(type) {
 	case int32:
-		if T < int32(V.Max) && T > int32(V.Min) {
+		if T <= int32(V.Max) && T >= int32(V.Min) {
 			return nil
 		}
 		return fmt.Errorf("IntegerRule Validate (%v) failed, rule: %s", T, V.String())
 	case int64:
-		if T < int64(V.Max) && T > int64(V.Min) {
+		if T <= int64(V.Max) && T >= int64(V.Min) {
 			return nil
 		}
 		return fmt.Errorf("IntegerRule Validate (%v) failed, rule: %s", T, V.String())
@@ -363,12 +363,12 @@ func (V FloatRule) String() string {
 func (V FloatRule) Validate(Value interface{}) error {
 	switch T := Value.(type) {
 	case float32:
-		if T < float32(V.Max) && T > float32(V.Min) {
+		if T <= float32(V.Max) && T >= float32(V.Min) {
 			return nil
 		}
 		return fmt.Errorf("FloatRule Validate (%v) failed, rule: %s", T, V.String())
 	case float64:
-		if T < float64(V.Max) && T > float64(V.Min) {
+		if T <= float64(V.Max) && T >= float64(V.Min) {
 			return nil
 		}
 		return fmt.Errorf("FloatRule Validate (%v) failed, rule: %s", T, V.String())

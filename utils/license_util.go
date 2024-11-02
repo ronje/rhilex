@@ -19,9 +19,11 @@ import (
 	"crypto/md5"
 	"crypto/rand"
 	"crypto/rsa"
+	"crypto/sha256"
 	"crypto/x509"
 	"encoding/base64"
 	"encoding/pem"
+	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -33,13 +35,58 @@ import (
 	"github.com/hootrhino/rhilex/ossupport"
 )
 
-func RSADecrypt(License, Key []byte) ([]byte, error) {
-	block, _ := pem.Decode(Key)
+/**
+ * 打印一个边框
+ *
+ */
+func BeautyPrintInfo(title string, info string) {
+	lines := strings.Split(info, "\n")
+	maxLength := 0
+
+	// 找到最长的行
+	for _, line := range lines {
+		if len(line) > maxLength {
+			maxLength = len(line)
+		}
+	}
+
+	// 打印顶部边框
+	fmt.Println("+" + strings.Repeat("-", maxLength+2) + "+")
+
+	// 打印标题
+	fmt.Printf("| %-*s |\n", maxLength, title)
+	fmt.Println("+" + strings.Repeat("-", maxLength+2) + "+")
+
+	// 打印内容
+	for _, line := range lines {
+		fmt.Printf("| %-*s |\n", maxLength, line)
+	}
+
+	// 打印底部边框
+	fmt.Println("+" + strings.Repeat("-", maxLength+2) + "+")
+}
+
+// RSA解密
+func RSADecrypt(cipherText []byte, privateKey *rsa.PrivateKey) ([]byte, error) {
+	plainText, err := rsa.DecryptOAEP(sha256.New(), rand.Reader, privateKey, cipherText, nil)
+	if err != nil {
+		return nil, err
+	}
+	return plainText, nil
+}
+
+// 从PEM格式字节切片中读取私钥
+func ParsePrivateKey(pemData []byte) (*rsa.PrivateKey, error) {
+	block, _ := pem.Decode(pemData)
+	if block == nil || block.Type != "PRIVATE KEY" {
+		return nil, errors.New("failed to decode PEM block containing private key")
+	}
+
 	privateKey, err := x509.ParsePKCS1PrivateKey(block.Bytes)
 	if err != nil {
 		return nil, err
 	}
-	return rsa.DecryptPKCS1v15(rand.Reader, privateKey, License)
+	return privateKey, nil
 }
 
 /*
@@ -77,8 +124,7 @@ func (ll *LocalLicense) ToString() string {
 ** Authorize Password : %s
 ** Begin Authorize    : %s
 ** End Authorize      : %s
-** Authorized MAC     : %s
-`,
+** Authorized MAC     : %s`,
 		ll.Type,
 		ll.DeviceID,
 		ll.AuthorizeAdmin,
@@ -130,30 +176,34 @@ func ParseAuthInfo(info string) (LocalLicense, error) {
 }
 func ValidateLicense(key_path, license_path string) (LocalLicense, error) {
 	LocalLicense := LocalLicense{}
-	licBytesB64, err := os.ReadFile(license_path)
-	if err != nil {
-		return LocalLicense, err
+	licBytesB64, err0 := os.ReadFile(license_path)
+	if err0 != nil {
+		return LocalLicense, fmt.Errorf("license file load error")
 	}
-	keyBytes, err := os.ReadFile(key_path)
-	if err != nil {
-		return LocalLicense, err
+	keyBytes, err1 := os.ReadFile(key_path)
+	if err1 != nil {
+		return LocalLicense, fmt.Errorf("public key file load error")
 	}
-	licBytes, err := base64.StdEncoding.DecodeString(string(licBytesB64))
-	if err != nil {
-		return LocalLicense, err
+	licBytes, err2 := base64.StdEncoding.DecodeString(string(licBytesB64))
+	if err2 != nil {
+		return LocalLicense, fmt.Errorf("license decode error")
 	}
-	adminSalt, err := RSADecrypt(licBytes, keyBytes)
+	privateKey, errParse := ParsePrivateKey(keyBytes)
+	if errParse != nil {
+		return LocalLicense, fmt.Errorf("key parse error")
+	}
+	adminSalt, err := RSADecrypt(licBytes, privateKey)
 	if err != nil {
-		return LocalLicense, err
+		return LocalLicense, fmt.Errorf("license decrypt error")
 	}
 
-	LocalLicense, err = ParseAuthInfo(string(adminSalt))
-	if err != nil {
-		return LocalLicense, err
+	LocalLicense, errParseAuth := ParseAuthInfo(string(adminSalt))
+	if errParseAuth != nil {
+		return LocalLicense, fmt.Errorf("license parse error")
 	}
 	//
 	if !LocalLicense.ValidateTime() {
-		return LocalLicense, fmt.Errorf("Invalid Auth Time!")
+		return LocalLicense, fmt.Errorf("license expired")
 	}
 	localMac := ""
 	var err3 error
@@ -164,10 +214,34 @@ func ValidateLicense(key_path, license_path string) (LocalLicense, error) {
 		localMac, err3 = ossupport.GetLinuxMacAddr(LocalLicense.Iface)
 	}
 	if err3 != nil {
-		return LocalLicense, err3
+		return LocalLicense, fmt.Errorf("device hardware info fetch error")
 	}
 	if localMac != LocalLicense.MAC {
-		return LocalLicense, fmt.Errorf("Local mac is not matched!")
+		return LocalLicense, fmt.Errorf("license validate failed, not matched")
 	}
 	return LocalLicense, nil
+}
+
+// 解析证书的授权信息
+func ValidateCertificateAuthorityInfo(cert_path string) (string, error) {
+	keyBytes, err1 := os.ReadFile(cert_path)
+	if err1 != nil {
+		return "", fmt.Errorf("Certificate file load error")
+	}
+	block, _ := pem.Decode(keyBytes)
+	if block == nil || block.Type != "CERTIFICATE" {
+		return "", errors.New("failed to decode PEM block containing certificate")
+	}
+	cert, err := x509.ParseCertificate(block.Bytes)
+	if err != nil {
+		return "", err
+	}
+	info := fmt.Sprintf("** Authority Subject       : %s\n", cert.Subject)
+	info += fmt.Sprintf("** Authority Issuer        : %s\n", cert.Issuer)
+	info += fmt.Sprintf("** Authority Subject       : %s\n", cert.Subject)
+	info += fmt.Sprintf("** Authority Issuer        : %s\n", cert.Issuer)
+	info += fmt.Sprintf("** Authority Serial Number : %s\n", cert.SerialNumber)
+	info += fmt.Sprintf("** Authority BEGIN DateTime: %s\n", cert.NotBefore.Format(time.DateTime))
+	info += fmt.Sprintf("** Authority END DateTime  : %s\n", cert.NotAfter.Format(time.DateTime))
+	return info, nil
 }

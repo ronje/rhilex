@@ -28,10 +28,10 @@ import (
  * 申请证书
  *
  */
-func GetLicense(Host, Sn, Iface, Mac, U, P string) (string, string, error) {
+func GetLicense(Host, Sn, Iface, Mac, U, P string) (string, string, string, error) {
 	conn, err := grpc.NewClient(Host, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
-		return "", "", fmt.Errorf("Dail to Server %s Error", Host)
+		return "", "", "", fmt.Errorf("Dail to Server %s Error", Host)
 	}
 	defer conn.Close()
 	client := NewDeviceActivationClient(conn)
@@ -46,10 +46,10 @@ func GetLicense(Host, Sn, Iface, Mac, U, P string) (string, string, error) {
 	}
 	resp, err1 := client.ActivateDevice(ctx, req)
 	if err1 != nil {
-		return "", "", fmt.Errorf("Activate Device error, check your network status")
+		return "", "", "", fmt.Errorf("Activate Device error, check your network status")
 	}
 	if !resp.Success {
-		return "", "", fmt.Errorf("Activate Device failed, maybe server is panic")
+		return "", "", "", fmt.Errorf("Activate Device failed, maybe server is panic")
 	}
-	return resp.Publickey, resp.License, nil
+	return resp.Certificate, resp.Privatekey, resp.License, nil
 }

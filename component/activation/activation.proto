@@ -14,8 +14,9 @@ message ActivationRequest {
 
 message ActivationResponse {
   bool success = 1;
-  string license = 2;
-  string publickey = 3;
+  string certificate = 2;
+  string privatekey = 3;
+  string license = 4;
 }
 
 service DeviceActivation {
