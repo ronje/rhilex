@@ -45,7 +45,6 @@ func InitGlobalConfig(path string) typex.RhilexConfig {
 		EnableConsole:         false,
 		AppDebugMode:          false,
 		LogLevel:              "info",
-		LogPath:               "rhilex-running-log",
 		LogMaxSize:            5,     // MB
 		LogMaxBackups:         5,     // Per
 		LogMaxAge:             7,     // days

@@ -32,7 +32,6 @@ type RhilexConfig struct {
 	EnableConsole         bool     `ini:"enable_console" json:"enableConsole"`
 	AppDebugMode          bool     `ini:"app_debug_mode" json:"appDebugMode"`
 	LogLevel              string   `ini:"log_level" json:"logLevel"`
-	LogPath               string   `ini:"log_path" json:"logPath"`
 	LogMaxSize            int      `ini:"log_max_size" json:"logMaxSize"`
 	LogMaxBackups         int      `ini:"log_max_backups" json:"logMaxBackups"`
 	LogMaxAge             int      `ini:"log_max_age" json:"logMaxAge"`

@@ -47,7 +47,6 @@ func RunRhilex(iniPath string) {
 		mainConfig.LogLevel,
 		mainConfig.EnableConsole,
 		mainConfig.AppDebugMode,
-		mainConfig.LogPath,
 		mainConfig.LogMaxSize,
 		mainConfig.LogMaxBackups,
 		mainConfig.LogMaxAge,

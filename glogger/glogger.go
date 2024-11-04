@@ -17,8 +17,7 @@ var Logrus *logrus.Logger
 var GLogger *logrus.Entry
 
 func StartGLogger(appId string, LogLevel string, EnableConsole bool,
-	AppDebugMode bool, LogPath string, LogMaxSize,
-	LogMaxBackups, LogMaxAge int, LogCompress bool) {
+	AppDebugMode bool, LogMaxSize, LogMaxBackups, LogMaxAge int, LogCompress bool) {
 	Logrus = logrus.New()
 	GLogger = Logrus.WithField("appId", appId)
 	Logrus.Formatter = &logrus.JSONFormatter{
@@ -32,7 +31,7 @@ func StartGLogger(appId string, LogLevel string, EnableConsole bool,
 		Logrus.SetOutput(os.Stdout)
 	} else {
 		Logrus.SetOutput(&lumberjack.Logger{
-			Filename:   LogPath + ".txt",
+			Filename:   "rhilex-running-log.txt",
 			MaxSize:    LogMaxSize,    // 超过10Mb备份
 			MaxBackups: LogMaxBackups, // 最多备份3次
 			MaxAge:     LogMaxAge,     // 最大保留天数
@@ -84,5 +83,5 @@ func Debugf(format string, args ...interface{}) {
 *
  */
 func Close() error {
-	return nil
+	return GLogger.Writer().Close()
 }
