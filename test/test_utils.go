@@ -78,7 +78,6 @@ func RunTestEngine() typex.Rhilex {
 		mainConfig.LogLevel,
 		mainConfig.EnableConsole,
 		mainConfig.AppDebugMode,
-		mainConfig.LogPath,
 		mainConfig.LogMaxSize,
 		mainConfig.LogMaxBackups,
 		mainConfig.LogMaxAge,

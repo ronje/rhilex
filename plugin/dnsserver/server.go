@@ -20,13 +20,12 @@ package dnsserver
 
 import (
 	"fmt"
-	"io"
-	"log"
 	"net"
 	"strings"
 	"sync/atomic"
 
 	"github.com/miekg/dns"
+	"github.com/sirupsen/logrus"
 )
 
 const (
@@ -62,7 +61,7 @@ type Config struct {
 	LogEmptyResponses bool
 
 	// Logger can optionally be set to use an alternative logger instead of the default.
-	Logger io.WriteCloser
+	Logger *logrus.Entry
 }
 
 // mDNS server is used to listen for mDNS queries and respond if we
@@ -89,7 +88,7 @@ func NewServer(config *Config) (*Server, error) {
 	}
 
 	if config.Logger == nil {
-		config.Logger = log.Default()
+		config.Logger = logrus.NewEntry(logrus.New())
 	}
 
 	s := &Server{
@@ -301,14 +300,16 @@ func (s *Server) sendResponse(resp *dns.Msg, from net.Addr, unicast bool) error 
 	if err != nil {
 		return err
 	}
-
 	// Determine the socket to send from
-	addr := from.(*net.UDPAddr)
-	if addr.IP.To4() != nil {
-		_, err = s.ipv4List.WriteToUDP(buf, addr)
-		return err
-	} else {
-		_, err = s.ipv6List.WriteToUDP(buf, addr)
-		return err
+	if !unicast {
+		addr := from.(*net.UDPAddr)
+		if addr.IP.To4() != nil {
+			_, err = s.ipv4List.WriteToUDP(buf, addr)
+			return err
+		} else {
+			_, err = s.ipv6List.WriteToUDP(buf, addr)
+			return err
+		}
 	}
+	return nil
 }

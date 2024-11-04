@@ -40,7 +40,7 @@ func (dm *TinyDnsServer) Start(typex.Rhilex) error {
 	host, _ := os.Hostname()
 	info := []string{"rhilex-service"}
 	service, _ := NewMDNSService(host, fmt.Sprintf("rhilex.service.%s", host), "", "", 40000, nil, info)
-	dm.server, _ = NewServer(&Config{Zone: service, Logger: glogger.GLogger.Writer()})
+	dm.server, _ = NewServer(&Config{Zone: service, Logger: glogger.GLogger})
 	return nil
 }
 func (dm *TinyDnsServer) Stop() error {
