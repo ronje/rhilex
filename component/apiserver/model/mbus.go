@@ -18,15 +18,16 @@ package model
 // 点位
 type MMBusDataPoint struct {
 	RhilexModel
-	UUID         string  `gorm:"not null"`
-	DeviceUuid   string  `gorm:"not null"`
-	SlaverId     string  `gorm:"not null"`
-	Type         string  `gorm:"not null"`
-	Manufacturer string  `gorm:"not null"`
-	Tag          string  `gorm:"not null"`
-	Alias        string  `gorm:"not null"`
-	Frequency    *uint64 `gorm:"not null"`
-	DataLength   *uint64 `gorm:"not null"`
+	UUID         string
+	DeviceUuid   string
+	SlaverId     string
+	Type         string
+	Manufacturer string
+	Tag          string
+	Alias        string
+	Frequency    *uint64
+	DataLength   *uint64
+	Weight       *float64
 }
 
 func (MMBusDataPoint) TableName() string {
