@@ -22,5 +22,6 @@ type MDlt6452007DataPoint struct {
 	MeterId    string
 	Tag        string
 	Alias      string
-	Frequency  uint64
+	Frequency  *uint64
+	Weight     *float64
 }
