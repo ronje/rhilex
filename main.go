@@ -26,6 +26,7 @@ import (
 	"github.com/hootrhino/rhilex-common-misc/misc"
 	archsupport "github.com/hootrhino/rhilex/archsupport"
 	"github.com/hootrhino/rhilex/component/activation"
+	"github.com/hootrhino/rhilex/component/performance"
 	"github.com/hootrhino/rhilex/engine"
 	"github.com/hootrhino/rhilex/ossupport"
 	"github.com/hootrhino/rhilex/typex"
@@ -67,7 +68,7 @@ func main() {
 		Commands: []*cli.Command{
 			{
 				Name:  "run",
-				Usage: "Start rhilex with config: -config=/path/rhilex.ini",
+				Usage: "rhilex run -config=./rhilex.ini",
 				Flags: []cli.Flag{
 					&cli.StringFlag{
 						Name:  "db",
@@ -344,9 +345,10 @@ func main() {
 				},
 			},
 			{
-				Name:   "active",
-				Usage:  "active -H ${HOST} --SN ${SN} -U ${Username} -P ${Password} -IF ${Iface name} -MAC ${MAC Address}",
-				Hidden: true,
+				Name:        "active",
+				Usage:       "rhilex active -H ${HOST} --SN ${SN} -U ${Username} -P ${Password} -IF ${Iface name} -MAC ${MAC Address}",
+				Description: "Activation Rhilex",
+				Hidden:      true,
 				Flags: []cli.Flag{
 					&cli.StringFlag{
 						Name:  "H",
@@ -427,7 +429,7 @@ func main() {
 					}
 					LicenseFile.Write([]byte(License))
 					utils.CLog("[LICENCE ACTIVE]: Get License success. save to ./license.key, ./license.lic")
-					utils.CLog("[LICENCE ACTIVE]: ! Warning: Freetrial license is only valid for 30 days, and a MAC address can only be applied for once")
+					utils.CLog("[LICENCE ACTIVE]: ! Warning: Freetrial license is only valid for 99 days, and a MAC address can only be applied for once")
 					defer PrivatekeyFile.Close()
 					defer CertificateFile.Close()
 					defer LicenseFile.Close()
@@ -435,9 +437,10 @@ func main() {
 				},
 			},
 			{
-				Name:   "validate",
-				Usage:  "validate rhilex license",
-				Hidden: true,
+				Name:        "validate",
+				Usage:       "rhilex validate -lic ./license.lic -key ./license.key -cert ./license.cert",
+				Description: "Validate Rhilex License",
+				Hidden:      true,
 				Flags: []cli.Flag{
 					&cli.StringFlag{
 						Name:  "key",
@@ -495,8 +498,9 @@ func main() {
 			},
 			// version
 			{
-				Name:  "version",
-				Usage: "Show rhilex Current Version",
+				Name:        "version",
+				Usage:       "rhilex version",
+				Description: "Show rhilex Current Version",
 				Flags: []cli.Flag{
 					&cli.StringFlag{
 						Name:  "version",
@@ -507,6 +511,16 @@ func main() {
 					version := fmt.Sprintf("[%v-%v-%v]",
 						runtime.GOOS, runtime.GOARCH, typex.MainVersion)
 					utils.CLog("[*] Version: " + version)
+					return nil
+				},
+			},
+			// bench
+			{
+				Name:        "pbench",
+				Usage:       "rhilex pbench",
+				Description: "Performance Bench Test",
+				Action: func(*cli.Context) error {
+					performance.TestPerformance()
 					return nil
 				},
 			},
