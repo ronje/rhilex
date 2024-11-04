@@ -428,7 +428,7 @@ func main() {
 						return nil
 					}
 					LicenseFile.Write([]byte(License))
-					utils.CLog("[LICENCE ACTIVE]: Get License success. save to ./license.key, ./license.lic")
+					utils.CLog("[LICENCE ACTIVE]: Get License success. save to ./license.cert, ./license.key, ./license.lic")
 					utils.CLog("[LICENCE ACTIVE]: ! Warning: Freetrial license is only valid for 99 days, and a MAC address can only be applied for once")
 					defer PrivatekeyFile.Close()
 					defer CertificateFile.Close()
