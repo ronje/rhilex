@@ -516,6 +516,24 @@ func main() {
 			},
 			// bench
 			{
+				Name:        "hwinfo",
+				Usage:       "rhilex hwinfo",
+				Description: "Show Local Hardware Info",
+				Action: func(*cli.Context) error {
+					macs, err1 := ossupport.ShowMacAddress()
+					if err1 != nil {
+						utils.CLog("[SHOW HWINFO]: Get Interface Address Failed: %s", err1)
+						return nil
+					}
+					fmt.Println("# All Interface Address")
+					for _, mac := range macs {
+						fmt.Printf("- %s\n", mac)
+					}
+					return nil
+				},
+			},
+			// bench
+			{
 				Name:        "pbench",
 				Usage:       "rhilex pbench",
 				Description: "Performance Bench Test",

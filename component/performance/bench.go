@@ -106,7 +106,7 @@ func max(a, b int) int {
 // 输出计算指标 V 的参考表格
 func printVReferenceTable(V1 float64, V2 int) {
 	fmt.Println("# Performance Bench Test Result")
-	fmt.Printf("- Score: **%2f**\n- Level: **%d**\n", V1, V2)
+	fmt.Printf("- Score: ** %2f **\n- Level: ** %d **\n", V1, V2)
 	fmt.Println(`### Grade Level Reference
 - 【Level 1】: (Lowest) : Total score 0-49
 - 【Level 2】: (Common1): Total score 50-69

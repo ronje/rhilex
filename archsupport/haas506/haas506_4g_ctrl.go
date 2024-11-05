@@ -98,7 +98,7 @@ func Get4GBaseInfo() ModuleInfo {
 	if err3 != nil {
 		return info
 	}
-	Up, _ := isInterfaceUp("eth0")
+	Up, _ := isInterfaceUp("usb2")
 	info.Up = Up
 	info.IMEL = imel
 	info.COPS = cm
@@ -139,8 +139,8 @@ func ML307RTurnOn4G() error {
 	{
 		ctx, Cancel := context.WithDeadline(typex.GCTX, time.Now().Add(3000*time.Millisecond))
 		defer Cancel()
-		output, err := exec.CommandContext(ctx, "sh", "-c", `ifconfig eth0 up`).CombinedOutput()
-		log.Println("[ML307RTurnOn4G] ifconfig eth0 up:", ", Output=", string(output))
+		output, err := exec.CommandContext(ctx, "sh", "-c", `ifconfig usb2 up`).CombinedOutput()
+		log.Println("[ML307RTurnOn4G] ifconfig usb2 up:", ", Output=", string(output))
 		if err != nil {
 			return err
 		}
@@ -148,8 +148,8 @@ func ML307RTurnOn4G() error {
 	{
 		ctx, Cancel := context.WithDeadline(typex.GCTX, time.Now().Add(3000*time.Millisecond))
 		defer Cancel()
-		output, err := exec.CommandContext(ctx, "sh", "-c", `udhcpc -i eth0`).CombinedOutput()
-		log.Println("[ML307RTurnOn4G] udhcpc -i eth0:", ", Output=", string(output))
+		output, err := exec.CommandContext(ctx, "sh", "-c", `udhcpc -i usb2`).CombinedOutput()
+		log.Println("[ML307RTurnOn4G] udhcpc -i usb2:", ", Output=", string(output))
 		if err != nil {
 			return err
 		}
@@ -164,8 +164,8 @@ func ML307RTurnOn4G() error {
 func ML307RTurnOff4G() error {
 	ctx, Cancel := context.WithDeadline(typex.GCTX, time.Now().Add(3000*time.Millisecond))
 	defer Cancel()
-	output, err := exec.CommandContext(ctx, "sh", "-c", `ifconfig eth0 down`).CombinedOutput()
-	log.Println("[ML307RTurnOff4G] ifconfig eth0 down:", ", Output=", string(output))
+	output, err := exec.CommandContext(ctx, "sh", "-c", `ifconfig usb2 down`).CombinedOutput()
+	log.Println("[ML307RTurnOff4G] ifconfig usb2 down:", ", Output=", string(output))
 	if err != nil {
 		return err
 	}

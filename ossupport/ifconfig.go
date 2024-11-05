@@ -22,6 +22,8 @@ import (
 	"net"
 	"os/exec"
 	"runtime"
+	"slices"
+	"strings"
 
 	"golang.org/x/text/encoding/simplifiedchinese"
 	"golang.org/x/text/transform"
@@ -90,4 +92,98 @@ func GetAllIps() ([]string, error) {
 	}
 
 	return ips, nil
+}
+
+// getEthList returns a list of Ethernet (wired) interfaces.
+func GetEthList() ([]net.Interface, error) {
+	ifaces, err := net.Interfaces()
+	if err != nil {
+		return nil, err
+	}
+	var ethIfaces []net.Interface
+	for _, iface := range ifaces {
+		if iface.Name == "lo" {
+			continue
+		}
+		ethIfaces = append(ethIfaces, iface)
+	}
+
+	return ethIfaces, nil
+}
+
+/**
+ * print all Macs
+ *
+ */
+func ShowMacAddress() ([]string, error) {
+	var macs []string
+	ifas, err := net.Interfaces()
+	if err != nil {
+		return nil, err
+	}
+
+	for _, ifa := range ifas {
+		if ifa.Flags == net.FlagLoopback {
+			continue
+		}
+		if slices.ContainsFunc(
+			[]string{"loopback", "veth", "virbr", "tun", "tap", "docker"},
+			func(s string) bool {
+				return strings.Contains(strings.ToLower(ifa.Name), s)
+			}) {
+			continue
+		}
+		mac := ifa.HardwareAddr.String()
+		if mac != "" {
+			macs = append(macs, fmt.Sprintf("[%10s]: %s", ifa.Name, strings.ToUpper(mac)))
+		}
+	}
+	return macs, nil
+}
+
+// getCPUID 返回CPU的序列号。
+func GetCPUID() (string, error) {
+	var cpuID string
+	var err error
+
+	switch runtime.GOOS {
+	case "windows":
+		cpuID, err = getCPUIDWindows()
+	case "linux":
+		cpuID, err = getCPUIDLinux()
+	default:
+		err = fmt.Errorf("Unsupported System: %s", runtime.GOOS)
+	}
+	return strings.ToUpper(cpuID), err
+}
+
+// getCPUIDWindows 获取Windows系统的CPU序列号。
+func getCPUIDWindows() (string, error) {
+	cmd := exec.Command("wmic", "cpu", "get", "ProcessorId")
+	output, err := cmd.CombinedOutput()
+	if err != nil {
+		return "", err
+	}
+	return strings.TrimSpace(strings.Split(string(output), "\n")[1]), nil
+}
+
+// getCPUIDLinux 获取Linux系统的CPU序列号。
+func getCPUIDLinux() (string, error) {
+	cmd := exec.Command("cat", "/proc/cpuinfo")
+	output, err := cmd.CombinedOutput()
+	if err != nil {
+		return "", err
+	}
+	cpuinfo := string(output)
+	start := strings.Index(cpuinfo, "Serial")
+	if start == -1 {
+		return "", fmt.Errorf("Can't Find CPU Info")
+	}
+	end := strings.Index(cpuinfo[start:], "\n")
+	if end == -1 {
+		return "", fmt.Errorf("Invalid CPU Info")
+	}
+	serialLine := strings.TrimSpace(cpuinfo[start : start+end])
+	serial := strings.Split(serialLine, ":")[1]
+	return strings.TrimSpace(serial), nil
 }
