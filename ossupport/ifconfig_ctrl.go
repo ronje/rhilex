@@ -17,13 +17,16 @@ package ossupport
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"io"
+	"log"
 	"net"
 	"os/exec"
 	"runtime"
 	"slices"
 	"strings"
+	"time"
 
 	"golang.org/x/text/encoding/simplifiedchinese"
 	"golang.org/x/text/transform"
@@ -33,9 +36,13 @@ import (
 func Ifconfig() (string, error) {
 	var cmd *exec.Cmd
 	if runtime.GOOS == "windows" {
-		cmd = exec.Command("ipconfig", "/all")
+		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+		cmd = exec.CommandContext(ctx, "ipconfig", "/all")
 	} else {
-		cmd = exec.Command("ifconfig", "-a")
+		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+		cmd = exec.CommandContext(ctx, "ifconfig", "-a")
 	}
 	var out bytes.Buffer
 	cmd.Stdout = &out
@@ -159,7 +166,9 @@ func GetCPUID() (string, error) {
 
 // getCPUIDWindows 获取Windows系统的CPU序列号。
 func getCPUIDWindows() (string, error) {
-	cmd := exec.Command("wmic", "cpu", "get", "ProcessorId")
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	cmd := exec.CommandContext(ctx, "wmic", "cpu", "get", "ProcessorId")
 	output, err := cmd.CombinedOutput()
 	if err != nil {
 		return "", err
@@ -169,7 +178,9 @@ func getCPUIDWindows() (string, error) {
 
 // getCPUIDLinux 获取Linux系统的CPU序列号。
 func getCPUIDLinux() (string, error) {
-	cmd := exec.Command("cat", "/proc/cpuinfo")
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	cmd := exec.CommandContext(ctx, "cat", "/proc/cpuinfo")
 	output, err := cmd.CombinedOutput()
 	if err != nil {
 		return "", err
@@ -186,4 +197,30 @@ func getCPUIDLinux() (string, error) {
 	serialLine := strings.TrimSpace(cpuinfo[start : start+end])
 	serial := strings.Split(serialLine, ":")[1]
 	return strings.TrimSpace(serial), nil
+}
+
+func IfconfigSetIface(interfaceName, status string) error {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	cmd := exec.Command("ifconfig", interfaceName, status)
+	log.Println("IpLinkSetIface = ", cmd.String())
+	if err := cmd.Run(); err != nil {
+		return fmt.Errorf("failed to start network interface %s: %w", interfaceName, err)
+	}
+	done := make(chan error, 1)
+	go func() {
+		done <- cmd.Wait()
+	}()
+	select {
+	case <-ctx.Done():
+		if err := cmd.Process.Kill(); err != nil {
+			log.Printf("failed to kill ifconfig process for interface %s: %v", interfaceName, err)
+		}
+		return fmt.Errorf("ifconfig command for interface %s timed out", interfaceName)
+	case err := <-done:
+		if err != nil {
+			return fmt.Errorf("ifconfig command for interface %s failed: %w", interfaceName, err)
+		}
+	}
+	return nil
 }

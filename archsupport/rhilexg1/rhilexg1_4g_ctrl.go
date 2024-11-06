@@ -18,6 +18,7 @@ package rhilexg1
 import (
 	"fmt"
 	"io"
+	"log"
 	"os"
 	"strconv"
 	"strings"
@@ -179,30 +180,30 @@ func __Get4G_CSQ(path string) int {
  */
 func InitEC200A4G(path string) {
 	if err := turnOffEcho(path); err != nil {
-		fmt.Println("EC200AInit4G turnOffEcho error:", err)
+		log.Println("EC200AInit4G turnOffEcho error:", err)
 		return
 	}
-	fmt.Println("EC200AInit4G turnOffEcho ok.")
+	log.Println("EC200AInit4G turnOffEcho ok.")
 	if err := setDriverMode(path); err != nil {
-		fmt.Println("EC200AInit4G setDriverMode error:", err)
+		log.Println("EC200AInit4G setDriverMode error:", err)
 		return
 	}
-	fmt.Println("EC200AInit4G setDriverMode ok.")
+	log.Println("EC200AInit4G setDriverMode ok.")
 	if err := setDial(path); err != nil {
-		fmt.Println("EC200AInit4G setDial error:", err)
+		log.Println("EC200AInit4G setDial error:", err)
 		return
 	}
-	fmt.Println("EC200AInit4G setDial ok.")
+	log.Println("EC200AInit4G setDial ok.")
 	if err := setNetMode(path); err != nil {
-		fmt.Println("EC200AInit4G setNetMode error:", err)
+		log.Println("EC200AInit4G setNetMode error:", err)
 		return
 	}
-	fmt.Println("EC200AInit4G setNetMode ok.")
+	log.Println("EC200AInit4G setNetMode ok.")
 	if err := resetCard(path); err != nil {
-		fmt.Println("EC200AInit4G resetCard error:", err)
+		log.Println("EC200AInit4G resetCard error:", err)
 		return
 	}
-	fmt.Println("EC200AInit4G resetCard ok.")
+	log.Println("EC200AInit4G resetCard ok.")
 
 }
 func turnOffEcho(path string) error {

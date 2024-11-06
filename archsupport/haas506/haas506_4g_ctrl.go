@@ -28,10 +28,12 @@ import (
 	"github.com/hootrhino/rhilex/typex"
 )
 
+const _ML307R_4G_PATH = "/dev/ttyUSB2"
+
 func init() {
 	env := os.Getenv("ARCHSUPPORT")
 	if env == "EN6400" {
-		InitML307R4G("/dev/ttyUSB2")
+		InitML307R4G(_ML307R_4G_PATH)
 	}
 }
 
@@ -71,12 +73,12 @@ func Get4GBaseInfo() ModuleInfo {
 		COPS:  "UNKNOWN",
 	}
 
-	csq := ML307RGet4G_CSQ("/dev/ttyUSB2")
+	csq := ML307RGet4G_CSQ(_ML307R_4G_PATH)
 	if csq == 0 {
 		time.Sleep(100 * time.Millisecond)
-		csq = ML307RGet4G_CSQ("/dev/ttyUSB2")
+		csq = ML307RGet4G_CSQ(_ML307R_4G_PATH)
 	}
-	cops, err1 := ML307RGetCOPS("/dev/ttyUSB2")
+	cops, err1 := ML307RGetCOPS(_ML307R_4G_PATH)
 	if err1 != nil {
 		return info
 	}
@@ -90,15 +92,15 @@ func Get4GBaseInfo() ModuleInfo {
 	if strings.Contains(cops, "UNICOM") {
 		cm = "CHINA UNICOM"
 	}
-	iccid, err2 := ML307RGetICCID("/dev/ttyUSB2")
+	iccid, err2 := ML307RGetICCID(_ML307R_4G_PATH)
 	if err2 != nil {
 		return info
 	}
-	imel, err3 := ML307RGetIMEL("/dev/ttyUSB2")
+	imel, err3 := ML307RGetIMEL(_ML307R_4G_PATH)
 	if err3 != nil {
 		return info
 	}
-	Up, _ := isInterfaceUp("usb2")
+	Up, _ := isInterfaceUp("eth0")
 	info.Up = Up
 	info.IMEL = imel
 	info.COPS = cm
@@ -135,12 +137,12 @@ const (
  *
  */
 func ML307RTurnOn4G() error {
-	__ML307R_AT("/dev/ttyUSB2", __DAIL_CMD, __AT_TIMEOUT)
+	__ML307R_AT(_ML307R_4G_PATH, __DAIL_CMD, __AT_TIMEOUT)
 	{
 		ctx, Cancel := context.WithDeadline(typex.GCTX, time.Now().Add(3000*time.Millisecond))
 		defer Cancel()
-		output, err := exec.CommandContext(ctx, "sh", "-c", `ifconfig usb2 up`).CombinedOutput()
-		log.Println("[ML307RTurnOn4G] ifconfig usb2 up:", ", Output=", string(output))
+		output, err := exec.CommandContext(ctx, "sh", "-c", `ifconfig eth0 up`).CombinedOutput()
+		log.Println("[ML307RTurnOn4G] ifconfig eth0 up:", ", Output=", string(output))
 		if err != nil {
 			return err
 		}
@@ -148,8 +150,8 @@ func ML307RTurnOn4G() error {
 	{
 		ctx, Cancel := context.WithDeadline(typex.GCTX, time.Now().Add(3000*time.Millisecond))
 		defer Cancel()
-		output, err := exec.CommandContext(ctx, "sh", "-c", `udhcpc -i usb2`).CombinedOutput()
-		log.Println("[ML307RTurnOn4G] udhcpc -i usb2:", ", Output=", string(output))
+		output, err := exec.CommandContext(ctx, "sh", "-c", `udhcpc -i eth0`).CombinedOutput()
+		log.Println("[ML307RTurnOn4G] udhcpc -i eth0:", ", Output=", string(output))
 		if err != nil {
 			return err
 		}
@@ -164,8 +166,8 @@ func ML307RTurnOn4G() error {
 func ML307RTurnOff4G() error {
 	ctx, Cancel := context.WithDeadline(typex.GCTX, time.Now().Add(3000*time.Millisecond))
 	defer Cancel()
-	output, err := exec.CommandContext(ctx, "sh", "-c", `ifconfig usb2 down`).CombinedOutput()
-	log.Println("[ML307RTurnOff4G] ifconfig usb2 down:", ", Output=", string(output))
+	output, err := exec.CommandContext(ctx, "sh", "-c", `ifconfig eth0 down`).CombinedOutput()
+	log.Println("[ML307RTurnOff4G] ifconfig eth0 down:", ", Output=", string(output))
 	if err != nil {
 		return err
 	}

@@ -92,37 +92,37 @@ func _RHILEXG1_GPIOAllInit() int {
 	if err1 != nil {
 		if strings.Contains(err1.Error(), "no such file or directory") {
 			_RHILEXG1_GPIOInit(rhilexg1_DO1, rhilexg1_Out)
-			fmt.Println("RHILEXG1_GPIOAllInit DO1 Out Mode Ok")
+			log.Println("RHILEXG1_GPIOAllInit DO1 Out Mode Ok")
 		}
 	}
 	if err2 != nil {
 		if strings.Contains(err2.Error(), "no such file or directory") {
 			_RHILEXG1_GPIOInit(rhilexg1_DO2, rhilexg1_Out)
-			fmt.Println("RHILEXG1_GPIOAllInit DO2 Out Mode Ok")
+			log.Println("RHILEXG1_GPIOAllInit DO2 Out Mode Ok")
 		}
 	}
 	if err3 != nil {
 		if strings.Contains(err3.Error(), "no such file or directory") {
 			_RHILEXG1_GPIOInit(rhilexg1_DI1, rhilexg1_In)
-			fmt.Println("RHILEXG1_GPIOAllInit DI1 In Mode Ok")
+			log.Println("RHILEXG1_GPIOAllInit DI1 In Mode Ok")
 		}
 	}
 	if err4 != nil {
 		if strings.Contains(err4.Error(), "no such file or directory") {
 			_RHILEXG1_GPIOInit(rhilexg1_DI2, rhilexg1_In)
-			fmt.Println("RHILEXG1_GPIOAllInit DI2 In Mode Ok")
+			log.Println("RHILEXG1_GPIOAllInit DI2 In Mode Ok")
 		}
 	}
 	if err5 != nil {
 		if strings.Contains(err5.Error(), "no such file or directory") {
 			_RHILEXG1_GPIOInit(rhilexg1_DI3, rhilexg1_In)
-			fmt.Println("RHILEXG1_GPIOAllInit DI3 In Mode Ok")
+			log.Println("RHILEXG1_GPIOAllInit DI3 In Mode Ok")
 		}
 	}
 	if err6 != nil {
 		if strings.Contains(err5.Error(), "no such file or directory") {
 			_RHILEXG1_GPIOInit(rhilexg1_USER_GPIO, rhilexg1_Out)
-			fmt.Println("RHILEXG1_GPIOAllInit USER_GPIO Out Mode Ok")
+			log.Println("RHILEXG1_GPIOAllInit USER_GPIO Out Mode Ok")
 		}
 	}
 	// 返回值无用

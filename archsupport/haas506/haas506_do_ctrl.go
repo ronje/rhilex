@@ -16,7 +16,7 @@
 package haas506
 
 import (
-	"fmt"
+	"log"
 	"os"
 	"strings"
 )
@@ -59,25 +59,25 @@ func _HAAS506_DO_Init() int {
 	if err1 != nil {
 		if strings.Contains(err1.Error(), "no such file or directory") {
 			_HAAS506_GPIOInit(HAAS506_DO1, HAAS506_Out)
-			fmt.Println("HAAS506_GPIOAllInit DO1 Out Mode Ok")
+			log.Println("HAAS506_GPIOAllInit DO1 Out Mode Ok")
 		}
 	}
 	if err2 != nil {
 		if strings.Contains(err2.Error(), "no such file or directory") {
 			_HAAS506_GPIOInit(HAAS506_DO2, HAAS506_Out)
-			fmt.Println("HAAS506_GPIOAllInit DO2 Out Mode Ok")
+			log.Println("HAAS506_GPIOAllInit DO2 Out Mode Ok")
 		}
 	}
 	if err3 != nil {
 		if strings.Contains(err2.Error(), "no such file or directory") {
 			_HAAS506_GPIOInit(HAAS506_DO3, HAAS506_Out)
-			fmt.Println("HAAS506_GPIOAllInit DO2 Out Mode Ok")
+			log.Println("HAAS506_GPIOAllInit DO2 Out Mode Ok")
 		}
 	}
 	if err4 != nil {
 		if strings.Contains(err2.Error(), "no such file or directory") {
 			_HAAS506_GPIOInit(HAAS506_DO4, HAAS506_Out)
-			fmt.Println("HAAS506_GPIOAllInit DO2 Out Mode Ok")
+			log.Println("HAAS506_GPIOAllInit DO2 Out Mode Ok")
 		}
 	}
 	return 1
