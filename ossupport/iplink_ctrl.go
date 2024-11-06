@@ -29,25 +29,10 @@ import (
 func IpLinkSetIface(interfaceName, status string) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
-	cmd := exec.Command("ip", "link", "set", interfaceName, status)
+	cmd := exec.CommandContext(ctx, "ip", "link", "set", interfaceName, status)
 	log.Println("IpLinkSetIface = ", cmd.String())
 	if err := cmd.Run(); err != nil {
 		return fmt.Errorf("failed to start network interface %s: %w", interfaceName, err)
-	}
-	done := make(chan error, 1)
-	go func() {
-		done <- cmd.Wait()
-	}()
-	select {
-	case <-ctx.Done():
-		if err := cmd.Process.Kill(); err != nil {
-			log.Printf("failed to kill ifconfig process for interface %s: %v", interfaceName, err)
-		}
-		return fmt.Errorf("ifconfig command for interface %s timed out", interfaceName)
-	case err := <-done:
-		if err != nil {
-			return fmt.Errorf("ifconfig command for interface %s failed: %w", interfaceName, err)
-		}
 	}
 	return nil
 }
