@@ -2,6 +2,7 @@ package utils
 
 import (
 	"archive/zip"
+	"context"
 	"fmt"
 	"io"
 	"os"
@@ -9,6 +10,7 @@ import (
 	"path/filepath"
 	"runtime"
 	"strings"
+	"time"
 
 	"github.com/hootrhino/rhilex/glogger"
 )
@@ -185,7 +187,9 @@ func GetOSDistribution() (string, error) {
 	// Linux 有很多发行版, 目前特别要识别一下Openwrt
 	if runtime.GOOS == "linux" {
 		if PathExists("/etc/os-release") {
-			cmd := exec.Command("cat", "/etc/os-release")
+			ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+			defer cancel()
+			cmd := exec.CommandContext(ctx, "cat", "/etc/os-release")
 			output, err := cmd.Output()
 			if err != nil {
 				return runtime.GOOS, err
@@ -228,7 +232,9 @@ func PathExists(path string) bool {
  */
 func GetUbuntuVersion() (string, error) {
 	// lsb_release -ds -> Ubuntu 22.04.1 LTS
-	cmd := exec.Command("lsb_release", "-ds")
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	cmd := exec.CommandContext(ctx, "lsb_release", "-ds")
 	output, err := cmd.Output()
 	if err != nil {
 		return "", err

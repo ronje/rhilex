@@ -16,10 +16,12 @@
 package ossupport
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"os"
 	"os/exec"
+	"time"
 )
 
 const __WINDOWS_SERVICENAME = "RhilexService"
@@ -31,7 +33,9 @@ func InstallService() {
 		log.Fatalf("Error getting executable path: %v", err)
 	}
 
-	cmd := exec.Command("sc.exe", "create", __WINDOWS_SERVICENAME, "binPath=", exePath)
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	cmd := exec.CommandContext(ctx, "sc.exe", "create", __WINDOWS_SERVICENAME, "binPath=", exePath)
 	if err := cmd.Run(); err != nil {
 		log.Fatalf("Error installing service: %v", err)
 	}
@@ -41,7 +45,9 @@ func InstallService() {
 
 // UninstallService 卸载服务
 func UninstallService() {
-	cmd := exec.Command("sc.exe", "delete", __WINDOWS_SERVICENAME)
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	cmd := exec.CommandContext(ctx, "sc.exe", "delete", __WINDOWS_SERVICENAME)
 	if err := cmd.Run(); err != nil {
 		log.Fatalf("Error uninstalling service: %v", err)
 	}
@@ -51,7 +57,9 @@ func UninstallService() {
 
 // CheckStatus 查询服务状态
 func CheckStatus() {
-	cmd := exec.Command("sc.exe", "query", __WINDOWS_SERVICENAME)
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	cmd := exec.CommandContext(ctx, "sc.exe", "query", __WINDOWS_SERVICENAME)
 	output, err := cmd.CombinedOutput()
 	if err != nil {
 		log.Fatalf("Error checking service status: %v", err)
@@ -62,15 +70,23 @@ func CheckStatus() {
 
 // RestartService 重启服务
 func RestartService() {
-	stopCmd := exec.Command("sc.exe", "stop", __WINDOWS_SERVICENAME)
-	if err := stopCmd.Run(); err != nil {
-		log.Fatalf("Error stopping service: %v", err)
-	}
+	{
+		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+		stopCmd := exec.CommandContext(ctx, "sc.exe", "stop", __WINDOWS_SERVICENAME)
+		if err := stopCmd.Run(); err != nil {
+			log.Fatalf("Error stopping service: %v", err)
+		}
 
-	startCmd := exec.Command("sc.exe", "start", __WINDOWS_SERVICENAME)
-	if err := startCmd.Run(); err != nil {
-		log.Fatalf("Error starting service: %v", err)
 	}
+	{
+		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+		startCmd := exec.CommandContext(ctx, "sc.exe", "start", __WINDOWS_SERVICENAME)
+		if err := startCmd.Run(); err != nil {
+			log.Fatalf("Error starting service: %v", err)
+		}
 
+	}
 	log.Println("Service restarted.")
 }

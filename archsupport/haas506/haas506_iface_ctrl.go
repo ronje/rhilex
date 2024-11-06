@@ -16,9 +16,11 @@
 package haas506
 
 import (
+	"context"
 	"fmt"
 	"os/exec"
 	"strings"
+	"time"
 )
 
 /*
@@ -28,7 +30,9 @@ import (
  */
 func GetNetIfaces() ([]string, error) {
 	// 执行命令
-	cmd := exec.Command("sh", "-c", "ip -o link show | awk -F': ' '{print $2}'")
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	cmd := exec.CommandContext(ctx, "sh", "-c", "ip -o link show | awk -F': ' '{print $2}'")
 	output, err := cmd.CombinedOutput()
 	if err != nil {
 		return nil, fmt.Errorf("error:%s", string(output))

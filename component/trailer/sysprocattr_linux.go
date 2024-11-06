@@ -1,10 +1,12 @@
 package trailer
 
 import (
+	"context"
 	"fmt"
 	"os/exec"
 	"strings"
 	"syscall"
+	"time"
 )
 
 func NewSysProcAttr() *syscall.SysProcAttr {
@@ -41,7 +43,9 @@ func RunningProcessDetail(pid int) (ProcessInfo, error) {
 	var processInfo ProcessInfo
 
 	// 构建命令
-	cmd := exec.Command("ps", "-p", fmt.Sprint(pid), "-o", "%cpu,%mem,vsz,rss,tty,stat,start,time,command")
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	cmd := exec.CommandContext(ctx, "ps", "-p", fmt.Sprint(pid), "-o", "%cpu,%mem,vsz,rss,tty,stat,start,time,command")
 
 	// 执行命令并捕获输出
 	output, err := cmd.CombinedOutput()

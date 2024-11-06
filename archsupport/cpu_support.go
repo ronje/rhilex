@@ -17,9 +17,11 @@ package archsupport
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"os/exec"
 	"strings"
+	"time"
 )
 
 /*
@@ -28,7 +30,9 @@ import (
 *
  */
 func GetWindowsCPUName() (string, error) {
-	cmd := exec.Command("wmic", "cpu", "get", "name")
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	cmd := exec.CommandContext(ctx, "wmic", "cpu", "get", "name")
 	var out bytes.Buffer
 	cmd.Stdout = &out
 	err := cmd.Run()
@@ -50,7 +54,9 @@ func GetWindowsCPUName() (string, error) {
 *
  */
 func GetLinuxCPUName() (string, error) {
-	cmd := exec.Command("bash", "-c", "lscpu | grep 'Model name'")
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	cmd := exec.CommandContext(ctx, "bash", "-c", "lscpu | grep 'Model name'")
 	var out bytes.Buffer
 	cmd.Stdout = &out
 	err := cmd.Run()

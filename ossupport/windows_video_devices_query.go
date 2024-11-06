@@ -16,9 +16,11 @@
 package ossupport
 
 import (
+	"context"
 	"fmt"
 	"os/exec"
 	"strings"
+	"time"
 )
 
 /*
@@ -41,7 +43,9 @@ DESKTOP-EMD3M3C,USB\VID_1908&amp;PID_2311&amp;MI_00\6&amp;1666943&amp;0&amp;0000
 *
 */
 func GetWindowsVideos() ([]WindowsCameraDevice, error) {
-	cmd := exec.Command("powershell.exe", "-Command",
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	cmd := exec.CommandContext(ctx, "powershell.exe", "-Command",
 		`WMIC Path Win32_PnPEntity WHERE "Caption LIKE '%CAMERA%'" GET DeviceID,Name /FORMAT:CSV`)
 	output, err := cmd.Output()
 	if err != nil {

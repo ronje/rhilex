@@ -17,11 +17,13 @@ package archsupport
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"os/exec"
 	"strconv"
 	"strings"
+	"time"
 )
 
 // nvidia-smi --query-gpu="index,name,temperature.gpu,memory.total,memory.used,memory.free,utilization.gpu,utilization.memory" --format="csv,noheader,nounits"
@@ -48,7 +50,9 @@ func (O GPUInfo) String() string {
 // GetGpuInfoWithNvidiaSmi 执行nvidia-smi命令并返回GPU信息
 func GetGpuInfoWithNvidiaSmi() ([]GPUInfo, error) {
 	// 创建一个*exec.Cmd对象，并设置nvidia-smi命令
-	cmd := exec.Command("nvidia-smi",
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	cmd := exec.CommandContext(ctx, "nvidia-smi",
 		"--query-gpu=index,name,temperature.gpu,memory.total,memory.used,memory.free,utilization.gpu,utilization.memory",
 		"--format=csv,noheader,nounits")
 

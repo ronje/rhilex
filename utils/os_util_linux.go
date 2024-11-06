@@ -1,11 +1,13 @@
 package utils
 
 import (
+	"context"
 	"gopkg.in/ini.v1"
 	"os"
 	"os/exec"
-	"strings"
 	"runtime"
+	"strings"
+	"time"
 )
 
 /*
@@ -62,7 +64,9 @@ func HostNameI() ([]string, error) {
 	dist, _ := GetOSDistribution()
 	if dist == "openwrt" {
 		line := `ip addr show | awk '/inet / {print $2}' | awk 'BEGIN{FS="/"} {split($0, arr, "/"); print arr[1]}'`
-		cmd := exec.Command("sh", "-c", line)
+		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+		cmd := exec.CommandContext(ctx, "sh", "-c", line)
 		output, err := cmd.Output()
 		if err != nil {
 			return []string{}, err
@@ -76,7 +80,9 @@ func HostNameI() ([]string, error) {
 		}
 		return ips, nil
 	}
-	cmd := exec.Command("hostname", "-I")
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	cmd := exec.CommandContext(ctx, "hostname", "-I")
 	data, err1 := cmd.Output()
 	if err1 != nil {
 		return []string{}, err1

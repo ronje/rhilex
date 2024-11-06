@@ -110,7 +110,9 @@ iw dev %s scan | awk '
   END { for (s in seen) print s "," seen[s]}
 ' | sort
 `
-	cmd := exec.Command("sh", "-c", fmt.Sprintf(shell, WFace))
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	cmd := exec.CommandContext(ctx, "sh", "-c", fmt.Sprintf(shell, WFace))
 	output, err := cmd.Output()
 	if err != nil {
 		return nil, fmt.Errorf("Error executing nmcli: %s", err.Error()+":"+string(output))

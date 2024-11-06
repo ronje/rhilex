@@ -16,27 +16,48 @@
 package haas506
 
 import (
+	"context"
 	"fmt"
+	"log"
+	"time"
 
+	"github.com/hootrhino/rhilex/ossupport"
 	"github.com/sirupsen/logrus"
 	"github.com/vishvananda/netlink"
 )
 
+func InitNetworkIfaceWatcher() {
+	NetworkIfaceWatcher := NewNetworkIfaceWatcher(logrus.New())
+	NetworkIfaceWatcher.SetCallback(func(e IfaceEvent) {
+		if e.Status == "up" {
+			up, err := ossupport.IsInterfaceUp(e.Iface)
+			if err != nil {
+				log.Println("Get Interface State error:", err)
+				return
+			}
+			if up {
+				log.Println("Interface change state, try to DHCP:", e.String())
+				if err1 := ossupport.AllocateIPAddressUsingUdhcpc(e.Iface); err1 != nil {
+					log.Println("DHCP error:", e.Iface, err1)
+				}
+			}
+		}
+	})
+	go NetworkIfaceWatcher.StartWatch()
+	time.Sleep(1 * time.Second)
+	InitDevTree()
+}
+
 type IfaceEvent struct {
 	Iface        string
-	Status       string
+	Status       string //"up"|"down"
 	HardwareAddr string
 }
 
 // String returns a formatted string representation of the NetlinkEvent.
 func (e IfaceEvent) String() string {
 
-	return fmt.Sprintf(`
-Netlink Event:
-  Interface:    %s
-  Status:       %s
-  HardwareAddr: %s
-`,
+	return fmt.Sprintf(`Netlink Event == Interface: %s Status: %s HardwareAddr: %s`,
 		e.Iface,
 		e.Status,
 		e.HardwareAddr,
@@ -62,6 +83,8 @@ func (w *NetworkIfaceWatcher) StartWatch() error {
 	}
 	for {
 		select {
+		case <-context.Background().Done():
+			return nil
 		case <-w.done:
 			return nil
 		case state := <-ch:

@@ -26,7 +26,7 @@ import (
 func init() {
 	env := os.Getenv("ARCHSUPPORT")
 	if env == "HAAS506LD1" {
-		InitDevTree()
+		InitNetworkIfaceWatcher()
 	}
 }
 func GetSysDevTree() archsupport.DeviceTree {
@@ -52,45 +52,49 @@ func GetSysDevTree() archsupport.DeviceTree {
 // 初始化一些硬件配置
 func InitDevTree() {
 	{
-		log.Println("Ip Link Set Iface eth0 up")
+		log.Println("[HAAS506_Init_Network_Iface] Init Interface")
+		log.Println("[HAAS506_Init_Network_Iface] Ip Link Set Iface eth0 up")
 		err := ossupport.IpLinkSetIface("eth0", "up")
 		if err != nil {
-			log.Println("Ip Link Set Iface eth0 up error:", err)
+			log.Println("[HAAS506_Init_Network_Iface] Ip Link Set Iface eth0 up error:", err)
 		}
 	}
 	{
-		log.Println("Ip Link Set Iface eth1 up")
+		log.Println("[HAAS506_Init_Network_Iface] Ip Link Set Iface eth1 up")
 		err := ossupport.IpLinkSetIface("eth1", "up")
 		if err != nil {
-			log.Println("Ip Link Set Iface eth1 up error:", err)
+			log.Println("[HAAS506_Init_Network_Iface] Ip Link Set Iface eth1 up error:", err)
 		}
 	}
 	{
-		log.Println("Ip Link Set Iface eth2 up")
+		log.Println("[HAAS506_Init_Network_Iface] Ip Link Set Iface eth2 up")
 		err := ossupport.IpLinkSetIface("eth2", "up")
 		if err != nil {
-			log.Println("Ip Link Set Iface eth2 up error:", err)
+			log.Println("[HAAS506_Init_Network_Iface] Ip Link Set Iface eth2 up error:", err)
 		}
 	}
 	{
 		log.Println("Ip Link Set Iface wlan0 up")
 		err := ossupport.IpLinkSetIface("wlan0", "up")
 		if err != nil {
-			log.Println("Ip Link Set Iface wlan0 up error:", err)
+			log.Println("[HAAS506_Init_Network_Iface] Ip Link Set Iface wlan0 up error:", err)
+		}
+	}
+
+	{
+		log.Println("[HAAS506_Init_Network_Iface] Ip Link Set Iface can1 up")
+		err := ossupport.IpLinkSetCanIface("can1", "up")
+		if err != nil {
+			log.Println("[HAAS506_Init_Network_Iface] Ip Link Set Iface can1 up error:", err)
 		}
 	}
 	{
-		log.Println("Ip Link Set Iface can1 up")
-		err := ossupport.IpLinkSetIface("can1", "up")
+		log.Println("[HAAS506_Init_Network_Iface] Ip Link Set Iface can2 up")
+		err := ossupport.IpLinkSetCanIface("can2", "up")
 		if err != nil {
-			log.Println("Ip Link Set Iface can1 up error:", err)
+			log.Println("[HAAS506_Init_Network_Iface] Ip Link Set Iface can2 up error:", err)
 		}
 	}
-	{
-		log.Println("Ip Link Set Iface can2 up")
-		err := ossupport.IpLinkSetIface("can2", "up")
-		if err != nil {
-			log.Println("Ip Link Set Iface can2 up error:", err)
-		}
-	}
+	log.Println("[HAAS506_Init_Network_Iface] Init Interface ok.")
+
 }

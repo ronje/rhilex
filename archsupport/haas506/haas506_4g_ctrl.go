@@ -25,6 +25,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/hootrhino/rhilex/ossupport"
 	"github.com/hootrhino/rhilex/typex"
 )
 
@@ -100,7 +101,7 @@ func Get4GBaseInfo() ModuleInfo {
 	if err3 != nil {
 		return info
 	}
-	Up, _ := isInterfaceUp("eth0")
+	Up, _ := ossupport.IsInterfaceUp("eth0")
 	info.Up = Up
 	info.IMEL = imel
 	info.COPS = cm

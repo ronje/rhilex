@@ -16,12 +16,15 @@
 package ossupport
 
 import (
+	"context"
 	"fmt"
+	"log"
 	"os"
 	"os/exec"
 	"strings"
 	"time"
 
+	"github.com/beevik/ntp"
 	"golang.org/x/sys/unix"
 )
 
@@ -60,7 +63,9 @@ func isValidTimeFormat(input string) bool {
 *
  */
 func GetSystemTime() (string, error) {
-	cmd := exec.Command("date", "+%Y-%m-%d %H:%M:%S")
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	cmd := exec.CommandContext(ctx, "date", "+%Y-%m-%d %H:%M:%S")
 	output, err := cmd.CombinedOutput()
 	if err != nil {
 		return "", err
@@ -79,7 +84,9 @@ func SetSystemTime(newTime string) error {
 		return fmt.Errorf("Invalid time format:%s, must be 'YYYY-MM-DD HH:MM:SS'", newTime)
 	}
 	// newTime := "2023-08-10 15:30:00"
-	cmd := exec.Command("date", "-s", newTime)
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	cmd := exec.CommandContext(ctx, "date", "-s", newTime)
 	_, err := cmd.CombinedOutput()
 	if err != nil {
 		return err
@@ -92,18 +99,66 @@ func SetSystemTime(newTime string) error {
 * v: true|false
 *
  */
+
+// setNtp 尝试从提供的NTP服务器列表中获取时间，并设置本地系统时间。
+// 如果成功获取时间并设置系统时间，则返回nil；否则返回错误。
 func setNtp(v bool) error {
-	cmd := exec.Command("timedatectl", "set-ntp", func(b bool) string {
-		if b {
-			return "true"
-		}
-		return "false"
-	}(v))
-	bytes, err := cmd.CombinedOutput()
-	if err != nil {
-		return fmt.Errorf(err.Error() + ":" + string(bytes))
+	if !v {
+		return nil
 	}
+	ntpServers := []string{
+		"ntp.sjtu.edu.cn",
+		"ntp.neu.edu.cn",
+		"ntp.bupt.edu.cn",
+		"ntp.shu.edu.cn",
+		"ntp.tuna.tsinghua.edu.cn",
+		"ntp1.aliyun.com",
+		"ntp2.aliyun.com",
+		"ntp3.aliyun.com",
+		"ntp4.aliyun.com",
+		"ntp5.aliyun.com",
+		"ntp6.aliyun.com",
+		"ntp7.aliyun.com",
+		"0.cn.pool.ntp.org",
+		"1.cn.pool.ntp.org",
+		"2.cn.pool.ntp.org",
+		"3.cn.pool.ntp.org",
+		"time1.cloud.tencent.com",
+		"time2.cloud.tencent.com",
+		"time3.cloud.tencent.com",
+		"time4.cloud.tencent.com",
+		"time5.cloud.tencent.com",
+	}
+	var ntpTime time.Time
+	var err error
+	for _, server := range ntpServers {
+		ntpTime, err = queryNTPTime(server)
+		if err == nil {
+			break
+		}
+	}
+
+	if err != nil {
+		return fmt.Errorf("all NTP servers failed to respond")
+	}
+	ntpTimeStr := ntpTime.Format("2006-01-02 15:04:05")
+	cmd := exec.Command("date", "-s", ntpTimeStr)
+	output, err := cmd.CombinedOutput()
+	if err != nil {
+		return fmt.Errorf("failed to set system time: %v", err)
+	}
+	log.Printf("System time set to: %s\n", ntpTimeStr)
+	log.Printf("Command output: %s\n", output)
 	return nil
+}
+
+// queryNTPTime 尝试从指定的NTP服务器获取时间
+func queryNTPTime(server string) (time.Time, error) {
+	response, err := ntp.Query(server)
+	if err != nil {
+		return time.Time{}, err
+	}
+	return response.Time, nil
 }
 
 /*
@@ -137,7 +192,9 @@ func GetLinuxTimeZone() (string, error) {
 // SetTimeZone 设置系统时区
 // timezone := "Asia/Shanghai"
 func SetTimeZone(timezone string) error {
-	cmd := exec.Command("timedatectl", "set-timezone", timezone)
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	cmd := exec.CommandContext(ctx, "timedatectl", "set-timezone", timezone)
 	output, err := cmd.CombinedOutput()
 	if err != nil {
 		return fmt.Errorf(err.Error() + ":" + string(output))

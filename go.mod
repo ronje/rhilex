@@ -7,6 +7,7 @@ toolchain go1.22.2
 require (
 	github.com/GreptimeTeam/greptimedb-ingester-go v0.5.3
 	github.com/adrianmo/go-nmea v1.10.0
+	github.com/beevik/ntp v1.4.3
 	github.com/chirpstack/chirpstack/api/go/v4 v4.9.0
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/eclipse/paho.mqtt.golang v1.5.0

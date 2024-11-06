@@ -16,11 +16,13 @@
 package rhilexg1
 
 import (
+	"context"
 	"fmt"
 	"html/template"
 	"net"
 	"os"
 	"os/exec"
+	"time"
 )
 
 // getEthList returns a list of Ethernet (wired) interfaces.
@@ -98,7 +100,9 @@ func writeInterfaceConfig(config NetworkInterfaceConfig, filePath string) error 
 	return tmpl.Execute(file, config)
 }
 func restartNetwork() error {
-	cmd := exec.Command("sh", "-c", `service networking restart`)
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	cmd := exec.CommandContext(ctx, "sh", "-c", `service networking restart`)
 	output, err := cmd.CombinedOutput()
 	if err != nil {
 		return fmt.Errorf(err.Error() + ":" + string(output))

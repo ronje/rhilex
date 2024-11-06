@@ -1,10 +1,12 @@
 package trailer
 
 import (
+	"context"
 	"fmt"
 	"os/exec"
 	"strings"
 	"syscall"
+	"time"
 )
 
 func NewSysProcAttr() *syscall.SysProcAttr {
@@ -40,7 +42,9 @@ type ProcessInfo struct {
 
 func RunningProcessDetail(pid int) (ProcessInfo, error) {
 	var processInfo ProcessInfo
-	cmd := exec.Command("tasklist.exe", "/fi", fmt.Sprintf("PID eq %d", pid), "/fo", "csv", "/nh")
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	cmd := exec.CommandContext(ctx, "tasklist.exe", "/fi", fmt.Sprintf("PID eq %d", pid), "/fo", "csv", "/nh")
 	fmt.Println(cmd.String())
 	// 这里给我造成了困惑, 在windows下一直有个“Error: exec: already started”异常
 	// 经过万分艰难才发现原来windows下Command就具备了执行文件的作用，而且貌似这个 tasklist 还会操作stdout

@@ -15,32 +15,6 @@
 
 package haas506
 
-import (
-	"bytes"
-	"os/exec"
-	"strings"
-)
+func InitNetworkIfaceWatcher() {
 
-// isInterfaceUp checks if a network interface is up.
-// It returns true if the interface is up, false otherwise, and an error if the check fails.
-func isInterfaceUp(interfaceName string) (bool, error) {
-	// Execute the 'ip link show' command for the specified interface
-	cmd := exec.Command("ip", "link", "show", interfaceName)
-	var out bytes.Buffer
-	cmd.Stdout = &out
-	err := cmd.Run()
-	if err != nil {
-		return false, err
-	}
-
-	// Parse the output to determine if the interface is up
-	output := out.String()
-	lines := strings.Split(output, "\n")
-	for _, line := range lines {
-		if strings.Contains(line, "state UP") {
-			return true, nil
-		}
-	}
-
-	return false, nil
 }

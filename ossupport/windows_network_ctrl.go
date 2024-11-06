@@ -1,13 +1,17 @@
 package ossupport
 
 import (
+	"context"
 	"os/exec"
 	"strings"
+	"time"
 )
 
 // GetWindowsMACAddress 获取网卡MAC
 func GetWindowsFirstMacAddress() (string, error) {
-	cmd := exec.Command("powershell.exe", "-Command",
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	cmd := exec.CommandContext(ctx, "powershell.exe", "-Command",
 		`wmic nicconfig where "Index=1" get MACAddress`)
 	output, err := cmd.Output()
 	if err != nil {
