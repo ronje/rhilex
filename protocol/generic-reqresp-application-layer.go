@@ -23,11 +23,11 @@ import (
 type GenericAppLayer struct {
 	errTxCount int32 // 错误包计数器
 	errRxCount int32 // 错误包计数器
-	datalink   *DataLinkLayer
+	datalink   *DataLayer
 }
 
 func NewGenericAppLayerAppLayer(config TransporterConfig) *GenericAppLayer {
-	return &GenericAppLayer{errTxCount: 0, errRxCount: 0, datalink: NewDataLinkLayer(config)}
+	return &GenericAppLayer{errTxCount: 0, errRxCount: 0, datalink: NewDataLayer(config)}
 }
 
 func (app *GenericAppLayer) Request(appframe AppLayerFrame) (AppLayerFrame, error) {

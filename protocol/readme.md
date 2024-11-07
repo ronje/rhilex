@@ -1,136 +1,108 @@
-# 自定义交互协议指南
-```
-+-------------------------+
-|      应用层              |
-+-------------------------+
-|      传输层              |
-|  (TCP、 UDP、Serial等)   |
-+-------------------------+
-|      数据链路层          |
-+-------------------------+
-|      物理层              |
-+-------------------------+
+### 串口协议指南
 
-```
-## 1. 概述
+本协议旨在通过串口通信传输数据。为了确保数据包的正确传输和接收，我们设计了一种带有包头、数据部分、校验和边界符的协议结构。此协议适用于数据长度不定且需要校验和边界识别的场景。
 
-本指南提供了一个自定义交互协议的结构和实现，适用于各种数据传输场景。该协议由 `Header` 和 `AppLayerFrame` 两部分组成，并包含 CRC 校验功能以确保数据传输的完整性。
+#### 1. 数据包结构
 
-## 2. 数据结构
+每个数据包由以下几部分组成：
 
-### 2.1 Header
+1. **边界符（Delimiter）**：用于标识数据包的开始和结束。边界符是一个独特的字节序列，能够清晰地划分数据包的边界。通常使用 `0xAA 0xBB` 或其他特定字节序列。
 
-`Header` 结构体用于描述数据的元信息，具体字段如下：
+2. **包头（Header）**：包含数据包的元信息，用于描述数据包的基本特征。
+   - `ID`（1字节）：包头标识符，通常用来标识包的类型或来源。
+   - `Type`（2字节）：包类型，表示数据包的处理方式或用途。
+   - `Length`（2字节）：数据部分的长度，指示数据字段的字节数。
 
-- **Type**: `[2]byte`
-  表示数据的类型，使用 2 字节表示。
+3. **数据（Data）**：实际传输的内容，长度由包头中的 `Length` 字段指定。
 
-- **Length**: `[2]byte`
-  表示有效载荷的长度，使用 2 字节表示。
+4. **CRC 校验（CRC）**：用于校验数据包的完整性。CRC校验字段用于在接收端验证数据是否完整且未被篡改。
 
-### 2.2 AppLayerFrame
+#### 2. 数据包格式
 
-`AppLayerFrame` 结构体用于封装完整的数据帧，具体字段如下：
+每个数据包的具体格式如下所示：
 
-- **Header**: `Header`
-  包含数据的头部信息。
+| 字段      | 长度  | 描述                                   |
+| --------- | ----- | -------------------------------------- |
+| Delimiter | 2字节 | 包的边界符，用于标识数据包的开始和结束 |
+| ID        | 1字节 | 包头标识符，标识数据包的来源或用途     |
+| Type      | 2字节 | 包类型，标识数据包的类型               |
+| Length    | 2字节 | 数据长度，指示数据字段的字节数         |
+| Data      | 可变  | 数据部分，长度由 `Length` 字段决定     |
+| CRC       | 4字节 | CRC 校验，用于验证数据的完整性         |
 
-- **Payload**: `[]byte`
-  表示实际的数据内容，长度可变。
+#### 3. 数据包解析流程
 
-## 3. CRC 校验码
+数据包的解析流程如下：
 
-在数据传输中，CRC（循环冗余校验）是一种常用的错误检测机制。本协议使用 CRC-8 校验码以确保数据的完整性。CRC 的计算方法在实现中提供，用户可以直接使用该方法进行数据校验。
+1. **读取边界符**：
+   - 在接收数据时，首先检查是否遇到预定的边界符（例如 `0xAA 0xBB`）。如果匹配到边界符，说明数据包开始。
 
-## 4. 使用场景
+2. **读取包头**：
+   - 包头部分包含包的元信息（ID、Type、Length），通过解析包头，接收端能够了解后续数据部分的长度及如何处理数据。
 
-本协议适用于各种需要数据传输的场景，例如：
+3. **读取数据部分**：
+   - 根据包头中的 `Length` 字段，读取指定长度的数据部分。
 
-- 网络通信
-- 文件传输
-- 设备间数据交互
+4. **校验数据完整性**：
+   - 使用 CRC 校验字段对数据进行校验。如果校验失败，则丢弃该数据包，等待重新同步。
 
-通过使用 `Header`，接收方可以快速了解接收到的数据类型及其长度，从而进行相应处理。
+5. **处理数据**：
+   - 根据包的类型 `Type` 进行相应的数据处理。如果数据包有效且校验通过，则继续进行处理。
 
-## 5. C语言实现示例
-```c
-#include <stdio.h>
-#include <stdint.h>
-#include <string.h>
+#### 4. 说明与注意事项
 
-#define HEADER_SIZE 4 // 2 bytes for Type + 2 bytes for Length
-#define PAYLOAD_MAX_SIZE 256 // Maximum payload size
+1. **边界符（Delimiter）**：
+   - 边界符用于标识数据包的边界，防止数据包之间的混淆。常见的边界符是两个字节的特定标识符（如 `0xAA 0xBB`）。
+   - 在实际应用中，接收方应该在每次读取数据时都检查边界符，并将其作为包的起始标识。
 
-// Header structure
-typedef struct {
-    uint8_t Type[2];
-    uint8_t Length[2];
-} Header;
+2. **包头（Header）**：
+   - 包头由 `ID`、`Type` 和 `Length` 三个字段组成，确保接收方能够根据包头中的信息正确解析数据部分。
+   - `ID` 用于标识数据包的来源或类型，`Type` 进一步说明数据包的具体用途，`Length` 用于指示数据部分的字节数。
 
-// AppLayerFrame structure
-typedef struct {
-    Header header;
-    uint8_t payload[PAYLOAD_MAX_SIZE];
-    uint8_t crc; // CRC-8 checksum
-} AppLayerFrame;
+3. **数据部分（Data）**：
+   - 数据部分的长度是由 `Length` 字段动态确定的，因此每个数据包的长度是可变的。接收方根据 `Length` 字段读取对应数量的字节数据。
 
-// Function to create an AppLayerFrame
-void createFrame(AppLayerFrame *frame, uint8_t type1, uint8_t type2, uint8_t *data, uint16_t length) {
-    frame->header.Type[0] = type1;
-    frame->header.Type[1] = type2;
-    frame->header.Length[0] = (length >> 8) & 0xFF; // High byte
-    frame->header.Length[1] = length & 0xFF;       // Low byte
-    memcpy(frame->payload, data, length);
-    frame->crc = crc8(frame); // Calculate CRC for the entire frame
-}
+4. **CRC 校验（CRC）**：
+   - CRC 校验是为了确保数据传输过程中数据的完整性。接收方计算接收到的数据的 CRC 校验值并与包中传输的 CRC 校验值进行比对。
+   - 如果 CRC 校验失败，则认为数据包无效，可以丢弃并重新接收数据。
 
-// Function to calculate CRC-8 checksum
-uint8_t crc8(const AppLayerFrame *frame) {
-    uint8_t crc = 0x00; // Initial value
-    for (size_t i = 0; i < HEADER_SIZE + (frame->header.Length[0] << 8 | frame->header.Length[1]); i++) {
-        uint8_t byte = ((uint8_t*)frame)[i]; // Access bytes of the frame
-        crc ^= byte; // XOR with the current byte
-        for (int j = 0; j < 8; j++) {
-            if (crc & 0x80) {
-                crc = (crc << 1) ^ 0x1D; // Polynomial for CRC-8
-            } else {
-                crc <<= 1;
-            }
-        }
-    }
-    return crc; // Final CRC value
-}
+#### 5. 协议流程示意图
 
-// Function to display the frame
-void displayFrame(const AppLayerFrame *frame) {
-    printf("Header Type: %02X %02X\n", frame->header.Type[0], frame->header.Type[1]);
-    printf("Payload Length: %d\n", (frame->header.Length[0] << 8) | frame->header.Length[1]);
-    printf("Payload: ");
-    for (int i = 0; i < (frame->header.Length[0] << 8 | frame->header.Length[1]); i++) {
-        printf("%02X ", frame->payload[i]);
-    }
-    printf("\n");
-    printf("CRC-8 Checksum: %02X\n", frame->crc);
-}
-
-int main() {
-    AppLayerFrame frame;
-    uint8_t data[] = {0xDE, 0xAD, 0xBE, 0xEF}; // Example payload
-
-    // Create a frame with type 0x01 and payload data
-    createFrame(&frame, 0x01, 0x02, data, sizeof(data));
-
-    // Display the constructed frame
-    displayFrame(&frame);
-
-    return 0;
-}
+```plaintext
++--------------------------------------+
+|             Delimiter               | <- 2字节，标识包的边界
++--------------------------------------+
+|                ID                   | <- 1字节，包标识符
++--------------------------------------+
+|               Type                   | <- 2字节，包类型
++--------------------------------------+
+|               Length                 | <- 2字节，数据长度
++--------------------------------------+
+|                Data                  | <- 可变字节，数据部分
++--------------------------------------+
+|                CRC                   | <- 4字节，CRC 校验
++--------------------------------------+
 ```
 
-### 说明
+#### 6. 数据包示例
 
-1. **Header 结构体**：定义数据头部信息。
-2. **AppLayerFrame 结构体**：包含头部、有效载荷和 CRC-8 校验码。
-3. **createFrame 函数**：在创建帧时计算并存储 CRC-8 校验码。
-4. **crc8 函数**：计算给定 `AppLayerFrame` 的 CRC-8 校验码，使用多项式 `0x1D`。
-5. **displayFrame 函数**：显示帧的信息，包括类型、有效载荷和 CRC 校验码。
+假设我们有一个数据包，它的包头和数据如下：
+
+- `Delimiter`: `0xAA 0xBB`
+- `ID`: `0x01`
+- `Type`: `0x02`
+- `Length`: `0x04` (表示数据部分为4字节)
+- `Data`: `0x10 0x20 0x30 0x40`
+- `CRC`: `0x12345678` (假设计算出的 CRC 校验值)
+
+则数据包的结构为：
+
+```plaintext
++------------+------------+------------+------------+------------+------------+
+| 0xAA 0xBB  |  0x01      | 0x02 0x00  | 0x04 0x00  | 0x10 0x20 0x30 0x40 | 0x12 0x34 0x56 0x78 |
++------------+------------+------------+------------+------------+------------+
+```
+
+#### 7. 总结
+
+该协议设计提供了一个可扩展的框架，适用于串口通信中可靠的数据传输。通过引入边界符、包头、数据长度、CRC 校验等机制，能够有效确保数据传输的完整性和正确性。接收方可以依据协议规则准确地解析数据，并通过 CRC 校验来检测是否存在传输错误。

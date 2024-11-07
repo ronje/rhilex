@@ -16,7 +16,6 @@
 package protocol
 
 import (
-	"bytes"
 	"encoding/binary"
 	"fmt"
 	"io"
@@ -47,31 +46,88 @@ func (transport *TransportLayer) Write(data []byte) error {
 }
 
 func (transport *TransportLayer) Read() ([]byte, error) {
-	if transport.config.ReadTimeout != 0 {
-		if err := transport.config.Port.SetReadDeadline(time.Now().Add(
-			transport.config.ReadTimeout * time.Millisecond)); err != nil {
-			return nil, err
+
+	maxPacketSize := uint16(512)
+	var buffer []byte
+	temp := make([]byte, 1)
+	errorBuffer := make([]byte, 0)
+	transport.config.Port.SetReadDeadline(time.Now().Add(transport.config.ReadTimeout * time.Millisecond))
+	for {
+		// 如果 errorBuffer 有数据，则先合并
+		if len(errorBuffer) > 0 {
+			buffer = append(buffer, errorBuffer...)
+			errorBuffer = errorBuffer[:0]
 		}
+
+		// 寻找包头同步
+		for {
+			_, err := transport.config.Port.Read(temp)
+			if err != nil {
+				if err == io.EOF {
+					return nil, fmt.Errorf("connection closed")
+				}
+				return nil, fmt.Errorf("read error: %w", err)
+			}
+
+			// 如果缓冲区为空且匹配包头的第一字节，继续读取
+			if len(buffer) == 0 && temp[0] == 0xAA { // 假设包头是 0xAA
+				buffer = append(buffer, temp[0])
+				continue
+			} else if len(buffer) == 1 && temp[0] == 0xBB { // 假设包头第二字节是 0xBB
+				buffer = append(buffer, temp[0])
+				break
+			} else {
+				// 丢弃不符合包头的数据
+				buffer = buffer[:0]
+			}
+		}
+
+		// 读取包头
+		header := Header{}
+		_, err := transport.config.Port.Read(header.Type[:])
+		if err != nil {
+			return nil, fmt.Errorf("failed to read packet type: %w", err)
+		}
+
+		_, err = transport.config.Port.Read(header.Length[:])
+		if err != nil {
+			return nil, fmt.Errorf("failed to read packet length: %w", err)
+		}
+
+		// 获取数据包长度
+		packetLength := binary.BigEndian.Uint16(header.Length[:])
+		if packetLength > maxPacketSize || packetLength == 0 {
+			// 如果包的长度不合法，丢弃当前包并恢复
+			fmt.Println("Error: Invalid packet length, resynchronizing.")
+			buffer = buffer[:0]
+			continue
+		}
+
+		// 读取数据内容
+		data := make([]byte, packetLength+4) // 包含 CRC 校验的长度
+		n, err := io.ReadFull(transport.config.Port, data)
+		if err != nil || n < int(packetLength+4) {
+			// 读取不完整的包，缓存错误数据
+			fmt.Println("Error: Incomplete packet received, buffering error data.")
+			errorBuffer = append(errorBuffer, header.Type[:]...)
+			errorBuffer = append(errorBuffer, header.Length[:]...)
+			errorBuffer = append(errorBuffer, data[:n]...)
+			continue
+		}
+
+		// 校验 CRC
+		receivedData := data[:packetLength]
+
+
+		// 如果没有错误，返回数据
+		buffer = append(buffer, header.Type[:]...)
+		buffer = append(buffer, header.Length[:]...)
+		buffer = append(buffer, receivedData...)
+		break
 	}
-	responsetHeader := Header{}
-	if err := binary.Read(transport.config.Port, binary.BigEndian,
-		&responsetHeader); err != nil {
-		return nil, err
-	}
-	responseLength := binary.BigEndian.Uint16(responsetHeader.Length[:])
-	response := make([]byte, responseLength)
-	if _, err := io.ReadFull(transport.config.Port, response); err != nil {
-		return nil, err
-	}
-	if err := transport.config.Port.SetReadDeadline(time.Time{}); err != nil {
-		return response, err
-	}
-	buffer := new(bytes.Buffer)
-	buffer.Write(responsetHeader.Type[:])
-	buffer.Write(responsetHeader.Length[:])
-	buffer.Write(response)
-	transport.config.Logger.Debug("TransportLayer.Read=", ByteDumpHexString(buffer.Bytes()))
-	return buffer.Bytes(), nil
+	transport.config.Port.SetReadDeadline(time.Time{})
+	transport.config.Logger.Debug("TransportLayer.Read=", ByteDumpHexString(buffer))
+	return buffer, nil
 }
 
 func (transport *TransportLayer) Status() error {
