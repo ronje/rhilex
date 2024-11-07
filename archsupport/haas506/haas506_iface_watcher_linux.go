@@ -29,6 +29,9 @@ import (
 func InitNetworkIfaceWatcher() {
 	NetworkIfaceWatcher := NewNetworkIfaceWatcher(logrus.New())
 	NetworkIfaceWatcher.SetCallback(func(e IfaceEvent) {
+		if e.Iface == "can1" || e.Iface == "can2" {
+			return
+		}
 		if e.Status == "up" {
 			up, err := ossupport.IsInterfaceUp(e.Iface)
 			if err != nil {

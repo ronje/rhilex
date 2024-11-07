@@ -13,12 +13,19 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-package engine
+package haas506
 
-/**
- * 全局配置,通常用来初始化硬件之类的，不要依赖golang的init函数，最好自己可控
- *
- */
-func init() {
+import "os"
 
+func Init_HAAS506LD1() error {
+	env := os.Getenv("ARCHSUPPORT")
+	if env == "HAAS506LD1" {
+		_HAAS506_AI_Init()
+		_HAAS506_DI_Init()
+		_HAAS506_DO_Init()
+		_HAAS506_LED_Init()
+		InitML307R4G(_ML307R_4G_PATH)
+		InitNetworkIfaceWatcher()
+	}
+	return nil
 }

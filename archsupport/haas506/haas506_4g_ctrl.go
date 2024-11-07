@@ -31,13 +31,6 @@ import (
 
 const _ML307R_4G_PATH = "/dev/ttyUSB2"
 
-func init() {
-	env := os.Getenv("ARCHSUPPORT")
-	if env == "EN6400" {
-		InitML307R4G(_ML307R_4G_PATH)
-	}
-}
-
 type ModuleInfo struct {
 	Up    bool
 	ICCID string

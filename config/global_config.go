@@ -29,10 +29,10 @@ var GlobalConfig typex.RhilexConfig
 
 // Init config, First to run!
 func InitGlobalConfig(path string) typex.RhilexConfig {
-	log.Println("Init config:", path)
+	log.Println("[RHILEX INIT] Init config:", path)
 	cfg, err := ini.ShadowLoad(path)
 	if err != nil {
-		log.Fatalf("Load config failed: %v Make sure your config path is valid", err)
+		log.Fatalf("[RHILEX INIT] Load config failed: %v Make sure your config path is valid", err)
 		os.Exit(1)
 	}
 	GlobalConfig = typex.RhilexConfig{
@@ -55,10 +55,10 @@ func InitGlobalConfig(path string) typex.RhilexConfig {
 		DataSchemaSecret:      []string{"rhilex-secret"},
 	}
 	if err := cfg.Section("app").MapTo(&GlobalConfig); err != nil {
-		log.Fatalf("Fail to map config file: %v", err)
+		log.Fatalf("[RHILEX INIT] Fail to map config file: %v", err)
 		os.Exit(1)
 	}
-	log.Println("rhilex config init successfully")
+	log.Println("[RHILEX INIT] RHILEX config init successfully")
 	return GlobalConfig
 }
 

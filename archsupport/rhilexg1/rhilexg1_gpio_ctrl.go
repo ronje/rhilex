@@ -66,13 +66,6 @@ const (
 	rhilexg1_In  string = "in"
 )
 
-func init() {
-	env := os.Getenv("ARCHSUPPORT")
-	if env == "RHILEXG1" {
-		_RHILEXG1_GPIOAllInit()
-	}
-}
-
 /*
 explain:init all gpio
 */

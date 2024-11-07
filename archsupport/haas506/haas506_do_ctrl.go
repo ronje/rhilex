@@ -40,13 +40,6 @@ const (
 	HAAS506_DO4 string = "50"
 )
 
-func init() {
-	env := os.Getenv("ARCHSUPPORT")
-	if env == "HAAS506LD1" {
-		_HAAS506_DO_Init()
-	}
-}
-
 func _HAAS506_DO_Init() int {
 	gpio47 := "/sys/class/gpio/gpio47/value"
 	gpio48 := "/sys/class/gpio/gpio48/value"

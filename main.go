@@ -49,6 +49,12 @@ func init() {
 		}
 	}()
 	env := os.Getenv("ARCHSUPPORT")
+	fmt.Println("** Current Product:", func() string {
+		if env == "" {
+			return "COMMON"
+		}
+		return env
+	}())
 	typex.DefaultVersionInfo.Product = archsupport.CheckVendor(env)
 	dist, err := utils.GetOSDistribution()
 	if err != nil {

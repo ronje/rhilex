@@ -18,6 +18,11 @@ package globalinit
 import (
 	"fmt"
 	"log"
+
+	"github.com/hootrhino/rhilex/archsupport/en6400"
+	"github.com/hootrhino/rhilex/archsupport/haas506"
+	"github.com/hootrhino/rhilex/archsupport/rhilexg1"
+	"github.com/hootrhino/rhilex/archsupport/rhilexpro1"
 )
 
 var __DefaultGlobalInitManager *GlobalInitManager
@@ -46,15 +51,43 @@ func (fm *GlobalInitManager) CallAllFunc() {
 	for _, fn := range fm.functions {
 		log.Println("Executing init function:", fn.Name)
 		if err := fn.Func(); err != nil {
-			panic(fmt.Sprintf("Executing init function:%s", fn.Name))
+			panic(fmt.Sprintf("Executing init function:%s, error:%s", fn.Name, err))
 		}
 	}
 }
 func InitGlobalInitManager() {
 	__DefaultGlobalInitManager = NewGlobalInitManager()
+	RegisterGlobalInit()
 	__DefaultGlobalInitManager.CallAllFunc()
 }
 
 func Register(fn InitFunc) {
+	if __DefaultGlobalInitManager == nil {
+		panic("Need Init GlobalInitManager")
+	}
 	__DefaultGlobalInitManager.Register(fn)
+}
+
+/**
+ * 注册全局初始化函数
+ *
+ */
+func RegisterGlobalInit() {
+	__DefaultGlobalInitManager.Register(InitFunc{
+		Name: "en6400",
+		Func: en6400.Init_EN6400,
+	})
+	__DefaultGlobalInitManager.Register(InitFunc{
+		Name: "haas506",
+		Func: haas506.Init_HAAS506LD1,
+	})
+	__DefaultGlobalInitManager.Register(InitFunc{
+		Name: "rhilexg1",
+		Func: rhilexg1.Init_RHILEXG1,
+	})
+	__DefaultGlobalInitManager.Register(InitFunc{
+		Name: "rhilexpro1",
+		Func: rhilexpro1.Init_RHILEXPRO1,
+	})
+
 }

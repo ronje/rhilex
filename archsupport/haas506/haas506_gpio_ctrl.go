@@ -22,16 +22,6 @@ import (
 	"os/exec"
 )
 
-func init() {
-	env := os.Getenv("ARCHSUPPORT")
-	if env == "HAAS506LD1" {
-		_HAAS506_AI_Init()
-		_HAAS506_DI_Init()
-		_HAAS506_DO_Init()
-		_HAAS506_LED_Init()
-	}
-}
-
 func _HAAS506_GPIOInit(Pin string, direction string) {
 	//gpio export
 	cmd := fmt.Sprintf("echo %s > /sys/class/gpio/export", Pin)

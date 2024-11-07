@@ -17,18 +17,11 @@ package haas506
 
 import (
 	"log"
-	"os"
 
 	"github.com/hootrhino/rhilex/archsupport"
 	"github.com/hootrhino/rhilex/ossupport"
 )
 
-func init() {
-	env := os.Getenv("ARCHSUPPORT")
-	if env == "HAAS506LD1" {
-		InitNetworkIfaceWatcher()
-	}
-}
 func GetSysDevTree() archsupport.DeviceTree {
 	return archsupport.DeviceTree{
 		Network: []archsupport.DeviceNode{
@@ -82,34 +75,53 @@ func InitDevTree() {
 	}
 
 	{
-		log.Println("[HAAS506_Init_CAN_Iface] Ip Link Set Iface can1")
-		err := ossupport.IpLinkSetCan("can1", "500000")
-		if err != nil {
-			log.Println("[HAAS506_Init_CAN_Iface] Ip Link Set Iface can1 error:", err)
+		{
+			log.Println("[HAAS506_Init_CAN_Iface] Ip Link Set Iface can1 down")
+			err := ossupport.IpLinkSetIface("can1", "down")
+			if err != nil {
+				log.Println("[HAAS506_Init_CAN_Iface] Ip Link Set Iface can1 down error:", err)
+			}
 		}
+		{
+			log.Println("[HAAS506_Init_CAN_Iface] Ip Link Set Iface can1")
+			err := ossupport.IpLinkSetCan("can1", "500000")
+			if err != nil {
+				log.Println("[HAAS506_Init_CAN_Iface] Ip Link Set Iface can1 error:", err)
+			}
 
-	}
-	{
-		log.Println("[HAAS506_Init_CAN_Iface] Ip Link Set Iface can1 up")
-		err := ossupport.IpLinkSetIface("can1", "up")
-		if err != nil {
-			log.Println("[HAAS506_Init_CAN_Iface] Ip Link Set Iface can1 up error:", err)
+		}
+		{
+			log.Println("[HAAS506_Init_CAN_Iface] Ip Link Set Iface can1 up")
+			err := ossupport.IpLinkSetIface("can1", "up")
+			if err != nil {
+				log.Println("[HAAS506_Init_CAN_Iface] Ip Link Set Iface can1 up error:", err)
+			}
 		}
 	}
 	{
-		log.Println("[HAAS506_Init_CAN_Iface] Ip Link Set Iface can2")
-		err := ossupport.IpLinkSetCan("can2", "500000")
-		if err != nil {
-			log.Println("[HAAS506_Init_CAN_Iface] Ip Link Set Iface can2 error:", err)
+		{
+			log.Println("[HAAS506_Init_CAN_Iface] Ip Link Set Iface can2 down")
+			err := ossupport.IpLinkSetIface("can2", "down")
+			if err != nil {
+				log.Println("[HAAS506_Init_CAN_Iface] Ip Link Set Iface can2 down error:", err)
+			}
+		}
+		{
+			log.Println("[HAAS506_Init_CAN_Iface] Ip Link Set Iface can2")
+			err := ossupport.IpLinkSetCan("can2", "500000")
+			if err != nil {
+				log.Println("[HAAS506_Init_CAN_Iface] Ip Link Set Iface can2 error:", err)
+			}
+		}
+		{
+			log.Println("[HAAS506_Init_CAN_Iface] Ip Link Set Iface can2 up")
+			err := ossupport.IpLinkSetIface("can2", "up")
+			if err != nil {
+				log.Println("[HAAS506_Init_CAN_Iface] Ip Link Set Iface can2 up error:", err)
+			}
 		}
 	}
-	{
-		log.Println("[HAAS506_Init_CAN_Iface] Ip Link Set Iface can2 up")
-		err := ossupport.IpLinkSetIface("can2", "up")
-		if err != nil {
-			log.Println("[HAAS506_Init_CAN_Iface] Ip Link Set Iface can2 up error:", err)
-		}
-	}
+
 	log.Println("[HAAS506_Init_Network_Iface] Init Interface ok.")
 
 }

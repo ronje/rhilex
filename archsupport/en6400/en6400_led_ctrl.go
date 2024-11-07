@@ -36,11 +36,12 @@ const (
 // 点亮LED:
 //     echo 0 >/sys/class/gpio/gpio231/value
 
-func init() {
+func Init_EN6400() error {
 	env := os.Getenv("ARCHSUPPORT")
 	if env == "EN6400" {
 		_EN6400_GPIOAllInit()
 	}
+	return nil
 }
 func _EN6400_GPIOAllInit() {
 	_EN6400_LedInit(__EN6400_GPIO231, "out")
