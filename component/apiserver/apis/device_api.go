@@ -310,7 +310,7 @@ func CreateDevice(c *gin.Context, ruleEngine typex.Rhilex) {
 		c.JSON(common.HTTP_OK, common.Error400(err))
 		return
 	}
-	if service.CheckNameDuplicate(form.Name) {
+	if service.CheckDeviceNameDuplicate(form.Name) {
 		c.JSON(common.HTTP_OK, common.Error("Device Name Duplicated"))
 		return
 	}

@@ -173,3 +173,50 @@ func LoadNewestDevice(uuid string, ruleEngine typex.Rhilex) error {
 	return nil
 
 }
+
+/*
+*
+* 云边协同器
+*
+ */
+var loadCecollaLocker = sync.Mutex{}
+
+// LoadNewestCecolla
+func LoadNewestCecolla(uuid string, ruleEngine typex.Rhilex) error {
+	loadCecollaLocker.Lock()
+	defer loadCecollaLocker.Unlock()
+	mCecolla, err := service.GetMCecollaWithUUID(uuid)
+	if err != nil {
+		return err
+	}
+	// 自动加载
+	// if !mCecolla.Enable {
+	// 	return nil
+	// }
+	config := map[string]interface{}{}
+	if err := json.Unmarshal([]byte(mCecolla.Config), &config); err != nil {
+		return err
+	}
+	// 所有的更新都先停止资源,然后再加载
+	old := ruleEngine.GetCecolla(uuid)
+	if old != nil {
+		old.Cecolla.Stop()
+	}
+	ruleEngine.RemoveCecolla(uuid) // 删除内存里面的
+	cecolla := typex.NewCecolla(typex.CecollaType(mCecolla.Type), mCecolla.Name,
+		mCecolla.Description, mCecolla.GetConfig())
+	// Important !!!!!!!!
+	cecolla.UUID = mCecolla.UUID // 本质上是配置和内存的数据映射起来
+	// 最新的配置
+	cecolla.Config = mCecolla.GetConfig()
+	// 参数传给 --> startCecolla()
+	ctx, cancelCTX := typex.NewCCTX()
+	err2 := ruleEngine.LoadCecollaWithCtx(cecolla, ctx, cancelCTX)
+	if err2 != nil {
+		glogger.GLogger.Error(err2)
+		// return err2
+	}
+	go StartCecollaSupervisor(ctx, cecolla, ruleEngine)
+	return nil
+
+}

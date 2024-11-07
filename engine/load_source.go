@@ -28,24 +28,6 @@ import (
 
 /*
 *
-* 加载用户资源
-*
- */
-func (e *RuleEngine) LoadUserInEnd(source typex.XSource, in *typex.InEnd) error {
-	return nil
-}
-
-/*
-*
-* 内建资源
-*
- */
-func (e *RuleEngine) LoadBuiltInEnd(in *typex.InEnd) error {
-	return nil
-}
-
-/*
-*
 * 加载输入资源
 *
  */

@@ -16,7 +16,6 @@ import (
 	"github.com/hootrhino/rhilex/component/apiserver/service"
 	"github.com/hootrhino/rhilex/component/applet"
 	"github.com/hootrhino/rhilex/component/interdb"
-	"github.com/hootrhino/rhilex/component/trailer"
 
 	"github.com/hootrhino/rhilex/glogger"
 	"github.com/hootrhino/rhilex/typex"
@@ -77,21 +76,6 @@ func initRhilex(engine typex.Rhilex) {
 		}
 
 	}
-	// 加载外挂
-	for _, mGoods := range service.AllGoods() {
-		newGoods := trailer.GoodsInfo{
-			UUID:        mGoods.UUID,
-			AutoStart:   mGoods.AutoStart,
-			LocalPath:   mGoods.LocalPath,
-			NetAddr:     mGoods.NetAddr,
-			Args:        mGoods.Args,
-			ExecuteType: mGoods.ExecuteType,
-			Description: mGoods.Description,
-		}
-		if err := trailer.StartProcess(newGoods); err != nil {
-			glogger.GLogger.Error("Goods load failed:", err)
-		}
-	}
 	//
 	// APP stack
 	//
@@ -127,7 +111,7 @@ func (hs *ApiServerPlugin) Init(config *ini.Section) error {
 		&model.MRule{},
 		&model.MUser{},
 		&model.MDevice{},
-		&model.MGoods{},
+		&model.MCecolla{},
 		&model.MApplet{},
 		&model.MGenericGroup{},
 		&model.MGenericGroupRelation{},

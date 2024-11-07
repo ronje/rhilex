@@ -67,18 +67,6 @@ func LoadAllDeviceType(e typex.Rhilex) {
 			NewDevice: device.NewLoraGateway,
 		},
 	)
-	DefaultDeviceTypeManager.Register(typex.TENCENT_IOTHUB_GATEWAY,
-		&typex.XConfig{
-			Engine:    e,
-			NewDevice: device.NewTencentIoTGateway,
-		},
-	)
-	DefaultDeviceTypeManager.Register(typex.ITHINGS_IOTHUB_GATEWAY,
-		&typex.XConfig{
-			Engine:    e,
-			NewDevice: device.NewIThingsGateway,
-		},
-	)
 	DefaultDeviceTypeManager.Register(typex.GENERIC_HTTP_DEVICE,
 		&typex.XConfig{
 			Engine:    e,

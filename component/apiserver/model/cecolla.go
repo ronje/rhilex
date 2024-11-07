@@ -15,18 +15,23 @@
 
 package model
 
-//
-// 外挂
-//
+import "encoding/json"
 
-type MGoods struct {
+// 设备元数据
+type MCecolla struct {
 	RhilexModel
 	UUID        string `gorm:"uniqueIndex"`
-	LocalPath   string `gorm:"not null"`
-	GoodsType   string `gorm:"not null"` // LOCAL, EXTERNAL
-	ExecuteType string `gorm:"not null"` // exe,elf,js,py....
-	AutoStart   *bool  `gorm:"not null"`
-	NetAddr     string `gorm:"not null"`
-	Args        string `gorm:"not null"`
-	Description string `gorm:"not null"`
+	Name        string `gorm:"not null"`
+	Type        string `gorm:"not null"`
+	Config      string
+	Description string
+}
+
+func (md MCecolla) GetConfig() map[string]interface{} {
+	result := make(map[string]interface{})
+	err := json.Unmarshal([]byte(md.Config), &result)
+	if err != nil {
+		return map[string]interface{}{}
+	}
+	return result
 }
