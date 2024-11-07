@@ -41,10 +41,10 @@ func IpLinkSetIface(interfaceName, status string) error {
 
 // Can
 // ip link set can1 type can bitrate 500000 //设置CAN1
-func IpLinkSetCanIface(interfaceName, status string) error {
+func IpLinkSetCan(interfaceName, bitrate string) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
-	cmd := exec.CommandContext(ctx, "ip", "link", "set", interfaceName, "type", "can", "bitrate", "500000")
+	cmd := exec.CommandContext(ctx, "ip", "link", "set", interfaceName, "type", "can", "bitrate", bitrate)
 	log.Println("IpLinkSetCanIface = ", cmd.String())
 	if err := cmd.Run(); err != nil {
 		return fmt.Errorf("failed to start network interface %s: %w", interfaceName, err)
