@@ -16,26 +16,24 @@
 package globalinit
 
 import (
+	"fmt"
 	"log"
-
-	"github.com/hootrhino/rhilex/typex"
 )
 
 var __DefaultGlobalInitManager *GlobalInitManager
 
 type InitFunc struct {
 	Name string
-	Func func()
+	Func func() error
 }
 
 // GlobalInitManager 用于管理注册的函数
 type GlobalInitManager struct {
-	r         typex.Rhilex
 	functions []InitFunc // 存储注册的函数
 }
 
-func NewGlobalInitManager(r typex.Rhilex) *GlobalInitManager {
-	return &GlobalInitManager{r: r, functions: []InitFunc{}}
+func NewGlobalInitManager() *GlobalInitManager {
+	return &GlobalInitManager{functions: []InitFunc{}}
 }
 
 // Register 函数用于注册一个新的函数
@@ -47,11 +45,14 @@ func (fm *GlobalInitManager) Register(fn InitFunc) {
 func (fm *GlobalInitManager) CallAllFunc() {
 	for _, fn := range fm.functions {
 		log.Println("Executing init function:", fn.Name)
-		fn.Func()
+		if err := fn.Func(); err != nil {
+			panic(fmt.Sprintf("Executing init function:%s", fn.Name))
+		}
 	}
 }
-func InitGlobalInitManager(r typex.Rhilex) {
-	__DefaultGlobalInitManager = NewGlobalInitManager(r)
+func InitGlobalInitManager() {
+	__DefaultGlobalInitManager = NewGlobalInitManager()
+	__DefaultGlobalInitManager.CallAllFunc()
 }
 
 func Register(fn InitFunc) {

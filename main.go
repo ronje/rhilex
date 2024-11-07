@@ -26,6 +26,7 @@ import (
 	"github.com/hootrhino/rhilex-common-misc/misc"
 	archsupport "github.com/hootrhino/rhilex/archsupport"
 	"github.com/hootrhino/rhilex/component/activation"
+	"github.com/hootrhino/rhilex/component/globalinit"
 	"github.com/hootrhino/rhilex/component/performance"
 	"github.com/hootrhino/rhilex/engine"
 	"github.com/hootrhino/rhilex/ossupport"
@@ -35,7 +36,7 @@ import (
 )
 
 func init() {
-
+	globalinit.InitGlobalInitManager()
 	go func() {
 		for {
 			select {
