@@ -31,6 +31,7 @@ import (
 	ini "gopkg.in/ini.v1"
 
 	apiServer "github.com/hootrhino/rhilex/component/apiserver"
+	"github.com/hootrhino/rhilex/component/globalinit"
 	"github.com/hootrhino/rhilex/component/performance"
 	"github.com/hootrhino/rhilex/component/rhilexmanager"
 	core "github.com/hootrhino/rhilex/config"
@@ -52,6 +53,7 @@ func RunRhilex(iniPath string) {
 		mainConfig.LogMaxAge,
 		mainConfig.LogCompress,
 	)
+	globalinit.InitGlobalInitManager()
 	glogger.StartNewRealTimeLogger(mainConfig.LogLevel)
 	performance.SetDebugMode(mainConfig.EnablePProf)
 	performance.SetGomaxProcs(mainConfig.GomaxProcs)

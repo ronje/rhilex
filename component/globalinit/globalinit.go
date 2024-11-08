@@ -17,7 +17,6 @@ package globalinit
 
 import (
 	"fmt"
-	"log"
 
 	"github.com/hootrhino/rhilex/archsupport/en6400"
 	"github.com/hootrhino/rhilex/archsupport/haas506"
@@ -49,7 +48,6 @@ func (fm *GlobalInitManager) Register(fn InitFunc) {
 // Start 执行所有已注册的函数
 func (fm *GlobalInitManager) CallAllFunc() {
 	for _, fn := range fm.functions {
-		log.Println("Executing init function:", fn.Name)
 		if err := fn.Func(); err != nil {
 			panic(fmt.Sprintf("Executing init function:%s, error:%s", fn.Name, err))
 		}
