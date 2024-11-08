@@ -33,9 +33,10 @@ type _SNMPCommonConfig struct {
 }
 
 type _GSNMPConfig struct {
-	SchemaId     string                   `json:"schemaId"`
-	CommonConfig _SNMPCommonConfig        `json:"commonConfig" validate:"required"`
-	SNMPConfig   common.GenericSnmpConfig `json:"snmpConfig" validate:"required"`
+	SchemaId      string                   `json:"schemaId"`
+	CommonConfig  _SNMPCommonConfig        `json:"commonConfig" validate:"required"`
+	SNMPConfig    common.GenericSnmpConfig `json:"snmpConfig" validate:"required"`
+	CecollaConfig common.CecollaConfig     `json:"cecollaConfig"`
 }
 
 type genericSnmpDevice struct {

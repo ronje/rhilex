@@ -50,9 +50,10 @@ type MBusConfig struct {
 }
 
 type MBusEn13433MasterGatewayMainConfig struct {
-	CommonConfig MBusEn13433MasterGatewayCommonConfig `json:"commonConfig" validate:"required"`
-	MBusConfig   MBusConfig                           `json:"MBusConfig"`
-	UartConfig   common.UartConfig                    `json:"uartConfig"`
+	CommonConfig  MBusEn13433MasterGatewayCommonConfig `json:"commonConfig" validate:"required"`
+	MBusConfig    MBusConfig                           `json:"MBusConfig"`
+	UartConfig    common.UartConfig                    `json:"uartConfig"`
+	CecollaConfig common.CecollaConfig                 `json:"cecollaConfig"`
 }
 
 /**

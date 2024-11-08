@@ -49,9 +49,10 @@ type CJT188_2004_MasterGatewayCommonConfig struct {
 }
 
 type CJT188_2004_MasterGatewayMainConfig struct {
-	CommonConfig CJT188_2004_MasterGatewayCommonConfig `json:"commonConfig" validate:"required"`
-	HostConfig   common.HostConfig                     `json:"hostConfig"`
-	UartConfig   common.UartConfig                     `json:"uartConfig"`
+	CommonConfig  CJT188_2004_MasterGatewayCommonConfig `json:"commonConfig" validate:"required"`
+	HostConfig    common.HostConfig                     `json:"hostConfig"`
+	UartConfig    common.UartConfig                     `json:"uartConfig"`
+	CecollaConfig common.CecollaConfig                  `json:"cecollaConfig"`
 }
 
 /**

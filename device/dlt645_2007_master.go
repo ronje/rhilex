@@ -48,9 +48,10 @@ type DLT645_2007_MasterGatewayCommonConfig struct {
 }
 
 type DLT645_2007_MasterGatewayMainConfig struct {
-	CommonConfig DLT645_2007_MasterGatewayCommonConfig `json:"commonConfig" validate:"required"`
-	HostConfig   common.HostConfig                     `json:"hostConfig"`
-	UartConfig   common.UartConfig                     `json:"uartConfig"`
+	CommonConfig  DLT645_2007_MasterGatewayCommonConfig `json:"commonConfig" validate:"required"`
+	HostConfig    common.HostConfig                     `json:"hostConfig"`
+	UartConfig    common.UartConfig                     `json:"uartConfig"`
+	CecollaConfig common.CecollaConfig                  `json:"cecollaConfig"`
 }
 
 /**

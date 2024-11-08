@@ -74,9 +74,10 @@ type ModbusMasterCommonConfig struct {
 	MaxRegNum      uint16 `json:"maxRegNum" validate:"required"`
 }
 type ModbusMasterConfig struct {
-	CommonConfig ModbusMasterCommonConfig `json:"commonConfig" validate:"required"`
-	HostConfig   common.HostConfig        `json:"hostConfig"`
-	UartConfig   common.UartConfig        `json:"uartConfig"`
+	CommonConfig  ModbusMasterCommonConfig `json:"commonConfig" validate:"required"`
+	HostConfig    common.HostConfig        `json:"hostConfig"`
+	UartConfig    common.UartConfig        `json:"uartConfig"`
+	CecollaConfig common.CecollaConfig     `json:"cecollaConfig"`
 }
 
 type ModbusMasterGroupedTag struct {

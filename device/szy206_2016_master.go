@@ -49,9 +49,10 @@ type SZY206_2016_MasterGatewayCommonConfig struct {
 }
 
 type SZY206_2016_MasterGatewayMainConfig struct {
-	CommonConfig SZY206_2016_MasterGatewayCommonConfig `json:"commonConfig" validate:"required"`
-	HostConfig   common.HostConfig                     `json:"hostConfig"`
-	UartConfig   common.UartConfig                     `json:"uartConfig"`
+	CommonConfig  SZY206_2016_MasterGatewayCommonConfig `json:"commonConfig" validate:"required"`
+	HostConfig    common.HostConfig                     `json:"hostConfig"`
+	UartConfig    common.UartConfig                     `json:"uartConfig"`
+	CecollaConfig common.CecollaConfig                  `json:"cecollaConfig"`
 }
 
 /**

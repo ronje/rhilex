@@ -39,9 +39,10 @@ type ModbusSlaverCommonConfig struct {
 	SlaverId     int16  `json:"slaverId" validate:"required"`
 }
 type ModbusSlaverConfig struct {
-	CommonConfig ModbusSlaverCommonConfig `json:"commonConfig" validate:"required"`
-	HostConfig   common.HostConfig        `json:"hostConfig"`
-	UartConfig   common.UartConfig        `json:"uartConfig"`
+	CommonConfig  ModbusSlaverCommonConfig `json:"commonConfig" validate:"required"`
+	HostConfig    common.HostConfig        `json:"hostConfig"`
+	UartConfig    common.UartConfig        `json:"uartConfig"`
+	CecollaConfig common.CecollaConfig     `json:"cecollaConfig"`
 }
 
 type ModbusSlaver struct {

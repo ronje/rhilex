@@ -57,8 +57,9 @@ type S1200Config struct {
 	Slot  int    `json:"slot" validate:"required"`  // 1
 }
 type S1200MainConfig struct {
-	CommonConfig S1200CommonConfig `json:"commonConfig" validate:"required"` // 通用配置
-	S1200Config  S1200Config       `json:"s1200Config" validate:"required"`  // 通用配置
+	CommonConfig  S1200CommonConfig    `json:"commonConfig" validate:"required"` // 通用配置
+	S1200Config   S1200Config          `json:"s1200Config" validate:"required"`  // 通用配置
+	CecollaConfig common.CecollaConfig `json:"cecollaConfig"`
 }
 
 // https://www.ad.siemens.com.cn/productportal/prods/s7-1200_plc_easy_plus/07-Program/02-basic/01-Data_Type/01-basic.html
