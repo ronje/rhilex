@@ -56,7 +56,7 @@ type UserProtocolMasterPointVo struct {
 	Command       string      `json:"command"`
 	Tag           string      `json:"tag"`
 	Alias         string      `json:"alias"`
-	Frequency     uint64      `json:"frequency"`
+	Frequency     *uint64     `json:"frequency"`
 	Status        int         `json:"status"`        // 运行时数据
 	LastFetchTime uint64      `json:"lastFetchTime"` // 运行时数据
 	Value         interface{} `json:"value"`         // 运行时数据
@@ -242,10 +242,10 @@ func CheckUserProtocolMasterDataPoints(M UserProtocolMasterPointVo) error {
 	if err := checkStringLength(M.Alias, "alias", 64); err != nil {
 		return err
 	}
-	if M.Frequency < 1 {
+	if *M.Frequency < 1 {
 		return fmt.Errorf("'frequency' must be greater than 50ms")
 	}
-	if M.Frequency > 100000 {
+	if *M.Frequency > 100000 {
 		return fmt.Errorf("'frequency' must be less than 100s")
 	}
 	return nil
@@ -435,7 +435,7 @@ func parseUserProtocolMasterPointExcel(r io.Reader, sheetName string,
 			Command:   Command,
 			Tag:       Tag,
 			Alias:     Alias,
-			Frequency: Frequency,
+			Frequency: &Frequency,
 		}); err != nil {
 			return nil, err
 		}
@@ -446,7 +446,7 @@ func parseUserProtocolMasterPointExcel(r io.Reader, sheetName string,
 			Command:    Command,
 			Tag:        Tag,
 			Alias:      Alias,
-			Frequency:  Frequency,
+			Frequency:  &Frequency,
 		}
 		list = append(list, model)
 	}

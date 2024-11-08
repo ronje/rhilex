@@ -121,10 +121,6 @@ func LoadNewestDevice(uuid string, ruleEngine typex.Rhilex) error {
 	if err != nil {
 		return err
 	}
-	// 自动加载
-	// if !mDevice.Enable {
-	// 	return nil
-	// }
 	config := map[string]interface{}{}
 	if err := json.Unmarshal([]byte(mDevice.Config), &config); err != nil {
 		return err
@@ -189,10 +185,6 @@ func LoadNewestCecolla(uuid string, ruleEngine typex.Rhilex) error {
 	if err != nil {
 		return err
 	}
-	// 自动加载
-	// if !mCecolla.Enable {
-	// 	return nil
-	// }
 	config := map[string]interface{}{}
 	if err := json.Unmarshal([]byte(mCecolla.Config), &config); err != nil {
 		return err

@@ -22,5 +22,5 @@ type MUserProtocolDataPoint struct {
 	Command    string
 	Tag        string
 	Alias      string
-	Frequency  uint64
+	Frequency  *uint64 `gorm:"default:50"`
 }

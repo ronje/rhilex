@@ -22,14 +22,14 @@ package model
  */
 type MBacnetDataPoint struct {
 	RhilexModel
-	UUID           string `gorm:"not null"`
-	DeviceUuid     string `gorm:"not null"`
-	Tag            string `gorm:"not null"`
-	Alias          string `gorm:"not null"`
-	BacnetDeviceId uint32 `gorm:"not null"`
-	ObjectType     string `gorm:"not null"`
-	ObjectId       uint32 `gorm:"not null"`
-	Frequency      uint64 `gorm:"not null"`
+	UUID           string  `gorm:"not null"`
+	DeviceUuid     string  `gorm:"not null"`
+	Tag            string  `gorm:"not null"`
+	Alias          string  `gorm:"not null"`
+	BacnetDeviceId uint32  `gorm:"not null"`
+	ObjectType     string  `gorm:"not null"`
+	ObjectId       uint32  `gorm:"not null"`
+	Frequency      *uint64 `gorm:"default:50"`
 }
 
 /*

@@ -55,7 +55,7 @@ func InitDataSchemaApi() {
  */
 type IoTSchemaVo struct {
 	UUID        string `json:"uuid,omitempty"`
-	Published   bool   `json:"published"`
+	Published   *bool  `json:"published"`
 	Name        string `json:"name"`
 	Description string `json:"description"`
 }
@@ -184,7 +184,7 @@ func CreateDataSchema(c *gin.Context, ruleEngine typex.Rhilex) {
 	}
 	MIotSchema := model.MIotSchema{
 		UUID:        utils.DataSchemaUuid(),
-		Published:   false,
+		Published:   new(bool),
 		Name:        IoTSchemaVo.Name,
 		Description: IoTSchemaVo.Description,
 	}
@@ -261,7 +261,7 @@ func PublishSchema(c *gin.Context, ruleEngine typex.Rhilex) {
 		c.JSON(common.HTTP_OK, common.Error400(err))
 		return
 	}
-	if MSchema.Published {
+	if *MSchema.Published {
 		c.JSON(common.HTTP_OK, common.Error("Data Schema Already published"))
 		return
 	}
@@ -299,7 +299,8 @@ func PublishSchema(c *gin.Context, ruleEngine typex.Rhilex) {
 	}
 	txErr := interdb.DB().Transaction(func(tx *gorm.DB) error {
 		// Publish Schema
-		MSchema.Published = true
+		True := true
+		MSchema.Published = &True
 		err3 := tx.Model(MSchema).Where("uuid=?", MSchema.UUID).Updates(&MSchema).Error
 		if err3 != nil {
 			return err3
@@ -416,12 +417,12 @@ func CreateIotSchemaProperty(c *gin.Context, ruleEngine typex.Rhilex) {
 		c.JSON(common.HTTP_OK, common.Error400(err))
 		return
 	}
-	if Schema.Published {
+	if *Schema.Published {
 		c.JSON(common.HTTP_OK, common.Error("Data Schema Already published"))
 		return
 	}
 	// Check Published
-	if Schema.Published {
+	if *Schema.Published {
 		c.JSON(common.HTTP_OK, common.Error("Schema Already Published:"+IotPropertyVo.Name))
 		return
 	}
@@ -467,7 +468,7 @@ func UpdateIotSchemaProperty(c *gin.Context, ruleEngine typex.Rhilex) {
 		c.JSON(common.HTTP_OK, common.Error400(err))
 		return
 	}
-	if Schema.Published {
+	if *Schema.Published {
 		c.JSON(common.HTTP_OK, common.Error("Data Schema Already published"))
 		return
 	}
@@ -504,7 +505,7 @@ func DeleteIotSchemaProperty(c *gin.Context, ruleEngine typex.Rhilex) {
 		c.JSON(common.HTTP_OK, common.Error400(err))
 		return
 	}
-	if Schema.Published {
+	if *Schema.Published {
 		c.JSON(common.HTTP_OK, common.Error("Data Schema Already published"))
 		return
 	}

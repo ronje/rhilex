@@ -22,7 +22,6 @@ type MInEnd struct {
 	// UUID for origin source ID
 	UUID        string     `gorm:"uniqueIndex"`
 	Type        string     `gorm:"not null"`
-	Enable      bool       `gorm:"not null"`
 	Name        string     `gorm:"not null"`
 	BindRules   StringList `json:"bindRules"` // 与之关联的规则表["A","B","C"]
 	Description string

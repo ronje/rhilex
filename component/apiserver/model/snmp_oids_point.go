@@ -18,9 +18,9 @@ package model
 type MSnmpOid struct {
 	RhilexModel
 	UUID       string
-	DeviceUuid string `gorm:"not null"` // 所属设备
-	Oid        string `gorm:"not null"` // .1.3.6.1.2.1.25.1.6.0
-	Tag        string `gorm:"not null"` // temp
-	Alias      string `gorm:"not null"` // 温度
-	Frequency  uint64 `gorm:"not null"` // 请求频率
+	DeviceUuid string  `gorm:"not null"` // 所属设备
+	Oid        string  `gorm:"not null"` // .1.3.6.1.2.1.25.1.6.0
+	Tag        string  `gorm:"not null"` // temp
+	Alias      string  `gorm:"not null"` // 温度
+	Frequency  *uint64 `gorm:"default:50"`
 }

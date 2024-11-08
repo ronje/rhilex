@@ -51,7 +51,6 @@ const (
 // XStatus for source status
 type XStatus struct {
 	PointId    string             // Input: Source; Output: Target
-	Enable     bool               // 是否开启
 	Ctx        context.Context    // context
 	CancelCTX  context.CancelFunc // cancel
 	RuleEngine Rhilex             // rhilex
