@@ -81,7 +81,7 @@ WHERE uuid IN (
 	  FROM m_generic_groups
 		LEFT JOIN
 		m_generic_group_relations ON (m_generic_groups.uuid = m_generic_group_relations.gid)
-	WHERE type = 'DEVICE' AND gid = ?
+	WHERE type = 'CECOLLA' AND gid = ?
 ) ORDER BY created_at DESC;`
 
 	m := []model.MCecolla{}
@@ -111,7 +111,7 @@ SELECT * FROM m_cecollas WHERE uuid IN (
 	  FROM m_generic_groups
 		LEFT JOIN m_generic_group_relations ON
 		(m_generic_groups.uuid = m_generic_group_relations.gid)
-	WHERE type = 'DEVICE' AND gid = ?
+	WHERE type = 'CECOLLA' AND gid = ?
 ) ORDER BY created_at DESC limit ? offset ?;`
 	MCecollas := []model.MCecolla{}
 	offset := (current - 1) * size
@@ -125,7 +125,7 @@ FROM m_generic_groups
 LEFT JOIN
 m_generic_group_relations
 ON (m_generic_groups.uuid = m_generic_group_relations.gid)
-WHERE type = 'DEVICE' AND
+WHERE type = 'CECOLLA' AND
 gid = ?
 );
 `

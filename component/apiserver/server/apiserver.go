@@ -198,6 +198,12 @@ func initStaticModel() {
 		Parent: "NULL",
 	})
 	service.InitGenericGroup(&model.MGenericGroup{
+		UUID:   "CEROOT",
+		Type:   "CECOLLA",
+		Name:   "DefaultGroup",
+		Parent: "NULL",
+	})
+	service.InitGenericGroup(&model.MGenericGroup{
 		UUID:   "ULTROOT",
 		Type:   "USER_LUA_TEMPLATE",
 		Name:   "DefaultGroup",
