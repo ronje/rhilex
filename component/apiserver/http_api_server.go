@@ -155,6 +155,8 @@ func (hs *ApiServerPlugin) Init(config *ini.Section) error {
 func (hs *ApiServerPlugin) LoadRoute() {
 	// User
 	apis.InitUserRoute()
+	// CE collaboration
+	apis.InitCecollaRoute()
 	// In End
 	apis.InitInEndRoute()
 	// Rules
