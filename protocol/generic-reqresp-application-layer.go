@@ -15,19 +15,14 @@
 
 package protocol
 
-import (
-	"encoding/binary"
-	"errors"
-)
-
 type GenericAppLayer struct {
 	errTxCount int32 // 错误包计数器
 	errRxCount int32 // 错误包计数器
-	datalink   *DataLayer
+	transport  *TransportLayer
 }
 
 func NewGenericAppLayerAppLayer(config TransporterConfig) *GenericAppLayer {
-	return &GenericAppLayer{errTxCount: 0, errRxCount: 0, datalink: NewDataLayer(config)}
+	return &GenericAppLayer{errTxCount: 0, errRxCount: 0, transport: NewTransportLayer(config)}
 }
 
 func (app *GenericAppLayer) Request(appframe AppLayerFrame) (AppLayerFrame, error) {
@@ -50,43 +45,27 @@ func (app *GenericAppLayer) Write(appframe AppLayerFrame) error {
 		app.errTxCount++
 		return errEncode
 	}
-	return app.datalink.Write(appBytes)
+	return app.transport.Write(appBytes)
 }
 
 func (app *GenericAppLayer) Read() (AppLayerFrame, error) {
-	bytes, errHd := app.datalink.Read()
+	bytes, errHd := app.transport.Read()
 	if errHd != nil {
 		app.errRxCount++
 		return AppLayerFrame{}, errHd
 	}
-	if len(bytes) < 4 {
+	Frame, errDecode := DecodeAppLayerFrame(bytes)
+	if errDecode != nil {
 		app.errRxCount++
-		return AppLayerFrame{}, errors.New("data too short for header")
+		return AppLayerFrame{}, errDecode
 	}
-	var responseHeader Header
-	copy(responseHeader.Type[:], bytes[:2])
-	copy(responseHeader.Length[:], bytes[2:4])
-	payloadLength := int(binary.BigEndian.Uint16(responseHeader.Length[:])) - 1 /*crc byte*/
-	if len(bytes) < 4+payloadLength {
-		return AppLayerFrame{}, errors.New("data too short for payload")
-	}
-	payload := bytes[4 : 4+payloadLength]
-	return AppLayerFrame{
-		Header:  responseHeader,
-		Payload: payload,
-	}, nil
+	return Frame, nil
 }
 
-func (app *GenericAppLayer) GetErrTxCount() int32 {
-	return app.errTxCount + app.datalink.errTxCount
-}
-func (app *GenericAppLayer) GetErrRxCount() int32 {
-	return app.errRxCount + app.datalink.errRxCount
-}
 func (app *GenericAppLayer) Status() error {
-	return app.datalink.Status()
+	return app.transport.Status()
 }
 
 func (app *GenericAppLayer) Close() error {
-	return app.datalink.Close()
+	return app.transport.Close()
 }

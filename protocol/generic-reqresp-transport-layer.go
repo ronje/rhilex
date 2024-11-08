@@ -32,13 +32,8 @@ func NewTransportLayer(config TransporterConfig) *TransportLayer {
 
 func (transport *TransportLayer) Write(data []byte) error {
 	transport.config.Logger.Debug("TransportLayer.Write=", ByteDumpHexString(data))
-	if transport.config.WriteTimeout != 0 {
-		if err := transport.config.Port.SetWriteDeadline(time.Now().Add(
-			transport.config.WriteTimeout * time.Millisecond)); err != nil {
-			return err
-		}
-	}
-
+	transport.config.Port.SetWriteDeadline(time.Now().Add(
+		transport.config.WriteTimeout * time.Millisecond))
 	if _, err := transport.config.Port.Write(data); err != nil {
 		return err
 	}
@@ -46,22 +41,29 @@ func (transport *TransportLayer) Write(data []byte) error {
 }
 
 func (transport *TransportLayer) Read() ([]byte, error) {
+	const (
+		maxPacketSize = 512
+		startByte1    = 0xAA
+		startByte2    = 0xBB
+	)
 
-	maxPacketSize := uint16(512)
 	var buffer []byte
-	temp := make([]byte, 1)
+	tempBuffer := make([]byte, 1)
 	errorBuffer := make([]byte, 0)
-	transport.config.Port.SetReadDeadline(time.Now().Add(transport.config.ReadTimeout * time.Millisecond))
+
+	// 设置读取超时
+	transport.config.Port.SetReadDeadline(time.Now().Add(transport.config.ReadTimeout))
+
 	for {
-		// 如果 errorBuffer 有数据，则先合并
+		// 如果 errorBuffer 有数据，则优先恢复数据到缓冲区
 		if len(errorBuffer) > 0 {
 			buffer = append(buffer, errorBuffer...)
 			errorBuffer = errorBuffer[:0]
 		}
 
-		// 寻找包头同步
+		// 同步寻找包头
 		for {
-			_, err := transport.config.Port.Read(temp)
+			_, err := transport.config.Port.Read(tempBuffer)
 			if err != nil {
 				if err == io.EOF {
 					return nil, fmt.Errorf("connection closed")
@@ -69,12 +71,12 @@ func (transport *TransportLayer) Read() ([]byte, error) {
 				return nil, fmt.Errorf("read error: %w", err)
 			}
 
-			// 如果缓冲区为空且匹配包头的第一字节，继续读取
-			if len(buffer) == 0 && temp[0] == 0xAA { // 假设包头是 0xAA
-				buffer = append(buffer, temp[0])
+			// 识别包头起始标志
+			if len(buffer) == 0 && tempBuffer[0] == startByte1 {
+				buffer = append(buffer, tempBuffer[0])
 				continue
-			} else if len(buffer) == 1 && temp[0] == 0xBB { // 假设包头第二字节是 0xBB
-				buffer = append(buffer, temp[0])
+			} else if len(buffer) == 1 && tempBuffer[0] == startByte2 {
+				buffer = append(buffer, tempBuffer[0])
 				break
 			} else {
 				// 丢弃不符合包头的数据
@@ -82,52 +84,60 @@ func (transport *TransportLayer) Read() ([]byte, error) {
 			}
 		}
 
-		// 读取包头
-		header := Header{}
-		_, err := transport.config.Port.Read(header.Type[:])
+		// 读取包头剩余部分
+		headerBytes := make([]byte, 4)
+		_, err := transport.config.Port.Read(headerBytes)
 		if err != nil {
-			return nil, fmt.Errorf("failed to read packet type: %w", err)
+			return nil, fmt.Errorf("failed to read full header: %w", err)
 		}
+		buffer = append(buffer, headerBytes...)
 
-		_, err = transport.config.Port.Read(header.Length[:])
+		// 解码 Header 并获取包长
+		header, err := DecodeHeader(buffer[:6])
 		if err != nil {
-			return nil, fmt.Errorf("failed to read packet length: %w", err)
+			return nil, fmt.Errorf("failed to decode header: %w", err)
 		}
-
-		// 获取数据包长度
 		packetLength := binary.BigEndian.Uint16(header.Length[:])
-		if packetLength > maxPacketSize || packetLength == 0 {
-			// 如果包的长度不合法，丢弃当前包并恢复
-			fmt.Println("Error: Invalid packet length, resynchronizing.")
+
+		// 检查长度是否合法
+		if packetLength == 0 || int(packetLength) > maxPacketSize {
+			buffer = buffer[:0] // 重置缓冲区并继续寻找新帧
+			continue
+		}
+
+		// 读取 payload、校验码和分隔符
+		payloadCrcDelimiterSize := int(packetLength) + 4 + 2 // payload + crc + reverse delimiter
+		data := make([]byte, payloadCrcDelimiterSize)
+		n, err := io.ReadFull(transport.config.Port, data)
+		if err != nil || n < payloadCrcDelimiterSize {
+			// 数据不完整，缓存错误数据
+			errorBuffer = append(errorBuffer, buffer...)
+			errorBuffer = append(errorBuffer, data[:n]...)
 			buffer = buffer[:0]
 			continue
 		}
 
-		// 读取数据内容
-		data := make([]byte, packetLength+4) // 包含 CRC 校验的长度
-		n, err := io.ReadFull(transport.config.Port, data)
-		if err != nil || n < int(packetLength+4) {
-			// 读取不完整的包，缓存错误数据
-			fmt.Println("Error: Incomplete packet received, buffering error data.")
-			errorBuffer = append(errorBuffer, header.Type[:]...)
-			errorBuffer = append(errorBuffer, header.Length[:]...)
-			errorBuffer = append(errorBuffer, data[:n]...)
-			continue
+		// 检查下一个帧的标志符来验证长度
+		for i := int(packetLength); i < len(data)-1; i++ {
+			if data[i] == startByte1 && data[i+1] == startByte2 {
+				// 如果找到下一个包的开始标志符，丢弃当前帧
+				errorBuffer = append(errorBuffer, buffer...)
+				errorBuffer = append(errorBuffer, data[:n]...)
+				buffer = buffer[:0]
+				continue
+			}
 		}
 
-		// 校验 CRC
-		receivedData := data[:packetLength]
+		// 拼接完整数据帧，完成解析
+		buffer = append(buffer, data...)
+		frame, err := DecodeAppLayerFrame(buffer)
+		if err != nil {
+			return nil, fmt.Errorf("failed to decode frame: %w", err)
+		}
 
-
-		// 如果没有错误，返回数据
-		buffer = append(buffer, header.Type[:]...)
-		buffer = append(buffer, header.Length[:]...)
-		buffer = append(buffer, receivedData...)
-		break
+		// 成功解析帧后返回 payload
+		return frame.Payload, nil
 	}
-	transport.config.Port.SetReadDeadline(time.Time{})
-	transport.config.Logger.Debug("TransportLayer.Read=", ByteDumpHexString(buffer))
-	return buffer, nil
 }
 
 func (transport *TransportLayer) Status() error {
