@@ -40,14 +40,14 @@ func LoadAllCecType(e typex.Rhilex) {
 
 	DefaultCecollaTypeManager.Register(typex.TENCENT_IOTHUB_CEC,
 		&typex.XConfig{
-			Engine:    e,
-			NewDevice: cecolla.NewTencentIoTGateway,
+			Engine:     e,
+			NewCecolla: cecolla.NewTencentIoTGateway,
 		},
 	)
 	DefaultCecollaTypeManager.Register(typex.ITHINGS_IOTHUB_CEC,
 		&typex.XConfig{
-			Engine:    e,
-			NewDevice: cecolla.NewIThingsGateway,
+			Engine:     e,
+			NewCecolla: cecolla.NewIThingsGateway,
 		},
 	)
 }

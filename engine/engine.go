@@ -75,7 +75,7 @@ func InitRuleEngine(config typex.RhilexConfig) typex.Rhilex {
 		InEnds:   orderedmap.NewOrderedMap[string, *typex.InEnd](),
 		OutEnds:  orderedmap.NewOrderedMap[string, *typex.OutEnd](),
 		Devices:  orderedmap.NewOrderedMap[string, *typex.Device](),
-		Cecollas: &orderedmap.OrderedMap[string, *typex.Cecolla]{},
+		Cecollas: orderedmap.NewOrderedMap[string, *typex.Cecolla](),
 		Config:   &config,
 	}
 	// Init Security License

@@ -25,9 +25,9 @@ type MMBusDataPoint struct {
 	Manufacturer string
 	Tag          string
 	Alias        string
-	Frequency    *uint64
 	DataLength   *uint64
-	Weight       *float64
+	Frequency    *uint64  `gorm:"default:50"`
+	Weight       *float64 `gorm:"default:1"`
 }
 
 func (MMBusDataPoint) TableName() string {

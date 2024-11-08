@@ -58,7 +58,7 @@ type ModbusMasterPointVo struct {
 	Function      *int        `json:"function"`
 	SlaverId      *byte       `json:"slaverId"`
 	Address       *uint16     `json:"address"`
-	Frequency     *int64      `json:"frequency"`
+	Frequency     *uint64     `json:"frequency"`
 	Quantity      *uint16     `json:"quantity"`
 	DataType      string      `json:"dataType"`      // 数据类型
 	DataOrder     string      `json:"dataOrder"`     // 字节序
@@ -540,7 +540,7 @@ func parseModbusMasterPointExcel(r io.Reader, sheetName string,
 		Function := int(function)
 		SlaverId := byte(slaverId)
 		Address := uint16(address)
-		Frequency := int64(frequency)
+		Frequency := uint64(frequency)
 		Quantity := uint16(quantity)
 
 		if err := CheckModbusMasterDataPoints(ModbusMasterPointVo{

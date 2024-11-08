@@ -60,7 +60,7 @@ type TencentIoTGatewayMainConfig struct {
 // 腾讯云物联网平台网关
 type TencentIoTGateway struct {
 	typex.XStatus
-	status             typex.DeviceState
+	status             typex.CecollaState
 	mainConfig         TencentIoTGatewayMainConfig
 	client             mqtt.Client
 	mqttClientId       string
@@ -77,7 +77,7 @@ type TencentIoTGateway struct {
 	TencentIotSubDevices []TencentIotSubDevice
 }
 
-func NewTencentIoTGateway(e typex.Rhilex) typex.XDevice {
+func NewTencentIoTGateway(e typex.Rhilex) typex.XCecolla {
 	hd := new(TencentIoTGateway)
 	hd.RuleEngine = e
 	hd.mainConfig = TencentIoTGatewayMainConfig{
@@ -137,14 +137,12 @@ func (hd *TencentIoTGateway) Start(cctx typex.CCTX) error {
 		// 属性下发
 		if token := hd.client.Subscribe(hd.propertyDownTopic, 1, func(c mqtt.Client, msg mqtt.Message) {
 			glogger.GLogger.Debug("Property Down, Topic: [", msg.Topic(), "] Payload: ", string(msg.Payload()))
-			hd.RuleEngine.WorkDevice(hd.Details(), string(msg.Payload()))
 		}); token.Error() != nil {
 			glogger.GLogger.Error(token.Error())
 		}
 		// 动作下发
 		if token := hd.client.Subscribe(hd.actionDownTopic, 1, func(c mqtt.Client, msg mqtt.Message) {
 			glogger.GLogger.Debug("Action Down, Topic: [", msg.Topic(), "] Payload: ", string(msg.Payload()))
-			hd.RuleEngine.WorkDevice(hd.Details(), string(msg.Payload()))
 		}); token.Error() != nil {
 			glogger.GLogger.Error(token.Error())
 		}
@@ -192,17 +190,17 @@ func (hd *TencentIoTGateway) Start(cctx typex.CCTX) error {
 	if token := hd.client.Connect(); token.Wait() && token.Error() != nil {
 		return token.Error()
 	}
-	hd.status = typex.DEV_UP
+	hd.status = typex.CEC_UP
 	return nil
 }
 
 // 设备当前状态
-func (hd *TencentIoTGateway) Status() typex.DeviceState {
+func (hd *TencentIoTGateway) Status() typex.CecollaState {
 	if hd.client != nil {
 		if hd.client.IsConnectionOpen() && hd.client.IsConnected() {
-			return typex.DEV_UP
+			return typex.CEC_UP
 		} else {
-			return typex.DEV_DOWN
+			return typex.CEC_DOWN
 		}
 	}
 	return hd.status
@@ -210,7 +208,7 @@ func (hd *TencentIoTGateway) Status() typex.DeviceState {
 
 // 停止设备
 func (hd *TencentIoTGateway) Stop() {
-	hd.status = typex.DEV_DOWN
+	hd.status = typex.CEC_DOWN
 	if hd.CancelCTX != nil {
 		hd.CancelCTX()
 	}
@@ -220,12 +218,12 @@ func (hd *TencentIoTGateway) Stop() {
 }
 
 // 真实设备
-func (hd *TencentIoTGateway) Details() *typex.Device {
-	return hd.RuleEngine.GetDevice(hd.PointId)
+func (hd *TencentIoTGateway) Details() *typex.Cecolla {
+	return hd.RuleEngine.GetCecolla(hd.PointId)
 }
 
 // 状态
-func (hd *TencentIoTGateway) SetState(status typex.DeviceState) {
+func (hd *TencentIoTGateway) SetState(status typex.CecollaState) {
 	hd.status = status
 
 }

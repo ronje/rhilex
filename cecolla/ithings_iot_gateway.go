@@ -68,7 +68,7 @@ type IThingsSubDevice struct {
 // 腾讯云物联网平台网关
 type IThingsGateway struct {
 	typex.XStatus
-	status            typex.DeviceState
+	status            typex.CecollaState
 	mainConfig        IThingsGatewayMainConfig
 	client            mqtt.Client
 	authInfo          IThingsMQTTAuthInfo
@@ -82,7 +82,7 @@ type IThingsGateway struct {
 	IThingsSubDevices []IThingsSubDevice
 }
 
-func NewIThingsGateway(e typex.Rhilex) typex.XDevice {
+func NewIThingsGateway(e typex.Rhilex) typex.XCecolla {
 	hd := new(IThingsGateway)
 	hd.RuleEngine = e
 	hd.mainConfig = IThingsGatewayMainConfig{
@@ -155,14 +155,12 @@ func (hd *IThingsGateway) Start(cctx typex.CCTX) error {
 		// 属性下发
 		if token := hd.client.Subscribe(hd.propertyDownTopic, 1, func(c mqtt.Client, msg mqtt.Message) {
 			glogger.GLogger.Debug("Property Down, Topic: [", msg.Topic(), "] Payload: ", string(msg.Payload()))
-			hd.RuleEngine.WorkDevice(hd.Details(), string(msg.Payload()))
 		}); token.Error() != nil {
 			glogger.GLogger.Error(token.Error())
 		}
 		// 动作下发
 		if token := hd.client.Subscribe(hd.actionDownTopic, 1, func(c mqtt.Client, msg mqtt.Message) {
 			glogger.GLogger.Debug("Action Down, Topic: [", msg.Topic(), "] Payload: ", string(msg.Payload()))
-			hd.RuleEngine.WorkDevice(hd.Details(), string(msg.Payload()))
 		}); token.Error() != nil {
 			glogger.GLogger.Error(token.Error())
 		}
@@ -208,17 +206,17 @@ func (hd *IThingsGateway) Start(cctx typex.CCTX) error {
 	if token := hd.client.Connect(); token.Wait() && token.Error() != nil {
 		return token.Error()
 	}
-	hd.status = typex.DEV_UP
+	hd.status = typex.CEC_UP
 	return nil
 }
 
 // 设备当前状态
-func (hd *IThingsGateway) Status() typex.DeviceState {
+func (hd *IThingsGateway) Status() typex.CecollaState {
 	if hd.client != nil {
 		if hd.client.IsConnectionOpen() && hd.client.IsConnected() {
-			return typex.DEV_UP
+			return typex.CEC_UP
 		} else {
-			return typex.DEV_DOWN
+			return typex.CEC_DOWN
 		}
 	}
 	return hd.status
@@ -226,7 +224,7 @@ func (hd *IThingsGateway) Status() typex.DeviceState {
 
 // 停止设备
 func (hd *IThingsGateway) Stop() {
-	hd.status = typex.DEV_DOWN
+	hd.status = typex.CEC_DOWN
 	if hd.CancelCTX != nil {
 		hd.CancelCTX()
 	}
@@ -236,12 +234,12 @@ func (hd *IThingsGateway) Stop() {
 }
 
 // 真实设备
-func (hd *IThingsGateway) Details() *typex.Device {
-	return hd.RuleEngine.GetDevice(hd.PointId)
+func (hd *IThingsGateway) Details() *typex.Cecolla {
+	return hd.RuleEngine.GetCecolla(hd.PointId)
 }
 
 // 状态
-func (hd *IThingsGateway) SetState(status typex.DeviceState) {
+func (hd *IThingsGateway) SetState(status typex.CecollaState) {
 	hd.status = status
 
 }
