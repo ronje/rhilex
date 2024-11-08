@@ -26,11 +26,10 @@ import (
 func CheckVendor(env string) string {
 	if slices.Contains([]string{
 		"RHILEXG1",
-		"RHILEXG1T507",
-		"WKYS805",
 		"RPI4B",
 		"EN6400",
 		"HAAS506LD1",
+		"RHILEXPRO1",
 	}, env) {
 		return env
 	}
