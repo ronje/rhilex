@@ -45,15 +45,12 @@ const (
 	_ithings_operation_down = "$gateway/operation/result/%s/%s" //数据下行 Topic（用于订阅）
 )
 
-type IThingsGatewayConfig struct {
+type IThingsGatewayMainConfig struct {
 	ServerEndpoint string `json:"serverEndpoint" validate:"required"` //服务地址
 	Mode           string `json:"mode" validate:"required"`           //模式: DEVICE|GATEWAY
 	ProductId      string `json:"productId" validate:"required"`      //产品名
 	DeviceName     string `json:"deviceName" validate:"required"`     //设备名
 	DevicePsk      string `json:"devicePsk" validate:"required"`      //秘钥
-}
-type IThingsGatewayMainConfig struct {
-	CommonConfig IThingsGatewayConfig `json:"ithingsConfig" validate:"required"` // 通用配置
 }
 type IThingsSubDevice struct {
 	ProductID    string `json:"productID"`
@@ -86,13 +83,11 @@ func NewIThingsGateway(e typex.Rhilex) typex.XCecolla {
 	hd := new(IThingsGateway)
 	hd.RuleEngine = e
 	hd.mainConfig = IThingsGatewayMainConfig{
-		CommonConfig: IThingsGatewayConfig{
-			ServerEndpoint: "tcp://127.0.0.1:1883",
-			Mode:           "DEVICE",
-			ProductId:      "",
-			DeviceName:     "",
-			DevicePsk:      "",
-		},
+		ServerEndpoint: "tcp://127.0.0.1:1883",
+		Mode:           "DEVICE",
+		ProductId:      "",
+		DeviceName:     "",
+		DevicePsk:      "",
 	}
 	hd.IThingsSubDevices = make([]IThingsSubDevice, 0)
 	return hd
@@ -120,8 +115,8 @@ func (hd *IThingsGateway) Init(devId string, configMap map[string]interface{}) e
 		glogger.GLogger.Error(err)
 		return err
 	}
-	authInfo, err := GenerateIThingsMQTTAuthInfo(hd.mainConfig.CommonConfig.ProductId,
-		hd.mainConfig.CommonConfig.DeviceName, hd.mainConfig.CommonConfig.DevicePsk)
+	authInfo, err := GenerateIThingsMQTTAuthInfo(hd.mainConfig.ProductId,
+		hd.mainConfig.DeviceName, hd.mainConfig.DevicePsk)
 	if err != nil {
 		glogger.GLogger.Error(err)
 		return err
@@ -136,19 +131,19 @@ func (hd *IThingsGateway) Start(cctx typex.CCTX) error {
 	hd.CancelCTX = cctx.CancelCTX
 	// 属性
 	hd.propertyDownTopic = fmt.Sprintf(_ithings_PropertyTopic,
-		hd.mainConfig.CommonConfig.ProductId, hd.mainConfig.CommonConfig.DeviceName)
+		hd.mainConfig.ProductId, hd.mainConfig.DeviceName)
 	hd.propertyUpTopic = fmt.Sprintf(_ithings_PropertyUpTopic,
-		hd.mainConfig.CommonConfig.ProductId, hd.mainConfig.CommonConfig.DeviceName)
+		hd.mainConfig.ProductId, hd.mainConfig.DeviceName)
 	// 动作
 	hd.actionDownTopic = fmt.Sprintf(_ithings_ActionTopic,
-		hd.mainConfig.CommonConfig.ProductId, hd.mainConfig.CommonConfig.DeviceName)
+		hd.mainConfig.ProductId, hd.mainConfig.DeviceName)
 	hd.actionUpTopic = fmt.Sprintf(_ithings_ActionUpTopic,
-		hd.mainConfig.CommonConfig.ProductId, hd.mainConfig.CommonConfig.DeviceName)
+		hd.mainConfig.ProductId, hd.mainConfig.DeviceName)
 	// 子设备
 	hd.topologyTopicUp = fmt.Sprintf(_ithings_operation_up,
-		hd.mainConfig.CommonConfig.ProductId, hd.mainConfig.CommonConfig.DeviceName)
+		hd.mainConfig.ProductId, hd.mainConfig.DeviceName)
 	hd.topologyTopicDown = fmt.Sprintf(_ithings_operation_down,
-		hd.mainConfig.CommonConfig.ProductId, hd.mainConfig.CommonConfig.DeviceName)
+		hd.mainConfig.ProductId, hd.mainConfig.DeviceName)
 
 	var connectHandler mqtt.OnConnectHandler = func(client mqtt.Client) {
 		glogger.GLogger.Infof("IThings Connected Success")
@@ -167,7 +162,7 @@ func (hd *IThingsGateway) Start(cctx typex.CCTX) error {
 		// 网关模式:
 		//    数据上行 Topic（用于发布）：$gateway/operation/${productid}/${devicename}
 		//    数据下行 Topic（用于订阅）：$gateway/operation/result/${productid}/${devicename}
-		if hd.mainConfig.CommonConfig.Mode == "GATEWAY" {
+		if hd.mainConfig.Mode == "GATEWAY" {
 			token := hd.client.Subscribe(hd.topologyTopicDown, 1, func(c mqtt.Client, msg mqtt.Message) {
 				glogger.GLogger.Debug("IThingsGateway topologyTopicDown: ", hd.topologyTopicDown, msg)
 				SubDeviceMessage := IThingsSubDeviceMessage{}
@@ -190,7 +185,7 @@ func (hd *IThingsGateway) Start(cctx typex.CCTX) error {
 		glogger.GLogger.Warnf("IThings Disconnect: %v, %v try to reconnect", err, hd.status)
 	}
 	opts := mqtt.NewClientOptions()
-	opts.AddBroker(hd.mainConfig.CommonConfig.ServerEndpoint)
+	opts.AddBroker(hd.mainConfig.ServerEndpoint)
 	opts.SetClientID(hd.authInfo.ClientID)
 	opts.SetUsername(hd.authInfo.UserName)
 	opts.SetPassword(hd.authInfo.Password)

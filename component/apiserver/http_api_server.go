@@ -51,30 +51,26 @@ func NewHttpApiServer(ruleEngine typex.Rhilex) *ApiServerPlugin {
  */
 func initRhilex(engine typex.Rhilex) {
 	go GetCpuUsage()
-	//
-	// Load inend from sqlite
-	//
+	for _, mCecolla := range service.AllCecollas() {
+		if err := server.LoadNewestCecolla(mCecolla.UUID, engine); err != nil {
+			glogger.GLogger.Error("Cecolla load failed:", err)
+		}
+	}
 	for _, minEnd := range service.AllMInEnd() {
 		if err := server.LoadNewestInEnd(minEnd.UUID, engine); err != nil {
 			glogger.GLogger.Error("InEnd load failed:", err)
 		}
 	}
-
-	//
-	// Load out from sqlite
-	//
 	for _, mOutEnd := range service.AllMOutEnd() {
 		if err := server.LoadNewestOutEnd(mOutEnd.UUID, engine); err != nil {
 			glogger.GLogger.Error("OutEnd load failed:", err)
 		}
 	}
-	// 加载设备
 	for _, mDevice := range service.AllDevices() {
 		glogger.GLogger.Debug("LoadNewestDevice mDevice.BindRules: ", mDevice.BindRules.String())
 		if err := server.LoadNewestDevice(mDevice.UUID, engine); err != nil {
 			glogger.GLogger.Error("Device load failed:", err)
 		}
-
 	}
 	//
 	// APP stack

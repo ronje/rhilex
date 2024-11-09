@@ -45,16 +45,13 @@ const (
 	_tencent_iothub_operation_down = "$gateway/operation/result/%s/%s" //数据下行 Topic（用于订阅）
 )
 
-type TencentIoTGatewayConfig struct {
+type TencentIoTGatewayMainConfig struct {
 	// "tcp://$.iotcloud.tencentdevices.com:1883"
 	// ServerEndpoint string `json:"serverEndpoint" validate:"required"` //服务地址
 	Mode       string `json:"mode" validate:"required"`       //模式: DEVICE|GATEWAY
 	ProductId  string `json:"productId" validate:"required"`  //产品名
 	DeviceName string `json:"deviceName" validate:"required"` //设备名
 	DevicePsk  string `json:"devicePsk" validate:"required"`  //秘钥
-}
-type TencentIoTGatewayMainConfig struct {
-	CommonConfig TencentIoTGatewayConfig `json:"tencentConfig" validate:"required"` // 通用配置
 }
 
 // 腾讯云物联网平台网关
@@ -81,12 +78,10 @@ func NewTencentIoTGateway(e typex.Rhilex) typex.XCecolla {
 	hd := new(TencentIoTGateway)
 	hd.RuleEngine = e
 	hd.mainConfig = TencentIoTGatewayMainConfig{
-		CommonConfig: TencentIoTGatewayConfig{
-			Mode:       "DEVICE",
-			ProductId:  "",
-			DeviceName: "",
-			DevicePsk:  "",
-		},
+		Mode:       "DEVICE",
+		ProductId:  "",
+		DeviceName: "",
+		DevicePsk:  "",
 	}
 	hd.TencentIotSubDevices = make([]TencentIotSubDevice, 0)
 	return hd
@@ -99,13 +94,12 @@ func (hd *TencentIoTGateway) Init(devId string, configMap map[string]interface{}
 		glogger.GLogger.Error(err)
 		return err
 	}
-	Info, err := GenerateTencentIotMQTTAuthInfo(hd.mainConfig.CommonConfig.ProductId,
-		hd.mainConfig.CommonConfig.DeviceName, hd.mainConfig.CommonConfig.DevicePsk)
+	Info, err := GenerateTencentIotMQTTAuthInfo(hd.mainConfig.ProductId,
+		hd.mainConfig.DeviceName, hd.mainConfig.DevicePsk)
 	if err != nil {
 		glogger.GLogger.Error(err)
 		return err
 	}
-	glogger.GLogger.Debug(Info.ToJSONString())
 	hd.mqttClientId = Info.ClientID
 	hd.mqttUsername = Info.UserName
 	hd.mqttPassword = Info.Password
@@ -118,19 +112,19 @@ func (hd *TencentIoTGateway) Start(cctx typex.CCTX) error {
 	hd.CancelCTX = cctx.CancelCTX
 	// 属性
 	hd.propertyDownTopic = fmt.Sprintf(_tencent_iothub_PropertyTopic,
-		hd.mainConfig.CommonConfig.ProductId, hd.mainConfig.CommonConfig.DeviceName)
+		hd.mainConfig.ProductId, hd.mainConfig.DeviceName)
 	hd.propertyUpTopic = fmt.Sprintf(_tencent_iothub_PropertyUpTopic,
-		hd.mainConfig.CommonConfig.ProductId, hd.mainConfig.CommonConfig.DeviceName)
+		hd.mainConfig.ProductId, hd.mainConfig.DeviceName)
 	hd.propertyReplyTopic = fmt.Sprintf(_tencent_iothub_PropertyReplyTopic,
-		hd.mainConfig.CommonConfig.ProductId, hd.mainConfig.CommonConfig.DeviceName)
+		hd.mainConfig.ProductId, hd.mainConfig.DeviceName)
 	hd.actionDownTopic = fmt.Sprintf(_tencent_iothub_ActionTopic,
-		hd.mainConfig.CommonConfig.ProductId, hd.mainConfig.CommonConfig.DeviceName)
+		hd.mainConfig.ProductId, hd.mainConfig.DeviceName)
 	hd.actionUpTopic = fmt.Sprintf(_tencent_iothub_ActionUpTopic,
-		hd.mainConfig.CommonConfig.ProductId, hd.mainConfig.CommonConfig.DeviceName)
+		hd.mainConfig.ProductId, hd.mainConfig.DeviceName)
 	hd.topologyTopicUp = fmt.Sprintf(_tencent_iothub_operation_up,
-		hd.mainConfig.CommonConfig.ProductId, hd.mainConfig.CommonConfig.DeviceName)
+		hd.mainConfig.ProductId, hd.mainConfig.DeviceName)
 	hd.topologyTopicDown = fmt.Sprintf(_tencent_iothub_operation_down,
-		hd.mainConfig.CommonConfig.ProductId, hd.mainConfig.CommonConfig.DeviceName)
+		hd.mainConfig.ProductId, hd.mainConfig.DeviceName)
 
 	var connectHandler mqtt.OnConnectHandler = func(client mqtt.Client) {
 		glogger.GLogger.Infof("IOTHUB Connected Success")
@@ -149,7 +143,7 @@ func (hd *TencentIoTGateway) Start(cctx typex.CCTX) error {
 		// 网关模式
 		//    数据上行 Topic（用于发布）：$gateway/operation/${productid}/${devicename}
 		//    数据下行 Topic（用于订阅）：$gateway/operation/result/${productid}/${devicename}
-		if hd.mainConfig.CommonConfig.Mode == "GATEWAY" {
+		if hd.mainConfig.Mode == "GATEWAY" {
 			token := hd.client.Subscribe(hd.topologyTopicDown, 1, func(c mqtt.Client, msg mqtt.Message) {
 				glogger.GLogger.Debug("TencentIoTGateway topologyTopicDown: ", hd.topologyTopicDown, msg)
 				SubDeviceMessage := TencentIotSubDeviceMessage{}
@@ -173,7 +167,7 @@ func (hd *TencentIoTGateway) Start(cctx typex.CCTX) error {
 	}
 	opts := mqtt.NewClientOptions()
 	endPoint := "tcp://%s.iotcloud.tencentdevices.com:1883"
-	ServerEndpoint := fmt.Sprintf(endPoint, hd.mainConfig.CommonConfig.ProductId)
+	ServerEndpoint := fmt.Sprintf(endPoint, hd.mainConfig.ProductId)
 	opts.AddBroker(ServerEndpoint)
 	opts.SetClientID(hd.mqttClientId)
 	opts.SetUsername(hd.mqttUsername)

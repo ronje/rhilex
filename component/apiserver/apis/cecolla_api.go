@@ -27,6 +27,7 @@ func InitCecollaRoute() {
 		cecollaApi.GET("/group", server.AddRoute(ListCecollaByGroup))
 		cecollaApi.GET("/listByGroup", server.AddRoute(ListCecollaByGroup))
 		cecollaApi.GET("/list", server.AddRoute(ListCecolla))
+		cecollaApi.GET("/listShort", server.AddRoute(ListCecollasShort))
 		cecollaApi.PUT("/restart", server.AddRoute(RestartCecolla))
 		cecollaApi.GET("/cecollaErrMsg", server.AddRoute(GetCecollaErrorMsg))
 	}
@@ -296,4 +297,28 @@ func GetCecollaErrorMsg(c *gin.Context, ruleEngine typex.Rhilex) {
 		}
 	}
 	c.JSON(common.HTTP_OK, common.OkWithData("--"))
+}
+
+/**
+ * 获取一个简单的列表
+ *
+ */
+type CecollaShortVo struct {
+	UUID string `json:"uuid"`
+	Name string `json:"name"`
+	Type string `json:"type"`
+}
+
+func ListCecollasShort(c *gin.Context, ruleEngine typex.Rhilex) {
+	MCecollas := service.AllCecollas()
+	cecollas := []CecollaShortVo{}
+	for _, mCecolla := range MCecollas {
+		CecollaVo := CecollaShortVo{}
+		CecollaVo.UUID = mCecolla.UUID
+		CecollaVo.Name = mCecolla.Name
+		CecollaVo.Type = mCecolla.Type
+		cecollas = append(cecollas, CecollaVo)
+	}
+	c.JSON(common.HTTP_OK, common.OkWithData(cecollas))
+
 }
