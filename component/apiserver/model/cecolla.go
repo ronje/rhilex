@@ -23,7 +23,8 @@ type MCecolla struct {
 	UUID        string `gorm:"uniqueIndex"`
 	Name        string `gorm:"not null"`
 	Type        string `gorm:"not null"`
-	Config      string
+	Config      string `gorm:"not null"`
+	Action      string `gorm:"not null"`
 	Description string
 }
 

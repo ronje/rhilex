@@ -24,6 +24,7 @@ type Cecolla struct {
 	Description string                 `json:"description"`
 	State       CecollaState           `json:"state"`
 	Config      map[string]interface{} `json:"config"`
+	Action      string                 `json:"action"`
 	Cecolla     XCecolla               `json:"-"`
 }
 
@@ -36,5 +37,11 @@ func NewCecolla(t CecollaType, name string,
 		State:       CEC_DOWN,
 		Description: description,
 		Config:      config,
+		Action: `-- Default Action
+function Main(Request)
+	Debug(Request)
+	return 0
+end
+`,
 	}
 }
