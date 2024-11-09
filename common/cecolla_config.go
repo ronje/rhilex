@@ -20,6 +20,6 @@ package common
  *
  */
 type CecollaConfig struct {
-	CecollaId   string `json:"cecollaId"`
-	CecollaName string `json:"cecollaName"`
+	Enable    bool   `json:"enable"`    // 是否开启
+	CecollaId string `json:"cecollaId"` // Cecolla UUID
 }
