@@ -10,6 +10,7 @@ import (
 	"github.com/hootrhino/rhilex/component/apiserver/model"
 	"github.com/hootrhino/rhilex/component/apiserver/server"
 	"github.com/hootrhino/rhilex/component/apiserver/service"
+	"github.com/hootrhino/rhilex/component/intercache"
 	"github.com/hootrhino/rhilex/typex"
 	"github.com/hootrhino/rhilex/utils"
 )
@@ -24,6 +25,7 @@ func InitInEndRoute() {
 		InEndApi.PUT(("/update"), server.AddRoute(UpdateInend))
 		InEndApi.PUT("/restart", server.AddRoute(RestartInEnd))
 		InEndApi.GET("/clients", server.AddRoute(GetInEndClients))
+		InEndApi.GET("/inendErrMsg", server.AddRoute(GetInendErrorMsg))
 	}
 }
 func InEndDetail(c *gin.Context, ruleEngine typex.Rhilex) {
@@ -250,4 +252,22 @@ func GetInEndClients(c *gin.Context, ruleEngine typex.Rhilex) {
 	}
 	Count := int64(0)
 	c.JSON(common.HTTP_OK, common.OkWithData(service.WrapPageResult(*pager, InEndClients, Count)))
+}
+
+/*
+*
+* 获取设备挂了的异常信息
+* __DefaultRuleEngine：用于RHILEX内部存储一些KV键值对
+ */
+func GetInendErrorMsg(c *gin.Context, ruleEngine typex.Rhilex) {
+	uuid, _ := c.GetQuery("uuid")
+	Slot := intercache.GetSlot("__DefaultRuleEngine")
+	if Slot != nil {
+		CacheValue, ok := Slot[uuid]
+		if ok {
+			c.JSON(common.HTTP_OK, common.OkWithData(CacheValue.ErrMsg))
+			return
+		}
+	}
+	c.JSON(common.HTTP_OK, common.OkWithData("--"))
 }
