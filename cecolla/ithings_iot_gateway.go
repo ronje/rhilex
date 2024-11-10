@@ -239,10 +239,6 @@ func (hd *IThingsGateway) SetState(status typex.CecollaState) {
 
 }
 
-func (hd *IThingsGateway) OnDCACall(UUID string, Command string, Args interface{}) typex.DCAResult {
-	return typex.DCAResult{}
-}
-
 /**
  * Lua输入进来的指令
  *
@@ -252,22 +248,13 @@ type IThingsInputMsg struct {
 	Cmd  interface{} `json:"cmd"`
 }
 
-func (hd *IThingsGateway) OnCtrl(cmd []byte, args []byte) ([]byte, error) {
-	return []byte{}, nil
-}
-
-func (hd *IThingsGateway) OnRead(cmd []byte, data []byte) (int, error) {
-
-	return 0, nil
-}
-
 // CtrlReplySuccess
 // CtrlReplyFailure
 // ActionReplySuccess
 // ActionReplyFailure
 // PropertyReplySuccess
 // PropertyReplyFailure
-func (hd *IThingsGateway) OnWrite(cmd []byte, b []byte) (int, error) {
+func (hd *IThingsGateway) OnCtrl(cmd []byte, b []byte) ([]byte, error) {
 	Cmd := string(cmd)
 	PropertyResp := `{"method": "reportReply","msgToken": "%s","code": 200,"msg":"success"}`
 	CtrlResp := `{"method": "controlReply","msgToken": "%s","code": 200,"msg":"success"}`
@@ -311,7 +298,7 @@ func (hd *IThingsGateway) OnWrite(cmd []byte, b []byte) (int, error) {
 	if Cmd == "PropertyReport" {
 		params := map[string]interface{}{}
 		if errUnmarshal := json.Unmarshal(b, &params); errUnmarshal != nil {
-			return 0, errUnmarshal
+			return nil, errUnmarshal
 		}
 		IthingsPropertyReport := IthingsPropertyReport{
 			Method:    "report",
@@ -325,7 +312,7 @@ func (hd *IThingsGateway) OnWrite(cmd []byte, b []byte) (int, error) {
 	if Cmd == "GetPropertyReply" {
 		params := map[string]interface{}{}
 		if errUnmarshal := json.Unmarshal(b, &params); errUnmarshal != nil {
-			return 0, errUnmarshal
+			return nil, errUnmarshal
 		}
 		IthingsGetPropertyReply := IthingsGetPropertyReply{
 			Method:    "getReportReply",
@@ -340,7 +327,7 @@ func (hd *IThingsGateway) OnWrite(cmd []byte, b []byte) (int, error) {
 		goto END
 	}
 END:
-	return 0, nil
+	return nil, nil
 }
 
 type IthingsGetPropertyReply struct {

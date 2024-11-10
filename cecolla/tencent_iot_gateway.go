@@ -222,26 +222,13 @@ func (hd *TencentIoTGateway) SetState(status typex.CecollaState) {
 
 }
 
-func (hd *TencentIoTGateway) OnDCACall(UUID string, Command string, Args interface{}) typex.DCAResult {
-	return typex.DCAResult{}
-}
-
-func (hd *TencentIoTGateway) OnCtrl(cmd []byte, args []byte) ([]byte, error) {
-	return []byte{}, nil
-}
-
-func (hd *TencentIoTGateway) OnRead(cmd []byte, data []byte) (int, error) {
-
-	return 0, nil
-}
-
 // CtrlReplySuccess
 // CtrlReplyFailure
 // ActionReplySuccess
 // ActionReplyFailure
 // PropertyReplySuccess
 // PropertyReplyFailure
-func (hd *TencentIoTGateway) OnWrite(cmd []byte, b []byte) (int, error) {
+func (hd *TencentIoTGateway) OnCtrl(cmd []byte, b []byte) ([]byte, error) {
 	Cmd := string(cmd)
 	CtrlResp := `{"method": "control_reply","clientToken": "%s","code": 200,"msg":"success"}`
 	ActionResp := `{"method": "action_reply","clientToken": "%s","code": 200,"msg":"success"}`
@@ -285,7 +272,7 @@ func (hd *TencentIoTGateway) OnWrite(cmd []byte, b []byte) (int, error) {
 	if Cmd == "PropertyReport" {
 		params := map[string]interface{}{}
 		if errUnmarshal := json.Unmarshal(b, &params); errUnmarshal != nil {
-			return 0, errUnmarshal
+			return nil, errUnmarshal
 		}
 		TencentIotPropertyReport := TencentIotPropertyReport{
 			Method:      "report",
@@ -299,7 +286,7 @@ func (hd *TencentIoTGateway) OnWrite(cmd []byte, b []byte) (int, error) {
 	if Cmd == "GetPropertyReply" {
 		params := map[string]interface{}{}
 		if errUnmarshal := json.Unmarshal(b, &params); errUnmarshal != nil {
-			return 0, errUnmarshal
+			return nil, errUnmarshal
 		}
 		TencentIotGetPropertyReply := TencentIotGetPropertyReply{
 			Method:      "get_status_reply",
@@ -314,7 +301,7 @@ func (hd *TencentIoTGateway) OnWrite(cmd []byte, b []byte) (int, error) {
 		goto END
 	}
 END:
-	return 0, nil
+	return nil, nil
 }
 
 // TencentIotHubMQTTAuthInfo 腾讯云 Iot Hub MQTT 认证信息
