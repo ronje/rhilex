@@ -139,7 +139,7 @@ func (gw *MBusEn13433MasterGateway) Init(devId string, configMap map[string]inte
 			Status:        0,
 			LastFetchTime: LastFetchTime,
 			Value:         "",
-			ErrMsg:        "Loading",
+			ErrMsg:        "--",
 		})
 	}
 	return nil

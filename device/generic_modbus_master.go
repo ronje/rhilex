@@ -200,7 +200,7 @@ func (mdev *GenericModbusMaster) Init(devId string, configMap map[string]interfa
 			Status:        0,
 			LastFetchTime: LastFetchTime,
 			Value:         "",
-			ErrMsg:        "Loading",
+			ErrMsg:        "--",
 		})
 	}
 

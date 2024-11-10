@@ -124,7 +124,7 @@ func (sd *genericSnmpDevice) Init(devId string, configMap map[string]interface{}
 			Status:        0,
 			LastFetchTime: LastFetchTime,
 			Value:         "",
-			ErrMsg:        "Loading",
+			ErrMsg:        "--",
 		})
 	}
 	if sd.mainConfig.SchemaId != "" {

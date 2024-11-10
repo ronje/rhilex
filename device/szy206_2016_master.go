@@ -140,7 +140,7 @@ func (gw *SZY206_2016_MasterGateway) Init(devId string, configMap map[string]int
 			Status:        0,
 			LastFetchTime: LastFetchTime,
 			Value:         "0",
-			ErrMsg:        "Loading",
+			ErrMsg:        "--",
 		})
 	}
 	return nil

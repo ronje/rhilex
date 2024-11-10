@@ -112,7 +112,7 @@ func (dev *GenericBacnetIpDevice) Init(devId string, configMap map[string]interf
 			Status:        0,
 			LastFetchTime: uint64(time.Now().UnixMilli()),
 			Value:         "",
-			ErrMsg:        "Loading",
+			ErrMsg:        "--",
 		})
 		dev.SubDeviceDataPoints = append(dev.SubDeviceDataPoints, dataPoint)
 	}
