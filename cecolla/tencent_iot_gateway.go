@@ -27,6 +27,7 @@ import (
 
 	mqtt "github.com/eclipse/paho.mqtt.golang"
 	"github.com/google/uuid"
+	"github.com/hootrhino/rhilex/component/intercache"
 	"github.com/hootrhino/rhilex/glogger"
 	"github.com/hootrhino/rhilex/typex"
 	"github.com/hootrhino/rhilex/utils"
@@ -90,6 +91,8 @@ func NewTencentIoTGateway(e typex.Rhilex) typex.XCecolla {
 //  初始化
 func (hd *TencentIoTGateway) Init(devId string, configMap map[string]interface{}) error {
 	hd.PointId = devId
+	intercache.RegisterSlot(hd.PointId)
+
 	if err := utils.BindSourceConfig(configMap, &hd.mainConfig); err != nil {
 		glogger.GLogger.Error(err)
 		return err
@@ -202,6 +205,7 @@ func (hd *TencentIoTGateway) Status() typex.CecollaState {
 
 // 停止设备
 func (hd *TencentIoTGateway) Stop() {
+	intercache.UnRegisterSlot(hd.PointId)
 	hd.status = typex.CEC_DOWN
 	if hd.CancelCTX != nil {
 		hd.CancelCTX()

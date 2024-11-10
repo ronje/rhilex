@@ -23,6 +23,7 @@ import (
 
 	mqtt "github.com/eclipse/paho.mqtt.golang"
 	"github.com/google/uuid"
+	"github.com/hootrhino/rhilex/component/intercache"
 	"github.com/hootrhino/rhilex/device/ithings"
 	"github.com/hootrhino/rhilex/glogger"
 	"github.com/hootrhino/rhilex/typex"
@@ -111,6 +112,7 @@ func GenerateIThingsMQTTAuthInfo(productID, deviceName, secret string) (IThingsM
 //  初始化
 func (hd *IThingsGateway) Init(devId string, configMap map[string]interface{}) error {
 	hd.PointId = devId
+	intercache.RegisterSlot(hd.PointId)
 	if err := utils.BindSourceConfig(configMap, &hd.mainConfig); err != nil {
 		glogger.GLogger.Error(err)
 		return err
@@ -219,6 +221,7 @@ func (hd *IThingsGateway) Status() typex.CecollaState {
 
 // 停止设备
 func (hd *IThingsGateway) Stop() {
+	intercache.UnRegisterSlot(hd.PointId)
 	hd.status = typex.CEC_DOWN
 	if hd.CancelCTX != nil {
 		hd.CancelCTX()
