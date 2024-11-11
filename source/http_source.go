@@ -23,7 +23,7 @@ type httpInEndSource struct {
 
 func NewHttpInEndSource(e typex.Rhilex) typex.XSource {
 	h := httpInEndSource{}
-	if core.GlobalConfig.AppDebugMode {
+	if core.GlobalConfig.DebugMode {
 		gin.SetMode(gin.DebugMode)
 	} else {
 		gin.SetMode(gin.ReleaseMode)

@@ -38,7 +38,7 @@ func StartClearDataCenterCron() {
 			return
 		default:
 		}
-		if core.GlobalConfig.AppDebugMode {
+		if core.GlobalConfig.DebugMode {
 			execDataCenterCron(`-1 day`)
 			time.Sleep(60 * time.Second) // For test
 		} else {

@@ -17,14 +17,14 @@ var Logrus *logrus.Logger
 var GLogger *logrus.Entry
 
 func StartGLogger(appId string, LogLevel string, EnableConsole bool,
-	AppDebugMode bool, LogMaxSize, LogMaxBackups, LogMaxAge int, LogCompress bool) {
+	DebugMode bool, LogMaxSize, LogMaxBackups, LogMaxAge int, LogCompress bool) {
 	Logrus = logrus.New()
 	GLogger = Logrus.WithField("appId", appId)
 	Logrus.Formatter = &logrus.JSONFormatter{
 		DisableHTMLEscape: true,
 		TimestampFormat:   "2006-01-02T15:04:05.999999999Z07:00",
 	}
-	if AppDebugMode {
+	if DebugMode {
 		Logrus.SetReportCaller(true)
 	}
 	if EnableConsole {

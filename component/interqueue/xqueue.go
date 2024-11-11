@@ -18,6 +18,7 @@ package interqueue
 import (
 	"context"
 	"fmt"
+	"math/rand"
 	"sync"
 	"time"
 
@@ -216,18 +217,18 @@ func (q *XQueue) pushDevice(d QueueData) error {
 * handle
 *
  */
+// handleQueue 尝试将数据发送到一个随机选择且有空间的通道
 func (q *XQueue) handleQueue(qData QueueData, Queue []chan QueueData) error {
-	send := false
-	for i := 0; i < 10; i++ {
-		if len((Queue[i]))+1 > q.maxQueueSize {
-			continue
+	var available []int
+	for i := 0; i < len(Queue); i++ {
+		if len(Queue[i])+1 <= q.maxQueueSize {
+			available = append(available, i)
 		}
-		Queue[i] <- qData
-		send = true
-		break
 	}
-	if send {
+	if len(available) > 0 {
+		randomIndex := available[rand.Intn(len(available))]
+		Queue[randomIndex] <- qData
 		return nil
 	}
-	return fmt.Errorf("Queue Send Failed")
+	return fmt.Errorf("Queue Send Failed: No available channels")
 }

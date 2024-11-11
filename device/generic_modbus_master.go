@@ -291,7 +291,7 @@ func (mdev *GenericModbusMaster) Start(cctx typex.CCTX) error {
 		mdev.rtuHandler.Parity = mdev.mainConfig.UartConfig.Parity
 		mdev.rtuHandler.StopBits = mdev.mainConfig.UartConfig.StopBits
 		mdev.rtuHandler.Timeout = time.Duration(mdev.mainConfig.UartConfig.Timeout) * time.Millisecond
-		if core.GlobalConfig.AppDebugMode {
+		if core.GlobalConfig.DebugMode {
 			mdev.rtuHandler.Logger = golog.New(glogger.GLogger.Writer(),
 				"Modbus RTU Mode: "+mdev.PointId+": ", golog.LstdFlags)
 		}
@@ -305,7 +305,7 @@ func (mdev *GenericModbusMaster) Start(cctx typex.CCTX) error {
 		mdev.tcpHandler = modbus.NewTCPClientHandler(
 			fmt.Sprintf("%s:%v", mdev.mainConfig.HostConfig.Host, mdev.mainConfig.HostConfig.Port),
 		)
-		if core.GlobalConfig.AppDebugMode {
+		if core.GlobalConfig.DebugMode {
 			mdev.tcpHandler.Logger = golog.New(glogger.GLogger.Writer(),
 				"Modbus TCP Mode: "+mdev.PointId+": ", golog.LstdFlags)
 		}

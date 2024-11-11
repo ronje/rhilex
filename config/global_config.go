@@ -43,7 +43,7 @@ func InitGlobalConfig(path string) typex.RhilexConfig {
 		GomaxProcs:            0,
 		EnablePProf:           false,
 		EnableConsole:         false,
-		AppDebugMode:          false,
+		DebugMode:             false,
 		LogLevel:              "info",
 		LogMaxSize:            5,     // MB
 		LogMaxBackups:         5,     // Per

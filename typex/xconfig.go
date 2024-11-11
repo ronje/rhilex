@@ -30,7 +30,7 @@ type RhilexConfig struct {
 	GomaxProcs            int      `ini:"gomax_procs" json:"gomaxProcs"`
 	EnablePProf           bool     `ini:"enable_pprof" json:"enablePProf"`
 	EnableConsole         bool     `ini:"enable_console" json:"enableConsole"`
-	AppDebugMode          bool     `ini:"app_debug_mode" json:"appDebugMode"`
+	DebugMode             bool     `ini:"debug_mode" json:"appDebugMode"`
 	LogLevel              string   `ini:"log_level" json:"logLevel"`
 	LogMaxSize            int      `ini:"log_max_size" json:"logMaxSize"`
 	LogMaxBackups         int      `ini:"log_max_backups" json:"logMaxBackups"`
