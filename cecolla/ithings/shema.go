@@ -14,13 +14,16 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 package ithings
 
+import "encoding/json"
+
 type (
 	// Model 物模型协议-数据模板定义
 	ModelSimple struct {
-		Properties PropertiesSimple `json:"properties,omitempty"` //属性
-		Events     EventsSimple     `json:"events,omitempty"`     //事件
-		Actions    ActionsSimple    `json:"actions,omitempty"`    //行为
+		Properties PropertiesSimple `json:"properties"` //属性
+		Events     EventsSimple     `json:"events"`     //事件
+		Actions    ActionsSimple    `json:"actions"`    //行为
 	}
+
 	/*事件*/
 	EventSimple struct {
 		Identifier string       `json:"id"`     //标识符 (统一)
@@ -56,10 +59,15 @@ type (
 	PropertiesSimple []PropertySimple
 	/*数据类型定义*/
 	Define struct {
-		Type    DataType          `json:"type"`              //参数类型:bool int string struct float timestamp array enum
-		Mapping map[string]string `json:"mapping,omitempty"` //枚举及bool类型:bool enum
+		Type    DataType          `json:"type"`    //参数类型:bool int string struct float timestamp array enum
+		Mapping map[string]string `json:"mapping"` //枚举及bool类型:bool enum
 	}
 )
+
+func (O ModelSimple) String() string {
+	bytes, _ := json.Marshal(O)
+	return string(bytes)
+}
 
 // 数据类型
 type DataType string

@@ -23,8 +23,8 @@ import (
 
 	mqtt "github.com/eclipse/paho.mqtt.golang"
 	"github.com/google/uuid"
+	"github.com/hootrhino/rhilex/cecolla/ithings"
 	"github.com/hootrhino/rhilex/component/intercache"
-	"github.com/hootrhino/rhilex/device/ithings"
 	"github.com/hootrhino/rhilex/glogger"
 	"github.com/hootrhino/rhilex/typex"
 	"github.com/hootrhino/rhilex/utils"
@@ -46,13 +46,6 @@ const (
 	_ithings_operation_down = "$gateway/operation/result/%s/%s" //数据下行 Topic（用于订阅）
 )
 
-type IThingsGatewayMainConfig struct {
-	ServerEndpoint string `json:"serverEndpoint" validate:"required"` //服务地址
-	Mode           string `json:"mode" validate:"required"`           //模式: DEVICE|GATEWAY
-	ProductId      string `json:"productId" validate:"required"`      //产品名
-	DeviceName     string `json:"deviceName" validate:"required"`     //设备名
-	DevicePsk      string `json:"devicePsk" validate:"required"`      //秘钥
-}
 type IThingsSubDevice struct {
 	ProductID    string `json:"productID"`
 	DeviceName   string `json:"deviceName"`
@@ -61,6 +54,19 @@ type IThingsSubDevice struct {
 	Timestamp    string `json:"timestamp"`
 	SignMethod   string `json:"signMethod"`
 	DeviceSecret string `json:"deviceSecret"`
+}
+
+/**
+ * 主配置
+ *
+ */
+type IThingsGatewayMainConfig struct {
+	ServerEndpoint string `json:"serverEndpoint" validate:"required"` //服务地址，默认"tcp://127.0.0.1:1883"
+	Mode           string `json:"mode" validate:"required"`           //工作模式: DEVICE|GATEWAY，默认DEVICE
+	SubProduct     string `json:"subProduct" validate:"required"`     //子产品名,GATEWAY模式下有效，必填
+	ProductId      string `json:"productId" validate:"required"`      //产品名称
+	DeviceName     string `json:"deviceName" validate:"required"`     //设备名称
+	DevicePsk      string `json:"devicePsk" validate:"required"`      //连接秘钥
 }
 
 // 腾讯云物联网平台网关
@@ -76,8 +82,12 @@ type IThingsGateway struct {
 	actionDownTopic   string
 	topologyTopicUp   string
 	topologyTopicDown string
-	//
+	// 子设备
 	IThingsSubDevices []IThingsSubDevice
+	// 自己的物模型
+	SelfSchema ithings.ModelSimple
+	// 子设备的物模型
+	SubDeviceSchema ithings.ModelSimple
 }
 
 func NewIThingsGateway(e typex.Rhilex) typex.XCecolla {
@@ -86,6 +96,7 @@ func NewIThingsGateway(e typex.Rhilex) typex.XCecolla {
 	hd.mainConfig = IThingsGatewayMainConfig{
 		ServerEndpoint: "tcp://127.0.0.1:1883",
 		Mode:           "DEVICE",
+		SubProduct:     "",
 		ProductId:      "",
 		DeviceName:     "",
 		DevicePsk:      "",

@@ -67,7 +67,7 @@ func StartInSupervisor(InCtx context.Context, in *typex.InEnd, ruleEngine typex.
 			glogger.GLogger.Debugf(info)
 			internotify.Push(internotify.BaseEvent{
 				Type:  `WARNING`,
-				Event: "event.inend.down",
+				Event: "event.inend.down." + UUID,
 				Ts:    uint64(time.Now().UnixMilli()),
 				Info:  info,
 			})
@@ -130,7 +130,7 @@ func StartOutSupervisor(OutCtx context.Context, out *typex.OutEnd, ruleEngine ty
 			glogger.GLogger.Debugf(info)
 			internotify.Push(internotify.BaseEvent{
 				Type:  `WARNING`,
-				Event: "event.outend.down",
+				Event: "event.outend.down." + UUID,
 				Ts:    uint64(time.Now().UnixMilli()),
 				Info:  info,
 			})
@@ -197,7 +197,7 @@ func StartDeviceSupervisor(DeviceCtx context.Context, device *typex.Device, rule
 			glogger.GLogger.Debugf(info)
 			internotify.Push(internotify.BaseEvent{
 				Type:  `WARNING`,
-				Event: "event.device.down",
+				Event: "event.device.down." + UUID,
 				Ts:    uint64(time.Now().UnixMilli()),
 				Info:  info,
 			})
@@ -264,7 +264,7 @@ func StartCecollaSupervisor(CecollaCtx context.Context, cecolla *typex.Cecolla, 
 			glogger.GLogger.Debugf(info)
 			internotify.Push(internotify.BaseEvent{
 				Type:  `WARNING`,
-				Event: "event.cecolla.down",
+				Event: "event.cecolla.down." + UUID,
 				Ts:    uint64(time.Now().UnixMilli()),
 				Info:  info,
 			})

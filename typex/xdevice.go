@@ -70,7 +70,6 @@ const (
 	SIEMENS_PLC                 DeviceType = "SIEMENS_PLC"                 // SIEMENS-S71200
 	GENERIC_SNMP                DeviceType = "GENERIC_SNMP"                // SNMP 协议支持
 	GENERIC_CAMERA              DeviceType = "GENERIC_CAMERA"              // 通用摄像头
-	GENERIC_AIS_RECEIVER        DeviceType = "GENERIC_AIS_RECEIVER"        // 通用AIS
 	GENERIC_BACNET_IP           DeviceType = "GENERIC_BACNET_IP"           // 通用Bacnet IP模式
 	BACNET_ROUTER_GW            DeviceType = "BACNET_ROUTER_GW"            // 通用BACNET 路由模式
 	GENERIC_HTTP_DEVICE         DeviceType = "GENERIC_HTTP_DEVICE"         // HTTP采集器
@@ -83,6 +82,8 @@ const (
 	CJT1882004_MASTER           DeviceType = "CJT1882004_MASTER"           // CJT1882004
 	SZY2062016_MASTER           DeviceType = "SZY2062016_MASTER"           // SZY2062016
 	GENERIC_USER_PROTOCOL       DeviceType = "GENERIC_USER_PROTOCOL"       // 自定义协议
+	GENERIC_AIS_RECEIVER        DeviceType = "GENERIC_AIS_RECEIVER"        // 通用AIS
+	GENERIC_NEMA_GNS_PROTOCOL   DeviceType = "GENERIC_NEMA_GNS_PROTOCOL"   // GPS采集器
 )
 
 type DCAModel struct {
