@@ -109,7 +109,7 @@ func (hh *CustomProtocol) Start(cctx typex.CCTX) error {
 					glogger.GLogger.Error(err)
 					return
 				}
-				ParsedData, errParse := protocol.ParseBinary(hh.mainConfig.ProtocolExpr, AppLayerFrame.Payload)
+				ParsedData, errParse := utils.ParseBinary(hh.mainConfig.ProtocolExpr, AppLayerFrame.Payload)
 				if errParse != nil {
 					glogger.GLogger.Error(errParse)
 					return

@@ -20,14 +20,14 @@ import (
 	"github.com/hootrhino/rhilex/utils"
 )
 
-type NemaGpsCommonConfig struct {
+type NemaGpsConfig struct {
 	Parse *bool  `json:"parse" validate:"required"`
 	GwSN  string `json:"gwsn" validate:"required"`
 }
 
 type NemaGpsMainConfig struct {
-	CommonConfig NemaGpsCommonConfig `json:"commonConfig" validate:"required"`
-	UartConfig   common.UartConfig   `json:"uartConfig" validate:"required"`
+	GpsConfig  NemaGpsConfig     `json:"gpsConfig" validate:"required"`
+	UartConfig common.UartConfig `json:"uartConfig" validate:"required"`
 }
 
 type NemaGpsMasterDevice struct {
@@ -48,7 +48,7 @@ func NewNemaGpsMasterDevice(e typex.Rhilex) typex.XDevice {
 	gpsd := new(NemaGpsMasterDevice)
 	gpsd.locker = &sync.Mutex{}
 	gpsd.mainConfig = NemaGpsMainConfig{
-		CommonConfig: NemaGpsCommonConfig{
+		GpsConfig: NemaGpsConfig{
 			Parse: new(bool),
 			GwSN:  "rhilex",
 		},
@@ -110,12 +110,12 @@ func (gpsd *NemaGpsMasterDevice) Start(cctx typex.CCTX) error {
 				glogger.Error(err)
 				continue
 			}
-			if !*gpsd.mainConfig.CommonConfig.Parse {
+			if !*gpsd.mainConfig.GpsConfig.Parse {
 				ds := `{"gwsn":"%s","data":"%s"}`
 				lens := len(rawAiSString)
 				if lens > 2 {
 					gpsd.RuleEngine.WorkDevice(gpsd.Details(),
-						fmt.Sprintf(ds, gpsd.mainConfig.CommonConfig.GwSN, rawAiSString))
+						fmt.Sprintf(ds, gpsd.mainConfig.GpsConfig.GwSN, rawAiSString))
 				}
 			} else {
 				GPGGAData, errParse := parseGPGGA(rawAiSString)

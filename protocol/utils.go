@@ -15,10 +15,7 @@
 
 package protocol
 
-import (
-	"encoding/hex"
-	"fmt"
-)
+import "fmt"
 
 /**
  * 打印十六进制
@@ -30,12 +27,4 @@ func ByteDumpHexString(b []byte) string {
 		result += fmt.Sprintf("0x%02x ", v)
 	}
 	return result
-}
-
-/**
- * 字节转成十六进制
- *
- */
-func ByteToHex(b []byte) string {
-	return hex.EncodeToString(b)
 }
