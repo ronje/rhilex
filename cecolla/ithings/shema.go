@@ -17,8 +17,8 @@ package ithings
 import "encoding/json"
 
 type (
-	// Model 物模型协议-数据模板定义
-	ModelSimple struct {
+	// Schema 物模型协议-数据模板定义
+	SchemaSimple struct {
 		Properties PropertiesSimple `json:"properties"` //属性
 		Events     EventsSimple     `json:"events"`     //事件
 		Actions    ActionsSimple    `json:"actions"`    //行为
@@ -64,7 +64,7 @@ type (
 	}
 )
 
-func (O ModelSimple) String() string {
+func (O SchemaSimple) String() string {
 	bytes, _ := json.Marshal(O)
 	return string(bytes)
 }
@@ -107,3 +107,20 @@ const (
 	ActionDirUp   ActionDir = "up"   //向上调用
 	ActionDirDown ActionDir = "down" //向下调用
 )
+
+type IthingsResponse struct {
+	Method   string         `json:"method"`
+	MsgToken string         `json:"msgToken"`
+	Code     int            `json:"code"`
+	Payload  IthingsPayload `json:"payload"`
+}
+
+type IthingsPayload struct {
+	ProductId string       `json:"productId"`
+	Schema    SchemaSimple `json:"schema"`
+}
+
+func (O IthingsResponse) String() string {
+	bytes, _ := json.Marshal(O)
+	return string(bytes)
+}

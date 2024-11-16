@@ -38,9 +38,9 @@ func (O ApiResponse) String() string {
 }
 
 type SchemaResponse struct {
-	Code int         `json:"code"`
-	Msg  string      `json:"msg"`
-	Data ModelSimple `json:"data"`
+	Code int          `json:"code"`
+	Msg  string       `json:"msg"`
+	Data SchemaSimple `json:"data"`
 }
 
 func (O SchemaResponse) String() string {
@@ -52,30 +52,34 @@ func (O SchemaResponse) String() string {
  * 获取物模型
  *
  */
-func FetchIthingsSchema(host, productID, deviceName, mqttUser, mqttPwd string) (ModelSimple, error) {
+func FetchIthingsSchema(host, productID, deviceName, mqttUser, mqttPwd string) (SchemaSimple, error) {
 	// http://%s/api/v1/things/device/edge/send/{handle}/{type}/{productID}/{deviceName}
-	url := "http://%s/api/v1/things/device/edge/send/thing/property/%s/%s"
+	url := "%s/api/v1/gateway/device/edge/send/gateway/thing"
 	method := "POST"
 	payload := strings.NewReader(fmt.Sprintf(`{"method": "getSchema","msgToken": "%s"}`, uuid.NewString()))
 	client := &http.Client{}
-	req, err := http.NewRequest(method, fmt.Sprintf(url, host, productID, deviceName), payload)
+	fmt.Println(fmt.Sprintf(url, host), " Authorization:", BasicAuthEncode(mqttUser, mqttPwd))
+	req, err := http.NewRequest(method, fmt.Sprintf(url, host), payload)
 	if err != nil {
-		return ModelSimple{}, err
+		return SchemaSimple{}, err
 	}
 	req.Header.Add("Content-Type", "application/json")
 	req.Header.Add("Authorization", BasicAuthEncode(mqttUser, mqttPwd))
+	// req.Header.Add("productID", productID)
+	// req.Header.Add("deviceName", deviceName)
 	res, err := client.Do(req)
 	if err != nil {
-		return ModelSimple{}, err
+		return SchemaSimple{}, err
 	}
 	defer res.Body.Close()
 	body, err := io.ReadAll(res.Body)
 	if err != nil {
-		return ModelSimple{}, err
+		return SchemaSimple{}, err
 	}
+	fmt.Println(string(body))
 	apiResponse := ApiResponse{}
 	if errUnmarshal := json.Unmarshal(body, &apiResponse); errUnmarshal != nil {
-		return ModelSimple{}, errUnmarshal
+		return SchemaSimple{}, errUnmarshal
 	}
 	return apiResponse.Data.Data, nil
 }

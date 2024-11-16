@@ -41,9 +41,11 @@ const (
 	// 动作
 	_ithings_ActionTopic   = "$thing/down/action/%v/%v"
 	_ithings_ActionUpTopic = "$thing/up/action/%v/%v"
-	// 子设备拓扑
-	_ithings_operation_up   = "$gateway/operation/%s/%s"        //数据上行 Topic（用于发布）
-	_ithings_operation_down = "$gateway/operation/result/%s/%s" //数据下行 Topic（用于订阅）
+	// 设备从云端接收最新消息使用的 Topic：
+	//     请求 Topic： $gateway/up/thing/{ProductID}/{DeviceName}
+	//     响应 Topic： $gateway/down/thing/{ProductID}/{DeviceName}
+	_ithings_gateway_up   = "$gateway/up/thing/%s/%s"   //数据上行 Topic（用于发布）
+	_ithings_gateway_down = "$gateway/down/thing/%s/%s" //数据下行 Topic（用于订阅）
 )
 
 type IThingsSubDevice struct {
@@ -80,14 +82,14 @@ type IThingsGateway struct {
 	propertyDownTopic string
 	actionUpTopic     string
 	actionDownTopic   string
-	topologyTopicUp   string
-	topologyTopicDown string
+	gatewayTopicUp    string
+	gatewayTopicDown  string
 	// 子设备
 	IThingsSubDevices []IThingsSubDevice
 	// 自己的物模型
-	SelfSchema ithings.ModelSimple
+	GatewaySchema *ithings.SchemaSimple
 	// 子设备的物模型
-	SubDeviceSchema ithings.ModelSimple
+	SubDeviceSchema *ithings.SchemaSimple
 }
 
 func NewIThingsGateway(e typex.Rhilex) typex.XCecolla {
@@ -142,22 +144,23 @@ func (hd *IThingsGateway) Init(devId string, configMap map[string]interface{}) e
 func (hd *IThingsGateway) Start(cctx typex.CCTX) error {
 	hd.Ctx = cctx.Ctx
 	hd.CancelCTX = cctx.CancelCTX
-	// 属性
+	// 自身属性
 	hd.propertyDownTopic = fmt.Sprintf(_ithings_PropertyTopic,
 		hd.mainConfig.ProductId, hd.mainConfig.DeviceName)
 	hd.propertyUpTopic = fmt.Sprintf(_ithings_PropertyUpTopic,
 		hd.mainConfig.ProductId, hd.mainConfig.DeviceName)
-	// 动作
+	// 自身动作
 	hd.actionDownTopic = fmt.Sprintf(_ithings_ActionTopic,
 		hd.mainConfig.ProductId, hd.mainConfig.DeviceName)
 	hd.actionUpTopic = fmt.Sprintf(_ithings_ActionUpTopic,
 		hd.mainConfig.ProductId, hd.mainConfig.DeviceName)
-	// 子设备
-	hd.topologyTopicUp = fmt.Sprintf(_ithings_operation_up,
-		hd.mainConfig.ProductId, hd.mainConfig.DeviceName)
-	hd.topologyTopicDown = fmt.Sprintf(_ithings_operation_down,
-		hd.mainConfig.ProductId, hd.mainConfig.DeviceName)
 
+	// 网关-子设备
+	hd.gatewayTopicUp = fmt.Sprintf(_ithings_gateway_up,
+		hd.mainConfig.ProductId, hd.mainConfig.DeviceName)
+	hd.gatewayTopicDown = fmt.Sprintf(_ithings_gateway_down,
+		hd.mainConfig.ProductId, hd.mainConfig.DeviceName)
+	//
 	var connectHandler mqtt.OnConnectHandler = func(client mqtt.Client) {
 		glogger.GLogger.Infof("IThings Connected Success")
 		// 属性下发
@@ -172,25 +175,37 @@ func (hd *IThingsGateway) Start(cctx typex.CCTX) error {
 		}); token.Error() != nil {
 			glogger.GLogger.Error(token.Error())
 		}
-		// 网关模式:
-		//    数据上行 Topic（用于发布）：$gateway/operation/${productid}/${devicename}
-		//    数据下行 Topic（用于订阅）：$gateway/operation/result/${productid}/${devicename}
+		// 设备物模型
+		hd.client.Publish(hd.gatewayTopicUp, 1, false,
+			fmt.Sprintf(`{"method":"getSchema","msgToken":"%s","payload":{"productID":"%s"}}`,
+				uuid.NewString(), hd.mainConfig.ProductId))
+		// 获取子物模型
 		if hd.mainConfig.Mode == "GATEWAY" {
-			token := hd.client.Subscribe(hd.topologyTopicDown, 1, func(c mqtt.Client, msg mqtt.Message) {
-				glogger.GLogger.Debug("IThingsGateway topologyTopicDown: ", hd.topologyTopicDown, msg)
-				SubDeviceMessage := IThingsSubDeviceMessage{}
-				if err := json.Unmarshal(msg.Payload(), &SubDeviceMessage); err != nil {
+			token := hd.client.Subscribe(hd.gatewayTopicDown, 1, func(c mqtt.Client, msg mqtt.Message) {
+				glogger.Debug("IThingsGateway gateway Topic Down: ", hd.gatewayTopicDown, string(msg.Payload()))
+				response := ithings.IthingsResponse{}
+				errUnmarshal := json.Unmarshal(msg.Payload(), &response)
+				if errUnmarshal != nil {
+					glogger.GLogger.Error(errUnmarshal)
 					return
 				}
-				hd.IThingsSubDevices = append(hd.IThingsSubDevices, SubDeviceMessage.Payload.Devices...)
+				if response.Payload.ProductId == hd.mainConfig.ProductId {
+					hd.GatewaySchema = &response.Payload.Schema
+					glogger.Debug("Get Gateway Schema Success:", hd.GatewaySchema.String())
+				}
+				if response.Payload.ProductId == hd.mainConfig.SubProduct {
+					hd.SubDeviceSchema = &response.Payload.Schema
+					glogger.Debug("Get SubDevice Schema Success:", hd.SubDeviceSchema.String())
+				}
 			})
 			if token.Error() != nil {
 				glogger.GLogger.Error(token.Error())
-			} else {
-				// Get Topology: {"type": "describe_sub_devices"}
-				glogger.GLogger.Info("Connect IThings with Gateway Mode")
-				hd.client.Publish(hd.topologyTopicUp, 1, false, `{"type": "describe_sub_devices"}`)
+				return
 			}
+			glogger.GLogger.Info("Connect IThings with Gateway Mode")
+			hd.client.Publish(hd.gatewayTopicUp, 1, false,
+				fmt.Sprintf(`{"method":"getSchema","msgToken":"%s","payload":{"productID":"%s"}}`,
+					uuid.NewString(), hd.mainConfig.SubProduct))
 		}
 	}
 
@@ -268,8 +283,15 @@ type IThingsInputMsg struct {
 // ActionReplyFailure
 // PropertyReplySuccess
 // PropertyReplyFailure
-func (hd *IThingsGateway) OnCtrl(cmd []byte, b []byte) ([]byte, error) {
+func (hd *IThingsGateway) OnCtrl(cmd []byte, b []byte) (any, error) {
 	Cmd := string(cmd)
+	// 返回物模型
+	if Cmd == "GetSchema" {
+		return map[string]any{
+			"schema":          hd.GatewaySchema,
+			"subDeviceSchema": hd.SubDeviceSchema,
+		}, nil
+	}
 	PropertyResp := `{"method": "reportReply","msgToken": "%s","code": 200,"msg":"success"}`
 	CtrlResp := `{"method": "controlReply","msgToken": "%s","code": 200,"msg":"success"}`
 	ActionResp := `{"method": "actionReply","msgToken": "%s","code": 200,"msg":"success"}`

@@ -38,7 +38,7 @@ const (
 type XCecolla interface {
 	Init(CECId string, configMap map[string]interface{}) error
 	Start(CCTX) error
-	OnCtrl(cmd []byte, args []byte) ([]byte, error)
+	OnCtrl(cmd []byte, args []byte) (any, error)
 	Status() CecollaState
 	Stop()
 	Details() *Cecolla

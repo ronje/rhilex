@@ -232,7 +232,7 @@ func (hd *TencentIoTGateway) SetState(status typex.CecollaState) {
 // ActionReplyFailure
 // PropertyReplySuccess
 // PropertyReplyFailure
-func (hd *TencentIoTGateway) OnCtrl(cmd []byte, b []byte) ([]byte, error) {
+func (hd *TencentIoTGateway) OnCtrl(cmd []byte, b []byte) (any, error) {
 	Cmd := string(cmd)
 	CtrlResp := `{"method": "control_reply","clientToken": "%s","code": 200,"msg":"success"}`
 	ActionResp := `{"method": "action_reply","clientToken": "%s","code": 200,"msg":"success"}`

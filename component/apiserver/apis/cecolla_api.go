@@ -27,9 +27,9 @@ func InitCecollaRoute() {
 		cecollaApi.GET("/group", server.AddRoute(ListCecollaByGroup))
 		cecollaApi.GET("/listByGroup", server.AddRoute(ListCecollaByGroup))
 		cecollaApi.GET("/list", server.AddRoute(ListCecolla))
-		cecollaApi.GET("/listShort", server.AddRoute(ListCecollasShort))
 		cecollaApi.PUT("/restart", server.AddRoute(RestartCecolla))
 		cecollaApi.GET("/cecollaErrMsg", server.AddRoute(GetCecollaErrorMsg))
+		cecollaApi.GET("/cecollaSchema", server.AddRoute(GetCecollaSchema))
 	}
 }
 
@@ -129,7 +129,7 @@ func ListCecollaByGroup(c *gin.Context, ruleEngine typex.Rhilex) {
 		c.JSON(common.HTTP_OK, common.Error400(err))
 		return
 	}
-	Gid, _ := c.GetQuery("uuid")
+	Gid, _ := c.GetQuery("gid")
 	count, MCecollas := service.PageCecollaByGroup(pager.Current, pager.Size, Gid)
 	cecollas := []CecollaVo{}
 	for _, mCecolla := range MCecollas {
@@ -220,7 +220,11 @@ func CreateCecolla(c *gin.Context, ruleEngine typex.Rhilex) {
 		Type:        form.Type,
 		Name:        form.Name,
 		Description: form.Description,
-		Config:      string(configJson),
+		Action: `-- Default Action Callback
+function Main(Payload)
+    Debug("== Payload == ".. Payload)
+end`,
+		Config: string(configJson),
 	}
 	if err := service.InsertCecolla(&MCecolla); err != nil {
 		c.JSON(common.HTTP_OK, common.Error400(err))
@@ -300,25 +304,25 @@ func GetCecollaErrorMsg(c *gin.Context, ruleEngine typex.Rhilex) {
 }
 
 /**
- * 获取一个简单的列表
+ * 获取物模型
  *
  */
-type CecollaShortVo struct {
-	UUID string `json:"uuid"`
-	Name string `json:"name"`
-	Type string `json:"type"`
-}
-
-func ListCecollasShort(c *gin.Context, ruleEngine typex.Rhilex) {
-	MCecollas := service.AllCecollas()
-	cecollas := []CecollaShortVo{}
-	for _, mCecolla := range MCecollas {
-		CecollaVo := CecollaShortVo{}
-		CecollaVo.UUID = mCecolla.UUID
-		CecollaVo.Name = mCecolla.Name
-		CecollaVo.Type = mCecolla.Type
-		cecollas = append(cecollas, CecollaVo)
+func GetCecollaSchema(c *gin.Context, ruleEngine typex.Rhilex) {
+	uuid, _ := c.GetQuery("uuid")
+	cecolla := ruleEngine.GetCecolla(uuid)
+	if cecolla == nil {
+		c.JSON(common.HTTP_OK, common.Error("Cecolla Not Exists:"+uuid))
+		return
 	}
-	c.JSON(common.HTTP_OK, common.OkWithData(cecollas))
-
+	response, err := cecolla.Cecolla.OnCtrl([]byte("GetSchema"), []byte{})
+	if err != nil {
+		c.JSON(common.HTTP_OK, common.Error400(err))
+		return
+	}
+	switch T := response.(type) {
+	case map[string]any:
+		c.JSON(common.HTTP_OK, common.OkWithData(T))
+		return
+	}
+	c.JSON(common.HTTP_OK, common.Error("Cecolla Ctrl Failed"))
 }

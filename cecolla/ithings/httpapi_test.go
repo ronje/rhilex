@@ -20,11 +20,13 @@ import "testing"
 // go test -timeout 30s -run ^TestFetchIthingsSchema$ github.com/hootrhino/rhilex/cecolla/ithings -v -count=1
 func TestFetchIthingsSchema(t *testing.T) {
 	// demo.ithings.net.cn
-	// 01D
-	// 基站1
-	// 01D&基站1;12010126;Q1AMS;1889253787453
-	// 4ae2b2175209fe7dc5fc1ef57468bc6a950046de;hmacsha1
-	Resp, err := FetchIthingsSchema("demo.ithings.net.cn",
+	// peoduct:    01D
+	// DeviceName: 基站1
+	// Key:        xSL17wB6+qtcj3n2Pqotfcr8WVE=
+	// Mqtt:
+	//    01D&基站1;12010126;Q1AMS;1889253787453
+	//    4ae2b2175209fe7dc5fc1ef57468bc6a950046de;hmacsha1
+	Resp, err := FetchIthingsSchema("https://demo.ithings.net.cn",
 		"01D", "基站1", "01D&基站1;12010126;Q1AMS;1889253787453",
 		"4ae2b2175209fe7dc5fc1ef57468bc6a950046de;hmacsha1")
 	if err != nil {
