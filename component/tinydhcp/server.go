@@ -156,30 +156,34 @@ func (s *DHCPServer) GetLeaseHistory() []Lease {
 	return leases
 }
 
-func (s *DHCPServer) StartServer(interfaceName string) {
+func (s *DHCPServer) StartServer(interfaceName string, port int) {
 
-	srv, err := server4.NewServer(interfaceName, nil, func(conn net.PacketConn, peer net.Addr, pkt *dhcpv4.DHCPv4) {
-		mac := pkt.ClientHWAddr
-		s.LogEvent(fmt.Sprintf("Request from MAC %s", mac))
+	srv, err := server4.NewServer(interfaceName,
+		&net.UDPAddr{
+			IP: net.ParseIP("0.0.0.0"), Port: port,
+		},
+		func(conn net.PacketConn, peer net.Addr, pkt *dhcpv4.DHCPv4) {
+			mac := pkt.ClientHWAddr
+			s.LogEvent(fmt.Sprintf("Request from MAC %s", mac))
 
-		if static, found := s.StaticBindings[mac.String()]; found {
+			if static, found := s.StaticBindings[mac.String()]; found {
+				response, _ := dhcpv4.NewReplyFromRequest(pkt)
+				response.YourIPAddr = static.IP
+				response.Options.Update(dhcpv4.OptSubnetMask(net.IPv4Mask(255, 255, 255, 0)))
+				response.Options.Update(dhcpv4.OptRouter(s.Gateway))
+				return
+			}
+
+			ip, err := s.AssignLease(mac)
+			if err != nil {
+				s.LogEvent(fmt.Sprintf("No IP available for MAC %s", mac))
+				return
+			}
 			response, _ := dhcpv4.NewReplyFromRequest(pkt)
-			response.YourIPAddr = static.IP
+			response.YourIPAddr = ip
 			response.Options.Update(dhcpv4.OptSubnetMask(net.IPv4Mask(255, 255, 255, 0)))
 			response.Options.Update(dhcpv4.OptRouter(s.Gateway))
-			return
-		}
-
-		ip, err := s.AssignLease(mac)
-		if err != nil {
-			s.LogEvent(fmt.Sprintf("No IP available for MAC %s", mac))
-			return
-		}
-		response, _ := dhcpv4.NewReplyFromRequest(pkt)
-		response.YourIPAddr = ip
-		response.Options.Update(dhcpv4.OptSubnetMask(net.IPv4Mask(255, 255, 255, 0)))
-		response.Options.Update(dhcpv4.OptRouter(s.Gateway))
-	})
+		})
 	if err != nil {
 		log.Fatalf("Failed to start DHCP server: %v", err)
 	}
@@ -188,18 +192,3 @@ func (s *DHCPServer) StartServer(interfaceName string) {
 		log.Fatalf("Failed to serve DHCP requests: %v", err)
 	}
 }
-
-// func main1() {
-// 	dhcpServer := &DHCPServer{
-// 		IPPools:        []*IPPool{},
-// 		StaticBindings: make(map[string]StaticBinding),
-// 		Log:            []string{},
-// 		Gateway:        net.ParseIP("192.168.1.1"),
-// 	}
-
-// 	dhcpServer.AddIPPool("192.168.1.0/24", "192.168.1.100", "192.168.1.200", 24*time.Hour)
-// 	mac, _ := net.ParseMAC("AA:BB:CC:DD:EE:01")
-// 	dhcpServer.AddStaticBinding(mac, net.ParseIP("192.168.1.150"))
-
-// 	dhcpServer.StartServer("eth1")
-// }
