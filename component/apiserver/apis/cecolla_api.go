@@ -321,7 +321,6 @@ func UpdateCecolla(c *gin.Context, ruleEngine typex.Rhilex) {
 			UUID:        form.UUID,
 			Type:        form.Type,
 			Name:        form.Name,
-			Action:      form.Action,
 			Description: form.Description,
 			Config:      string(configJson),
 		}

@@ -288,7 +288,7 @@ func (hd *IThingsGateway) OnCtrl(cmd []byte, b []byte) (any, error) {
 	// 返回物模型
 	if Cmd == "GetSchema" {
 		return map[string]any{
-			"schema":          hd.GatewaySchema,
+			"gatewaySchema":   hd.GatewaySchema,
 			"subDeviceSchema": hd.SubDeviceSchema,
 		}, nil
 	}
