@@ -81,7 +81,7 @@ func (e *RuleEngine) loadCecollas(xCecolla typex.XCecolla, cecollaInstance *type
 		})
 		return err
 	}
-	err2 := startCecolla(xCecolla, e, ctx, cancelCTX)
+	err2 := startCecolla(xCecolla, ctx, cancelCTX)
 	if err2 != nil {
 		glogger.GLogger.Error(err2)
 		intercache.SetValue("__DefaultRuleEngine", cecollaInstance.UUID, intercache.CacheValue{
@@ -104,8 +104,7 @@ func (e *RuleEngine) loadCecollas(xCecolla typex.XCecolla, cecollaInstance *type
 * Start是异步进行的,当云边协同器的GetStatus返回状态UP时，正常运行，当Down时重启
 *
  */
-func startCecolla(xCecolla typex.XCecolla, e *RuleEngine,
-	ctx context.Context, cancelCTX context.CancelFunc) error {
+func startCecolla(xCecolla typex.XCecolla, ctx context.Context, cancelCTX context.CancelFunc) error {
 	if err := xCecolla.Start(typex.CCTX{Ctx: ctx, CancelCTX: cancelCTX}); err != nil {
 		glogger.GLogger.Error("Cecolla start error:", err)
 		return err

@@ -23,6 +23,7 @@ import (
 	lua "github.com/hootrhino/gopher-lua"
 	"github.com/hootrhino/rhilex/component/aibase"
 	"github.com/hootrhino/rhilex/component/applet"
+	"github.com/hootrhino/rhilex/component/cecollalet"
 	"github.com/hootrhino/rhilex/component/crontask"
 	datacenter "github.com/hootrhino/rhilex/component/datacenter"
 	intercache "github.com/hootrhino/rhilex/component/intercache"
@@ -98,6 +99,8 @@ func InitRuleEngine(config typex.RhilexConfig) typex.Rhilex {
 	intermetric.InitInternalMetric(__DefaultRuleEngine)
 	// lua applet manager
 	applet.InitAppletRuntime(__DefaultRuleEngine)
+	// lua Cecollalet manager
+	cecollalet.InitCecollaletRuntime(__DefaultRuleEngine)
 	// current only support Internal ai
 	aibase.InitAlgorithmRuntime(__DefaultRuleEngine)
 	// Internal Queue
@@ -141,7 +144,6 @@ func (e *RuleEngine) GetConfig() *typex.RhilexConfig {
 func (e *RuleEngine) Stop() {
 	glogger.GLogger.Info("Ready to stop RHILEX")
 	crontask.StopCronRebootExecutor()
-	applet.Stop()
 	// 资源
 	for _, inEnd := range e.InEnds.Values() {
 		if inEnd.Source != nil {
@@ -165,7 +167,12 @@ func (e *RuleEngine) Stop() {
 		device.Device.Stop()
 		glogger.GLogger.Infof("Stop Device:(%s) Successfully", device.Name)
 	}
-
+	// Stop Applet
+	glogger.GLogger.Info("Stop Applet Runtime")
+	applet.Stop()
+	// Stop Cecollalet
+	glogger.GLogger.Info("Stop Cecollalet Runtime")
+	cecollalet.Stop()
 	// Internal Cache
 	glogger.GLogger.Info("Flush Internal Cache")
 	intercache.Flush()

@@ -87,7 +87,7 @@ func VerifyLuaSyntax(r *typex.Rule) error {
 }
 
 // 临时校验语法
-func ValidateAppletSyntax(bytes []byte) error {
+func ValidateLuaSyntax(bytes []byte) error {
 	// 把虚拟机参数全部设置为0是为了防止误操作产生垃圾数据
 	tempVm := lua.NewState(lua.Options{
 		SkipOpenLibs:     true,
@@ -109,6 +109,16 @@ func ValidateAppletSyntax(bytes []byte) error {
 	tempVm.Close()
 	tempVm = nil
 	return nil
+}
+
+// 临时校验语法
+func ValidateCecollaletSyntax(bytes []byte) error {
+	return ValidateLuaSyntax(bytes)
+}
+
+// 临时校验语法
+func ValidateAppletSyntax(bytes []byte) error {
+	return ValidateLuaSyntax(bytes)
 }
 
 /*

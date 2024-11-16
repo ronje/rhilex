@@ -1,12 +1,15 @@
 package apis
 
 import (
+	"fmt"
+
 	common "github.com/hootrhino/rhilex/component/apiserver/common"
 	"github.com/hootrhino/rhilex/component/apiserver/model"
 	"github.com/hootrhino/rhilex/component/apiserver/server"
 	"github.com/hootrhino/rhilex/component/apiserver/service"
 	"github.com/hootrhino/rhilex/component/intercache"
 	"github.com/hootrhino/rhilex/component/interdb"
+	"github.com/hootrhino/rhilex/component/luaruntime"
 	"gorm.io/gorm"
 
 	"github.com/hootrhino/rhilex/typex"
@@ -22,6 +25,7 @@ func InitCecollaRoute() {
 	{
 		cecollaApi.POST(("/create"), server.AddRoute(CreateCecolla))
 		cecollaApi.PUT(("/update"), server.AddRoute(UpdateCecolla))
+		cecollaApi.PUT(("/updateSchema"), server.AddRoute(UpdateCecollaSchema))
 		cecollaApi.DELETE(("/del"), server.AddRoute(DeleteCecolla))
 		cecollaApi.GET(("/detail"), server.AddRoute(CecollaDetail))
 		cecollaApi.GET("/group", server.AddRoute(ListCecollaByGroup))
@@ -38,6 +42,7 @@ type CecollaVo struct {
 	Gid         string                 `json:"gid"`
 	Name        string                 `json:"name"`
 	Type        string                 `json:"type"`
+	Action      string                 `json:"action"`
 	State       int                    `json:"state"`
 	ErrMsg      string                 `json:"errMsg"`
 	Config      map[string]interface{} `json:"config"`
@@ -60,6 +65,7 @@ func CecollaDetail(c *gin.Context, ruleEngine typex.Rhilex) {
 	CecollaVo.UUID = mCecolla.UUID
 	CecollaVo.Name = mCecolla.Name
 	CecollaVo.Type = mCecolla.Type
+	CecollaVo.Action = mCecolla.Action
 	CecollaVo.Description = mCecolla.Description
 	CecollaVo.Config = mCecolla.GetConfig()
 	Slot := intercache.GetSlot("__DefaultRuleEngine")
@@ -99,6 +105,7 @@ func ListCecolla(c *gin.Context, ruleEngine typex.Rhilex) {
 		CecollaVo.UUID = mCecolla.UUID
 		CecollaVo.Name = mCecolla.Name
 		CecollaVo.Type = mCecolla.Type
+		CecollaVo.Action = mCecolla.Action
 		CecollaVo.Description = mCecolla.Description
 		CecollaVo.Config = mCecolla.GetConfig()
 		//
@@ -137,6 +144,7 @@ func ListCecollaByGroup(c *gin.Context, ruleEngine typex.Rhilex) {
 		CecollaVo.UUID = mCecolla.UUID
 		CecollaVo.Name = mCecolla.Name
 		CecollaVo.Type = mCecolla.Type
+		CecollaVo.Action = mCecolla.Action
 		CecollaVo.Description = mCecolla.Description
 		CecollaVo.Config = mCecolla.GetConfig()
 		//
@@ -213,19 +221,29 @@ func CreateCecolla(c *gin.Context, ruleEngine typex.Rhilex) {
 		c.JSON(common.HTTP_OK, common.Error("Cecolla Name Duplicated"))
 		return
 	}
-
+	template :=
+		`--
+-- Go https://www.hootrhino.com for more tutorials
+--
+-- ID: %s
+-- NAME = "%s"
+-- DESCRIPTION = "%s"
+--
+-- Action Main
+--
+function Main(Payload)
+	Debug("== Payload ==", Payload)
+end
+`
 	newUUID := utils.CecUuid()
 	MCecolla := model.MCecolla{
 		UUID:        newUUID,
 		Type:        form.Type,
 		Name:        form.Name,
 		Description: form.Description,
-		Action: `-- Default Action Callback
-function Main(Payload)
-    Debug("== Payload == ".. Payload)
-end`,
-		Config: string(configJson),
+		Config:      string(configJson),
 	}
+	MCecolla.Action = fmt.Sprintf(template, MCecolla.UUID, MCecolla.Name, MCecolla.Description)
 	if err := service.InsertCecolla(&MCecolla); err != nil {
 		c.JSON(common.HTTP_OK, common.Error400(err))
 		return
@@ -237,6 +255,38 @@ end`,
 	}
 	if err := server.LoadNewestCecolla(newUUID, ruleEngine); err != nil {
 		c.JSON(common.HTTP_OK, common.OkWithMsg(err.Error()))
+		return
+	}
+	c.JSON(common.HTTP_OK, common.Ok())
+
+}
+
+/**
+ * 更新物模型
+ *
+ */
+func UpdateCecollaSchema(c *gin.Context, ruleEngine typex.Rhilex) {
+	type Form struct {
+		UUID   string `json:"uuid"`
+		Action string `json:"action"`
+	}
+	form := Form{}
+	if err := c.ShouldBindJSON(&form); err != nil {
+		c.JSON(common.HTTP_OK, common.Error400(err))
+		return
+	}
+	if err := luaruntime.ValidateCecollaletSyntax([]byte(form.Action)); err != nil {
+		c.JSON(common.HTTP_OK, common.Error400(err))
+		return
+	}
+	mCecolla, err := service.GetMCecollaWithUUID(form.UUID)
+	if err != nil {
+		c.JSON(common.HTTP_OK, common.Error400(err))
+		return
+	}
+	mCecolla.Action = form.Action
+	if err := service.UpdateCecolla(form.UUID, mCecolla); err != nil {
+		c.JSON(common.HTTP_OK, common.Error400(err))
 		return
 	}
 	c.JSON(common.HTTP_OK, common.Ok())
@@ -260,6 +310,10 @@ func UpdateCecolla(c *gin.Context, ruleEngine typex.Rhilex) {
 		c.JSON(common.HTTP_OK, common.Error(r))
 		return
 	}
+	if err := luaruntime.ValidateCecollaletSyntax([]byte(form.Action)); err != nil {
+		c.JSON(common.HTTP_OK, common.Error400(err))
+		return
+	}
 	//
 	// 取消绑定分组,删除原来旧的分组
 	txErr := service.ReBindResource(func(tx *gorm.DB) error {
@@ -267,6 +321,7 @@ func UpdateCecolla(c *gin.Context, ruleEngine typex.Rhilex) {
 			UUID:        form.UUID,
 			Type:        form.Type,
 			Name:        form.Name,
+			Action:      form.Action,
 			Description: form.Description,
 			Config:      string(configJson),
 		}
