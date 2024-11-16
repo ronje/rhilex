@@ -97,7 +97,7 @@ func InitRuleEngine(config typex.RhilexConfig) typex.Rhilex {
 	// Internal Metric
 	intermetric.InitInternalMetric(__DefaultRuleEngine)
 	// lua applet manager
-	applet.InitApplet(__DefaultRuleEngine)
+	applet.InitAppletRuntime(__DefaultRuleEngine)
 	// current only support Internal ai
 	aibase.InitAlgorithmRuntime(__DefaultRuleEngine)
 	// Internal Queue
