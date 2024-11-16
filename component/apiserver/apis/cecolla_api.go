@@ -25,7 +25,7 @@ func InitCecollaRoute() {
 	{
 		cecollaApi.POST(("/create"), server.AddRoute(CreateCecolla))
 		cecollaApi.PUT(("/update"), server.AddRoute(UpdateCecolla))
-		cecollaApi.PUT(("/updateSchema"), server.AddRoute(UpdateCecollaSchema))
+		cecollaApi.PUT(("/updateAction"), server.AddRoute(UpdateCecollaAction))
 		cecollaApi.DELETE(("/del"), server.AddRoute(DeleteCecolla))
 		cecollaApi.GET(("/detail"), server.AddRoute(CecollaDetail))
 		cecollaApi.GET("/group", server.AddRoute(ListCecollaByGroup))
@@ -265,7 +265,7 @@ end
  * 更新物模型
  *
  */
-func UpdateCecollaSchema(c *gin.Context, ruleEngine typex.Rhilex) {
+func UpdateCecollaAction(c *gin.Context, ruleEngine typex.Rhilex) {
 	type Form struct {
 		UUID   string `json:"uuid"`
 		Action string `json:"action"`
