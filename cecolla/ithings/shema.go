@@ -199,7 +199,7 @@ type IthingsPackReport struct {
 	MsgToken   string              `json:"msgToken"`
 	Timestamp  int64               `json:"timestamp"`
 	Properties []IthingsProperties `json:"properties"`
-	SubDevices IthingsSubDevices   `json:"subDevices"`
+	SubDevices []IthingsSubDevices `json:"subDevices"`
 }
 
 func NewIthingsPackReport(Timestamp int64, ProductID, DeviceName string, Param string, Value any) IthingsPackReport {
@@ -207,13 +207,15 @@ func NewIthingsPackReport(Timestamp int64, ProductID, DeviceName string, Param s
 		Method:    "packReport",
 		MsgToken:  uuid.NewString(),
 		Timestamp: time.Now().UnixMilli(),
-		SubDevices: IthingsSubDevices{
-			ProductID:  ProductID,
-			DeviceName: DeviceName,
-			Properties: []IthingsProperties{
-				{
-					Timestamp: Timestamp,
-					Params:    map[string]any{Param: Value},
+		SubDevices: []IthingsSubDevices{
+			{
+				ProductID:  ProductID,
+				DeviceName: DeviceName,
+				Properties: []IthingsProperties{
+					{
+						Timestamp: Timestamp,
+						Params:    map[string]any{Param: Value},
+					},
 				},
 			},
 		},

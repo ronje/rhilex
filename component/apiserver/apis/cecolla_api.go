@@ -310,10 +310,6 @@ func UpdateCecolla(c *gin.Context, ruleEngine typex.Rhilex) {
 		c.JSON(common.HTTP_OK, common.Error(r))
 		return
 	}
-	if err := luaruntime.ValidateCecollaletSyntax([]byte(form.Action)); err != nil {
-		c.JSON(common.HTTP_OK, common.Error400(err))
-		return
-	}
 	//
 	// 取消绑定分组,删除原来旧的分组
 	txErr := service.ReBindResource(func(tx *gorm.DB) error {
@@ -321,6 +317,7 @@ func UpdateCecolla(c *gin.Context, ruleEngine typex.Rhilex) {
 			UUID:        form.UUID,
 			Type:        form.Type,
 			Name:        form.Name,
+			Action:      "",
 			Description: form.Description,
 			Config:      string(configJson),
 		}
@@ -365,12 +362,12 @@ func GetCecollaSchema(c *gin.Context, ruleEngine typex.Rhilex) {
 	uuid, _ := c.GetQuery("uuid")
 	cecolla := ruleEngine.GetCecolla(uuid)
 	if cecolla == nil {
-		c.JSON(common.HTTP_OK, common.Error("Cecolla Not Exists:"+uuid))
+		c.JSON(common.HTTP_OK, common.OkWithMsg("Cecolla Not Exists:"+uuid))
 		return
 	}
 	response, err := cecolla.Cecolla.OnCtrl([]byte("GetSchema"), []byte{})
 	if err != nil {
-		c.JSON(common.HTTP_OK, common.Error400(err))
+		c.JSON(common.HTTP_OK, common.OkWithMsg(err.Error()))
 		return
 	}
 	switch T := response.(type) {
@@ -378,5 +375,5 @@ func GetCecollaSchema(c *gin.Context, ruleEngine typex.Rhilex) {
 		c.JSON(common.HTTP_OK, common.OkWithData(T))
 		return
 	}
-	c.JSON(common.HTTP_OK, common.Error("Cecolla Ctrl Failed"))
+	c.JSON(common.HTTP_OK, common.OkWithMsg("Empty Schema"))
 }

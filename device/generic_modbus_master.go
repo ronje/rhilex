@@ -184,6 +184,7 @@ func (mdev *GenericModbusMaster) Init(devId string, configMap map[string]interfa
 		return modbusPointLoadErr
 	}
 	LastFetchTime := uint64(time.Now().UnixMilli())
+	subDevicesAlias := map[string]string{}
 	for _, ModbusPoint := range ModbusPointList {
 		// 频率不能太快
 		if ModbusPoint.Frequency < 1 {
@@ -209,8 +210,31 @@ func (mdev *GenericModbusMaster) Init(devId string, configMap map[string]interfa
 			Value:         "",
 			ErrMsg:        "--",
 		})
+		subDevicesAlias[ModbusPoint.Alias] = ModbusPoint.Alias
 	}
 
+	// 子设备上线,推向云边协同
+	for _, Alias := range subDevicesAlias {
+		if *mdev.mainConfig.CecollaConfig.Enable {
+			cecolla := mdev.RuleEngine.GetCecolla(mdev.mainConfig.CecollaConfig.CecollaId)
+			if cecolla != nil {
+				ProductId, DeviceId, err := ithings.ParseProductInfo(Alias)
+				if err != nil {
+					glogger.Error(err)
+				} else {
+					param := ithings.SubDeviceParam{
+						Timestamp: int64(LastFetchTime),
+						ProductId: ProductId,
+						DeviceId:  DeviceId,
+					}
+					_, errOnCtrl := cecolla.Cecolla.OnCtrl([]byte("SubDeviceSetOnline"), []byte(param.String()))
+					if errOnCtrl != nil {
+						glogger.Error(errOnCtrl)
+					}
+				}
+			}
+		}
+	}
 	// 开启优化
 	if *mdev.mainConfig.CommonConfig.EnableOptimize {
 		rws := make([]*common.RegisterRW, len(mdev.Registers))
@@ -578,7 +602,7 @@ func (mdev *GenericModbusMaster) modbusSingleRead() []ReadRegisterValue {
 							DeviceId:  DeviceId,
 							Value:     Value,
 						}
-						_, OnCtrl := cecolla.Cecolla.OnCtrl([]byte("PackReportParams"), []byte(param.String()))
+						_, OnCtrl := cecolla.Cecolla.OnCtrl([]byte("PackReportSubDeviceParams"), []byte(param.String()))
 						if OnCtrl != nil {
 							glogger.Error(OnCtrl)
 						}
@@ -644,7 +668,7 @@ func (mdev *GenericModbusMaster) modbusSingleRead() []ReadRegisterValue {
 							DeviceId:  DeviceId,
 							Value:     Value,
 						}
-						_, OnCtrl := cecolla.Cecolla.OnCtrl([]byte("PackReportParams"), []byte(param.String()))
+						_, OnCtrl := cecolla.Cecolla.OnCtrl([]byte("PackReportSubDeviceParams"), []byte(param.String()))
 						if OnCtrl != nil {
 							glogger.Error(OnCtrl)
 						}
@@ -711,9 +735,9 @@ func (mdev *GenericModbusMaster) modbusSingleRead() []ReadRegisterValue {
 							DeviceId:  DeviceId,
 							Value:     Value,
 						}
-						_, OnCtrl := cecolla.Cecolla.OnCtrl([]byte("PackReportParams"), []byte(param.String()))
-						if OnCtrl != nil {
-							glogger.Error(OnCtrl)
+						_, errOnCtrl := cecolla.Cecolla.OnCtrl([]byte("PackReportSubDeviceParams"), []byte(param.String()))
+						if errOnCtrl != nil {
+							glogger.Error(errOnCtrl)
 						}
 					}
 				}
@@ -776,7 +800,7 @@ func (mdev *GenericModbusMaster) modbusSingleRead() []ReadRegisterValue {
 							DeviceId:  DeviceId,
 							Value:     Value,
 						}
-						_, OnCtrl := cecolla.Cecolla.OnCtrl([]byte("PackReportParams"), []byte(param.String()))
+						_, OnCtrl := cecolla.Cecolla.OnCtrl([]byte("PackReportSubDeviceParams"), []byte(param.String()))
 						if OnCtrl != nil {
 							glogger.Error(OnCtrl)
 						}
@@ -850,7 +874,7 @@ func (mdev *GenericModbusMaster) modbusGroupRead() []ReadRegisterValue {
 								DeviceId:  DeviceId,
 								Value:     value,
 							}
-							_, OnCtrl := cecolla.Cecolla.OnCtrl([]byte("PackReportParams"), []byte(param.String()))
+							_, OnCtrl := cecolla.Cecolla.OnCtrl([]byte("PackReportSubDeviceParams"), []byte(param.String()))
 							if OnCtrl != nil {
 								glogger.Error(OnCtrl)
 							}
@@ -910,7 +934,7 @@ func (mdev *GenericModbusMaster) modbusGroupRead() []ReadRegisterValue {
 								DeviceId:  DeviceId,
 								Value:     value,
 							}
-							_, OnCtrl := cecolla.Cecolla.OnCtrl([]byte("PackReportParams"), []byte(param.String()))
+							_, OnCtrl := cecolla.Cecolla.OnCtrl([]byte("PackReportSubDeviceParams"), []byte(param.String()))
 							if OnCtrl != nil {
 								glogger.Error(OnCtrl)
 							}
@@ -971,7 +995,7 @@ func (mdev *GenericModbusMaster) modbusGroupRead() []ReadRegisterValue {
 								DeviceId:  DeviceId,
 								Value:     Value,
 							}
-							_, OnCtrl := cecolla.Cecolla.OnCtrl([]byte("PackReportParams"), []byte(param.String()))
+							_, OnCtrl := cecolla.Cecolla.OnCtrl([]byte("PackReportSubDeviceParams"), []byte(param.String()))
 							if OnCtrl != nil {
 								glogger.Error(OnCtrl)
 							}
@@ -1032,7 +1056,7 @@ func (mdev *GenericModbusMaster) modbusGroupRead() []ReadRegisterValue {
 								DeviceId:  DeviceId,
 								Value:     Value,
 							}
-							_, OnCtrl := cecolla.Cecolla.OnCtrl([]byte("PackReportParams"), []byte(param.String()))
+							_, OnCtrl := cecolla.Cecolla.OnCtrl([]byte("PackReportSubDeviceParams"), []byte(param.String()))
 							if OnCtrl != nil {
 								glogger.Error(OnCtrl)
 							}

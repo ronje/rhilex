@@ -51,6 +51,11 @@ const (
 	// 数据下行 Topic（用于订阅）：$gateway/down/topo/${productid}/${devicename}
 	_ithings_topology_up   = "$gateway/up/topo/%s/%s"   //数据上行 Topic（用于发布）
 	_ithings_topology_down = "$gateway/down/topo/%s/%s" //数据下行 Topic（用于订阅）
+	// 网关类型的设备，可通过与云端的数据通信，代理其下的子设备进行上线与下线操作。此类功能所用到的 Topic 与网关子设备拓扑管理的 Topic 一致：
+	// 数据上行 Topic（用于发布）：$gateway/up/status/${productid}/${devicename}
+	// 数据下行 Topic（用于订阅）：$gateway/down/status/${productid}/${devicename}
+	_ithings_gateway_status_up   = "$gateway/up/status/%s/%s"   //数据上行 Topic（用于发布）
+	_ithings_gateway_status_down = "$gateway/down/status/%s/%s" //数据下行 Topic（用于订阅）
 )
 
 /**
@@ -69,18 +74,20 @@ type IThingsGatewayMainConfig struct {
 // 腾讯云物联网平台网关
 type IThingsGateway struct {
 	typex.XStatus
-	status            typex.CecollaState
-	mainConfig        IThingsGatewayMainConfig
-	client            mqtt.Client
-	authInfo          IThingsMQTTAuthInfo
-	propertyUpTopic   string
-	propertyDownTopic string
-	actionUpTopic     string
-	actionDownTopic   string
-	gatewayTopicUp    string
-	gatewayTopicDown  string
-	topologyTopicUp   string
-	topologyTopicDown string
+	status                 typex.CecollaState
+	mainConfig             IThingsGatewayMainConfig
+	client                 mqtt.Client
+	authInfo               IThingsMQTTAuthInfo
+	propertyUpTopic        string
+	propertyDownTopic      string
+	actionUpTopic          string
+	actionDownTopic        string
+	gatewayTopicUp         string
+	gatewayTopicDown       string
+	topologyTopicUp        string
+	topologyTopicDown      string
+	gatewayStatusTopicUp   string
+	gatewayStatusTopicDown string
 	// 子设备
 	IThingsSubDevices []ithings.IThingsSubDevice
 	// 自己的物模型
@@ -161,6 +168,11 @@ func (hd *IThingsGateway) Start(cctx typex.CCTX) error {
 	hd.topologyTopicUp = fmt.Sprintf(_ithings_topology_up,
 		hd.mainConfig.ProductId, hd.mainConfig.DeviceName)
 	hd.topologyTopicDown = fmt.Sprintf(_ithings_topology_down,
+		hd.mainConfig.ProductId, hd.mainConfig.DeviceName)
+	// 子设备上下线
+	hd.gatewayStatusTopicUp = fmt.Sprintf(_ithings_gateway_status_up,
+		hd.mainConfig.ProductId, hd.mainConfig.DeviceName)
+	hd.gatewayStatusTopicDown = fmt.Sprintf(_ithings_gateway_status_down,
 		hd.mainConfig.ProductId, hd.mainConfig.DeviceName)
 	var connectHandler mqtt.OnConnectHandler = func(client mqtt.Client) {
 		glogger.GLogger.Infof("IThings Connected Success")
@@ -298,8 +310,25 @@ type SubDeviceParam struct {
  */
 func (hd *IThingsGateway) OnCtrl(cmd []byte, b []byte) (any, error) {
 	Cmd := string(cmd)
+	// 子设备上线
+	if Cmd == "SubDeviceSetOnline" {
+		subDeviceParam := SubDeviceParam{}
+		if errUnmarshal := json.Unmarshal(b, &subDeviceParam); errUnmarshal != nil {
+			return nil, errUnmarshal
+		}
+		payload := `{"method":"online","msgToken":"%s","payload":{"devices":[{"productID":"%s","deviceName":"%s"}]}}`
+		token := hd.client.Publish(hd.gatewayStatusTopicUp, 1, false,
+			fmt.Sprintf(payload, uuid.NewString(), subDeviceParam.ProductId, subDeviceParam.DeviceId))
+		glogger.Debugf("SubDevice SetOnline: %s %s", hd.gatewayStatusTopicUp,
+			fmt.Sprintf(payload, uuid.NewString(), subDeviceParam.ProductId, subDeviceParam.DeviceId))
+
+		if token.Error() != nil {
+			glogger.Error(token.Error())
+			return nil, token.Error()
+		}
+	}
 	// 来自点位表的数据同步，批量上报
-	if Cmd == "PackReportParams" {
+	if Cmd == "PackReportSubDeviceParams" {
 		subDeviceParam := SubDeviceParam{}
 		if errUnmarshal := json.Unmarshal(b, &subDeviceParam); errUnmarshal != nil {
 			return nil, errUnmarshal
@@ -307,6 +336,7 @@ func (hd *IThingsGateway) OnCtrl(cmd []byte, b []byte) (any, error) {
 		packReport := ithings.NewIthingsPackReport(subDeviceParam.Timestamp,
 			subDeviceParam.ProductId, subDeviceParam.DeviceId,
 			subDeviceParam.Param, subDeviceParam.Value)
+		glogger.Debugf("PackReport SubDevice Params: %s %s", hd.propertyUpTopic, packReport.String())
 		token := hd.client.Publish(hd.propertyUpTopic, 1, false, packReport.String())
 		if token.Error() != nil {
 			glogger.Error(token.Error())
@@ -316,6 +346,7 @@ func (hd *IThingsGateway) OnCtrl(cmd []byte, b []byte) (any, error) {
 	}
 	// 返回物模型
 	if Cmd == "GetSchema" {
+		glogger.Debug("GetSchema")
 		return map[string]any{
 			"gatewaySchema":   hd.GatewaySchema,
 			"subDeviceSchema": hd.SubDeviceSchema,
