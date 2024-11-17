@@ -14,7 +14,12 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 package ithings
 
-import "encoding/json"
+import (
+	"encoding/json"
+	"time"
+
+	"github.com/google/uuid"
+)
 
 type (
 	// Schema 物模型协议-数据模板定义
@@ -183,4 +188,49 @@ type IThingsSubDevice struct {
 	// Timestamp    string `json:"timestamp"`
 	// SignMethod   string `json:"signMethod"`
 	// DeviceSecret string `json:"deviceSecret"`
+}
+
+/**
+ * 批量上报子设备
+ *
+ */
+type IthingsPackReport struct {
+	Method     string              `json:"method"`
+	MsgToken   string              `json:"msgToken"`
+	Timestamp  int64               `json:"timestamp"`
+	Properties []IthingsProperties `json:"properties"`
+	SubDevices IthingsSubDevices   `json:"subDevices"`
+}
+
+func NewIthingsPackReport(Timestamp int64, ProductID, DeviceName string, Param string, Value any) IthingsPackReport {
+	return IthingsPackReport{
+		Method:    "packReport",
+		MsgToken:  uuid.NewString(),
+		Timestamp: time.Now().UnixMilli(),
+		SubDevices: IthingsSubDevices{
+			ProductID:  ProductID,
+			DeviceName: DeviceName,
+			Properties: []IthingsProperties{
+				{
+					Timestamp: Timestamp,
+					Params:    map[string]any{Param: Value},
+				},
+			},
+		},
+	}
+}
+func (O IthingsPackReport) String() string {
+	bytes, _ := json.Marshal(O)
+	return string(bytes)
+}
+
+type IthingsSubDevices struct {
+	ProductID  string              `json:"productID"`
+	DeviceName string              `json:"deviceName"`
+	Properties []IthingsProperties `json:"properties"`
+}
+
+type IthingsProperties struct {
+	Timestamp int64          `json:"timestamp"`
+	Params    map[string]any `json:"params"`
 }

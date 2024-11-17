@@ -284,10 +284,34 @@ func (hd *IThingsGateway) SetState(status typex.CecollaState) {
 
 }
 
+type SubDeviceParam struct {
+	Timestamp int64  `json:"timestamp"`
+	ProductId string `json:"productID"`
+	DeviceId  string `json:"deviceID"`
+	Param     string `json:"param"`
+	Value     any    `json:"value"`
+}
+
+/**
+ * 外部参数
+ *
+ */
 func (hd *IThingsGateway) OnCtrl(cmd []byte, b []byte) (any, error) {
 	Cmd := string(cmd)
-	// 来自点位表的数据同步
-	if Cmd == "ReportParams" {
+	// 来自点位表的数据同步，批量上报
+	if Cmd == "PackReportParams" {
+		subDeviceParam := SubDeviceParam{}
+		if errUnmarshal := json.Unmarshal(b, &subDeviceParam); errUnmarshal != nil {
+			return nil, errUnmarshal
+		}
+		packReport := ithings.NewIthingsPackReport(subDeviceParam.Timestamp,
+			subDeviceParam.ProductId, subDeviceParam.DeviceId,
+			subDeviceParam.Param, subDeviceParam.Value)
+		token := hd.client.Publish(hd.propertyUpTopic, 1, false, packReport.String())
+		if token.Error() != nil {
+			glogger.Error(token.Error())
+			return nil, token.Error()
+		}
 		return nil, nil
 	}
 	// 返回物模型

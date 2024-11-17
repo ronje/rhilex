@@ -6,18 +6,17 @@
 curl --location '127.0.0.1:2580/api/v1/devices/create' \
 --header 'Content-Type: application/json' \
 --data '{
-    "name": "ITHINGS_IOTHUB_GATEWAY",
-    "type": "ITHINGS_IOTHUB_GATEWAY",
-    "gid": "DROOT",
+    "name": "ITHINGS_IOTHUB_CEC",
+    "type": "ITHINGS_IOTHUB_CEC",
+    "gid": "CEROOT",
     "config": {
-        "ithingsConfig": {
-            "serverEndpoint": "tcp://139.159.188.223:1883",
-            "mode": "GATEWAY",
-            "productId": "00c",
-            "deviceName": "主机1",
-            "devicePsk": "cJwhsaSdbecsdydkVr5bf1XS1p4="
-        }
+        "serverEndpoint": "tcp://demo.ithings.net.cn:1883",
+        "mode": "GATEWAY",
+        "productId": "01D",
+        "subProduct": "01J",
+        "deviceName": "基站1",
+        "devicePsk": "xSL17wB6+qtcj3n2Pqotfcr8WVE="
     },
-    "description": "ITHINGS_IOTHUB_GATEWAY"
+    "description": "ITHINGS_IOTHUB_CEC"
 }'
 ```
