@@ -46,17 +46,12 @@ const (
 	//     响应 Topic： $gateway/down/thing/{ProductID}/{DeviceName}
 	_ithings_gateway_up   = "$gateway/up/thing/%s/%s"   //数据上行 Topic（用于发布）
 	_ithings_gateway_down = "$gateway/down/thing/%s/%s" //数据下行 Topic（用于订阅）
+	// 网关类型的设备，可通过与云端的数据通信，对其下的子设备进行绑定与解绑操作。实现此类功能需利用如下两个 Topic：
+	// 数据上行 Topic（用于发布）：$gateway/up/topo/${productid}/${devicename}
+	// 数据下行 Topic（用于订阅）：$gateway/down/topo/${productid}/${devicename}
+	_ithings_topology_up   = "$gateway/up/topo/%s/%s"   //数据上行 Topic（用于发布）
+	_ithings_topology_down = "$gateway/down/topo/%s/%s" //数据下行 Topic（用于订阅）
 )
-
-type IThingsSubDevice struct {
-	ProductID    string `json:"productID"`
-	DeviceName   string `json:"deviceName"`
-	Signature    string `json:"signature"`
-	Random       string `json:"random"`
-	Timestamp    string `json:"timestamp"`
-	SignMethod   string `json:"signMethod"`
-	DeviceSecret string `json:"deviceSecret"`
-}
 
 /**
  * 主配置
@@ -84,8 +79,10 @@ type IThingsGateway struct {
 	actionDownTopic   string
 	gatewayTopicUp    string
 	gatewayTopicDown  string
+	topologyTopicUp   string
+	topologyTopicDown string
 	// 子设备
-	IThingsSubDevices []IThingsSubDevice
+	IThingsSubDevices []ithings.IThingsSubDevice
 	// 自己的物模型
 	GatewaySchema *ithings.SchemaSimple
 	// 子设备的物模型
@@ -103,7 +100,7 @@ func NewIThingsGateway(e typex.Rhilex) typex.XCecolla {
 		DeviceName:     "",
 		DevicePsk:      "",
 	}
-	hd.IThingsSubDevices = make([]IThingsSubDevice, 0)
+	hd.IThingsSubDevices = make([]ithings.IThingsSubDevice, 0)
 	return hd
 }
 
@@ -160,7 +157,11 @@ func (hd *IThingsGateway) Start(cctx typex.CCTX) error {
 		hd.mainConfig.ProductId, hd.mainConfig.DeviceName)
 	hd.gatewayTopicDown = fmt.Sprintf(_ithings_gateway_down,
 		hd.mainConfig.ProductId, hd.mainConfig.DeviceName)
-	//
+	// 拓扑关系
+	hd.topologyTopicUp = fmt.Sprintf(_ithings_topology_up,
+		hd.mainConfig.ProductId, hd.mainConfig.DeviceName)
+	hd.topologyTopicDown = fmt.Sprintf(_ithings_topology_down,
+		hd.mainConfig.ProductId, hd.mainConfig.DeviceName)
 	var connectHandler mqtt.OnConnectHandler = func(client mqtt.Client) {
 		glogger.GLogger.Infof("IThings Connected Success")
 		// 属性下发
@@ -181,8 +182,9 @@ func (hd *IThingsGateway) Start(cctx typex.CCTX) error {
 				uuid.NewString(), hd.mainConfig.ProductId))
 		// 获取子物模型
 		if hd.mainConfig.Mode == "GATEWAY" {
-			token := hd.client.Subscribe(hd.gatewayTopicDown, 1, func(c mqtt.Client, msg mqtt.Message) {
-				glogger.Debug("IThingsGateway gateway Topic Down: ", hd.gatewayTopicDown, string(msg.Payload()))
+			glogger.GLogger.Info("Connect IThings with Gateway Mode")
+			token0 := hd.client.Subscribe(hd.gatewayTopicDown, 1, func(c mqtt.Client, msg mqtt.Message) {
+				glogger.Debug("IThingsGateway gateway Down: ", hd.gatewayTopicDown, string(msg.Payload()))
 				response := ithings.IthingsResponse{}
 				errUnmarshal := json.Unmarshal(msg.Payload(), &response)
 				if errUnmarshal != nil {
@@ -195,17 +197,31 @@ func (hd *IThingsGateway) Start(cctx typex.CCTX) error {
 				}
 				if response.Payload.ProductId == hd.mainConfig.SubProduct {
 					hd.SubDeviceSchema = &response.Payload.Schema
-					glogger.Debug("Get SubDevice Schema Success:", hd.SubDeviceSchema.String())
 				}
 			})
-			if token.Error() != nil {
-				glogger.GLogger.Error(token.Error())
-				return
+			if token0.Error() == nil {
+				// 获取物模型
+				hd.client.Publish(hd.gatewayTopicUp, 1, false,
+					fmt.Sprintf(`{"method":"getSchema","msgToken":"%s","payload":{"productID":"%s"}}`,
+						uuid.NewString(), hd.mainConfig.SubProduct))
 			}
-			glogger.GLogger.Info("Connect IThings with Gateway Mode")
-			hd.client.Publish(hd.gatewayTopicUp, 1, false,
-				fmt.Sprintf(`{"method":"getSchema","msgToken":"%s","payload":{"productID":"%s"}}`,
-					uuid.NewString(), hd.mainConfig.SubProduct))
+
+			// 获取拓扑
+			token1 := hd.client.Subscribe(hd.topologyTopicDown, 1, func(c mqtt.Client, msg mqtt.Message) {
+				glogger.Debug("IThingsGateway topology Down: ", hd.gatewayTopicDown, string(msg.Payload()))
+				response := ithings.IthingsTopologyResponse{}
+				errUnmarshal := json.Unmarshal(msg.Payload(), &response)
+				if errUnmarshal != nil {
+					glogger.GLogger.Error(errUnmarshal)
+					return
+				}
+				hd.IThingsSubDevices = response.Payload.Devices
+			})
+			if token1.Error() == nil {
+				hd.client.Publish(hd.topologyTopicUp, 1, false,
+					fmt.Sprintf(`{"method": "getTopo","msgToken": "%s"}`, uuid.NewString()))
+			}
+
 		}
 	}
 
@@ -268,23 +284,12 @@ func (hd *IThingsGateway) SetState(status typex.CecollaState) {
 
 }
 
-/**
- * Lua输入进来的指令
- *
- */
-type IThingsInputMsg struct {
-	Type string      `json:"type"`
-	Cmd  interface{} `json:"cmd"`
-}
-
-// CtrlReplySuccess
-// CtrlReplyFailure
-// ActionReplySuccess
-// ActionReplyFailure
-// PropertyReplySuccess
-// PropertyReplyFailure
 func (hd *IThingsGateway) OnCtrl(cmd []byte, b []byte) (any, error) {
 	Cmd := string(cmd)
+	// 来自点位表的数据同步
+	if Cmd == "ReportParams" {
+		return nil, nil
+	}
 	// 返回物模型
 	if Cmd == "GetSchema" {
 		return map[string]any{
@@ -336,7 +341,7 @@ func (hd *IThingsGateway) OnCtrl(cmd []byte, b []byte) (any, error) {
 		if errUnmarshal := json.Unmarshal(b, &params); errUnmarshal != nil {
 			return nil, errUnmarshal
 		}
-		IthingsPropertyReport := IthingsPropertyReport{
+		IthingsPropertyReport := ithings.IthingsPropertyReport{
 			Method:    "report",
 			MsgToken:  uuid.NewString(),
 			Timestamp: time.Now().UnixMilli(),
@@ -350,7 +355,7 @@ func (hd *IThingsGateway) OnCtrl(cmd []byte, b []byte) (any, error) {
 		if errUnmarshal := json.Unmarshal(b, &params); errUnmarshal != nil {
 			return nil, errUnmarshal
 		}
-		IthingsGetPropertyReply := IthingsGetPropertyReply{
+		IthingsGetPropertyReply := ithings.IthingsGetPropertyReply{
 			Method:    "getReportReply",
 			Type:      "report",
 			MsgToken:  uuid.NewString(),
@@ -364,46 +369,4 @@ func (hd *IThingsGateway) OnCtrl(cmd []byte, b []byte) (any, error) {
 	}
 END:
 	return nil, nil
-}
-
-type IthingsGetPropertyReply struct {
-	Method    string                 `json:"method"`
-	Timestamp int64                  `json:"timestamp"`
-	MsgToken  string                 `json:"msgToken"`
-	Type      string                 `json:"type"`
-	Code      int                    `json:"code"`
-	Data      map[string]interface{} `json:"data"`
-	Msg       string                 `json:"msg"`
-}
-
-func (O IthingsGetPropertyReply) String() string {
-	bytes, _ := json.Marshal(O)
-	return string(bytes)
-}
-
-type IthingsPropertyReport struct {
-	Method    string                 `json:"method"`
-	MsgToken  string                 `json:"msgToken"`
-	Timestamp int64                  `json:"timestamp"`
-	Params    map[string]interface{} `json:"params"`
-}
-
-func (O IthingsPropertyReport) String() string {
-	bytes, _ := json.Marshal(O)
-	return string(bytes)
-}
-
-type IThingsSubDeviceMessage struct {
-	Method  string                         `json:"method"`
-	Payload IThingsSubDeviceMessagePayload `json:"payload"`
-}
-type IThingsSubDeviceMessagePayload struct {
-	Devices []IThingsSubDevice `json:"devices"`
-}
-
-// IThingsHubMQTTAuthInfo 腾讯云 Iot Hub MQTT 认证信息
-type IThingsHubMQTTAuthInfo struct {
-	ClientID string `json:"clientid"`
-	UserName string `json:"username"`
-	Password string `json:"password"`
 }

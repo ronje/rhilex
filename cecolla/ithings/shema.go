@@ -108,6 +108,41 @@ const (
 	ActionDirDown ActionDir = "down" //向下调用
 )
 
+type IthingsGetPropertyReply struct {
+	Method    string                 `json:"method"`
+	Timestamp int64                  `json:"timestamp"`
+	MsgToken  string                 `json:"msgToken"`
+	Type      string                 `json:"type"`
+	Code      int                    `json:"code"`
+	Data      map[string]interface{} `json:"data"`
+	Msg       string                 `json:"msg"`
+}
+
+func (O IthingsGetPropertyReply) String() string {
+	bytes, _ := json.Marshal(O)
+	return string(bytes)
+}
+
+type IthingsPropertyReport struct {
+	Method    string                 `json:"method"`
+	MsgToken  string                 `json:"msgToken"`
+	Timestamp int64                  `json:"timestamp"`
+	Params    map[string]interface{} `json:"params"`
+}
+
+func (O IthingsPropertyReport) String() string {
+	bytes, _ := json.Marshal(O)
+	return string(bytes)
+}
+
+type IThingsSubDeviceMessage struct {
+	Method  string                         `json:"method"`
+	Payload IThingsSubDeviceMessagePayload `json:"payload"`
+}
+type IThingsSubDeviceMessagePayload struct {
+	Devices []IThingsSubDevice `json:"devices"`
+}
+
 type IthingsResponse struct {
 	Method   string         `json:"method"`
 	MsgToken string         `json:"msgToken"`
@@ -123,4 +158,29 @@ type IthingsPayload struct {
 func (O IthingsResponse) String() string {
 	bytes, _ := json.Marshal(O)
 	return string(bytes)
+}
+
+type IthingsTopologyResponse struct {
+	Method   string                  `json:"method"`
+	MsgToken string                  `json:"msgToken"`
+	Code     int                     `json:"code"`
+	Payload  IthingsSubDevicePayload `json:"payload"`
+}
+
+func (O IthingsTopologyResponse) String() string {
+	bytes, _ := json.Marshal(O)
+	return string(bytes)
+}
+
+type IthingsSubDevicePayload struct {
+	Devices []IThingsSubDevice `json:"devices"`
+}
+type IThingsSubDevice struct {
+	ProductID  string `json:"productID"`
+	DeviceName string `json:"deviceName"`
+	// Signature    string `json:"signature"`
+	// Random       string `json:"random"`
+	// Timestamp    string `json:"timestamp"`
+	// SignMethod   string `json:"signMethod"`
+	// DeviceSecret string `json:"deviceSecret"`
 }
