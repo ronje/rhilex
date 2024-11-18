@@ -16,6 +16,7 @@
 package apis
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
@@ -47,6 +48,7 @@ func InitModbusRoute() {
 		modbusMasterApi.POST(("/update"), server.AddRoute(ModbusMasterSheetUpdate))
 		modbusMasterApi.DELETE(("/delIds"), server.AddRoute(ModbusMasterSheetDelete))
 		modbusMasterApi.DELETE(("/delAll"), server.AddRoute(ModbusMasterSheetDeleteAll))
+		modbusMasterApi.POST(("/writeModbusSheet"), server.AddRoute(WriteModbusSheet))
 	}
 }
 
@@ -575,4 +577,37 @@ func parseModbusMasterPointExcel(r io.Reader, sheetName string,
 		list = append(list, model)
 	}
 	return list, nil
+}
+
+/**
+ * 给某个云边发指令
+ *
+ */
+// POST -> temp , 0x0001
+type CtrlCmd struct {
+	UUID  string `json:"uuid"`  // 设备的UUID
+	Tag   string `json:"tag"`   // 点位表的Tag
+	Type  string `json:"type"`  // 点位表的类型
+	Value string `json:"value"` // 写的值
+}
+
+func (O CtrlCmd) String() string {
+	bytes, _ := json.Marshal(O)
+	return string(bytes)
+}
+func WriteModbusSheet(c *gin.Context, ruleEngine typex.Rhilex) {
+	form := CtrlCmd{}
+	if err := c.ShouldBindJSON(&form); err != nil {
+		c.JSON(common.HTTP_OK, common.Error400(err))
+		return
+	}
+	device := ruleEngine.GetDevice(form.UUID)
+	if device != nil {
+		_, errOnCtrl := device.Device.OnCtrl([]byte("WriteToSheetRegister"), []byte(form.String()))
+		if errOnCtrl != nil {
+			c.JSON(common.HTTP_OK, common.Error400(errOnCtrl))
+			return
+		}
+	}
+	c.JSON(common.HTTP_OK, common.Error("Device not exists:"+form.UUID))
 }
