@@ -97,8 +97,7 @@ func ParseUSignedValue(DataBlockType string, DataBlockOrder string,
 			return fmt.Sprintf("%d", intValue*uint32(Weight))
 		}
 	}
-
-	return ""
+	return "0"
 }
 
 func stringReverse(str string) string {
@@ -150,8 +149,8 @@ func HandleZeroValue[V int16 | int32 | int64 | float32 | float64](v *V) *V {
 注意：如果想解析值，必须不能超过4字节，目前常见的数一般都是4字节，也许后期会有8字节，但是目前暂时不支持
 *
 */
-func ParseModbusValue(dataLen int, DataBlockType string, DataBlockOrder string,
-	Weight float32, byteSlice [256]byte) string {
+func ParseRegisterValue(dataLen int, DataBlockType string, DataBlockOrder string,
+	Weight float32, byteSlice [256]byte) any {
 	// binary
 	if DataBlockType == "UTF8" {
 		acc := 0
@@ -178,7 +177,7 @@ func ParseModbusValue(dataLen int, DataBlockType string, DataBlockOrder string,
 	}
 
 	if DataBlockType == "BYTE" {
-		return fmt.Sprintf("%d", byteSlice[0])
+		return byteSlice[0]
 	}
 	// signed
 	if DataBlockType == "SHORT" || DataBlockType == "INT16" {
@@ -187,16 +186,16 @@ func ParseModbusValue(dataLen int, DataBlockType string, DataBlockOrder string,
 		if DataBlockOrder == "AB" {
 			int16Value := int16(byteSlice[0])<<8 | int16(byteSlice[1])
 			if Weight == 1 {
-				return fmt.Sprintf("%d", int16Value)
+				return int16Value
 			}
-			return fmt.Sprintf("%.4f", float32(int16Value)*(Weight))
+			return float32(int16Value) * (Weight)
 		}
 		if DataBlockOrder == "BA" {
 			int16Value := int16(byteSlice[0]) | int16(byteSlice[1])<<8
 			if Weight == 1 {
-				return fmt.Sprintf("%d", int16Value)
+				return int16Value
 			}
-			return fmt.Sprintf("%.4f", float32(int16Value)*(Weight))
+			return float32(int16Value) * (Weight)
 		}
 	}
 	if DataBlockType == "INT" || DataBlockType == "INT32" {
@@ -205,25 +204,25 @@ func ParseModbusValue(dataLen int, DataBlockType string, DataBlockOrder string,
 			intValue := int32(byteSlice[0])<<24 | int32(byteSlice[1])<<16 |
 				int32(byteSlice[2])<<8 | int32(byteSlice[3])
 			if Weight == 1 {
-				return fmt.Sprintf("%d", intValue)
+				return intValue
 			}
-			return fmt.Sprintf("%.4f", float32(intValue)*(Weight))
+			return float32(intValue) * (Weight)
 		}
 		if DataBlockOrder == "CDAB" {
 			intValue := int32(byteSlice[0])<<8 | int32(byteSlice[1]) |
 				int32(byteSlice[2])<<24 | int32(byteSlice[3])<<16
 			if Weight == 1 {
-				return fmt.Sprintf("%d", intValue)
+				return intValue
 			}
-			return fmt.Sprintf("%.4f", float32(intValue)*(Weight))
+			return float32(intValue) * (Weight)
 		}
 		if DataBlockOrder == "DCBA" {
 			intValue := int32(byteSlice[0]) | int32(byteSlice[1])<<8 |
 				int32(byteSlice[2])<<16 | int32(byteSlice[3])<<24
 			if Weight == 1 {
-				return fmt.Sprintf("%d", intValue)
+				return intValue
 			}
-			return fmt.Sprintf("%.4f", float32(intValue)*(Weight))
+			return float32(intValue) * (Weight)
 		}
 	}
 	// Unsigned
@@ -233,16 +232,16 @@ func ParseModbusValue(dataLen int, DataBlockType string, DataBlockOrder string,
 		if DataBlockOrder == "AB" {
 			uint16Value := uint16(byteSlice[0])<<8 | uint16(byteSlice[1])
 			if Weight == 1 {
-				return fmt.Sprintf("%d", uint16Value)
+				return uint16Value
 			}
-			return fmt.Sprintf("%.4f", float32(uint16Value)*(Weight))
+			return float32(uint16Value) * (Weight)
 		}
 		if DataBlockOrder == "BA" {
 			uint16Value := uint16(byteSlice[0]) | uint16(byteSlice[1])<<8
 			if Weight == 1 {
-				return fmt.Sprintf("%d", uint16Value)
+				return uint16Value
 			}
-			return fmt.Sprintf("%.4f", float32(uint16Value)*(Weight))
+			return float32(uint16Value) * (Weight)
 		}
 	}
 	if DataBlockType == "UINT" || DataBlockType == "UINT32" {
@@ -251,25 +250,25 @@ func ParseModbusValue(dataLen int, DataBlockType string, DataBlockOrder string,
 			intValue := uint32(byteSlice[0])<<24 | uint32(byteSlice[1])<<16 |
 				uint32(byteSlice[2])<<8 | uint32(byteSlice[3])
 			if Weight == 1 {
-				return fmt.Sprintf("%d", intValue)
+				return intValue
 			}
-			return fmt.Sprintf("%.4f", float32(intValue)*(Weight))
+			return float32(intValue) * (Weight)
 		}
 		if DataBlockOrder == "CDAB" {
 			intValue := uint32(byteSlice[0])<<8 | uint32(byteSlice[1]) |
 				uint32(byteSlice[2])<<24 | uint32(byteSlice[3])<<16
 			if Weight == 1 {
-				return fmt.Sprintf("%d", intValue)
+				return intValue
 			}
-			return fmt.Sprintf("%.4f", float32(intValue)*(Weight))
+			return float32(intValue) * (Weight)
 		}
 		if DataBlockOrder == "DCBA" {
 			intValue := uint32(byteSlice[0]) | uint32(byteSlice[1])<<8 |
 				uint32(byteSlice[2])<<16 | uint32(byteSlice[3])<<24
 			if Weight == 1 {
-				return fmt.Sprintf("%d", intValue)
+				return intValue
 			}
-			return fmt.Sprintf("%.4f", float32(intValue)*(Weight))
+			return float32(intValue) * (Weight)
 		}
 	}
 	// 3.14159:DCBA -> 40490FDC
@@ -279,19 +278,19 @@ func ParseModbusValue(dataLen int, DataBlockType string, DataBlockOrder string,
 			intValue := int32(byteSlice[0])<<24 | int32(byteSlice[1])<<16 |
 				int32(byteSlice[2])<<8 | int32(byteSlice[3])
 			floatValue := float32(math.Float32frombits(uint32(intValue)))
-			return fmt.Sprintf("%.4f", floatValue)
+			return floatValue
 		}
 		if DataBlockOrder == "CDAB" {
 			intValue := int32(byteSlice[0])<<8 | int32(byteSlice[1]) |
 				int32(byteSlice[2])<<24 | int32(byteSlice[3])<<16
 			floatValue := float32(math.Float32frombits(uint32(intValue)))
-			return fmt.Sprintf("%.4f", floatValue)
+			return floatValue
 		}
 		if DataBlockOrder == "DCBA" {
 			intValue := int32(byteSlice[0]) | int32(byteSlice[1])<<8 |
 				int32(byteSlice[2])<<16 | int32(byteSlice[3])<<24
 			floatValue := float32(math.Float32frombits(uint32(intValue)))
-			return fmt.Sprintf("%.4f", floatValue)
+			return floatValue
 
 		}
 	}
@@ -302,20 +301,69 @@ func ParseModbusValue(dataLen int, DataBlockType string, DataBlockOrder string,
 			intValue := int32(byteSlice[0])<<24 | int32(byteSlice[1])<<16 |
 				int32(byteSlice[2])<<8 | int32(byteSlice[3])
 			floatValue := float32(math.Float32frombits(uint32(intValue)))
-			return fmt.Sprintf("%.4f", floatValue)
+			return floatValue
 		}
 		if DataBlockOrder == "CDAB" {
 			intValue := int32(byteSlice[0])<<8 | int32(byteSlice[1]) |
 				int32(byteSlice[2])<<24 | int32(byteSlice[3])<<16
 			floatValue := float32(math.Float32frombits(uint32(intValue)))
-			return fmt.Sprintf("%.4f", floatValue)
+			return floatValue
 		}
 		if DataBlockOrder == "DCBA" {
 			intValue := int32(byteSlice[0]) | int32(byteSlice[1])<<8 |
 				int32(byteSlice[2])<<16 | int32(byteSlice[3])<<24
 			floatValue := float32(math.Float32frombits(uint32(intValue)))
-			return fmt.Sprintf("%.4f", floatValue)
+			return floatValue
 		}
 	}
-	return "0"
+	return 0
+}
+
+/**
+ * 将Any转换成具体类型的字符串表示形式
+ *
+ */
+func CovertAnyType(v any) string {
+	switch T := v.(type) {
+	case byte:
+		return fmt.Sprintf("%d", v)
+	case int8:
+		return fmt.Sprintf("%d", v)
+	case int16:
+		return fmt.Sprintf("%d", v)
+	case int32:
+		return fmt.Sprintf("%d", v)
+	case int64:
+		return fmt.Sprintf("%d", v)
+	case float32:
+		return fmt.Sprintf("%.4f", float32(T))
+	case float64:
+		return fmt.Sprintf("%.4f", float64(T))
+	case *byte:
+		return fmt.Sprintf("%d", *T)
+	case *int8:
+		return fmt.Sprintf("%d", *T)
+	case *int16:
+		return fmt.Sprintf("%d", *T)
+	case *int32:
+		return fmt.Sprintf("%d", *T)
+	case *int64:
+		return fmt.Sprintf("%d", *T)
+	case *float32:
+		return fmt.Sprintf("%.4f", float32(*T))
+	case *float64:
+		return fmt.Sprintf("%.4f", float64(*T))
+	case string:
+		return T
+	}
+	return ""
+}
+
+/**
+ * 解析Modbus值
+ *
+ */
+func ParseModbusValue(dataLen int, DataBlockType string, DataBlockOrder string,
+	Weight float32, byteSlice [256]byte) string {
+	return CovertAnyType(ParseRegisterValue(dataLen, DataBlockType, DataBlockOrder, Weight, byteSlice))
 }

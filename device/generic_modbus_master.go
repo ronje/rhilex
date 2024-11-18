@@ -23,7 +23,6 @@ import (
 	"fmt"
 	golog "log"
 	"sort"
-	"strconv"
 
 	"time"
 
@@ -527,7 +526,7 @@ type ReadRegisterValue struct {
  */
 func (mdev *GenericModbusMaster) modbusRead() []ReadRegisterValue {
 	if *mdev.mainConfig.CommonConfig.EnableOptimize {
-		return mdev.modbusGroupRead()
+		return mdev.modbusSingleRead()
 	} else {
 		return mdev.modbusSingleRead()
 	}
@@ -571,7 +570,8 @@ func (mdev *GenericModbusMaster) modbusSingleRead() []ReadRegisterValue {
 			// ValidData := [4]byte{0, 0, 0, 0}
 			copy(__modbusReadResult[:], results[:])
 
-			Value := utils.ParseModbusValue(len(results), r.DataType, r.DataOrder, float32(r.Weight), __modbusReadResult)
+			AnyValue := utils.ParseRegisterValue(len(results), r.DataType, r.DataOrder, float32(r.Weight), __modbusReadResult)
+			Value := utils.CovertAnyType(AnyValue)
 			Reg := ReadRegisterValue{
 				Tag:           r.Tag,
 				SlaverId:      r.SlaverId,
@@ -600,7 +600,7 @@ func (mdev *GenericModbusMaster) modbusSingleRead() []ReadRegisterValue {
 							Param:     r.Tag,
 							ProductId: ProductId,
 							DeviceId:  DeviceId,
-							Value:     Value,
+							Value:     AnyValue,
 						}
 						_, OnCtrl := cecolla.Cecolla.OnCtrl([]byte("PackReportSubDeviceParams"), []byte(param.String()))
 						if OnCtrl != nil {
@@ -637,7 +637,8 @@ func (mdev *GenericModbusMaster) modbusSingleRead() []ReadRegisterValue {
 			}
 			// ValidData := [4]byte{0, 0, 0, 0}
 			copy(__modbusReadResult[:], results[:])
-			Value := utils.ParseModbusValue(len(results), r.DataType, r.DataOrder, float32(r.Weight), __modbusReadResult)
+			AnyValue := utils.ParseRegisterValue(len(results), r.DataType, r.DataOrder, float32(r.Weight), __modbusReadResult)
+			Value := utils.CovertAnyType(AnyValue)
 			Reg := ReadRegisterValue{
 				Tag:           r.Tag,
 				SlaverId:      r.SlaverId,
@@ -666,7 +667,7 @@ func (mdev *GenericModbusMaster) modbusSingleRead() []ReadRegisterValue {
 							Param:     r.Tag,
 							ProductId: ProductId,
 							DeviceId:  DeviceId,
-							Value:     Value,
+							Value:     AnyValue,
 						}
 						_, OnCtrl := cecolla.Cecolla.OnCtrl([]byte("PackReportSubDeviceParams"), []byte(param.String()))
 						if OnCtrl != nil {
@@ -703,8 +704,8 @@ func (mdev *GenericModbusMaster) modbusSingleRead() []ReadRegisterValue {
 			}
 			// ValidData := [4]byte{0, 0, 0, 0}
 			copy(__modbusReadResult[:], results[:])
-			Value := utils.ParseModbusValue(len(results), r.DataType, r.DataOrder, float32(r.Weight), __modbusReadResult)
-
+			AnyValue := utils.ParseRegisterValue(len(results), r.DataType, r.DataOrder, float32(r.Weight), __modbusReadResult)
+			Value := utils.CovertAnyType(AnyValue)
 			Reg := ReadRegisterValue{
 				Tag:           r.Tag,
 				SlaverId:      r.SlaverId,
@@ -733,7 +734,7 @@ func (mdev *GenericModbusMaster) modbusSingleRead() []ReadRegisterValue {
 							Param:     r.Tag,
 							ProductId: ProductId,
 							DeviceId:  DeviceId,
-							Value:     Value,
+							Value:     AnyValue,
 						}
 						_, errOnCtrl := cecolla.Cecolla.OnCtrl([]byte("PackReportSubDeviceParams"), []byte(param.String()))
 						if errOnCtrl != nil {
@@ -769,7 +770,8 @@ func (mdev *GenericModbusMaster) modbusSingleRead() []ReadRegisterValue {
 			}
 			// ValidData := [4]byte{0, 0, 0, 0}
 			copy(__modbusReadResult[:], results[:])
-			Value := utils.ParseModbusValue(len(results), r.DataType, r.DataOrder, float32(r.Weight), __modbusReadResult)
+			AnyValue := utils.ParseRegisterValue(len(results), r.DataType, r.DataOrder, float32(r.Weight), __modbusReadResult)
+			Value := utils.CovertAnyType(AnyValue)
 			Reg := ReadRegisterValue{
 				Tag:           r.Tag,
 				SlaverId:      r.SlaverId,
@@ -798,7 +800,7 @@ func (mdev *GenericModbusMaster) modbusSingleRead() []ReadRegisterValue {
 							Param:     r.Tag,
 							ProductId: ProductId,
 							DeviceId:  DeviceId,
-							Value:     Value,
+							Value:     AnyValue,
 						}
 						_, OnCtrl := cecolla.Cecolla.OnCtrl([]byte("PackReportSubDeviceParams"), []byte(param.String()))
 						if OnCtrl != nil {
@@ -818,262 +820,4 @@ func (mdev *GenericModbusMaster) modbusSingleRead() []ReadRegisterValue {
 		time.Sleep(time.Duration(r.Frequency) * time.Millisecond)
 	}
 	return RegisterRWs
-}
-
-func (mdev *GenericModbusMaster) modbusGroupRead() []ReadRegisterValue {
-	jsonValueGroups := make([]ReadRegisterValue, 0)
-	var __modbusReadResult = [256]byte{0} // 放在栈上提高效率
-
-	for _, group := range mdev.RegisterGroups {
-		if mdev.mainConfig.CommonConfig.Mode == "TCP" {
-			mdev.tcpHandler.SlaveId = 0x01
-		}
-		if mdev.mainConfig.CommonConfig.Mode == "UART" {
-			mdev.rtuHandler.SlaveId = group.SlaverId
-		}
-		if group.Function == common.READ_COIL {
-			buf, err := mdev.Client.ReadCoils(group.Address, group.Quantity)
-			if err != nil {
-				glogger.GLogger.Error(err)
-				mdev.retryTimes++
-				continue
-			}
-			for uuid, r := range group.Registers {
-				offsetAddr := r.Address - group.Address
-				offsetByte := offsetAddr / uint16(8)
-				offsetBit := offsetAddr % uint16(8)
-				value := (buf[offsetByte] >> offsetBit) & 0x1
-				ts := time.Now().UnixMilli()
-				jsonVal := ReadRegisterValue{
-					Tag:           r.Tag,
-					SlaverId:      r.SlaverId,
-					Alias:         r.Alias,
-					Value:         strconv.Itoa(int(value)),
-					LastFetchTime: uint64(ts),
-				}
-				jsonValueGroups = append(jsonValueGroups, jsonVal)
-				intercache.SetValue(mdev.PointId, uuid, intercache.CacheValue{
-					UUID:          uuid,
-					Status:        1,
-					Value:         strconv.Itoa(int(value)),
-					LastFetchTime: uint64(ts),
-					ErrMsg:        "",
-				})
-				// 数据推向云边协同
-				if *mdev.mainConfig.CecollaConfig.Enable {
-					cecolla := mdev.RuleEngine.GetCecolla(mdev.mainConfig.CecollaConfig.CecollaId)
-					if cecolla != nil {
-						ProductId, DeviceId, err := ithings.ParseProductInfo(r.Alias)
-						if err != nil {
-							glogger.Error(err)
-						} else {
-							param := ithings.SubDeviceParam{
-								Timestamp: int64(ts),
-								Param:     r.Tag,
-								ProductId: ProductId,
-								DeviceId:  DeviceId,
-								Value:     value,
-							}
-							_, OnCtrl := cecolla.Cecolla.OnCtrl([]byte("PackReportSubDeviceParams"), []byte(param.String()))
-							if OnCtrl != nil {
-								glogger.Error(OnCtrl)
-							}
-						}
-					}
-				}
-				if !*mdev.mainConfig.CommonConfig.BatchRequest {
-					if bytes, errMarshal := json.Marshal(jsonVal); errMarshal != nil {
-						glogger.GLogger.Error(errMarshal)
-					} else {
-						mdev.RuleEngine.WorkDevice(mdev.Details(), string(bytes))
-					}
-				}
-			}
-		}
-		if group.Function == common.READ_DISCRETE_INPUT {
-			buf, err := mdev.Client.ReadDiscreteInputs(group.Address, group.Quantity)
-			if err != nil {
-				glogger.GLogger.Error(err)
-				mdev.retryTimes++
-				continue
-			}
-			for uuid, r := range group.Registers {
-				offsetAddr := r.Address - group.Address
-				offsetByte := offsetAddr / uint16(8)
-				offsetBit := offsetAddr % uint16(8)
-				value := (buf[offsetByte] >> offsetBit) & 0x1
-
-				ts := time.Now().UnixMilli()
-				jsonVal := ReadRegisterValue{
-					Tag:           r.Tag,
-					SlaverId:      r.SlaverId,
-					Alias:         r.Alias,
-					Value:         strconv.Itoa(int(value)),
-					LastFetchTime: uint64(ts),
-				}
-				jsonValueGroups = append(jsonValueGroups, jsonVal)
-				intercache.SetValue(mdev.PointId, uuid, intercache.CacheValue{
-					UUID:          uuid,
-					Status:        1,
-					Value:         strconv.Itoa(int(value)),
-					LastFetchTime: uint64(ts),
-					ErrMsg:        "",
-				})
-				// 数据推向云边协同
-				if *mdev.mainConfig.CecollaConfig.Enable {
-					cecolla := mdev.RuleEngine.GetCecolla(mdev.mainConfig.CecollaConfig.CecollaId)
-					if cecolla != nil {
-						ProductId, DeviceId, err := ithings.ParseProductInfo(r.Alias)
-						if err != nil {
-							glogger.Error(err)
-						} else {
-							param := ithings.SubDeviceParam{
-								Timestamp: int64(ts),
-								Param:     r.Tag,
-								ProductId: ProductId,
-								DeviceId:  DeviceId,
-								Value:     value,
-							}
-							_, OnCtrl := cecolla.Cecolla.OnCtrl([]byte("PackReportSubDeviceParams"), []byte(param.String()))
-							if OnCtrl != nil {
-								glogger.Error(OnCtrl)
-							}
-						}
-					}
-				}
-				if !*mdev.mainConfig.CommonConfig.BatchRequest {
-					if bytes, errMarshal := json.Marshal(jsonVal); errMarshal != nil {
-						glogger.GLogger.Error(errMarshal)
-					} else {
-						mdev.RuleEngine.WorkDevice(mdev.Details(), string(bytes))
-					}
-				}
-			}
-		}
-		if group.Function == common.READ_HOLDING_REGISTERS {
-			results, err := mdev.Client.ReadHoldingRegisters(group.Address, group.Quantity)
-			if err != nil {
-				glogger.GLogger.Error(err)
-				mdev.retryTimes++
-				continue
-			}
-			for uuid, r := range group.Registers {
-				offsetByte := (r.Address - group.Address) * 2
-				offsetByteEnd := offsetByte + r.Quantity*2
-				copy(__modbusReadResult[:], results[offsetByte:offsetByteEnd])
-				Value := utils.ParseModbusValue(len(results), r.DataType, r.DataOrder, float32(r.Weight), __modbusReadResult)
-
-				ts := time.Now().UnixMilli()
-				jsonVal := ReadRegisterValue{
-					Tag:           r.Tag,
-					SlaverId:      r.SlaverId,
-					Alias:         r.Alias,
-					Value:         Value,
-					LastFetchTime: uint64(ts),
-				}
-				jsonValueGroups = append(jsonValueGroups, jsonVal)
-
-				intercache.SetValue(mdev.PointId, uuid, intercache.CacheValue{
-					UUID:          uuid,
-					Status:        1,
-					Value:         Value,
-					LastFetchTime: uint64(ts),
-					ErrMsg:        "",
-				})
-				// 数据推向云边协同
-				if *mdev.mainConfig.CecollaConfig.Enable {
-					cecolla := mdev.RuleEngine.GetCecolla(mdev.mainConfig.CecollaConfig.CecollaId)
-					if cecolla != nil {
-						ProductId, DeviceId, err := ithings.ParseProductInfo(r.Alias)
-						if err != nil {
-							glogger.Error(err)
-						} else {
-							param := ithings.SubDeviceParam{
-								Timestamp: int64(ts),
-								Param:     r.Tag,
-								ProductId: ProductId,
-								DeviceId:  DeviceId,
-								Value:     Value,
-							}
-							_, OnCtrl := cecolla.Cecolla.OnCtrl([]byte("PackReportSubDeviceParams"), []byte(param.String()))
-							if OnCtrl != nil {
-								glogger.Error(OnCtrl)
-							}
-						}
-					}
-				}
-				if !*mdev.mainConfig.CommonConfig.BatchRequest {
-					if bytes, errMarshal := json.Marshal(jsonVal); errMarshal != nil {
-						glogger.GLogger.Error(errMarshal)
-					} else {
-						mdev.RuleEngine.WorkDevice(mdev.Details(), string(bytes))
-					}
-				}
-			}
-		}
-		if group.Function == common.READ_INPUT_REGISTERS {
-			results, err := mdev.Client.ReadHoldingRegisters(group.Address, group.Quantity)
-			if err != nil {
-				glogger.GLogger.Error(err)
-				mdev.retryTimes++
-				continue
-			}
-			for uuid, r := range group.Registers {
-				offsetByte := (r.Address - group.Address) * 2
-				offsetByteEnd := offsetByte + r.Quantity*2
-				copy(__modbusReadResult[:], results[offsetByte:offsetByteEnd])
-				Value := utils.ParseModbusValue(len(results), r.DataType, r.DataOrder, float32(r.Weight), __modbusReadResult)
-
-				ts := time.Now().UnixMilli()
-				jsonVal := ReadRegisterValue{
-					Tag:           r.Tag,
-					SlaverId:      r.SlaverId,
-					Alias:         r.Alias,
-					Value:         Value,
-					LastFetchTime: uint64(ts),
-				}
-				jsonValueGroups = append(jsonValueGroups, jsonVal)
-
-				intercache.SetValue(mdev.PointId, uuid, intercache.CacheValue{
-					UUID:          uuid,
-					Status:        1,
-					Value:         Value,
-					LastFetchTime: uint64(ts),
-					ErrMsg:        "",
-				})
-				// 数据推向云边协同
-				if *mdev.mainConfig.CecollaConfig.Enable {
-					cecolla := mdev.RuleEngine.GetCecolla(mdev.mainConfig.CecollaConfig.CecollaId)
-					if cecolla != nil {
-						ProductId, DeviceId, err := ithings.ParseProductInfo(r.Alias)
-						if err != nil {
-							glogger.Error(err)
-						} else {
-							param := ithings.SubDeviceParam{
-								Timestamp: int64(ts),
-								Param:     r.Tag,
-								ProductId: ProductId,
-								DeviceId:  DeviceId,
-								Value:     Value,
-							}
-							_, OnCtrl := cecolla.Cecolla.OnCtrl([]byte("PackReportSubDeviceParams"), []byte(param.String()))
-							if OnCtrl != nil {
-								glogger.Error(OnCtrl)
-							}
-						}
-					}
-				}
-				if !*mdev.mainConfig.CommonConfig.BatchRequest {
-					if bytes, errMarshal := json.Marshal(jsonVal); errMarshal != nil {
-						glogger.GLogger.Error(errMarshal)
-					} else {
-						mdev.RuleEngine.WorkDevice(mdev.Details(), string(bytes))
-					}
-				}
-			}
-		}
-
-		time.Sleep(time.Duration(group.Frequency) * time.Millisecond)
-	}
-	return jsonValueGroups
 }
