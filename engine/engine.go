@@ -128,6 +128,7 @@ func InitRuleEngine(config typex.RhilexConfig) typex.Rhilex {
 func (e *RuleEngine) Start() *typex.RhilexConfig {
 	// RuleEngine Cache Slot
 	intercache.RegisterSlot("__DefaultRuleEngine")
+	intercache.RegisterSlot("__CecollaBinding")
 	// Internal BUS
 	interqueue.StartXQueue()
 	return e.Config
@@ -186,6 +187,8 @@ func (e *RuleEngine) Stop() {
 	intercache.UnRegisterSlot("__DefaultRuleEngine")
 	// UnRegister __DeviceConfigMap
 	intercache.UnRegisterSlot("__DeviceConfigMap")
+	// Cecolla bindinged Config
+	intercache.UnRegisterSlot("__CecollaBinding")
 	// Stop PluginType Manager
 	glogger.GLogger.Info("Stop PluginType Manager")
 	rhilexmanager.DefaultPluginTypeManager.Stop()

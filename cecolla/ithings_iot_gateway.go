@@ -258,6 +258,7 @@ func (hd *IThingsGateway) Start(cctx typex.CCTX) error {
 		return token.Error()
 	}
 	hd.status = typex.CEC_UP
+
 	return nil
 }
 

@@ -175,6 +175,7 @@ func (mdev *GenericModbusMaster) Init(devId string, configMap map[string]interfa
 	if !utils.SContains([]string{"UART", "TCP"}, mdev.mainConfig.CommonConfig.Mode) {
 		return errors.New("unsupported mode, only can be one of 'TCP' or 'UART'")
 	}
+
 	// 合并数据库里面的点位表
 	var ModbusPointList []ModbusPoint
 	modbusPointLoadErr := interdb.DB().Table("m_modbus_data_points").
@@ -247,7 +248,22 @@ func (mdev *GenericModbusMaster) Init(devId string, configMap map[string]interfa
 			glogger.GLogger.Infof("RegisterGroups%v %v", i, v)
 		}
 	}
+	//
+	if *mdev.mainConfig.CecollaConfig.Enable {
+		value := intercache.GetValue("__CecollaBinding", mdev.mainConfig.CecollaConfig.CecollaId)
+		if value.Value == nil {
+			intercache.SetValue("__CecollaBinding",
+				mdev.mainConfig.CecollaConfig.CecollaId,
+				intercache.CacheValue{
+					Value: mdev.PointId,
+				},
+			)
+		} else {
+			glogger.GLogger.Errorf("Cecolla already bind to device:%s", value.Value)
+			return fmt.Errorf("Cecolla already bind to device:%s", value.Value)
+		}
 
+	}
 	return nil
 }
 

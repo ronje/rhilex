@@ -291,7 +291,17 @@ NEXT:
 		c.JSON(common.HTTP_OK, common.Error400(txErr))
 		return
 	}
+	// 删除云边协同
+	intercache.DeleteValue("__CecollaBinding", uuid)
 	c.JSON(common.HTTP_OK, common.Ok())
+}
+
+type CecollaConfig struct {
+	Enable    bool   `json:"enable"`    // 是否开启
+	CecollaId string `json:"cecollaId"` // Cecolla UUID
+}
+type DeviceConfig struct {
+	CecollaConfig CecollaConfig `json:"cecollaConfig"`
 }
 
 // 创建设备
@@ -305,6 +315,15 @@ func CreateDevice(c *gin.Context, ruleEngine typex.Rhilex) {
 	if err != nil {
 		c.JSON(common.HTTP_OK, common.Error400(err))
 		return
+	}
+	deviceConfig := DeviceConfig{}
+	json.Unmarshal(configJson, &deviceConfig)
+	if deviceConfig.CecollaConfig.Enable {
+		value := intercache.GetValue("__CecollaBinding", deviceConfig.CecollaConfig.CecollaId)
+		if value.Value != nil {
+			c.JSON(common.HTTP_OK, common.Error400(fmt.Errorf("Cecolla already bind to device:%s", value.Value)))
+			return
+		}
 	}
 	if err := ruleEngine.CheckDeviceType(typex.DeviceType(form.Type)); err != nil {
 		c.JSON(common.HTTP_OK, common.Error400(err))
@@ -396,6 +415,15 @@ func UpdateDevice(c *gin.Context, ruleEngine typex.Rhilex) {
 	if ok, r := utils.IsValidNameLength(form.Name); !ok {
 		c.JSON(common.HTTP_OK, common.Error(r))
 		return
+	}
+	deviceConfig := DeviceConfig{}
+	json.Unmarshal(configJson, &deviceConfig)
+	if deviceConfig.CecollaConfig.Enable {
+		value := intercache.GetValue("__CecollaBinding", deviceConfig.CecollaConfig.CecollaId)
+		if value.Value != form.UUID {
+			c.JSON(common.HTTP_OK, common.Error400(fmt.Errorf("Cecolla already bind to device:%s", value.Value)))
+			return
+		}
 	}
 	// 检查个人版的创建权限: 以下三种情况，以及2个数量
 	// - GENERIC_UART_RW
