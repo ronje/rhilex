@@ -289,6 +289,7 @@ func UpdateCecollaAction(c *gin.Context, ruleEngine typex.Rhilex) {
 		c.JSON(common.HTTP_OK, common.Error400(err))
 		return
 	}
+	ruleEngine.RestartCecolla(form.UUID)
 	c.JSON(common.HTTP_OK, common.Ok())
 
 }
