@@ -65,7 +65,7 @@ func LoadApp(app *Application, luaSource string) error {
 	app.SetMainFunc(&fMain)
 	// 加载库
 	// LoadAppLib(app, __DefaultAppletRuntime.RuleEngine)
-	luaruntime.LoadRuleLibGroup(__DefaultAppletRuntime.RuleEngine, app.UUID, app.VM())
+	luaruntime.LoadRuleLibGroup(__DefaultAppletRuntime.RuleEngine, "APPLET", app.UUID, app.VM())
 	// 加载到内存里
 	__DefaultAppletRuntime.Applications[app.UUID] = app
 	return nil
@@ -77,6 +77,10 @@ func LoadApp(app *Application, luaSource string) error {
 *
  */
 func StartApp(uuid string) error {
+	// 默认的参数
+	return StartAppWithArgs(uuid, lua.LBool(false))
+}
+func StartAppWithArgs(uuid string, args ...lua.LValue) error {
 	__DefaultAppletRuntime.locker.Lock()
 	defer __DefaultAppletRuntime.locker.Unlock()
 	app, ok := __DefaultAppletRuntime.Applications[uuid]
@@ -86,7 +90,6 @@ func StartApp(uuid string) error {
 	if app.AppState == 1 {
 		return fmt.Errorf("Application already started:%s", uuid)
 	}
-	args := lua.LBool(false) // Main的参数，未来准备扩展
 	ctx, cancel := context.WithCancel(typex.GCTX)
 	app.SetCnC(ctx, cancel)
 	go func(app *Application) {
@@ -107,7 +110,7 @@ func StartApp(uuid string) error {
 					return 0
 				},
 			},
-		}, args)
+		}, args...)
 		if err == nil {
 			if app.KilledBy == "RHILEX" {
 				glogger.GLogger.Infof("Application %s Killed By RHILEX", app.UUID)

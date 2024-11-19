@@ -62,7 +62,7 @@ func LoadCecollalet(cecollalet *Cecollalet, luaSource string) error {
 	cecollalet.SetMainFunc(&fMain)
 	// 加载库
 	// LoadCecollaletLib(cecollalet, __DefaultCecollaletRuntime.RuleEngine)
-	luaruntime.LoadRuleLibGroup(__DefaultCecollaletRuntime.RuleEngine, cecollalet.UUID, cecollalet.VM())
+	luaruntime.LoadRuleLibGroup(__DefaultCecollaletRuntime.RuleEngine, "CECOLLA", cecollalet.UUID, cecollalet.VM())
 	// 加载到内存里
 	__DefaultCecollaletRuntime.Cecollalets[cecollalet.UUID] = cecollalet
 	return nil
@@ -73,7 +73,10 @@ func LoadCecollalet(cecollalet *Cecollalet, luaSource string) error {
 * 启动 function Main(args) --do-some-thing-- return 0 end
 *
  */
-func StartCecollalet(uuid string) error {
+func StartCecollalet(uuid string, args string) error {
+	return StartCecollaletWithArgs(uuid, args)
+}
+func StartCecollaletWithArgs(uuid string, args string) error {
 	__DefaultCecollaletRuntime.locker.Lock()
 	defer __DefaultCecollaletRuntime.locker.Unlock()
 	cecollalet, ok := __DefaultCecollaletRuntime.Cecollalets[uuid]
@@ -83,7 +86,6 @@ func StartCecollalet(uuid string) error {
 	if cecollalet.CecollaletState == 1 {
 		return fmt.Errorf("Cecollalet already started:%s", uuid)
 	}
-	args := lua.LBool(false) // Main的参数，未来准备扩展
 	ctx, cancel := context.WithCancel(typex.GCTX)
 	cecollalet.SetCnC(ctx, cancel)
 	go func(cecollalet *Cecollalet) {
@@ -104,7 +106,7 @@ func StartCecollalet(uuid string) error {
 					return 0
 				},
 			},
-		}, args)
+		}, lua.LString(args))
 		if err == nil {
 			if cecollalet.KilledBy == "RHILEX" {
 				glogger.GLogger.Infof("Cecollalet %s Killed By RHILEX", cecollalet.UUID)
@@ -142,7 +144,6 @@ func StartCecollalet(uuid string) error {
 		// 1 正常结束
 		// 2 被rhilex删除
 		// 3 跑飞了
-
 		// 中间出现异常挂了，此时要根据: auto start 来判断是否抢救
 		time.Sleep(5 * time.Second)
 		if cecollalet.KilledBy == "RHILEX" {
@@ -153,18 +154,8 @@ func StartCecollalet(uuid string) error {
 			glogger.GLogger.Infof("Cecollalet %s NORMAL Exited, No need to rescue", cecollalet.UUID)
 			return
 		}
-
 		glogger.GLogger.Warnf("Cecollalet %s Exited With error: %s, Maybe accident, Try to survive",
 			cecollalet.UUID, err.Error())
-		// TODO 到底要不要设置一个尝试重启的阈值？
-		// if tryTimes >= Max -> return
-		if cecollalet.AutoStart {
-			glogger.GLogger.Warnf("Cecollalet %s Try to restart", cecollalet.UUID)
-			go StartCecollalet(uuid)
-			return
-		}
-		glogger.GLogger.Infof("Cecollalet %s not need to restart", cecollalet.UUID)
-
 	}(cecollalet)
 	glogger.GLogger.Info("Cecollalet started:", cecollalet.UUID)
 	return nil
@@ -211,7 +202,6 @@ func UpdateCecollalet(cecollalet Cecollalet) error {
 	defer __DefaultCecollaletRuntime.locker.Unlock()
 	if oldCecollalet, ok := __DefaultCecollaletRuntime.Cecollalets[cecollalet.UUID]; ok {
 		oldCecollalet.Name = cecollalet.Name
-		oldCecollalet.AutoStart = cecollalet.AutoStart
 		oldCecollalet.Version = cecollalet.Version
 		glogger.GLogger.Info("Cecollalet updated:", cecollalet.UUID)
 		return nil

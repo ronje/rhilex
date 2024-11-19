@@ -37,11 +37,5 @@ func NewCecolla(t CecollaType, name string,
 		State:       CEC_DOWN,
 		Description: description,
 		Config:      config,
-		Action: `-- Default Action
-function Main(Request)
-	Debug(Request)
-	return 0
-end
-`,
 	}
 }

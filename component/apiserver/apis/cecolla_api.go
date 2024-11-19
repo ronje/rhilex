@@ -232,7 +232,7 @@ func CreateCecolla(c *gin.Context, ruleEngine typex.Rhilex) {
 -- Action Main
 --
 function Main(Payload)
-	Debug("== Payload ==", Payload)
+	Debug("== Payload ==" .. Payload)
 end
 `
 	newUUID := utils.CecUuid()

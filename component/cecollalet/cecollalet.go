@@ -30,6 +30,9 @@ const p_VM_Registry_MaxSize int = 1024 * 1024 // 默认最大堆栈
 const p_VM_Registry_GrowStep int = 32         // 默认CPU消耗
 type CecollaletState int
 
+const CecollaletRunning CecollaletState = 1
+const CecollaletStopped CecollaletState = 0
+
 /*
 *
 * 轻量级应用
@@ -40,7 +43,6 @@ type Cecollalet struct {
 	Name            string             `json:"name"`            // 名称
 	Version         string             `json:"version"`         // 版本号
 	Description     string             `json:"description"`     // 版本号
-	AutoStart       bool               `json:"autoStart"`       // 自动启动
 	CecollaletState CecollaletState    `json:"cecollaletState"` // 状态: 1 运行中, 0 停止
 	KilledBy        string             `json:"-"`               // 被谁杀死的: RHILEX|EXCEPT|NORMAL|""
 	luaMainFunc     *lua.LFunction     `json:"-"`               // Main

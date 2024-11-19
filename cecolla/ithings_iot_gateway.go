@@ -24,6 +24,7 @@ import (
 	mqtt "github.com/eclipse/paho.mqtt.golang"
 	"github.com/google/uuid"
 	"github.com/hootrhino/rhilex/cecolla/ithings"
+	"github.com/hootrhino/rhilex/component/cecollalet"
 	"github.com/hootrhino/rhilex/component/intercache"
 	"github.com/hootrhino/rhilex/glogger"
 	"github.com/hootrhino/rhilex/typex"
@@ -78,6 +79,8 @@ type IThingsGateway struct {
 	mainConfig             IThingsGatewayMainConfig
 	client                 mqtt.Client
 	authInfo               IThingsMQTTAuthInfo
+	Cecollalet             *cecollalet.Cecollalet
+	Action                 string
 	propertyUpTopic        string
 	propertyDownTopic      string
 	actionUpTopic          string
@@ -141,7 +144,13 @@ func (hd *IThingsGateway) Init(devId string, configMap map[string]interface{}) e
 		return err
 	}
 	hd.authInfo = authInfo
-	return nil
+	hd.Cecollalet = cecollalet.NewCecollalet(hd.PointId, fmt.Sprintf("Action: %s", devId), "v1.0.0")
+	// FIXME 这种形式来获取配置其实是不合理的，不过暂时先这么搞，后期重新设计架构
+	Detail := hd.RuleEngine.GetCecolla(hd.PointId)
+	if Detail != nil {
+		return cecollalet.LoadCecollalet(hd.Cecollalet, Detail.Action)
+	}
+	return fmt.Errorf("Get Cecolla Failed:%s", hd.PointId)
 }
 
 // 启动
@@ -179,12 +188,14 @@ func (hd *IThingsGateway) Start(cctx typex.CCTX) error {
 		// 属性下发
 		if token := hd.client.Subscribe(hd.propertyDownTopic, 1, func(c mqtt.Client, msg mqtt.Message) {
 			glogger.GLogger.Debug("Property Down, Topic: [", msg.Topic(), "] Payload: ", string(msg.Payload()))
+			hd.ExecAction(string(msg.Payload()))
 		}); token.Error() != nil {
 			glogger.GLogger.Error(token.Error())
 		}
 		// 动作下发
 		if token := hd.client.Subscribe(hd.actionDownTopic, 1, func(c mqtt.Client, msg mqtt.Message) {
 			glogger.GLogger.Debug("Action Down, Topic: [", msg.Topic(), "] Payload: ", string(msg.Payload()))
+			hd.ExecAction(string(msg.Payload()))
 		}); token.Error() != nil {
 			glogger.GLogger.Error(token.Error())
 		}
@@ -277,13 +288,21 @@ func (hd *IThingsGateway) Status() typex.CecollaState {
 // 停止设备
 func (hd *IThingsGateway) Stop() {
 	intercache.UnRegisterSlot(hd.PointId)
+	if hd.Cecollalet != nil {
+		cecollalet.StopCecollalet(hd.PointId)
+		cecollalet.RemoveCecollalet(hd.PointId)
+	}
 	hd.status = typex.CEC_DOWN
+	if hd.Cecollalet != nil {
+		hd.Cecollalet.Stop()
+	}
 	if hd.CancelCTX != nil {
 		hd.CancelCTX()
 	}
 	if hd.client != nil {
 		hd.client.Disconnect(50)
 	}
+
 }
 
 // 真实设备
@@ -425,4 +444,13 @@ func (hd *IThingsGateway) OnCtrl(cmd []byte, b []byte) (any, error) {
 	}
 END:
 	return nil, nil
+}
+
+/**
+ * 执行本地回调
+ *
+ */
+func (hd *IThingsGateway) ExecAction(s string) error {
+	glogger.Debug("IThingsGateway.ExecAction == ", s)
+	return cecollalet.StartCecollalet(hd.PointId, s)
 }

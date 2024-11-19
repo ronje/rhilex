@@ -197,6 +197,8 @@ func LoadNewestCecolla(uuid string, ruleEngine typex.Rhilex) error {
 	ruleEngine.RemoveCecolla(uuid) // 删除内存里面的
 	cecolla := typex.NewCecolla(typex.CecollaType(mCecolla.Type), mCecolla.Name,
 		mCecolla.Description, mCecolla.GetConfig())
+	// 挂脚本
+	cecolla.Action = mCecolla.Action
 	// Important !!!!!!!!
 	cecolla.UUID = mCecolla.UUID // 本质上是配置和内存的数据映射起来
 	// 最新的配置

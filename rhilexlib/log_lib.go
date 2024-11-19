@@ -76,3 +76,21 @@ func DebugRule(rx typex.Rhilex, uuid string) func(*lua.LState) int {
 		return 0
 	}
 }
+
+// 输出
+func DebugCecolla(rx typex.Rhilex, uuid string) func(*lua.LState) int {
+	return func(L *lua.LState) int {
+		top := L.GetTop()
+		content := ""
+		for i := 1; i <= top; i++ {
+			content += L.ToStringMeta(L.Get(i)).String()
+			if i != top {
+				content += "\t"
+			}
+		}
+		glogger.GLogger.WithFields(logrus.Fields{
+			"topic": "cecolla/console/" + uuid,
+		}).Info(content)
+		return 0
+	}
+}

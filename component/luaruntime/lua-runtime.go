@@ -140,7 +140,7 @@ func AddRuleLibToGroup(rx typex.Rhilex, LState *lua.LState,
 	LState.Push(table)
 }
 
-func LoadRuleLibGroup(e typex.Rhilex, uuid string, LState *lua.LState) {
+func LoadRuleLibGroup(e typex.Rhilex, scope, uuid string, LState *lua.LState) {
 	{
 		Funcs := map[string]func(l *lua.LState) int{
 			"ToHttp":       rhilexlib.DataToHttp(e, uuid),
@@ -156,9 +156,16 @@ func LoadRuleLibGroup(e typex.Rhilex, uuid string, LState *lua.LState) {
 		AddRuleLibToGroup(e, LState, "data", Funcs)
 	}
 	{
-		Funcs := map[string]func(l *lua.LState) int{
-			"Debug": rhilexlib.DebugRule(e, uuid),
-			"Throw": rhilexlib.Throw(e, uuid),
+		Funcs := map[string]func(l *lua.LState) int{}
+		Funcs["Throw"] = rhilexlib.Throw(e, uuid)
+		if scope == "RULE" {
+			Funcs["Debug"] = rhilexlib.DebugRule(e, uuid)
+		}
+		if scope == "CECOLLA" {
+			Funcs["Debug"] = rhilexlib.DebugCecolla(e, uuid)
+		}
+		if scope == "APPLET" {
+			Funcs["Debug"] = rhilexlib.DebugAPP(e, uuid)
 		}
 		AddRuleLibToGroup(e, LState, "_G", Funcs)
 	}
