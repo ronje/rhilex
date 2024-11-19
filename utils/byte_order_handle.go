@@ -21,85 +21,6 @@ import (
 	"math"
 )
 
-/*
-*
-*解析西门子的值 无符号
-*
- */
-func ParseSignedValue(DataBlockType string, DataBlockOrder string,
-	Weight float32, byteSlice [256]byte) string {
-	if DataBlockType == "SHORT" || DataBlockType == "INT16" {
-		// AB: 1234
-		// BA: 3412
-		if DataBlockOrder == "AB" {
-			uint16Value := int16(byteSlice[0])<<8 | int16(byteSlice[1])
-			return fmt.Sprintf("%d", uint16Value*int16(Weight))
-
-		}
-		if DataBlockOrder == "BA" {
-			uint16Value := int16(byteSlice[0]) | int16(byteSlice[1])<<8
-			return fmt.Sprintf("%d", uint16Value*int16(Weight))
-		}
-	}
-	if DataBlockType == "INT" || DataBlockType == "INT32" {
-		// ABCD
-		if DataBlockOrder == "ABCD" {
-			intValue := int32(byteSlice[0])<<24 | int32(byteSlice[1])<<16 |
-				int32(byteSlice[2])<<8 | int32(byteSlice[3])
-			return fmt.Sprintf("%d", intValue*int32(Weight))
-
-		}
-		if DataBlockOrder == "CDAB" {
-			intValue := int32(byteSlice[0])<<8 | int32(byteSlice[1]) |
-				int32(byteSlice[2])<<24 | int32(byteSlice[3])<<16
-			return fmt.Sprintf("%d", intValue*int32(Weight))
-		}
-		if DataBlockOrder == "DCBA" {
-			intValue := int32(byteSlice[0]) | int32(byteSlice[1])<<8 |
-				int32(byteSlice[2])<<16 | int32(byteSlice[3])<<24
-			return fmt.Sprintf("%d", intValue*int32(Weight))
-		}
-	}
-
-	return ""
-}
-func ParseUSignedValue(DataBlockType string, DataBlockOrder string,
-	Weight float32, byteSlice [256]byte) string {
-	if DataBlockType == "USHORT" || DataBlockType == "UINT16" {
-		// AB: 1234
-		// BA: 3412
-		if DataBlockOrder == "AB" {
-			uint16Value := uint16(byteSlice[0])<<8 | uint16(byteSlice[1])
-			return fmt.Sprintf("%d", uint16Value*uint16(Weight))
-
-		}
-		if DataBlockOrder == "BA" {
-			uint16Value := uint16(byteSlice[0]) | uint16(byteSlice[1])<<8
-			return fmt.Sprintf("%d", uint16Value*uint16(Weight))
-		}
-	}
-	if DataBlockType == "UINT" || DataBlockType == "UINT32" {
-		// ABCD
-		if DataBlockOrder == "ABCD" {
-			intValue := uint32(byteSlice[0])<<24 | uint32(byteSlice[1])<<16 |
-				uint32(byteSlice[2])<<8 | uint32(byteSlice[3])
-			return fmt.Sprintf("%d", intValue*uint32(Weight))
-
-		}
-		if DataBlockOrder == "CDAB" {
-			intValue := uint32(byteSlice[0])<<8 | uint32(byteSlice[1]) |
-				uint32(byteSlice[2])<<24 | uint32(byteSlice[3])<<16
-			return fmt.Sprintf("%d", intValue*uint32(Weight))
-		}
-		if DataBlockOrder == "DCBA" {
-			intValue := uint32(byteSlice[0]) | uint32(byteSlice[1])<<8 |
-				uint32(byteSlice[2])<<16 | uint32(byteSlice[3])<<24
-			return fmt.Sprintf("%d", intValue*uint32(Weight))
-		}
-	}
-	return "0"
-}
-
 func stringReverse(str string) string {
 	bytes := []byte(str)
 	for i := 0; i < len(str)/2; i++ {
@@ -118,6 +39,8 @@ func stringReverse(str string) string {
 func GetDefaultDataOrder(Type, Order string) string {
 	if Order == "" {
 		switch Type {
+		case "BOOL":
+			return "A"
 		case "INT", "UINT", "INT32", "UINT32", "FLOAT", "FLOAT32":
 			return "DCBA"
 		case "BYTE", "I", "Q":
@@ -175,9 +98,11 @@ func ParseRegisterValue(dataLen int, DataBlockType string, DataBlockOrder string
 	if DataBlockType == "RAW" {
 		return hex.EncodeToString(byteSlice[:dataLen])
 	}
-
 	if DataBlockType == "BYTE" {
 		return byteSlice[0]
+	}
+	if DataBlockType == "BOOL" {
+		return byteSlice[0] == 1
 	}
 	// signed
 	if DataBlockType == "SHORT" || DataBlockType == "INT16" {
@@ -325,6 +250,8 @@ func ParseRegisterValue(dataLen int, DataBlockType string, DataBlockOrder string
  */
 func CovertAnyType(v any) string {
 	switch T := v.(type) {
+	case bool:
+		return fmt.Sprintf("%v", T)
 	case byte:
 		return fmt.Sprintf("%d", v)
 	case int8:
@@ -339,6 +266,8 @@ func CovertAnyType(v any) string {
 		return fmt.Sprintf("%.4f", float32(T))
 	case float64:
 		return fmt.Sprintf("%.4f", float64(T))
+	case *bool:
+		return fmt.Sprintf("%v", T)
 	case *byte:
 		return fmt.Sprintf("%d", *T)
 	case *int8:

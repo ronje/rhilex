@@ -276,7 +276,7 @@ func CheckModbusMasterDataPoints(M ModbusMasterPointVo) error {
 	if M.Address == nil {
 		return fmt.Errorf("missing required param 'address'")
 	}
-	if *M.Address > 65535 {
+	if *M.Address > uint16(65535) {
 		return fmt.Errorf("'address' must be in the range of 0-65535")
 	}
 
@@ -284,7 +284,7 @@ func CheckModbusMasterDataPoints(M ModbusMasterPointVo) error {
 	if M.Function == nil {
 		return fmt.Errorf("missing required param 'function'")
 	}
-	if *M.Function < 1 || *M.Function > 4 {
+	if *M.Function < int(1) || *M.Function > int(4) {
 		return fmt.Errorf("'function' only supports values of 1, 2, 3, or 4")
 	}
 
@@ -292,7 +292,7 @@ func CheckModbusMasterDataPoints(M ModbusMasterPointVo) error {
 	if M.SlaverId == nil {
 		return fmt.Errorf("missing required param 'slaverId'")
 	}
-	if *M.SlaverId > 255 {
+	if *M.SlaverId > uint8(255) {
 		return fmt.Errorf("'slaverId' must be in the range of 0-255")
 	}
 
@@ -300,10 +300,10 @@ func CheckModbusMasterDataPoints(M ModbusMasterPointVo) error {
 	if M.Frequency == nil {
 		return fmt.Errorf("missing required param 'frequency'")
 	}
-	if *M.Frequency < 1 {
+	if *M.Frequency < uint64(1) {
 		return fmt.Errorf("'frequency' must be greater than 50ms")
 	}
-	if *M.Frequency > 100000 {
+	if *M.Frequency > uint64(100000) {
 		return fmt.Errorf("'frequency' must be less than 100s")
 	}
 
@@ -318,6 +318,7 @@ func CheckModbusMasterDataPoints(M ModbusMasterPointVo) error {
 		"I":        {"A"},
 		"Q":        {"A"},
 		"BYTE":     {"A"},
+		"BOOL":     {"A"},
 		"INT16":    {"AB", "BA"},
 		"UINT16":   {"AB", "BA"},
 		"RAW":      {"ABCD", "DCBA", "CDAB"},
@@ -585,10 +586,10 @@ func parseModbusMasterPointExcel(r io.Reader, sheetName string,
  */
 // POST -> temp , 0x0001
 type CtrlCmd struct {
-	UUID  string `json:"uuid"`  // 设备的UUID
-	Tag   string `json:"tag"`   // 点位表的Tag
-	Type  string `json:"type"`  // 点位表的类型
-	Value string `json:"value"` // 写的值
+	UUID    string `json:"uuid"`    // 设备UUID
+	PointId string `json:"pointId"` // 点位Point Id
+	Tag     string `json:"tag"`     // 点位表的Tag
+	Value   string `json:"value"`   // 写的值
 }
 
 func (O CtrlCmd) String() string {
@@ -608,6 +609,8 @@ func WriteModbusSheet(c *gin.Context, ruleEngine typex.Rhilex) {
 			c.JSON(common.HTTP_OK, common.Error400(errOnCtrl))
 			return
 		}
+		c.JSON(common.HTTP_OK, common.Ok())
+		return
 	}
 	c.JSON(common.HTTP_OK, common.Error("Device not exists:"+form.UUID))
 }

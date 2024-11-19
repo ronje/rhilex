@@ -23,6 +23,7 @@ import (
 	"fmt"
 	golog "log"
 	"sort"
+	"strconv"
 
 	"time"
 
@@ -518,8 +519,79 @@ func (mdev *GenericModbusMaster) SetState(status typex.DeviceState) {
 func (mdev *GenericModbusMaster) OnDCACall(UUID string, Command string, Args interface{}) typex.DCAResult {
 	return typex.DCAResult{}
 }
-func (mdev *GenericModbusMaster) OnCtrl([]byte, []byte) ([]byte, error) {
+
+/**
+ * 写入Modbus寄存器
+ *
+ */
+// POST -> temp , 0x0001
+type CtrlCmd struct {
+	UUID    string `json:"uuid"`    // 设备的UUID
+	PointId string `json:"pointId"` // 点位Point Id
+	Tag     string `json:"tag"`     // 点位表的Tag
+	Value   string `json:"value"`   // 写的值
+}
+
+func (O CtrlCmd) String() string {
+	bytes, _ := json.Marshal(O)
+	return string(bytes)
+}
+
+/**
+ * 外部控制指令
+ *
+ */
+func (mdev *GenericModbusMaster) OnCtrl(cmd []byte, args []byte) ([]byte, error) {
+	glogger.Debug("GenericModbusMaster.OnCtrl, CMD=", string(cmd), ", Args=", string(args))
+	// 写指令
+	if string(cmd) == "WriteToSheetRegister" {
+		ctrlCmd := CtrlCmd{}
+		if errUnmarshal := json.Unmarshal(args, &ctrlCmd); errUnmarshal != nil {
+			return nil, errUnmarshal
+		}
+		Register, ok := mdev.Registers[ctrlCmd.PointId]
+		if ok {
+			// 单个线圈
+			// 0xFF00：表示线圈 ON（开）。任何非零值通常都表示线圈为 ON，但标准中通常用 0xFF00 来表示。
+			// 0x0000：表示线圈 OFF（关）。它是唯一的有效值来表示线圈处于关闭状态。
+			if Register.Function == 1 {
+				if ctrlCmd.Value == "0" || ctrlCmd.Value == "false" {
+					_, errW := mdev.Client.WriteSingleCoil(Register.Address, 0x0000)
+					if errW != nil {
+						return nil, errW
+					}
+				}
+				if ctrlCmd.Value == "1" || ctrlCmd.Value == "true" {
+					_, errW := mdev.Client.WriteSingleCoil(Register.Address, 0xFF00)
+					if errW != nil {
+						return nil, errW
+					}
+				}
+			}
+			// 单个寄存器
+			if Register.Function == 3 {
+				value, err := StringToUint16(ctrlCmd.Value)
+				if err != nil {
+					return nil, err
+				}
+				_, errW := mdev.Client.WriteSingleRegister(Register.Address, value)
+				if errW != nil {
+					return nil, errW
+				}
+			}
+		}
+
+	}
 	return []byte{}, nil
+}
+
+// StringToUint16 将字符串转换为 uint16
+func StringToUint16(s string) (uint16, error) {
+	value, err := strconv.ParseUint(s, 10, 16)
+	if err != nil {
+		return 0, err
+	}
+	return uint16(value), nil
 }
 
 /*
