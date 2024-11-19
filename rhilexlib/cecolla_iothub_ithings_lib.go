@@ -27,14 +27,14 @@ import (
  * 控制指令
  *
  */
-func TencentIothubCtrlReplySuccess(rx typex.Rhilex) func(*lua.LState) int {
+func IthingsCtrlReplySuccess(rx typex.Rhilex) func(*lua.LState) int {
 	return func(stateStack *lua.LState) int {
 		uuid := stateStack.ToString(2)
 		token := stateStack.ToString(3)
-		Device := rx.GetDevice(uuid)
-		if Device != nil {
-			if Device.Device != nil {
-				_, err := Device.Device.OnWrite([]byte("CtrlReplySuccess"), []byte(token))
+		Cecolla := rx.GetCecolla(uuid)
+		if Cecolla != nil {
+			if Cecolla.Cecolla != nil {
+				_, err := Cecolla.Cecolla.OnCtrl([]byte("CtrlReplySuccess"), []byte(token))
 				if err != nil {
 					stateStack.Push(lua.LString(err.Error()))
 					return 1
@@ -45,14 +45,14 @@ func TencentIothubCtrlReplySuccess(rx typex.Rhilex) func(*lua.LState) int {
 		return 1
 	}
 }
-func TencentIothubCtrlReplyFailure(rx typex.Rhilex) func(*lua.LState) int {
+func IthingsCtrlReplyFailure(rx typex.Rhilex) func(*lua.LState) int {
 	return func(stateStack *lua.LState) int {
 		uuid := stateStack.ToString(2)
 		token := stateStack.ToString(3)
-		Device := rx.GetDevice(uuid)
-		if Device != nil {
-			if Device.Device != nil {
-				_, err := Device.Device.OnWrite([]byte("CtrlReplyFailure"), []byte(token))
+		Cecolla := rx.GetCecolla(uuid)
+		if Cecolla != nil {
+			if Cecolla.Cecolla != nil {
+				_, err := Cecolla.Cecolla.OnCtrl([]byte("CtrlReplyFailure"), []byte(token))
 				if err != nil {
 					stateStack.Push(lua.LString(err.Error()))
 					return 1
@@ -68,14 +68,14 @@ func TencentIothubCtrlReplyFailure(rx typex.Rhilex) func(*lua.LState) int {
  * 动作成功
  *
  */
-func TencentIothubActionReplySuccess(rx typex.Rhilex) func(*lua.LState) int {
+func IthingsActionReplySuccess(rx typex.Rhilex) func(*lua.LState) int {
 	return func(stateStack *lua.LState) int {
 		uuid := stateStack.ToString(2)
 		token := stateStack.ToString(3)
-		Device := rx.GetDevice(uuid)
-		if Device != nil {
-			if Device.Device != nil {
-				_, err := Device.Device.OnWrite([]byte("ActionReplySuccess"), []byte(token))
+		Cecolla := rx.GetCecolla(uuid)
+		if Cecolla != nil {
+			if Cecolla.Cecolla != nil {
+				_, err := Cecolla.Cecolla.OnCtrl([]byte("ActionReplySuccess"), []byte(token))
 				if err != nil {
 					stateStack.Push(lua.LString(err.Error()))
 					return 1
@@ -91,14 +91,14 @@ func TencentIothubActionReplySuccess(rx typex.Rhilex) func(*lua.LState) int {
  * 动作失败
  *
  */
-func TencentIothubActionReplyFailure(rx typex.Rhilex) func(*lua.LState) int {
+func IthingsActionReplyFailure(rx typex.Rhilex) func(*lua.LState) int {
 	return func(stateStack *lua.LState) int {
 		uuid := stateStack.ToString(2)
 		token := stateStack.ToString(3)
-		Device := rx.GetDevice(uuid)
-		if Device != nil {
-			if Device.Device != nil {
-				_, err := Device.Device.OnWrite([]byte("ActionReplyFailure"), []byte(token))
+		Cecolla := rx.GetCecolla(uuid)
+		if Cecolla != nil {
+			if Cecolla.Cecolla != nil {
+				_, err := Cecolla.Cecolla.OnCtrl([]byte("ActionReplyFailure"), []byte(token))
 				if err != nil {
 					stateStack.Push(lua.LString(err.Error()))
 					return 1
@@ -114,14 +114,14 @@ func TencentIothubActionReplyFailure(rx typex.Rhilex) func(*lua.LState) int {
  * 属性成功
  *
  */
-func TencentIothubPropertyReplySuccess(rx typex.Rhilex) func(*lua.LState) int {
+func IthingsPropertyReplySuccess(rx typex.Rhilex) func(*lua.LState) int {
 	return func(stateStack *lua.LState) int {
 		uuid := stateStack.ToString(2)
 		token := stateStack.ToString(3)
-		Device := rx.GetDevice(uuid)
-		if Device != nil {
-			if Device.Device != nil {
-				_, err := Device.Device.OnWrite([]byte("PropertyReplySuccess"), []byte(token))
+		Cecolla := rx.GetCecolla(uuid)
+		if Cecolla != nil {
+			if Cecolla.Cecolla != nil {
+				_, err := Cecolla.Cecolla.OnCtrl([]byte("PropertyReplySuccess"), []byte(token))
 				if err != nil {
 					stateStack.Push(lua.LString(err.Error()))
 					return 1
@@ -137,14 +137,14 @@ func TencentIothubPropertyReplySuccess(rx typex.Rhilex) func(*lua.LState) int {
  * 属性失败
  *
  */
-func TencentIothubPropertyReplyFailure(rx typex.Rhilex) func(*lua.LState) int {
+func IthingsPropertyReplyFailure(rx typex.Rhilex) func(*lua.LState) int {
 	return func(stateStack *lua.LState) int {
 		uuid := stateStack.ToString(2)
 		token := stateStack.ToString(3)
-		Device := rx.GetDevice(uuid)
-		if Device != nil {
-			if Device.Device != nil {
-				_, err := Device.Device.OnWrite([]byte("PropertyReplyFailure"), []byte(token))
+		Cecolla := rx.GetCecolla(uuid)
+		if Cecolla != nil {
+			if Cecolla.Cecolla != nil {
+				_, err := Cecolla.Cecolla.OnCtrl([]byte("PropertyReplyFailure"), []byte(token))
 				if err != nil {
 					stateStack.Push(lua.LString(err.Error()))
 					return 1
@@ -160,7 +160,7 @@ func TencentIothubPropertyReplyFailure(rx typex.Rhilex) func(*lua.LState) int {
  * 上传属性
  *
  */
-func TencentIothubPropertyReport(rx typex.Rhilex) func(*lua.LState) int {
+func IthingsPropertyReport(rx typex.Rhilex) func(*lua.LState) int {
 	return func(stateStack *lua.LState) int {
 		uuid := stateStack.ToString(2)
 		paramsTable := stateStack.ToTable(3)
@@ -168,15 +168,15 @@ func TencentIothubPropertyReport(rx typex.Rhilex) func(*lua.LState) int {
 		paramsTable.ForEach(func(k, v lua.LValue) {
 			params[k.String()] = v
 		})
-		Device := rx.GetDevice(uuid)
-		if Device != nil {
-			if Device.Device != nil {
+		Cecolla := rx.GetCecolla(uuid)
+		if Cecolla != nil {
+			if Cecolla.Cecolla != nil {
 				bytes, errMarshal := json.Marshal(params)
 				if errMarshal != nil {
 					stateStack.Push(lua.LString(errMarshal.Error()))
 					return 1
 				}
-				_, err := Device.Device.OnWrite([]byte("PropertyReport"), []byte(bytes))
+				_, err := Cecolla.Cecolla.OnCtrl([]byte("PropertyReport"), []byte(bytes))
 				if err != nil {
 					stateStack.Push(lua.LString(err.Error()))
 					return 1
@@ -192,7 +192,7 @@ func TencentIothubPropertyReport(rx typex.Rhilex) func(*lua.LState) int {
  * 获取属性回复
  *
  */
-func TencentIothubGetPropertyReply(rx typex.Rhilex) func(*lua.LState) int {
+func IthingsGetPropertyReply(rx typex.Rhilex) func(*lua.LState) int {
 	return func(stateStack *lua.LState) int {
 		uuid := stateStack.ToString(2)
 		paramsTable := stateStack.ToTable(3)
@@ -200,15 +200,15 @@ func TencentIothubGetPropertyReply(rx typex.Rhilex) func(*lua.LState) int {
 		paramsTable.ForEach(func(k, v lua.LValue) {
 			params[k.String()] = v
 		})
-		Device := rx.GetDevice(uuid)
-		if Device != nil {
-			if Device.Device != nil {
+		Cecolla := rx.GetCecolla(uuid)
+		if Cecolla != nil {
+			if Cecolla.Cecolla != nil {
 				bytes, errMarshal := json.Marshal(params)
 				if errMarshal != nil {
 					stateStack.Push(lua.LString(errMarshal.Error()))
 					return 1
 				}
-				_, err := Device.Device.OnWrite([]byte("GetPropertyReply"), []byte(bytes))
+				_, err := Cecolla.Cecolla.OnCtrl([]byte("GetPropertyReply"), []byte(bytes))
 				if err != nil {
 					stateStack.Push(lua.LString(err.Error()))
 					return 1
