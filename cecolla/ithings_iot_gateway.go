@@ -276,9 +276,7 @@ func (hd *IThingsGateway) Start(cctx typex.CCTX) error {
 // 设备当前状态
 func (hd *IThingsGateway) Status() typex.CecollaState {
 	if hd.client != nil {
-		if hd.client.IsConnectionOpen() && hd.client.IsConnected() {
-			return typex.CEC_UP
-		} else {
+		if !hd.client.IsConnectionOpen() || !hd.client.IsConnected() {
 			return typex.CEC_DOWN
 		}
 	}
