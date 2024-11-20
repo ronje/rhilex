@@ -176,9 +176,15 @@ func RestartCecolla(c *gin.Context, ruleEngine typex.Rhilex) {
 
 }
 
-// 删除设备
+// 删除
 func DeleteCecolla(c *gin.Context, ruleEngine typex.Rhilex) {
 	uuid, _ := c.GetQuery("uuid")
+	// 删除的时候判断是否被绑定, 不允许直接删除已经被绑定的
+	value := intercache.GetValue("__CecollaBinding", uuid)
+	if value.Value != nil {
+		c.JSON(common.HTTP_OK, common.Error400(fmt.Errorf("Cecolla already bind to device:%s", value.Value)))
+		return
+	}
 	txErr := interdb.DB().Transaction(func(tx *gorm.DB) error {
 		Group := service.GetResourceGroup(uuid)
 		err3 := service.DeleteCecolla(uuid)
@@ -222,17 +228,63 @@ func CreateCecolla(c *gin.Context, ruleEngine typex.Rhilex) {
 		return
 	}
 	template :=
-		`--
--- Go https://www.hootrhino.com for more tutorials
+		`
+--------------------------------------------------------
+-- Go https://www.hootrhino.com for more tutorials    --
+--                                                    --
+-- ID: %s                                             --
+-- NAME = "%s"                                        --
+-- DESCRIPTION = "%s"                                 --
+--------------------------------------------------------
+
 --
--- ID: %s
--- NAME = "%s"
--- DESCRIPTION = "%s"
+-- Handle Received Params
+--
+function HandleParams(Params)
+    for key, value in pairs(Params) do
+        Debug("[== HandleParams ==] " .. key .. " [== value ==] ", value)
+    end
+end
+
+--
+-- Handle Received Action
+--
+function HandleAction(ActionId, Params)
+    Debug("[== HandleAction ==] ActionId=" .. ActionId)
+    for key, value in pairs(Params) do
+        Debug("[== HandleAction ==] " .. key .. " [== value ==] ", value)
+    end
+end
+
 --
 -- Action Main
 --
-function Main(Payload)
-	Debug("== Payload ==" .. Payload)
+
+function Main(CecollaId, Payload)
+    Debug("[==Debug==] Received Ithings Payload:" .. Payload);
+    local dataT, errJ2T = json:J2T(Payload);
+    if errJ2T ~= nil then
+        Throw("json:J2T error:" .. errJ2T);
+        return false, Payload;
+    end;
+    if dataT.method == "control" then
+        Debug("[==Debug==] Ithings Send Control:" .. Payload);
+        HandleParams(dataT.params)
+        local errIothub = ithings:CtrlReplySuccess(CecollaId, dataT.msgToken);
+        if errIothub ~= nil then
+            Throw("ithings:CtrlReplySuccess Error:" .. errIothub);
+            return false, Payload;
+        end;
+    end;
+    if dataT.method == "action" then
+        Debug("[==Debug==] Ithings Send Action:" .. Payload);
+        HandleAction(dataT.actionID, dataT.params)
+        local errIothub = ithings:ActionReplySuccess(CecollaId, dataT.msgToken);
+        if errIothub ~= nil then
+            Throw("ithings:ActionReplySuccess Error:" .. errIothub);
+            return false, Payload;
+        end;
+    end;
 end
 `
 	newUUID := utils.CecUuid()
@@ -334,6 +386,7 @@ func UpdateCecolla(c *gin.Context, ruleEngine typex.Rhilex) {
 		c.JSON(common.HTTP_OK, common.Error400(err))
 		return
 	}
+	ruleEngine.RestartCecolla(form.UUID)
 	c.JSON(common.HTTP_OK, common.Ok())
 }
 

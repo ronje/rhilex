@@ -27,6 +27,7 @@ import (
 
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/hootrhino/rhilex/common"
 	intercache "github.com/hootrhino/rhilex/component/intercache"
 	"github.com/hootrhino/rhilex/component/interdb"
@@ -157,6 +158,10 @@ func NewGenericModbusMaster(e typex.Rhilex) typex.XDevice {
 				b := false
 				return &b
 			}(),
+			EnableCreateSchema: func() *bool {
+				b := true
+				return &b
+			}(),
 		},
 	}
 	mdev.Registers = map[string]*common.RegisterRW{}
@@ -249,33 +254,36 @@ func (mdev *GenericModbusMaster) Init(devId string, configMap map[string]interfa
 			glogger.GLogger.Infof("RegisterGroups%v %v", i, v)
 		}
 	}
-	//
-	if *mdev.mainConfig.CecollaConfig.Enable {
-		value := intercache.GetValue("__CecollaBinding", mdev.mainConfig.CecollaConfig.CecollaId)
+	// 清空可能存在的老数据
+	value := intercache.GetValue("__CecollaBinding", mdev.mainConfig.CecollaConfig.CecollaId)
+	if !*mdev.mainConfig.CecollaConfig.Enable {
+		if value.Value != nil {
+			intercache.DeleteValue("__CecollaBinding", mdev.mainConfig.CecollaConfig.CecollaId)
+		}
+	} else {
 		if value.Value == nil {
 			intercache.SetValue("__CecollaBinding",
 				mdev.mainConfig.CecollaConfig.CecollaId,
-				intercache.CacheValue{
-					Value: mdev.PointId,
-				},
-			)
+				intercache.CacheValue{Value: mdev.PointId})
 		} else {
 			glogger.GLogger.Errorf("Cecolla already bind to device:%s", value.Value)
 			return fmt.Errorf("Cecolla already bind to device:%s", value.Value)
 		}
-
 	}
+
 	return nil
 }
 
+/*
+*
+0、分组，Frequency采集时间需要相同
+1、寄存器类型分类
+2、tag排序
+3、限制单次数据采集数量为32个
+4、tag address必须连续
+*/
 func (mdev *GenericModbusMaster) groupTags(registers []*common.RegisterRW) []*ModbusMasterGroupedTag {
-	/**
-	0、分组，Frequency采集时间需要相同
-	1、寄存器类型分类
-	2、tag排序
-	3、限制单次数据采集数量为32个
-	4、tag address必须连续
-	*/
+
 	sort.Sort(common.RegisterList(registers))
 	result := make([]*ModbusMasterGroupedTag, 0)
 	for i := 0; i < len(registers); {
@@ -394,6 +402,33 @@ func (mdev *GenericModbusMaster) Start(cctx typex.CCTX) error {
 			}
 
 		}(mdev.Ctx)
+	}
+	if *mdev.mainConfig.CecollaConfig.Enable {
+		// 新建设备端物模型
+		if *mdev.mainConfig.CecollaConfig.EnableCreateSchema {
+			Properties := []ithings.IthingsCreateSchemaProperties{}
+			for _, Register := range mdev.Registers {
+				Properties = append(Properties, ithings.IthingsCreateSchemaProperties{
+					Id:        Register.Tag,
+					Name:      Register.Alias,
+					Type:      ithings.ModbusTypeToSchemaType(Register.DataType),
+				})
+			}
+
+			createSchema := ithings.IthingsCreateSchema{
+				Method:     "createSchema",
+				MsgToken:   uuid.NewString(),
+				Timestamp:  time.Now().UnixMilli(),
+				Properties: Properties,
+			}
+			cecolla := mdev.RuleEngine.GetCecolla(mdev.mainConfig.CecollaConfig.CecollaId)
+			if cecolla != nil {
+				_, errOnCtrl := cecolla.Cecolla.OnCtrl([]byte("CreateSubDeviceSchema"), []byte(createSchema.String()))
+				if errOnCtrl != nil {
+					glogger.Error(errOnCtrl)
+				}
+			}
+		}
 	}
 
 	mdev.status = typex.DEV_UP

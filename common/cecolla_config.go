@@ -20,6 +20,7 @@ package common
  *
  */
 type CecollaConfig struct {
-	Enable    *bool  `json:"enable"`    // 是否开启
-	CecollaId string `json:"cecollaId"` // Cecolla UUID
+	Enable             *bool  `json:"enable"`             // 是否开启
+	CecollaId          string `json:"cecollaId"`          // Cecolla UUID
+	EnableCreateSchema *bool  `json:"enableCreateSchema"` // 是否允许设备创建物模型
 }

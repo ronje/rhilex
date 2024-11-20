@@ -106,7 +106,7 @@ func StartCecollaletWithArgs(uuid string, args string) error {
 					return 0
 				},
 			},
-		}, lua.LString(args))
+		}, lua.LString(uuid), lua.LString(args))
 		if err == nil {
 			if cecollalet.KilledBy == "RHILEX" {
 				glogger.GLogger.Infof("Cecollalet %s Killed By RHILEX", cecollalet.UUID)

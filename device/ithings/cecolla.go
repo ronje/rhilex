@@ -44,3 +44,60 @@ func ParseProductInfo(s string) (string, string, error) {
 	}
 	return parts[0], parts[1], nil
 }
+
+/**
+ * 创建物模型
+ *
+ */
+type IthingsCreateSchema struct {
+	Method     string                          `json:"method"`
+	MsgToken   string                          `json:"msgToken"`
+	Timestamp  int64                           `json:"timestamp"`
+	Properties []IthingsCreateSchemaProperties `json:"properties"`
+}
+
+func (O IthingsCreateSchema) String() string {
+	bytes, _ := json.Marshal(O)
+	return string(bytes)
+}
+
+type IthingsCreateSchemaProperties struct {
+	Id   string `json:"id"`
+	Name string `json:"name"`
+	Type string `json:"type"`
+}
+
+/*
+*
+  - Modbus点位类型转换成物模型
+
+const (
+
+	DataTypeBool      DataType = "bool"
+	DataTypeInt       DataType = "int"
+	DataTypeString    DataType = "string"
+	DataTypeStruct    DataType = "struct"
+	DataTypeFloat     DataType = "float"
+	DataTypeTimestamp DataType = "timestamp"
+	DataTypeArray     DataType = "array"
+	DataTypeEnum      DataType = "enum"
+
+)
+*/
+func ModbusTypeToSchemaType(Type string) string {
+	switch Type {
+	case "BOOL":
+		return "bool"
+	case "INT", "UINT", "INT32", "UINT32":
+		return "int"
+	case "FLOAT", "FLOAT32":
+		return "float"
+	case "BYTE", "I", "Q":
+		return "int"
+	case "INT16", "UINT16", "SHORT", "USHORT":
+		return "int"
+	case "LONG", "ULONG":
+		return "int"
+	}
+	return "NULL"
+}

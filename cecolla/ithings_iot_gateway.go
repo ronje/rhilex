@@ -187,14 +187,14 @@ func (hd *IThingsGateway) Start(cctx typex.CCTX) error {
 		glogger.GLogger.Infof("IThings Connected Success")
 		// 属性下发
 		if token := hd.client.Subscribe(hd.propertyDownTopic, 1, func(c mqtt.Client, msg mqtt.Message) {
-			glogger.GLogger.Debug("Property Down, Topic: [", msg.Topic(), "] Payload: ", string(msg.Payload()))
+			// glogger.GLogger.Debug("Property Down, Topic: [", msg.Topic(), "] Payload: ", string(msg.Payload()))
 			hd.ExecAction(string(msg.Payload()))
 		}); token.Error() != nil {
 			glogger.GLogger.Error(token.Error())
 		}
 		// 动作下发
 		if token := hd.client.Subscribe(hd.actionDownTopic, 1, func(c mqtt.Client, msg mqtt.Message) {
-			glogger.GLogger.Debug("Action Down, Topic: [", msg.Topic(), "] Payload: ", string(msg.Payload()))
+			// glogger.GLogger.Debug("Action Down, Topic: [", msg.Topic(), "] Payload: ", string(msg.Payload()))
 			hd.ExecAction(string(msg.Payload()))
 		}); token.Error() != nil {
 			glogger.GLogger.Error(token.Error())
@@ -291,9 +291,6 @@ func (hd *IThingsGateway) Stop() {
 		cecollalet.RemoveCecollalet(hd.PointId)
 	}
 	hd.status = typex.CEC_DOWN
-	if hd.Cecollalet != nil {
-		hd.Cecollalet.Stop()
-	}
 	if hd.CancelCTX != nil {
 		hd.CancelCTX()
 	}
@@ -328,6 +325,16 @@ type SubDeviceParam struct {
  */
 func (hd *IThingsGateway) OnCtrl(cmd []byte, b []byte) (any, error) {
 	Cmd := string(cmd)
+	// 新建物模型
+	// 请求 Topic： $gateway/up/thing/{ProductID}/{DeviceName}
+	// 响应 Topic： $gateway/down/thing/{ProductID}/{DeviceName}
+	if Cmd == "CreateSubDeviceSchema" {
+		token := hd.client.Publish(hd.gatewayTopicUp, 1, false, b)
+		if token.Error() != nil {
+			glogger.Error(token.Error())
+			return nil, token.Error()
+		}
+	}
 	// 子设备上线
 	if Cmd == "SubDeviceSetOnline" {
 		subDeviceParam := SubDeviceParam{}
@@ -448,7 +455,19 @@ END:
  * 执行本地回调
  *
  */
+type IthingsDownMsg struct {
+	Method   string `json:"method"`
+	MsgToken string `json:"msgToken"`
+}
+
 func (hd *IThingsGateway) ExecAction(s string) error {
 	glogger.Debug("IThingsGateway.ExecAction == ", s)
-	return cecollalet.StartCecollalet(hd.PointId, s)
+	msg := IthingsDownMsg{}
+	if errUnmarshal := json.Unmarshal([]byte(s), &msg); errUnmarshal != nil {
+		return errUnmarshal
+	}
+	if msg.Method == "control" || msg.Method == "action" {
+		return cecollalet.StartCecollalet(hd.PointId, s)
+	}
+	return nil
 }

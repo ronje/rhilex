@@ -233,6 +233,28 @@ type IthingsSubDevices struct {
 }
 
 type IthingsProperties struct {
-	Timestamp int64          `json:"timestamp"`
+	Timestamp int64          `json:"timestamp,omitempty"`
 	Params    map[string]any `json:"params"`
+}
+
+/**
+ * 创建物模型
+ *
+ */
+type IthingsCreateSchema struct {
+	Method     string                          `json:"method"`
+	MsgToken   string                          `json:"msgToken"`
+	Timestamp  int64                           `json:"timestamp"`
+	Properties []IthingsCreateSchemaProperties `json:"properties"`
+}
+
+func (O IthingsCreateSchema) String() string {
+	bytes, _ := json.Marshal(O)
+	return string(bytes)
+}
+
+type IthingsCreateSchemaProperties struct {
+	Id   string `json:"id,omitempty"`
+	Name string `json:"name,omitempty"`
+	Type string `json:"type,omitempty"`
 }
