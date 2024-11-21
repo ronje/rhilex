@@ -108,3 +108,22 @@ func ModbusTypeToSchemaType(Type string) string {
 	}
 	return "NULL"
 }
+
+/**
+ * 获取Modbus Type 长度
+ *
+ */
+func GetModbusTypeSize(Type string) int {
+	switch Type {
+
+	case "BOOL", "BYTE", "I", "Q":
+		return 1
+	case "INT16", "UINT16", "SHORT", "USHORT":
+		return 2
+	case "INT", "UINT", "FLOAT", "FLOAT32", "INT32", "UINT32":
+		return 4
+	case "LONG", "ULONG":
+		return 8
+	}
+	return 0
+}

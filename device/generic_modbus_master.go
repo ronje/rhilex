@@ -433,13 +433,6 @@ func (mdev *GenericModbusMaster) Start(cctx typex.CCTX) error {
 					}
 				}
 			}
-			// createSchema := ithings.IthingsCreateSchema{
-			// 	Method:     "createSchema",
-			// 	MsgToken:   uuid.NewString(),
-			// 	Timestamp:  time.Now().UnixMilli(),
-			// 	Properties: Properties,
-			// }
-
 		}
 	}
 
