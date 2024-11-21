@@ -254,19 +254,22 @@ func (mdev *GenericModbusMaster) Init(devId string, configMap map[string]interfa
 		}
 	}
 	// 清空可能存在的老数据
-	value := intercache.GetValue("__CecollaBinding", mdev.mainConfig.CecollaConfig.CecollaId)
 	if !*mdev.mainConfig.CecollaConfig.Enable {
-		if value.Value != nil {
-			intercache.DeleteValue("__CecollaBinding", mdev.mainConfig.CecollaConfig.CecollaId)
-		}
+		intercache.DeleteValue("__CecollaBinding", mdev.mainConfig.CecollaConfig.CecollaId)
 	} else {
+		value := intercache.GetValue("__CecollaBinding", mdev.mainConfig.CecollaConfig.CecollaId)
 		if value.Value == nil {
 			intercache.SetValue("__CecollaBinding",
 				mdev.mainConfig.CecollaConfig.CecollaId,
 				intercache.CacheValue{Value: mdev.PointId})
 		} else {
-			glogger.GLogger.Errorf("Cecolla already bind to device:%s", value.Value)
-			return fmt.Errorf("Cecolla already bind to device:%s", value.Value)
+			switch T := value.Value.(type) {
+			case string:
+				if T != mdev.PointId {
+					glogger.GLogger.Errorf("Cecolla already bind to device:%s", value.Value)
+					return fmt.Errorf("Cecolla already bind to device:%s", value.Value)
+				}
+			}
 		}
 	}
 
