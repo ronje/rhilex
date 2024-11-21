@@ -15,26 +15,26 @@
 
 package rhilexg1
 
-import "github.com/hootrhino/rhilex/archsupport"
+import "github.com/hootrhino/rhilex/periphery"
 
-func GetSysDevTree() archsupport.DeviceTree {
+func GetSysDevTree() periphery.DeviceTree {
 	wlanList, _ := getWlanList()
-	Wlans := []archsupport.DeviceNode{}
+	Wlans := []periphery.DeviceNode{}
 	for _, wlan := range wlanList {
-		Wlans = append(Wlans, archsupport.DeviceNode{Name: wlan.Name, Type: archsupport.WLAN, Status: 1})
+		Wlans = append(Wlans, periphery.DeviceNode{Name: wlan.Name, Type: periphery.WLAN, Status: 1})
 	}
 	ethList, _ := getEthList()
-	eths := []archsupport.DeviceNode{}
+	eths := []periphery.DeviceNode{}
 	for _, eth := range ethList {
-		eths = append(eths, archsupport.DeviceNode{Name: eth.Name, Type: archsupport.ETHNET, Status: 1})
+		eths = append(eths, periphery.DeviceNode{Name: eth.Name, Type: periphery.ETHNET, Status: 1})
 	}
-	return archsupport.DeviceTree{
+	return periphery.DeviceTree{
 		Network: eths,
 		Wlan:    Wlans,
-		MNet4g: []archsupport.DeviceNode{
-			{Name: "usb0", Type: archsupport.NM4G, Status: 1},
+		MNet4g: []periphery.DeviceNode{
+			{Name: "usb0", Type: periphery.NM4G, Status: 1},
 		},
-		MNet5g: []archsupport.DeviceNode{},
-		CanBus: []archsupport.DeviceNode{},
+		MNet5g: []periphery.DeviceNode{},
+		CanBus: []periphery.DeviceNode{},
 	}
 }

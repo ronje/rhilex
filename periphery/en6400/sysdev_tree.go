@@ -13,21 +13,18 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-package rhilexpro1
+package en6400
 
-import "github.com/hootrhino/rhilex/archsupport"
+import "github.com/hootrhino/rhilex/periphery"
 
-func GetSysDevTree() archsupport.DeviceTree {
-	return archsupport.DeviceTree{
-		Network: []archsupport.DeviceNode{
-			{Name: "eth0", Type: "ethernet", Status: 1},
-			{Name: "eth1", Type: "ethernet", Status: 1},
+func GetSysDevTree() periphery.DeviceTree {
+	return periphery.DeviceTree{
+		Network: []periphery.DeviceNode{
+			{Name: "eth0", Type: periphery.ETHNET, Status: 1},
 		},
-		Wlan: []archsupport.DeviceNode{
-			{Name: "wlan0", Type: "wlan", Status: 1},
-		},
-		MNet4g: []archsupport.DeviceNode{},
-		MNet5g: []archsupport.DeviceNode{},
-		CanBus: []archsupport.DeviceNode{},
+		Wlan:   []periphery.DeviceNode{},
+		MNet4g: []periphery.DeviceNode{},
+		MNet5g: []periphery.DeviceNode{},
+		CanBus: []periphery.DeviceNode{},
 	}
 }

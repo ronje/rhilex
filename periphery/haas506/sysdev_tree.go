@@ -18,26 +18,26 @@ package haas506
 import (
 	"log"
 
-	"github.com/hootrhino/rhilex/archsupport"
 	"github.com/hootrhino/rhilex/ossupport"
+	"github.com/hootrhino/rhilex/periphery"
 )
 
-func GetSysDevTree() archsupport.DeviceTree {
-	return archsupport.DeviceTree{
-		Network: []archsupport.DeviceNode{
-			{Name: "eth1", Type: archsupport.ETHNET, Status: 1},
-			{Name: "eth2", Type: archsupport.ETHNET, Status: 1},
+func GetSysDevTree() periphery.DeviceTree {
+	return periphery.DeviceTree{
+		Network: []periphery.DeviceNode{
+			{Name: "eth1", Type: periphery.ETHNET, Status: 1},
+			{Name: "eth2", Type: periphery.ETHNET, Status: 1},
 		},
-		Wlan: []archsupport.DeviceNode{
-			{Name: "wlan0", Type: archsupport.WLAN, Status: 1},
+		Wlan: []periphery.DeviceNode{
+			{Name: "wlan0", Type: periphery.WLAN, Status: 1},
 		},
-		MNet4g: []archsupport.DeviceNode{
-			{Name: "eth0", Type: archsupport.NM4G, Status: 1},
+		MNet4g: []periphery.DeviceNode{
+			{Name: "eth0", Type: periphery.NM4G, Status: 1},
 		},
-		MNet5g: []archsupport.DeviceNode{},
-		CanBus: []archsupport.DeviceNode{
-			{Name: "can1", Type: archsupport.CAN, Status: 1},
-			{Name: "can2", Type: archsupport.CAN, Status: 1},
+		MNet5g: []periphery.DeviceNode{},
+		CanBus: []periphery.DeviceNode{
+			{Name: "can1", Type: periphery.CAN, Status: 1},
+			{Name: "can2", Type: periphery.CAN, Status: 1},
 		},
 	}
 }

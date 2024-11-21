@@ -24,11 +24,11 @@ import (
 	"time"
 
 	"github.com/hootrhino/rhilex-common-misc/misc"
-	archsupport "github.com/hootrhino/rhilex/archsupport"
 	"github.com/hootrhino/rhilex/component/activation"
 	"github.com/hootrhino/rhilex/component/performance"
 	"github.com/hootrhino/rhilex/engine"
 	"github.com/hootrhino/rhilex/ossupport"
+	"github.com/hootrhino/rhilex/periphery"
 	"github.com/hootrhino/rhilex/typex"
 	"github.com/hootrhino/rhilex/utils"
 	"github.com/urfave/cli/v2"
@@ -53,7 +53,7 @@ func init() {
 		}
 		return env
 	}())
-	typex.DefaultVersionInfo.Product = archsupport.CheckVendor(env)
+	typex.DefaultVersionInfo.Product = periphery.CheckVendor(env)
 	dist, err := utils.GetOSDistribution()
 	if err != nil {
 		utils.CLog("Failed to Get OS Distribution:%s", err)

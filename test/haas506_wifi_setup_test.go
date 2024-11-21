@@ -19,7 +19,7 @@ import (
 	"testing"
 	"time"
 
-	haas506 "github.com/hootrhino/rhilex/archsupport/haas506"
+	haas506 "github.com/hootrhino/rhilex/periphery/haas506"
 )
 
 // go test -timeout 30s -run ^TestSetWifi github.com/hootrhino/rhilex/test -v -count=1

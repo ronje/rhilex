@@ -18,10 +18,10 @@ package globalinit
 import (
 	"fmt"
 
-	"github.com/hootrhino/rhilex/archsupport/en6400"
-	"github.com/hootrhino/rhilex/archsupport/haas506"
-	"github.com/hootrhino/rhilex/archsupport/rhilexg1"
-	"github.com/hootrhino/rhilex/archsupport/rhilexpro1"
+	"github.com/hootrhino/rhilex/periphery/en6400"
+	"github.com/hootrhino/rhilex/periphery/haas506"
+	"github.com/hootrhino/rhilex/periphery/rhilexg1"
+	"github.com/hootrhino/rhilex/periphery/rhilexpro1"
 )
 
 var __DefaultGlobalInitManager *GlobalInitManager

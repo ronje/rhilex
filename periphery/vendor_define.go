@@ -13,18 +13,25 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-package en6400
+package periphery
 
-import "github.com/hootrhino/rhilex/archsupport"
+import (
+	"golang.org/x/exp/slices"
+)
 
-func GetSysDevTree() archsupport.DeviceTree {
-	return archsupport.DeviceTree{
-		Network: []archsupport.DeviceNode{
-			{Name: "eth0", Type: archsupport.ETHNET, Status: 1},
-		},
-		Wlan:   []archsupport.DeviceNode{},
-		MNet4g: []archsupport.DeviceNode{},
-		MNet5g: []archsupport.DeviceNode{},
-		CanBus: []archsupport.DeviceNode{},
+/**
+ * 获取厂商
+ *
+ */
+func CheckVendor(env string) string {
+	if slices.Contains([]string{
+		"RHILEXG1",
+		"RPI4B",
+		"EN6400",
+		"HAAS506LD1",
+		"RHILEXPRO1",
+	}, env) {
+		return env
 	}
+	return "COMMON"
 }
