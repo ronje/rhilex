@@ -198,8 +198,8 @@ type IthingsPackReport struct {
 	Method     string              `json:"method"`
 	MsgToken   string              `json:"msgToken"`
 	Timestamp  int64               `json:"timestamp"`
-	Properties []IthingsProperties `json:"properties"`
-	SubDevices []IthingsSubDevices `json:"subDevices"`
+	Properties []IthingsProperties `json:"properties,omitempty"`
+	SubDevices []IthingsSubDevices `json:"subDevices,omitempty"`
 }
 
 func NewIthingsPackReport(Timestamp int64, ProductID, DeviceName string, Param string, Value any) IthingsPackReport {
@@ -242,10 +242,10 @@ type IthingsProperties struct {
  *
  */
 type IthingsCreateSchema struct {
-	Method     string                          `json:"method"`
-	MsgToken   string                          `json:"msgToken"`
-	Timestamp  int64                           `json:"timestamp"`
-	Properties []IthingsCreateSchemaProperties `json:"properties"`
+	Method     string                         `json:"method"`
+	MsgToken   string                         `json:"msgToken"`
+	Timestamp  int64                          `json:"timestamp"`
+	Properties []IthingsCreateSchemaPropertie `json:"properties"`
 }
 
 func (O IthingsCreateSchema) String() string {
@@ -253,8 +253,10 @@ func (O IthingsCreateSchema) String() string {
 	return string(bytes)
 }
 
-type IthingsCreateSchemaProperties struct {
-	Id   string `json:"id,omitempty"`
-	Name string `json:"name,omitempty"`
-	Type string `json:"type,omitempty"`
+type IthingsCreateSchemaPropertie struct {
+	Id        string `json:"id"`
+	Name      string `json:"name"`
+	Type      string `json:"type"`
+	ProductId string `json:"productID,omitempty"`
+	DeviceId  string `json:"deviceID,omitempty"`
 }

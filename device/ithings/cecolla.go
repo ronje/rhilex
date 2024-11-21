@@ -50,10 +50,10 @@ func ParseProductInfo(s string) (string, string, error) {
  *
  */
 type IthingsCreateSchema struct {
-	Method     string                          `json:"method"`
-	MsgToken   string                          `json:"msgToken"`
-	Timestamp  int64                           `json:"timestamp"`
-	Properties []IthingsCreateSchemaProperties `json:"properties"`
+	Method     string                         `json:"method"`
+	MsgToken   string                         `json:"msgToken"`
+	Timestamp  int64                          `json:"timestamp"`
+	Properties []IthingsCreateSchemaPropertie `json:"properties"`
 }
 
 func (O IthingsCreateSchema) String() string {
@@ -61,10 +61,17 @@ func (O IthingsCreateSchema) String() string {
 	return string(bytes)
 }
 
-type IthingsCreateSchemaProperties struct {
-	Id   string `json:"id"`
-	Name string `json:"name"`
-	Type string `json:"type"`
+type IthingsCreateSchemaPropertie struct {
+	Id        string `json:"id"`
+	Name      string `json:"name"`
+	Type      string `json:"type"`
+	ProductId string `json:"productID,omitempty"`
+	DeviceId  string `json:"deviceID,omitempty"`
+}
+
+func (O IthingsCreateSchemaPropertie) String() string {
+	bytes, _ := json.Marshal(O)
+	return string(bytes)
 }
 
 /*

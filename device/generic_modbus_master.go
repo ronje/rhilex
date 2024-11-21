@@ -27,7 +27,6 @@ import (
 
 	"time"
 
-	"github.com/google/uuid"
 	"github.com/hootrhino/rhilex/common"
 	intercache "github.com/hootrhino/rhilex/component/intercache"
 	"github.com/hootrhino/rhilex/component/interdb"
@@ -406,28 +405,38 @@ func (mdev *GenericModbusMaster) Start(cctx typex.CCTX) error {
 	if *mdev.mainConfig.CecollaConfig.Enable {
 		// 新建设备端物模型
 		if *mdev.mainConfig.CecollaConfig.EnableCreateSchema {
-			Properties := []ithings.IthingsCreateSchemaProperties{}
+			Properties := []ithings.IthingsCreateSchemaPropertie{}
 			for _, Register := range mdev.Registers {
-				Properties = append(Properties, ithings.IthingsCreateSchemaProperties{
+				ProductId, DeviceId, err := ithings.ParseProductInfo(Register.Alias)
+				if err != nil {
+					glogger.Error(err)
+				}
+				Properties = append(Properties, ithings.IthingsCreateSchemaPropertie{
 					Id:        Register.Tag,
 					Name:      Register.Alias,
 					Type:      ithings.ModbusTypeToSchemaType(Register.DataType),
+					ProductId: ProductId,
+					DeviceId:  DeviceId,
 				})
 			}
-
-			createSchema := ithings.IthingsCreateSchema{
-				Method:     "createSchema",
-				MsgToken:   uuid.NewString(),
-				Timestamp:  time.Now().UnixMilli(),
-				Properties: Properties,
-			}
-			cecolla := mdev.RuleEngine.GetCecolla(mdev.mainConfig.CecollaConfig.CecollaId)
-			if cecolla != nil {
-				_, errOnCtrl := cecolla.Cecolla.OnCtrl([]byte("CreateSubDeviceSchema"), []byte(createSchema.String()))
-				if errOnCtrl != nil {
-					glogger.Error(errOnCtrl)
+			if bytes, errMarshal := json.Marshal(Properties); errMarshal != nil {
+				glogger.Error(errMarshal)
+			} else {
+				cecolla := mdev.RuleEngine.GetCecolla(mdev.mainConfig.CecollaConfig.CecollaId)
+				if cecolla != nil {
+					_, errOnCtrl := cecolla.Cecolla.OnCtrl([]byte("CreateSubDeviceSchema"), bytes)
+					if errOnCtrl != nil {
+						glogger.Error(errOnCtrl)
+					}
 				}
 			}
+			// createSchema := ithings.IthingsCreateSchema{
+			// 	Method:     "createSchema",
+			// 	MsgToken:   uuid.NewString(),
+			// 	Timestamp:  time.Now().UnixMilli(),
+			// 	Properties: Properties,
+			// }
+
 		}
 	}
 

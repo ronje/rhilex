@@ -325,15 +325,36 @@ type SubDeviceParam struct {
  */
 func (hd *IThingsGateway) OnCtrl(cmd []byte, b []byte) (any, error) {
 	Cmd := string(cmd)
-	// 新建物模型
-	// 请求 Topic： $gateway/up/thing/{ProductID}/{DeviceName}
-	// 响应 Topic： $gateway/down/thing/{ProductID}/{DeviceName}
+	// 新建子设备点位表的物模型
 	if Cmd == "CreateSubDeviceSchema" {
-		token := hd.client.Publish(hd.gatewayTopicUp, 1, false, b)
-		if token.Error() != nil {
-			glogger.Error(token.Error())
-			return nil, token.Error()
+		Properties := []ithings.IthingsCreateSchemaPropertie{}
+		if errUnmarshal := json.Unmarshal(b, &Properties); errUnmarshal != nil {
+			return nil, errUnmarshal
 		}
+		for _, Property := range Properties {
+			createSchema := ithings.IthingsCreateSchema{
+				Method:    "createSchema",
+				MsgToken:  uuid.NewString(),
+				Timestamp: time.Now().UnixMilli(),
+				Properties: []ithings.IthingsCreateSchemaPropertie{{
+					Id:   Property.Id,
+					Name: Property.Name,
+					Type: Property.Type,
+				}},
+			}
+
+			token := hd.client.Publish(fmt.Sprintf(_ithings_gateway_up,
+				Property.ProductId, Property.DeviceId), 1, false, createSchema.String())
+			if token.Error() != nil {
+				glogger.Error(token.Error())
+				return nil, token.Error()
+			}
+		}
+
+		// 再次刷新获取物模型
+		hd.client.Publish(hd.gatewayTopicUp, 1, false,
+			fmt.Sprintf(`{"method":"getSchema","msgToken":"%s","payload":{"productID":"%s"}}`,
+				uuid.NewString(), hd.mainConfig.SubProduct))
 	}
 	// 子设备上线
 	if Cmd == "SubDeviceSetOnline" {
