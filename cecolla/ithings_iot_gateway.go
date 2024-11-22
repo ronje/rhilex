@@ -37,11 +37,11 @@ import (
 // 应用调用设备行为或服务端响应设备请求执行结果 Topic： $thing/down/action/{ProductID}/{DeviceName}
 const (
 	// 属性
-	_ithings_PropertyUpTopic = "$thing/up/property/%v/%v"
-	_ithings_PropertyTopic   = "$thing/down/property/%v/%v"
+	_ithings_PropertyUpTopic   = "$thing/up/property/%v/%v"
+	_ithings_PropertyDownTopic = "$thing/down/property/%v/%v"
 	// 动作
-	_ithings_ActionTopic   = "$thing/down/action/%v/%v"
-	_ithings_ActionUpTopic = "$thing/up/action/%v/%v"
+	_ithings_ActionDownTopic = "$thing/down/action/%v/%v"
+	_ithings_ActionUpTopic   = "$thing/up/action/%v/%v"
 	// 设备从云端接收最新消息使用的 Topic：
 	//     请求 Topic： $gateway/up/thing/{ProductID}/{DeviceName}
 	//     响应 Topic： $gateway/down/thing/{ProductID}/{DeviceName}
@@ -158,12 +158,12 @@ func (hd *IThingsGateway) Start(cctx typex.CCTX) error {
 	hd.Ctx = cctx.Ctx
 	hd.CancelCTX = cctx.CancelCTX
 	// 自身属性
-	hd.propertyDownTopic = fmt.Sprintf(_ithings_PropertyTopic,
+	hd.propertyDownTopic = fmt.Sprintf(_ithings_PropertyDownTopic,
 		hd.mainConfig.ProductId, hd.mainConfig.DeviceName)
 	hd.propertyUpTopic = fmt.Sprintf(_ithings_PropertyUpTopic,
 		hd.mainConfig.ProductId, hd.mainConfig.DeviceName)
 	// 自身动作
-	hd.actionDownTopic = fmt.Sprintf(_ithings_ActionTopic,
+	hd.actionDownTopic = fmt.Sprintf(_ithings_ActionDownTopic,
 		hd.mainConfig.ProductId, hd.mainConfig.DeviceName)
 	hd.actionUpTopic = fmt.Sprintf(_ithings_ActionUpTopic,
 		hd.mainConfig.ProductId, hd.mainConfig.DeviceName)
@@ -184,20 +184,16 @@ func (hd *IThingsGateway) Start(cctx typex.CCTX) error {
 	hd.gatewayStatusTopicDown = fmt.Sprintf(_ithings_gateway_status_down,
 		hd.mainConfig.ProductId, hd.mainConfig.DeviceName)
 	var connectHandler mqtt.OnConnectHandler = func(client mqtt.Client) {
-		glogger.GLogger.Infof("IThings Connected Success")
+		glogger.Infof("IThings Connected Success")
 		// 属性下发
-		if token := hd.client.Subscribe(hd.propertyDownTopic, 1, func(c mqtt.Client, msg mqtt.Message) {
-			// glogger.GLogger.Debug("Property Down, Topic: [", msg.Topic(), "] Payload: ", string(msg.Payload()))
-			hd.ExecAction(string(msg.Payload()))
-		}); token.Error() != nil {
-			glogger.GLogger.Error(token.Error())
+		if token := hd.client.Subscribe(hd.propertyDownTopic, 1,
+			hd.OnGatewayPropertyReceived); token.Error() != nil {
+			glogger.Error(token.Error())
 		}
 		// 动作下发
-		if token := hd.client.Subscribe(hd.actionDownTopic, 1, func(c mqtt.Client, msg mqtt.Message) {
-			// glogger.GLogger.Debug("Action Down, Topic: [", msg.Topic(), "] Payload: ", string(msg.Payload()))
-			hd.ExecAction(string(msg.Payload()))
-		}); token.Error() != nil {
-			glogger.GLogger.Error(token.Error())
+		if token := hd.client.Subscribe(hd.actionDownTopic, 1,
+			hd.OnGatewayActionReceived); token.Error() != nil {
+			glogger.Error(token.Error())
 		}
 		// 设备物模型
 		hd.client.Publish(hd.gatewayTopicUp, 1, false,
@@ -317,6 +313,12 @@ type SubDeviceParam struct {
 	DeviceId  string `json:"deviceID"`
 	Param     string `json:"param"`
 	Value     any    `json:"value"`
+}
+
+// 子设备订阅
+type SubDeviceTopic struct {
+	ProductId string `json:"productID"`
+	DeviceId  string `json:"deviceID"`
 }
 
 /**
@@ -481,14 +483,48 @@ type IthingsDownMsg struct {
 	MsgToken string `json:"msgToken"`
 }
 
-func (hd *IThingsGateway) ExecAction(s string) error {
-	glogger.Debug("IThingsGateway.ExecAction == ", s)
-	msg := IthingsDownMsg{}
-	if errUnmarshal := json.Unmarshal([]byte(s), &msg); errUnmarshal != nil {
-		return errUnmarshal
+/**
+ * 处理网关的物模型消息
+ *
+ */
+func (hd *IThingsGateway) OnGatewayPropertyReceived(c mqtt.Client, msg mqtt.Message) {
+	glogger.Debug("IThingsGateway.OnGatewayPropertyReceived == ", string(msg.Payload()))
+	downMsg := IthingsDownMsg{}
+	if errUnmarshal := json.Unmarshal(msg.Payload(), &msg); errUnmarshal != nil {
+		glogger.Error(errUnmarshal)
+		return
 	}
-	if msg.Method == "control" || msg.Method == "action" {
-		return cecollalet.StartCecollalet(hd.PointId, s)
+	if downMsg.Method == "control" {
+		err := cecollalet.StartCecollalet(hd.PointId, string(msg.Payload()))
+		if err != nil {
+			glogger.Error(err)
+		}
 	}
-	return nil
+}
+func (hd *IThingsGateway) OnGatewayActionReceived(c mqtt.Client, msg mqtt.Message) {
+	glogger.Debug("IThingsGateway.OnGatewayActionReceived == ", string(msg.Payload()))
+	downMsg := IthingsDownMsg{}
+	if errUnmarshal := json.Unmarshal(msg.Payload(), &msg); errUnmarshal != nil {
+		return
+	}
+	if downMsg.Method == "action" {
+		err := cecollalet.StartCecollalet(hd.PointId, string(msg.Payload()))
+		if err != nil {
+			glogger.Error(err)
+		}
+	}
+
+}
+
+/**
+ * 子设备的代理消息
+ *
+ */
+func (hd *IThingsGateway) OnSubdevicePropertyReceived(c mqtt.Client, msg mqtt.Message) {
+	glogger.Debug("IThingsGateway.OnSubdevicePropertyReceived == ", msg)
+
+}
+func (hd *IThingsGateway) OnSubdeviceActionReceived(c mqtt.Client, msg mqtt.Message) {
+	glogger.Debug("IThingsGateway.OnSubdeviceActionReceived == ", msg)
+
 }

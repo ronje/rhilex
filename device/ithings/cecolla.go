@@ -74,6 +74,12 @@ func (O IthingsCreateSchemaPropertie) String() string {
 	return string(bytes)
 }
 
+// 子设备订阅
+type SubDeviceTopic struct {
+	ProductId string `json:"productID"`
+	DeviceId  string `json:"deviceID"`
+}
+
 /*
 *
   - Modbus点位类型转换成物模型

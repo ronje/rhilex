@@ -422,11 +422,12 @@ func (mdev *GenericModbusMaster) Start(cctx typex.CCTX) error {
 					DeviceId:  DeviceId,
 				})
 			}
+			cecolla := mdev.RuleEngine.GetCecolla(mdev.mainConfig.CecollaConfig.CecollaId)
 			if bytes, errMarshal := json.Marshal(Properties); errMarshal != nil {
 				glogger.Error(errMarshal)
 			} else {
-				cecolla := mdev.RuleEngine.GetCecolla(mdev.mainConfig.CecollaConfig.CecollaId)
 				if cecolla != nil {
+					// CreateSubDeviceSchema
 					_, errOnCtrl := cecolla.Cecolla.OnCtrl([]byte("CreateSubDeviceSchema"), bytes)
 					if errOnCtrl != nil {
 						glogger.Error(errOnCtrl)
