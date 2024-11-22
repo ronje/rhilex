@@ -1,12 +1,62 @@
 {
     "properties": [
         {
-            "identifier": "switcher",
+            "identifier": "sensorShort",
             "tag": 1,
-            "name": "switcher",
+            "name": "温度探头短路",
             "desc": "",
             "required": false,
             "extendConfig": "",
+            "isCanSceneLinkage": 1,
+            "isShareAuthPerm": 0,
+            "funcGroup": 1,
+            "controlMode": 1,
+            "userPerm": 3,
+            "isHistory": 1,
+            "order": 0,
+            "mode": "r",
+            "define": {
+                "type": "bool",
+                "mapping": {
+                    "0": "关",
+                    "1": "开"
+                }
+            },
+            "isUseShadow": false,
+            "isNoRecord": false
+        },
+        {
+            "identifier": "sensorOpen",
+            "tag": 1,
+            "name": "温度探头开路",
+            "desc": "",
+            "required": false,
+            "extendConfig": "",
+            "isCanSceneLinkage": 1,
+            "isShareAuthPerm": 0,
+            "funcGroup": 1,
+            "controlMode": 1,
+            "userPerm": 3,
+            "isHistory": 1,
+            "order": 0,
+            "mode": "r",
+            "define": {
+                "type": "bool",
+                "mapping": {
+                    "0": "正常",
+                    "1": "故障"
+                }
+            },
+            "isUseShadow": false,
+            "isNoRecord": false
+        },
+        {
+            "identifier": "switch",
+            "tag": 2,
+            "name": "电源开关",
+            "desc": "",
+            "required": false,
+            "extendConfig": "{}",
             "isCanSceneLinkage": 1,
             "isShareAuthPerm": 0,
             "funcGroup": 1,
@@ -26,88 +76,39 @@
             "isNoRecord": false
         },
         {
-            "identifier": "temperature",
-            "tag": 1,
-            "name": "temperature",
+            "identifier": "windSpeed",
+            "tag": 2,
+            "name": "风速",
             "desc": "",
             "required": false,
-            "extendConfig": "",
+            "extendConfig": "{}",
             "isCanSceneLinkage": 1,
             "isShareAuthPerm": 0,
             "funcGroup": 1,
             "controlMode": 1,
             "userPerm": 3,
-            "isHistory": 1,
-            "order": 0,
-            "mode": "rw",
-            "define": {
-                "type": "int",
-                "min": "1",
-                "max": "100",
-                "start": "1",
-                "step": "1"
-            },
-            "isUseShadow": false,
-            "isNoRecord": false
-        },
-        {
-            "identifier": "exception",
-            "tag": 1,
-            "name": "exception",
-            "desc": "",
-            "required": false,
-            "extendConfig": "",
-            "isCanSceneLinkage": 1,
-            "isShareAuthPerm": 0,
-            "funcGroup": 1,
-            "controlMode": 1,
-            "userPerm": 3,
-            "isHistory": 1,
-            "order": 0,
-            "mode": "rw",
-            "define": {
-                "type": "bool",
-                "mapping": {
-                    "0": "无",
-                    "1": "有"
-                }
-            },
-            "isUseShadow": false,
-            "isNoRecord": false
-        },
-        {
-            "identifier": "setting_wind_mode",
-            "tag": 1,
-            "name": "setting_wind_mode",
-            "desc": "",
-            "required": false,
-            "extendConfig": "",
-            "isCanSceneLinkage": 1,
-            "isShareAuthPerm": 0,
-            "funcGroup": 1,
-            "controlMode": 1,
-            "userPerm": 0,
             "isHistory": 1,
             "order": 0,
             "mode": "rw",
             "define": {
                 "type": "enum",
                 "mapping": {
-                    "0": "高",
-                    "1": "中",
-                    "3": "低"
+                    "0": "高速",
+                    "1": "中速",
+                    "2": "低速",
+                    "3": "自动"
                 }
             },
             "isUseShadow": false,
             "isNoRecord": false
         },
         {
-            "identifier": "setting_working_mode",
-            "tag": 1,
-            "name": "setting_working_mode",
+            "identifier": "mode",
+            "tag": 2,
+            "name": "模式",
             "desc": "",
             "required": false,
-            "extendConfig": "",
+            "extendConfig": "{}",
             "isCanSceneLinkage": 1,
             "isShareAuthPerm": 0,
             "funcGroup": 1,
@@ -128,9 +129,35 @@
             "isNoRecord": false
         },
         {
-            "identifier": "setting_temperature",
-            "tag": 1,
-            "name": "setting_temperature",
+            "identifier": "roomTemp",
+            "tag": 2,
+            "name": "室内温度",
+            "desc": "",
+            "required": false,
+            "extendConfig": "{}",
+            "isCanSceneLinkage": 1,
+            "isShareAuthPerm": 0,
+            "funcGroup": 1,
+            "controlMode": 1,
+            "userPerm": 3,
+            "isHistory": 1,
+            "order": 0,
+            "mode": "r",
+            "define": {
+                "type": "float",
+                "min": "0.000",
+                "max": "99.000",
+                "start": "1.000",
+                "step": "1.000",
+                "unit": "℃"
+            },
+            "isUseShadow": false,
+            "isNoRecord": false
+        },
+        {
+            "identifier": "setTemp",
+            "tag": 2,
+            "name": "设置温度",
             "desc": "",
             "required": false,
             "extendConfig": "",
@@ -147,13 +174,14 @@
                 "min": "5",
                 "max": "35",
                 "start": "5",
-                "step": "1"
+                "step": "1",
+                "unit": "℃"
             },
-            "isUseShadow": false,
+            "isUseShadow": true,
             "isNoRecord": false
         }
     ],
     "profile": {
-        "productID": "00p"
+        "productID": "00r"
     }
 }
