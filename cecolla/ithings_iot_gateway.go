@@ -490,7 +490,7 @@ type IthingsDownMsg struct {
 func (hd *IThingsGateway) OnGatewayPropertyReceived(c mqtt.Client, msg mqtt.Message) {
 	glogger.Debug("IThingsGateway.OnGatewayPropertyReceived == ", string(msg.Payload()))
 	downMsg := IthingsDownMsg{}
-	if errUnmarshal := json.Unmarshal(msg.Payload(), &msg); errUnmarshal != nil {
+	if errUnmarshal := json.Unmarshal(msg.Payload(), &downMsg); errUnmarshal != nil {
 		glogger.Error(errUnmarshal)
 		return
 	}
@@ -504,7 +504,7 @@ func (hd *IThingsGateway) OnGatewayPropertyReceived(c mqtt.Client, msg mqtt.Mess
 func (hd *IThingsGateway) OnGatewayActionReceived(c mqtt.Client, msg mqtt.Message) {
 	glogger.Debug("IThingsGateway.OnGatewayActionReceived == ", string(msg.Payload()))
 	downMsg := IthingsDownMsg{}
-	if errUnmarshal := json.Unmarshal(msg.Payload(), &msg); errUnmarshal != nil {
+	if errUnmarshal := json.Unmarshal(msg.Payload(), &downMsg); errUnmarshal != nil {
 		return
 	}
 	if downMsg.Method == "action" {

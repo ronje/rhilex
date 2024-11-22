@@ -109,10 +109,11 @@ type GenericModbusMaster struct {
 	tcpHandler *modbus.TCPClientHandler
 	Client     modbus.Client
 	//
-	mainConfig     ModbusMasterConfig
-	retryTimes     int
-	Registers      map[string]*common.RegisterRW
-	RegisterGroups []*ModbusMasterGroupedTag
+	mainConfig       ModbusMasterConfig
+	retryTimes       int
+	Registers        map[string]*common.RegisterRW
+	RegisterWithTags map[string]*common.RegisterRW
+	RegisterGroups   []*ModbusMasterGroupedTag
 }
 
 /*
@@ -164,6 +165,8 @@ func NewGenericModbusMaster(e typex.Rhilex) typex.XDevice {
 		},
 	}
 	mdev.Registers = map[string]*common.RegisterRW{}
+	mdev.RegisterWithTags = map[string]*common.RegisterRW{}
+	mdev.RegisterGroups = []*ModbusMasterGroupedTag{}
 	mdev.Busy = false
 	mdev.status = typex.DEV_DOWN
 	return mdev
@@ -194,6 +197,19 @@ func (mdev *GenericModbusMaster) Init(devId string, configMap map[string]interfa
 		// 频率不能太快
 		if ModbusPoint.Frequency < 1 {
 			return errors.New("'frequency' must grate than 50 millisecond")
+		}
+		mdev.RegisterWithTags[ModbusPoint.Tag] = &common.RegisterRW{
+			UUID:      ModbusPoint.UUID,
+			Tag:       ModbusPoint.Tag,
+			Alias:     ModbusPoint.Alias,
+			Function:  ModbusPoint.Function,
+			SlaverId:  ModbusPoint.SlaverId,
+			Address:   ModbusPoint.Address,
+			Quantity:  ModbusPoint.Quantity,
+			Frequency: ModbusPoint.Frequency,
+			DataType:  ModbusPoint.DataType,
+			DataOrder: ModbusPoint.DataOrder,
+			Weight:    ModbusPoint.Weight,
 		}
 		mdev.Registers[ModbusPoint.UUID] = &common.RegisterRW{
 			UUID:      ModbusPoint.UUID,
@@ -569,10 +585,9 @@ func (mdev *GenericModbusMaster) OnDCACall(UUID string, Command string, Args int
  */
 // POST -> temp , 0x0001
 type CtrlCmd struct {
-	UUID    string `json:"uuid"`    // 设备的UUID
-	PointId string `json:"pointId"` // 点位Point Id
-	Tag     string `json:"tag"`     // 点位表的Tag
-	Value   string `json:"value"`   // 写的值
+	PointId string `json:"pointId,omitempty"` // 点位Point Id
+	Tag     string `json:"tag,omitempty"`     // 点位Point Id
+	Value   string `json:"value"`             // 写的值
 }
 
 func (O CtrlCmd) String() string {
@@ -586,6 +601,44 @@ func (O CtrlCmd) String() string {
  */
 func (mdev *GenericModbusMaster) OnCtrl(cmd []byte, args []byte) ([]byte, error) {
 	glogger.Debug("GenericModbusMaster.OnCtrl, CMD=", string(cmd), ", Args=", string(args))
+	// 根据Tag来写点位
+	if string(cmd) == "WriteToSheetRegisterWithTag" {
+		ctrlCmd := CtrlCmd{}
+		if errUnmarshal := json.Unmarshal(args, &ctrlCmd); errUnmarshal != nil {
+			return nil, errUnmarshal
+		}
+		Register, ok := mdev.RegisterWithTags[ctrlCmd.Tag]
+		if ok {
+			// 单个线圈
+			// 0xFF00：表示线圈 ON（开）。任何非零值通常都表示线圈为 ON，但标准中通常用 0xFF00 来表示。
+			// 0x0000：表示线圈 OFF（关）。它是唯一的有效值来表示线圈处于关闭状态。
+			if Register.Function == 1 {
+				if ctrlCmd.Value == "0" || ctrlCmd.Value == "false" {
+					_, errW := mdev.Client.WriteSingleCoil(Register.Address, 0x0000)
+					if errW != nil {
+						return nil, errW
+					}
+				}
+				if ctrlCmd.Value == "1" || ctrlCmd.Value == "true" {
+					_, errW := mdev.Client.WriteSingleCoil(Register.Address, 0xFF00)
+					if errW != nil {
+						return nil, errW
+					}
+				}
+			}
+			// 单个寄存器
+			if Register.Function == 3 {
+				value, err := StringToUint16(ctrlCmd.Value)
+				if err != nil {
+					return nil, err
+				}
+				_, errW := mdev.Client.WriteSingleRegister(Register.Address, value)
+				if errW != nil {
+					return nil, errW
+				}
+			}
+		}
+	}
 	// 写指令
 	if string(cmd) == "WriteToSheetRegister" {
 		ctrlCmd := CtrlCmd{}

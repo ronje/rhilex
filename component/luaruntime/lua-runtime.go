@@ -248,11 +248,12 @@ func LoadRuleLibGroup(e typex.Rhilex, scope, uuid string, LState *lua.LState) {
 	}
 	{
 		Funcs := map[string]func(l *lua.LState) int{
-			"F5":        rhilexlib.F5(e, uuid),
-			"F6":        rhilexlib.F6(e, uuid),
-			"F15":       rhilexlib.F15(e, uuid),
-			"F16":       rhilexlib.F16(e, uuid),
-			"ParseByte": rhilexlib.ParseModbusByte(e, uuid),
+			"F5":         rhilexlib.F5(e, uuid),
+			"F6":         rhilexlib.F6(e, uuid),
+			"F15":        rhilexlib.F15(e, uuid),
+			"F16":        rhilexlib.F16(e, uuid),
+			"WritePoint": rhilexlib.WriteToModbusSheetRegisterWithTag(e),
+			"ParseByte":  rhilexlib.ParseModbusByte(e, uuid),
 		}
 		AddRuleLibToGroup(e, LState, "modbus", Funcs)
 	}

@@ -349,3 +349,42 @@ func calculateCRC(data []byte) uint16 {
 	}
 	return crc
 }
+
+// POST -> temp , 0x0001
+type CtrlCmd struct {
+	Tag   string `json:"tag"`   // 点位表的Tag
+	Value string `json:"value"` // 写的值
+}
+
+func (O CtrlCmd) String() string {
+	bytes, _ := json.Marshal(O)
+	return string(bytes)
+}
+
+/**
+ * 设备控制
+ *
+ */
+func WriteToModbusSheetRegisterWithTag(rx typex.Rhilex) func(*lua.LState) int {
+	return func(stateStack *lua.LState) int {
+		uuid := stateStack.ToString(2)
+		args := stateStack.ToString(3)
+		Device := rx.GetDevice(uuid)
+		if Device != nil {
+			if Device.Device != nil {
+				ctrlCmd := CtrlCmd{}
+				if errUnmarshal := json.Unmarshal([]byte(args), &ctrlCmd); errUnmarshal != nil {
+					stateStack.Push(lua.LString(errUnmarshal.Error()))
+					return 1
+				}
+				_, err := Device.Device.OnCtrl([]byte("WriteToModbusSheetRegisterWithTag"), []byte(ctrlCmd.String()))
+				if err != nil {
+					stateStack.Push(lua.LString(err.Error()))
+					return 1
+				}
+			}
+		}
+		stateStack.Push(lua.LNil)
+		return 1
+	}
+}
