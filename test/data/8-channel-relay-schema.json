@@ -1,0 +1,207 @@
+{
+    "properties": [
+        {
+            "identifier": "sw1",
+            "tag": 1,
+            "name": "sw1",
+            "desc": "",
+            "required": false,
+            "extendConfig": "",
+            "isCanSceneLinkage": 1,
+            "isShareAuthPerm": 0,
+            "funcGroup": 1,
+            "controlMode": 1,
+            "userPerm": 3,
+            "isHistory": 1,
+            "order": 0,
+            "mode": "rw",
+            "define": {
+                "type": "bool",
+                "mapping": {
+                    "0": "关",
+                    "1": "开"
+                }
+            },
+            "isUseShadow": false,
+            "isNoRecord": false
+        },
+        {
+            "identifier": "sw2",
+            "tag": 1,
+            "name": "sw2",
+            "desc": "",
+            "required": false,
+            "extendConfig": "",
+            "isCanSceneLinkage": 1,
+            "isShareAuthPerm": 0,
+            "funcGroup": 1,
+            "controlMode": 1,
+            "userPerm": 3,
+            "isHistory": 1,
+            "order": 0,
+            "mode": "rw",
+            "define": {
+                "type": "bool",
+                "mapping": {
+                    "0": "关",
+                    "1": "开"
+                }
+            },
+            "isUseShadow": false,
+            "isNoRecord": false
+        },
+        {
+            "identifier": "sw3",
+            "tag": 1,
+            "name": "sw3",
+            "desc": "",
+            "required": false,
+            "extendConfig": "",
+            "isCanSceneLinkage": 1,
+            "isShareAuthPerm": 0,
+            "funcGroup": 1,
+            "controlMode": 1,
+            "userPerm": 3,
+            "isHistory": 1,
+            "order": 0,
+            "mode": "rw",
+            "define": {
+                "type": "bool",
+                "mapping": {
+                    "0": "关",
+                    "1": "开"
+                }
+            },
+            "isUseShadow": false,
+            "isNoRecord": false
+        },
+        {
+            "identifier": "sw4",
+            "tag": 1,
+            "name": "sw4",
+            "desc": "",
+            "required": false,
+            "extendConfig": "",
+            "isCanSceneLinkage": 1,
+            "isShareAuthPerm": 0,
+            "funcGroup": 1,
+            "controlMode": 1,
+            "userPerm": 3,
+            "isHistory": 1,
+            "order": 0,
+            "mode": "rw",
+            "define": {
+                "type": "bool",
+                "mapping": {
+                    "0": "关",
+                    "1": "开"
+                }
+            },
+            "isUseShadow": false,
+            "isNoRecord": false
+        },
+        {
+            "identifier": "sw5",
+            "tag": 1,
+            "name": "sw5",
+            "desc": "",
+            "required": false,
+            "extendConfig": "",
+            "isCanSceneLinkage": 1,
+            "isShareAuthPerm": 0,
+            "funcGroup": 1,
+            "controlMode": 1,
+            "userPerm": 3,
+            "isHistory": 1,
+            "order": 0,
+            "mode": "rw",
+            "define": {
+                "type": "bool",
+                "mapping": {
+                    "0": "关",
+                    "1": "开"
+                }
+            },
+            "isUseShadow": false,
+            "isNoRecord": false
+        },
+        {
+            "identifier": "sw6",
+            "tag": 1,
+            "name": "sw6",
+            "desc": "",
+            "required": false,
+            "extendConfig": "",
+            "isCanSceneLinkage": 1,
+            "isShareAuthPerm": 0,
+            "funcGroup": 1,
+            "controlMode": 1,
+            "userPerm": 3,
+            "isHistory": 1,
+            "order": 0,
+            "mode": "rw",
+            "define": {
+                "type": "bool",
+                "mapping": {
+                    "0": "关",
+                    "1": "开"
+                }
+            },
+            "isUseShadow": false,
+            "isNoRecord": false
+        },
+        {
+            "identifier": "sw7",
+            "tag": 1,
+            "name": "sw7",
+            "desc": "",
+            "required": false,
+            "extendConfig": "",
+            "isCanSceneLinkage": 1,
+            "isShareAuthPerm": 0,
+            "funcGroup": 1,
+            "controlMode": 1,
+            "userPerm": 3,
+            "isHistory": 1,
+            "order": 0,
+            "mode": "rw",
+            "define": {
+                "type": "bool",
+                "mapping": {
+                    "0": "关",
+                    "1": "开"
+                }
+            },
+            "isUseShadow": false,
+            "isNoRecord": false
+        },
+        {
+            "identifier": "sw8",
+            "tag": 1,
+            "name": "sw8",
+            "desc": "",
+            "required": false,
+            "extendConfig": "",
+            "isCanSceneLinkage": 1,
+            "isShareAuthPerm": 0,
+            "funcGroup": 1,
+            "controlMode": 1,
+            "userPerm": 3,
+            "isHistory": 1,
+            "order": 0,
+            "mode": "rw",
+            "define": {
+                "type": "bool",
+                "mapping": {
+                    "0": "关",
+                    "1": "开"
+                }
+            },
+            "isUseShadow": false,
+            "isNoRecord": false
+        }
+    ],
+    "profile": {
+        "productID": "00s"
+    }
+}
