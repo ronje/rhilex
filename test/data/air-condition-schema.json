@@ -1,9 +1,9 @@
 {
     "properties": [
         {
-            "identifier": "p1",
+            "identifier": "switcher",
             "tag": 1,
-            "name": "属性1",
+            "name": "switcher",
             "desc": "",
             "required": false,
             "extendConfig": "",
@@ -16,19 +16,19 @@
             "order": 0,
             "mode": "rw",
             "define": {
-                "type": "float",
-                "min": "0.001",
-                "max": "9999999999999",
-                "start": "0.001",
-                "step": "0.001"
+                "type": "bool",
+                "mapping": {
+                    "0": "关",
+                    "1": "开"
+                }
             },
             "isUseShadow": false,
             "isNoRecord": false
         },
         {
-            "identifier": "p2",
-            "tag": 2,
-            "name": "属性2",
+            "identifier": "temperature",
+            "tag": 1,
+            "name": "temperature",
             "desc": "",
             "required": false,
             "extendConfig": "",
@@ -41,19 +41,19 @@
             "order": 0,
             "mode": "rw",
             "define": {
-                "type": "float",
-                "min": "0.001",
-                "max": "9999999999999",
-                "start": "0.001",
-                "step": "0.001"
+                "type": "int",
+                "min": "1",
+                "max": "100",
+                "start": "1",
+                "step": "1"
             },
             "isUseShadow": false,
             "isNoRecord": false
         },
         {
-            "identifier": "p3",
-            "tag": 3,
-            "name": "属性3",
+            "identifier": "exception",
+            "tag": 1,
+            "name": "exception",
             "desc": "",
             "required": false,
             "extendConfig": "",
@@ -66,19 +66,19 @@
             "order": 0,
             "mode": "rw",
             "define": {
-                "type": "float",
-                "min": "0.001",
-                "max": "9999999999999",
-                "start": "0.001",
-                "step": "0.001"
+                "type": "bool",
+                "mapping": {
+                    "0": "无",
+                    "1": "有"
+                }
             },
             "isUseShadow": false,
             "isNoRecord": false
         },
         {
-            "identifier": "p4",
-            "tag": 4,
-            "name": "属性4",
+            "identifier": "setting_wind_mode",
+            "tag": 1,
+            "name": "setting_wind_mode",
             "desc": "",
             "required": false,
             "extendConfig": "",
@@ -86,24 +86,25 @@
             "isShareAuthPerm": 0,
             "funcGroup": 1,
             "controlMode": 1,
-            "userPerm": 3,
+            "userPerm": 0,
             "isHistory": 1,
             "order": 0,
             "mode": "rw",
             "define": {
-                "type": "float",
-                "min": "0.001",
-                "max": "9999999999999",
-                "start": "0.001",
-                "step": "0.001"
+                "type": "enum",
+                "mapping": {
+                    "0": "高",
+                    "1": "中",
+                    "3": "低"
+                }
             },
             "isUseShadow": false,
             "isNoRecord": false
         },
         {
-            "identifier": "p5",
-            "tag": 5,
-            "name": "属性5",
+            "identifier": "setting_working_mode",
+            "tag": 1,
+            "name": "setting_working_mode",
             "desc": "",
             "required": false,
             "extendConfig": "",
@@ -116,19 +117,20 @@
             "order": 0,
             "mode": "rw",
             "define": {
-                "type": "float",
-                "min": "0.001",
-                "max": "9999999999999",
-                "start": "0.001",
-                "step": "0.001"
+                "type": "enum",
+                "mapping": {
+                    "1": "制冷",
+                    "2": "制热",
+                    "3": "通风"
+                }
             },
             "isUseShadow": false,
             "isNoRecord": false
         },
         {
-            "identifier": "p6",
-            "tag": 6,
-            "name": "属性6",
+            "identifier": "setting_temperature",
+            "tag": 1,
+            "name": "setting_temperature",
             "desc": "",
             "required": false,
             "extendConfig": "",
@@ -141,111 +143,11 @@
             "order": 0,
             "mode": "rw",
             "define": {
-                "type": "float",
-                "min": "0.001",
-                "max": "9999999999999",
-                "start": "0.001",
-                "step": "0.001"
-            },
-            "isUseShadow": false,
-            "isNoRecord": false
-        },
-        {
-            "identifier": "p7",
-            "tag": 7,
-            "name": "属性7",
-            "desc": "",
-            "required": false,
-            "extendConfig": "",
-            "isCanSceneLinkage": 1,
-            "isShareAuthPerm": 0,
-            "funcGroup": 1,
-            "controlMode": 1,
-            "userPerm": 3,
-            "isHistory": 1,
-            "order": 0,
-            "mode": "rw",
-            "define": {
-                "type": "float",
-                "min": "0.001",
-                "max": "9999999999999",
-                "start": "0.001",
-                "step": "0.001"
-            },
-            "isUseShadow": false,
-            "isNoRecord": false
-        },
-        {
-            "identifier": "p8",
-            "tag": 8,
-            "name": "属性8",
-            "desc": "",
-            "required": false,
-            "extendConfig": "",
-            "isCanSceneLinkage": 1,
-            "isShareAuthPerm": 0,
-            "funcGroup": 1,
-            "controlMode": 1,
-            "userPerm": 3,
-            "isHistory": 1,
-            "order": 0,
-            "mode": "rw",
-            "define": {
-                "type": "float",
-                "min": "0.001",
-                "max": "9999999999999",
-                "start": "0.001",
-                "step": "0.001"
-            },
-            "isUseShadow": false,
-            "isNoRecord": false
-        },
-        {
-            "identifier": "p9",
-            "tag": 9,
-            "name": "属性9",
-            "desc": "",
-            "required": false,
-            "extendConfig": "",
-            "isCanSceneLinkage": 1,
-            "isShareAuthPerm": 0,
-            "funcGroup": 1,
-            "controlMode": 1,
-            "userPerm": 3,
-            "isHistory": 1,
-            "order": 0,
-            "mode": "rw",
-            "define": {
-                "type": "float",
-                "min": "0.001",
-                "max": "9999999999999",
-                "start": "0.001",
-                "step": "0.001"
-            },
-            "isUseShadow": false,
-            "isNoRecord": false
-        },
-        {
-            "identifier": "p10",
-            "tag": 10,
-            "name": "属性10",
-            "desc": "",
-            "required": false,
-            "extendConfig": "",
-            "isCanSceneLinkage": 1,
-            "isShareAuthPerm": 0,
-            "funcGroup": 1,
-            "controlMode": 1,
-            "userPerm": 3,
-            "isHistory": 1,
-            "order": 0,
-            "mode": "rw",
-            "define": {
-                "type": "float",
-                "min": "0.001",
-                "max": "9999999999999",
-                "start": "0.001",
-                "step": "0.001"
+                "type": "int",
+                "min": "5",
+                "max": "35",
+                "start": "5",
+                "step": "1"
             },
             "isUseShadow": false,
             "isNoRecord": false
