@@ -297,7 +297,7 @@ NEXT:
 }
 
 type CecollaConfig struct {
-	Enable    bool   `json:"enable"`    // 是否开启
+	Enable    *bool  `json:"enable"`    // 是否开启
 	CecollaId string `json:"cecollaId"` // Cecolla UUID
 }
 type DeviceConfig struct {
@@ -318,13 +318,21 @@ func CreateDevice(c *gin.Context, ruleEngine typex.Rhilex) {
 	}
 	deviceConfig := DeviceConfig{}
 	json.Unmarshal(configJson, &deviceConfig)
-	if deviceConfig.CecollaConfig.Enable {
+	if *deviceConfig.CecollaConfig.Enable {
+		Cecolla := ruleEngine.GetCecolla(deviceConfig.CecollaConfig.CecollaId)
+		if Cecolla == nil {
+			c.JSON(common.HTTP_OK, common.Error400(fmt.Errorf("Cecolla not exists:%s",
+				deviceConfig.CecollaConfig.CecollaId)))
+			return
+		}
 		value := intercache.GetValue("__CecollaBinding", deviceConfig.CecollaConfig.CecollaId)
 		if value.Value != nil {
 			c.JSON(common.HTTP_OK, common.Error400(fmt.Errorf("Cecolla already bind to device:%s", value.Value)))
 			return
 		}
+
 	}
+
 	if err := ruleEngine.CheckDeviceType(typex.DeviceType(form.Type)); err != nil {
 		c.JSON(common.HTTP_OK, common.Error400(err))
 		return
@@ -418,13 +426,20 @@ func UpdateDevice(c *gin.Context, ruleEngine typex.Rhilex) {
 	}
 	deviceConfig := DeviceConfig{}
 	json.Unmarshal(configJson, &deviceConfig)
-	if deviceConfig.CecollaConfig.Enable {
+	if *deviceConfig.CecollaConfig.Enable {
+		if Cecolla := ruleEngine.GetCecolla(deviceConfig.CecollaConfig.CecollaId); Cecolla == nil {
+			c.JSON(common.HTTP_OK, common.Error400(fmt.Errorf("Cecolla not exists:%s",
+				deviceConfig.CecollaConfig.CecollaId)))
+			return
+		}
 		value := intercache.GetValue("__CecollaBinding", deviceConfig.CecollaConfig.CecollaId)
-		if value.Value != form.UUID {
+		if value.Value != nil {
 			c.JSON(common.HTTP_OK, common.Error400(fmt.Errorf("Cecolla already bind to device:%s", value.Value)))
 			return
 		}
+
 	}
+
 	// 检查个人版的创建权限: 以下三种情况，以及2个数量
 	// - GENERIC_UART_RW
 	// - GENERIC_MODBUS_MASTER

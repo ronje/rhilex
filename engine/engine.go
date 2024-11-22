@@ -385,7 +385,7 @@ func (e *RuleEngine) RemoveCecolla(uuid string) {
 			glogger.GLogger.Infof("Cecolla [%s, %s] ready to stop", uuid, cecolla.Name)
 			cecolla.Cecolla.Stop()
 			glogger.GLogger.Infof("Cecolla [%s, %s] stopped", uuid, cecolla.Name)
-			e.OutEnds.Delete(uuid)
+			e.Cecollas.Delete(uuid)
 			glogger.GLogger.Infof("Cecolla [%s, %s] has been deleted", uuid, cecolla.Name)
 			cecolla = nil
 		}

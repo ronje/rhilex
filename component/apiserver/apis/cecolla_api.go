@@ -180,9 +180,9 @@ func RestartCecolla(c *gin.Context, ruleEngine typex.Rhilex) {
 func DeleteCecolla(c *gin.Context, ruleEngine typex.Rhilex) {
 	uuid, _ := c.GetQuery("uuid")
 	// 删除的时候判断是否被绑定, 不允许直接删除已经被绑定的
-	value := intercache.GetValue("__CecollaBinding", uuid)
-	if value.Value != nil {
-		c.JSON(common.HTTP_OK, common.Error400(fmt.Errorf("Cecolla already bind to device:%s", value.Value)))
+	bindingedCecolla := intercache.GetValue("__CecollaBinding", uuid)
+	if bindingedCecolla.Value != nil {
+		c.JSON(common.HTTP_OK, common.Error400(fmt.Errorf("Cecolla already bind to device:%s", bindingedCecolla.Value)))
 		return
 	}
 	txErr := interdb.DB().Transaction(func(tx *gorm.DB) error {

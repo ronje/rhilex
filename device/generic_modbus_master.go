@@ -545,6 +545,8 @@ func (mdev *GenericModbusMaster) Stop() {
 		}
 	}
 	intercache.UnRegisterSlot(mdev.PointId) // 卸载点位表
+	intercache.DeleteValue("__CecollaBinding", mdev.mainConfig.CecollaConfig.CecollaId)
+
 }
 
 // 真实设备
