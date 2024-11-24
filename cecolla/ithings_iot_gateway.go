@@ -18,11 +18,13 @@ package cecolla
 import (
 	"encoding/json"
 	"fmt"
+	"strings"
 
 	"time"
 
 	mqtt "github.com/eclipse/paho.mqtt.golang"
 	"github.com/google/uuid"
+	lua "github.com/hootrhino/gopher-lua"
 	"github.com/hootrhino/rhilex/cecolla/ithings"
 	"github.com/hootrhino/rhilex/component/cecollalet"
 	"github.com/hootrhino/rhilex/component/intercache"
@@ -31,10 +33,10 @@ import (
 	"github.com/hootrhino/rhilex/utils"
 )
 
-// 设备属性上行请求 Topic： $thing/up/property/{ProductID}/{DeviceName}
-// 设备属性下行响应 Topic： $thing/down/property/{ProductID}/{DeviceName}
-// 设备响应行为执行结果或设备请求服务端行为 Topic： $thing/up/action/{ProductID}/{DeviceName}
-// 应用调用设备行为或服务端响应设备请求执行结果 Topic： $thing/down/action/{ProductID}/{DeviceName}
+// 设备属性上行请求 Topic： $thing/up/property/{ProductID}/{DeviceId}
+// 设备属性下行响应 Topic： $thing/down/property/{ProductID}/{DeviceId}
+// 设备响应行为执行结果或设备请求服务端行为 Topic： $thing/up/action/{ProductID}/{DeviceId}
+// 应用调用设备行为或服务端响应设备请求执行结果 Topic： $thing/down/action/{ProductID}/{DeviceId}
 const (
 	// 属性
 	_ithings_PropertyUpTopic   = "$thing/up/property/%v/%v"
@@ -43,8 +45,8 @@ const (
 	_ithings_ActionDownTopic = "$thing/down/action/%v/%v"
 	_ithings_ActionUpTopic   = "$thing/up/action/%v/%v"
 	// 设备从云端接收最新消息使用的 Topic：
-	//     请求 Topic： $gateway/up/thing/{ProductID}/{DeviceName}
-	//     响应 Topic： $gateway/down/thing/{ProductID}/{DeviceName}
+	//     请求 Topic： $gateway/up/thing/{ProductID}/{DeviceId}
+	//     响应 Topic： $gateway/down/thing/{ProductID}/{DeviceId}
 	_ithings_gateway_up   = "$gateway/up/thing/%s/%s"   //数据上行 Topic（用于发布）
 	_ithings_gateway_down = "$gateway/down/thing/%s/%s" //数据下行 Topic（用于订阅）
 	// 网关类型的设备，可通过与云端的数据通信，对其下的子设备进行绑定与解绑操作。实现此类功能需利用如下两个 Topic：
@@ -68,7 +70,7 @@ type IThingsGatewayMainConfig struct {
 	Mode           string `json:"mode" validate:"required"`           //工作模式: DEVICE|GATEWAY，默认DEVICE
 	SubProduct     string `json:"subProduct" validate:"required"`     //子产品名,GATEWAY模式下有效，必填
 	ProductId      string `json:"productId" validate:"required"`      //产品名称
-	DeviceName     string `json:"deviceName" validate:"required"`     //设备名称
+	DeviceId       string `json:"deviceId" validate:"required"`       //设备名称
 	DevicePsk      string `json:"devicePsk" validate:"required"`      //连接秘钥
 }
 
@@ -97,6 +99,8 @@ type IThingsGateway struct {
 	GatewaySchema *ithings.SchemaSimple
 	// 子设备的物模型
 	SubDeviceSchema *ithings.SchemaSimple
+	// 缓存数据值的地方，设备report过来以后，保存在此处
+	DevicePropertiesSlot map[string]any
 }
 
 func NewIThingsGateway(e typex.Rhilex) typex.XCecolla {
@@ -107,10 +111,11 @@ func NewIThingsGateway(e typex.Rhilex) typex.XCecolla {
 		Mode:           "DEVICE",
 		SubProduct:     "",
 		ProductId:      "",
-		DeviceName:     "",
+		DeviceId:       "",
 		DevicePsk:      "",
 	}
-	hd.IThingsSubDevices = make([]ithings.IThingsSubDevice, 0)
+	hd.IThingsSubDevices = []ithings.IThingsSubDevice{}
+	hd.DevicePropertiesSlot = map[string]any{}
 	return hd
 }
 
@@ -120,8 +125,8 @@ type IThingsMQTTAuthInfo struct {
 	Password string `json:"password"`
 }
 
-func GenerateIThingsMQTTAuthInfo(productID, deviceName, secret string) (IThingsMQTTAuthInfo, error) {
-	c, u, p := ithings.GenSecretDeviceInfo("hmacsha256", productID, deviceName, secret)
+func GenerateIThingsMQTTAuthInfo(productID, deviceId, secret string) (IThingsMQTTAuthInfo, error) {
+	c, u, p := ithings.GenSecretDeviceInfo("hmacsha256", productID, deviceId, secret)
 	return IThingsMQTTAuthInfo{
 		ClientID: c,
 		UserName: u,
@@ -138,7 +143,7 @@ func (hd *IThingsGateway) Init(devId string, configMap map[string]interface{}) e
 		return err
 	}
 	authInfo, err := GenerateIThingsMQTTAuthInfo(hd.mainConfig.ProductId,
-		hd.mainConfig.DeviceName, hd.mainConfig.DevicePsk)
+		hd.mainConfig.DeviceId, hd.mainConfig.DevicePsk)
 	if err != nil {
 		glogger.GLogger.Error(err)
 		return err
@@ -159,30 +164,30 @@ func (hd *IThingsGateway) Start(cctx typex.CCTX) error {
 	hd.CancelCTX = cctx.CancelCTX
 	// 自身属性
 	hd.propertyDownTopic = fmt.Sprintf(_ithings_PropertyDownTopic,
-		hd.mainConfig.ProductId, hd.mainConfig.DeviceName)
+		hd.mainConfig.ProductId, hd.mainConfig.DeviceId)
 	hd.propertyUpTopic = fmt.Sprintf(_ithings_PropertyUpTopic,
-		hd.mainConfig.ProductId, hd.mainConfig.DeviceName)
+		hd.mainConfig.ProductId, hd.mainConfig.DeviceId)
 	// 自身动作
 	hd.actionDownTopic = fmt.Sprintf(_ithings_ActionDownTopic,
-		hd.mainConfig.ProductId, hd.mainConfig.DeviceName)
+		hd.mainConfig.ProductId, hd.mainConfig.DeviceId)
 	hd.actionUpTopic = fmt.Sprintf(_ithings_ActionUpTopic,
-		hd.mainConfig.ProductId, hd.mainConfig.DeviceName)
+		hd.mainConfig.ProductId, hd.mainConfig.DeviceId)
 
 	// 网关-子设备
 	hd.gatewayTopicUp = fmt.Sprintf(_ithings_gateway_up,
-		hd.mainConfig.ProductId, hd.mainConfig.DeviceName)
+		hd.mainConfig.ProductId, hd.mainConfig.DeviceId)
 	hd.gatewayTopicDown = fmt.Sprintf(_ithings_gateway_down,
-		hd.mainConfig.ProductId, hd.mainConfig.DeviceName)
+		hd.mainConfig.ProductId, hd.mainConfig.DeviceId)
 	// 拓扑关系
 	hd.topologyTopicUp = fmt.Sprintf(_ithings_topology_up,
-		hd.mainConfig.ProductId, hd.mainConfig.DeviceName)
+		hd.mainConfig.ProductId, hd.mainConfig.DeviceId)
 	hd.topologyTopicDown = fmt.Sprintf(_ithings_topology_down,
-		hd.mainConfig.ProductId, hd.mainConfig.DeviceName)
+		hd.mainConfig.ProductId, hd.mainConfig.DeviceId)
 	// 子设备上下线
 	hd.gatewayStatusTopicUp = fmt.Sprintf(_ithings_gateway_status_up,
-		hd.mainConfig.ProductId, hd.mainConfig.DeviceName)
+		hd.mainConfig.ProductId, hd.mainConfig.DeviceId)
 	hd.gatewayStatusTopicDown = fmt.Sprintf(_ithings_gateway_status_down,
-		hd.mainConfig.ProductId, hd.mainConfig.DeviceName)
+		hd.mainConfig.ProductId, hd.mainConfig.DeviceId)
 	var connectHandler mqtt.OnConnectHandler = func(client mqtt.Client) {
 		glogger.Infof("IThings Connected Success")
 		// 属性下发
@@ -210,12 +215,22 @@ func (hd *IThingsGateway) Start(cctx typex.CCTX) error {
 					glogger.GLogger.Error(errUnmarshal)
 					return
 				}
+				// 初始化本地属性槽
 				if response.Payload.ProductId == hd.mainConfig.ProductId {
 					hd.GatewaySchema = &response.Payload.Schema
+					for _, Property := range hd.GatewaySchema.Properties {
+						hd.DevicePropertiesSlot[fmt.Sprintf("%s:%s:%s",
+							hd.mainConfig.ProductId, hd.mainConfig.DeviceId, Property.Identifier)] = "0"
+					}
 					glogger.Debug("Get Gateway Schema Success:", hd.GatewaySchema.String())
 				}
+				// 初始化子设备的属性槽
 				if response.Payload.ProductId == hd.mainConfig.SubProduct {
 					hd.SubDeviceSchema = &response.Payload.Schema
+					for _, Property := range hd.SubDeviceSchema.Properties {
+						hd.DevicePropertiesSlot[fmt.Sprintf("%s:%s:%s",
+							hd.mainConfig.SubProduct, hd.mainConfig.DeviceId, Property.Identifier)] = "0"
+					}
 				}
 			})
 			if token0.Error() == nil {
@@ -322,11 +337,40 @@ type SubDeviceTopic struct {
 }
 
 /**
+ * 获取属性
+ *
+ */
+//
+type GetPropertiesCmd struct {
+	Token       string   `json:"token"`
+	ProductId   string   `json:"productID"`
+	DeviceId    string   `json:"deviceID"`
+	Identifiers []string `json:"identifiers"`
+}
+
+/**
  * 外部参数
  *
  */
 func (hd *IThingsGateway) OnCtrl(cmd []byte, b []byte) (any, error) {
 	Cmd := string(cmd)
+	// 获取某个产品某个设备的某个属性,用于子设备数据获取
+	if Cmd == "GetProperties" {
+		ctrlCmd := GetPropertiesCmd{}
+		if errUnmarshal := json.Unmarshal(b, &ctrlCmd); errUnmarshal != nil {
+			return nil, errUnmarshal
+		}
+		values := map[string]any{}
+		for _, param := range ctrlCmd.Identifiers {
+			value := hd.DevicePropertiesSlot[fmt.Sprintf("%s:%s:%s", ctrlCmd.ProductId, ctrlCmd.DeviceId, param)]
+			values[param] = value
+		}
+		if bytes, errMarshal := json.Marshal(values); errMarshal != nil {
+			return nil, errMarshal
+		} else {
+			return bytes, nil
+		}
+	}
 	// 新建子设备点位表的物模型
 	if Cmd == "CreateSubDeviceSchema" {
 		Properties := []ithings.IthingsCreateSchemaPropertie{}
@@ -351,6 +395,9 @@ func (hd *IThingsGateway) OnCtrl(cmd []byte, b []byte) (any, error) {
 				glogger.Error(token.Error())
 				return nil, token.Error()
 			}
+			// 在物模型创建好以后初始化值
+			hd.DevicePropertiesSlot[fmt.Sprintf("%s:%s:%s",
+				hd.mainConfig.ProductId, hd.mainConfig.DeviceId, Property.Name)] = new(int)
 		}
 
 		// 再次刷新获取物模型
@@ -364,7 +411,7 @@ func (hd *IThingsGateway) OnCtrl(cmd []byte, b []byte) (any, error) {
 		if errUnmarshal := json.Unmarshal(b, &subDeviceParam); errUnmarshal != nil {
 			return nil, errUnmarshal
 		}
-		payload := `{"method":"online","msgToken":"%s","payload":{"devices":[{"productID":"%s","deviceName":"%s"}]}}`
+		payload := `{"method":"online","msgToken":"%s","payload":{"devices":[{"productID":"%s","deviceId":"%s"}]}}`
 		token := hd.client.Publish(hd.gatewayStatusTopicUp, 1, false,
 			fmt.Sprintf(payload, uuid.NewString(), subDeviceParam.ProductId, subDeviceParam.DeviceId))
 		glogger.Debugf("SubDevice SetOnline: %s %s", hd.gatewayStatusTopicUp,
@@ -381,6 +428,8 @@ func (hd *IThingsGateway) OnCtrl(cmd []byte, b []byte) (any, error) {
 		if errUnmarshal := json.Unmarshal(b, &subDeviceParam); errUnmarshal != nil {
 			return nil, errUnmarshal
 		}
+		hd.DevicePropertiesSlot[fmt.Sprintf("%s:%s:%s",
+			subDeviceParam.ProductId, subDeviceParam.DeviceId, subDeviceParam.Param)] = subDeviceParam.Value
 		packReport := ithings.NewIthingsPackReport(subDeviceParam.Timestamp,
 			subDeviceParam.ProductId, subDeviceParam.DeviceId,
 			subDeviceParam.Param, subDeviceParam.Value)
@@ -439,35 +488,27 @@ func (hd *IThingsGateway) OnCtrl(cmd []byte, b []byte) (any, error) {
 		hd.client.Publish(hd.propertyUpTopic, 1, false, msg)
 		goto END
 	}
-	if Cmd == "PropertyReport" {
-		params := map[string]interface{}{}
-		if errUnmarshal := json.Unmarshal(b, &params); errUnmarshal != nil {
+	// 上报属性
+	if Cmd == "GetPropertyReplySuccess" {
+		ctrlCmd := GetPropertiesCmd{}
+		if errUnmarshal := json.Unmarshal(b, &ctrlCmd); errUnmarshal != nil {
 			return nil, errUnmarshal
 		}
-		IthingsPropertyReport := ithings.IthingsPropertyReport{
-			Method:    "report",
-			MsgToken:  uuid.NewString(),
-			Timestamp: time.Now().UnixMilli(),
-			Params:    params,
-		}
-		hd.client.Publish(hd.propertyUpTopic, 1, false, IthingsPropertyReport.String())
-		goto END
-	}
-	if Cmd == "GetPropertyReply" {
-		params := map[string]interface{}{}
-		if errUnmarshal := json.Unmarshal(b, &params); errUnmarshal != nil {
-			return nil, errUnmarshal
+		params := map[string]any{}
+		for _, param := range ctrlCmd.Identifiers {
+			value := hd.DevicePropertiesSlot[fmt.Sprintf("%s:%s:%s", ctrlCmd.ProductId, ctrlCmd.DeviceId, param)]
+			params[param] = value
 		}
 		IthingsGetPropertyReply := ithings.IthingsGetPropertyReply{
 			Method:    "getReportReply",
-			Type:      "report",
-			MsgToken:  uuid.NewString(),
+			MsgToken:  ctrlCmd.Token,
 			Timestamp: time.Now().UnixMilli(),
-			Code:      0,
+			Code:      200,
 			Data:      params,
 			Msg:       "success",
 		}
-		hd.client.Publish(hd.propertyUpTopic, 1, false, IthingsGetPropertyReply.String())
+		hd.client.Publish(fmt.Sprintf(_ithings_PropertyUpTopic, ctrlCmd.ProductId, ctrlCmd.DeviceId),
+			1, false, IthingsGetPropertyReply.String())
 		goto END
 	}
 END:
@@ -494,8 +535,16 @@ func (hd *IThingsGateway) OnGatewayPropertyReceived(c mqtt.Client, msg mqtt.Mess
 		glogger.Error(errUnmarshal)
 		return
 	}
-	if downMsg.Method == "control" {
-		err := cecollalet.StartCecollalet(hd.PointId, string(msg.Payload()))
+	if downMsg.Method == "control" || downMsg.Method == "getReport" {
+		// "$thing/down/action/%v/%v"
+		fields := strings.Split(msg.Topic(), "/")
+		Env := lua.LTable{}
+		if len(fields) == 5 {
+			Env.RawSetString("Product", lua.LString(fields[3]))
+			Env.RawSetString("Device", lua.LString(fields[4]))
+			Env.RawSetString("Payload", lua.LString(msg.Payload()))
+		}
+		err := cecollalet.StartCecollalet(hd.PointId, &Env)
 		if err != nil {
 			glogger.Error(err)
 		}
@@ -508,7 +557,15 @@ func (hd *IThingsGateway) OnGatewayActionReceived(c mqtt.Client, msg mqtt.Messag
 		return
 	}
 	if downMsg.Method == "action" {
-		err := cecollalet.StartCecollalet(hd.PointId, string(msg.Payload()))
+		// "$thing/down/action/%v/%v"
+		fields := strings.Split(msg.Topic(), "/")
+		Env := lua.LTable{}
+		if len(fields) == 5 {
+			Env.RawSetString("Product", lua.LString(fields[3]))
+			Env.RawSetString("Device", lua.LString(fields[4]))
+			Env.RawSetString("Payload", lua.LString(msg.Payload()))
+		}
+		err := cecollalet.StartCecollalet(hd.PointId, &Env)
 		if err != nil {
 			glogger.Error(err)
 		}

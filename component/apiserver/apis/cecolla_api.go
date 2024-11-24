@@ -238,53 +238,11 @@ func CreateCecolla(c *gin.Context, ruleEngine typex.Rhilex) {
 --------------------------------------------------------
 
 --
--- Handle Received Params
---
-function HandleParams(Params)
-    for key, value in pairs(Params) do
-        Debug("[== HandleParams ==] " .. key .. " [== value ==] ", value)
-    end
-end
-
---
--- Handle Received Action
---
-function HandleAction(ActionId, Params)
-    Debug("[== HandleAction ==] ActionId=" .. ActionId)
-    for key, value in pairs(Params) do
-        Debug("[== HandleAction ==] " .. key .. " [== value ==] ", value)
-    end
-end
-
---
 -- Action Main
 --
 
-function Main(CecollaId, Payload)
-    Debug("[==Debug==] Received Ithings Payload:" .. Payload);
-    local dataT, errJ2T = json:J2T(Payload);
-    if errJ2T ~= nil then
-        Throw("json:J2T error:" .. errJ2T);
-        return false, Payload;
-    end;
-    if dataT.method == "control" then
-        Debug("[==Debug==] Ithings Send Control:" .. Payload);
-        HandleParams(dataT.params)
-        local errIothub = ithings:CtrlReplySuccess(CecollaId, dataT.msgToken);
-        if errIothub ~= nil then
-            Throw("ithings:CtrlReplySuccess Error:" .. errIothub);
-            return false, Payload;
-        end;
-    end;
-    if dataT.method == "action" then
-        Debug("[==Debug==] Ithings Send Action:" .. Payload);
-        HandleAction(dataT.actionID, dataT.params)
-        local errIothub = ithings:ActionReplySuccess(CecollaId, dataT.msgToken);
-        if errIothub ~= nil then
-            Throw("ithings:ActionReplySuccess Error:" .. errIothub);
-            return false, Payload;
-        end;
-    end;
+function Main(CecollaId, Env)
+    Debug("[== Cecolla Debug ==] 收到平台下发指令, CecollaId=" .. CecollaId .. ", Payload=" .. Env.Payload);
 end
 `
 	newUUID := utils.CecUuid()

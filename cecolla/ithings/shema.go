@@ -117,7 +117,6 @@ type IthingsGetPropertyReply struct {
 	Method    string                 `json:"method"`
 	Timestamp int64                  `json:"timestamp"`
 	MsgToken  string                 `json:"msgToken"`
-	Type      string                 `json:"type"`
 	Code      int                    `json:"code"`
 	Data      map[string]interface{} `json:"data"`
 	Msg       string                 `json:"msg"`

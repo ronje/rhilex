@@ -73,10 +73,7 @@ func LoadCecollalet(cecollalet *Cecollalet, luaSource string) error {
 * 启动 function Main(args) --do-some-thing-- return 0 end
 *
  */
-func StartCecollalet(uuid string, args string) error {
-	return StartCecollaletWithArgs(uuid, args)
-}
-func StartCecollaletWithArgs(uuid string, args string) error {
+func StartCecollalet(uuid string, Env *lua.LTable) error {
 	__DefaultCecollaletRuntime.locker.Lock()
 	defer __DefaultCecollaletRuntime.locker.Unlock()
 	cecollalet, ok := __DefaultCecollaletRuntime.Cecollalets[uuid]
@@ -106,7 +103,7 @@ func StartCecollaletWithArgs(uuid string, args string) error {
 					return 0
 				},
 			},
-		}, lua.LString(uuid), lua.LString(args))
+		}, lua.LString(uuid), Env)
 		if err == nil {
 			if cecollalet.KilledBy == "RHILEX" {
 				glogger.GLogger.Infof("Cecollalet %s Killed By RHILEX", cecollalet.UUID)
@@ -132,7 +129,7 @@ func StartCecollaletWithArgs(uuid string, args string) error {
 			}
 			glogger.GLogger.WithFields(logrus.Fields{
 				"topic": "cecollalet/console/" + uuid,
-			}).Warnf("Function Name: [%s],"+
+			}).Errorf("Function Name: [%s],"+
 				"What: [%s], Source Line: [%d],"+
 				" Last Call: [%s], Error message: %s",
 				Debugger.Name, Debugger.What, Debugger.CurrentLine,

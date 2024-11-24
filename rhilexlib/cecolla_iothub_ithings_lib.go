@@ -163,15 +163,22 @@ func IthingsPropertyReplyFailure(rx typex.Rhilex) func(*lua.LState) int {
 func IthingsPropertyReport(rx typex.Rhilex) func(*lua.LState) int {
 	return func(stateStack *lua.LState) int {
 		uuid := stateStack.ToString(2)
-		paramsTable := stateStack.ToTable(3)
-		params := map[string]interface{}{}
-		paramsTable.ForEach(func(k, v lua.LValue) {
-			params[k.String()] = v
+		productId := stateStack.ToString(3)
+		deviceId := stateStack.ToString(4)
+		luaTable := stateStack.ToTable(5)
+		identifiers := []string{}
+		luaTable.ForEach(func(i, v lua.LValue) {
+			identifiers = append(identifiers, v.String())
 		})
 		Cecolla := rx.GetCecolla(uuid)
 		if Cecolla != nil {
 			if Cecolla.Cecolla != nil {
-				bytes, errMarshal := json.Marshal(params)
+				getPropertiesCmd := GetPropertiesCmd{
+					ProductId:   productId,
+					DeviceId:    deviceId,
+					Identifiers: identifiers,
+				}
+				bytes, errMarshal := json.Marshal(getPropertiesCmd)
 				if errMarshal != nil {
 					stateStack.Push(lua.LString(errMarshal.Error()))
 					return 1
@@ -192,23 +199,32 @@ func IthingsPropertyReport(rx typex.Rhilex) func(*lua.LState) int {
  * 获取属性回复
  *
  */
-func IthingsGetPropertyReply(rx typex.Rhilex) func(*lua.LState) int {
+func IthingsGetPropertyReplySuccess(rx typex.Rhilex) func(*lua.LState) int {
 	return func(stateStack *lua.LState) int {
 		uuid := stateStack.ToString(2)
-		paramsTable := stateStack.ToTable(3)
-		params := map[string]interface{}{}
-		paramsTable.ForEach(func(k, v lua.LValue) {
-			params[k.String()] = v
+		token := stateStack.ToString(3)
+		productId := stateStack.ToString(4)
+		deviceId := stateStack.ToString(5)
+		luaTable := stateStack.ToTable(6)
+		identifiers := []string{}
+		luaTable.ForEach(func(i, v lua.LValue) {
+			identifiers = append(identifiers, v.String())
 		})
 		Cecolla := rx.GetCecolla(uuid)
 		if Cecolla != nil {
 			if Cecolla.Cecolla != nil {
-				bytes, errMarshal := json.Marshal(params)
+				getPropertiesCmd := GetPropertiesCmd{
+					Token:       token,
+					ProductId:   productId,
+					DeviceId:    deviceId,
+					Identifiers: identifiers,
+				}
+				bytes, errMarshal := json.Marshal(getPropertiesCmd)
 				if errMarshal != nil {
 					stateStack.Push(lua.LString(errMarshal.Error()))
 					return 1
 				}
-				_, err := Cecolla.Cecolla.OnCtrl([]byte("GetPropertyReply"), []byte(bytes))
+				_, err := Cecolla.Cecolla.OnCtrl([]byte("GetPropertyReplySuccess"), bytes)
 				if err != nil {
 					stateStack.Push(lua.LString(err.Error()))
 					return 1
@@ -217,5 +233,53 @@ func IthingsGetPropertyReply(rx typex.Rhilex) func(*lua.LState) int {
 		}
 		stateStack.Push(lua.LNil)
 		return 1
+	}
+}
+
+/**
+ * 获取属性
+ *
+ */
+//
+type GetPropertiesCmd struct {
+	Token       string   `json:"token"`
+	ProductId   string   `json:"productID"`
+	DeviceId    string   `json:"deviceID"`
+	Identifiers []string `json:"identifiers"`
+}
+
+func IthingsGetProperties(rx typex.Rhilex) func(*lua.LState) int {
+	return func(stateStack *lua.LState) int {
+		uuid := stateStack.ToString(2)
+		productId := stateStack.ToString(3)
+		deviceId := stateStack.ToString(4)
+		luaTable := stateStack.ToTable(5)
+		identifiers := []string{}
+		luaTable.ForEach(func(i, v lua.LValue) {
+			identifiers = append(identifiers, v.String())
+		})
+		Cecolla := rx.GetCecolla(uuid)
+		if Cecolla != nil {
+			if Cecolla.Cecolla != nil {
+				getPropertiesCmd := GetPropertiesCmd{
+					ProductId:   productId,
+					DeviceId:    deviceId,
+					Identifiers: identifiers,
+				}
+				bytes, errMarshal := json.Marshal(getPropertiesCmd)
+				if errMarshal != nil {
+					stateStack.Push(lua.LString(errMarshal.Error()))
+					return 1
+				}
+				_, err := Cecolla.Cecolla.OnCtrl([]byte("GetProperties"), []byte(bytes))
+				if err != nil {
+					stateStack.Push(lua.LString(err.Error()))
+					return 1
+				}
+			}
+		}
+		stateStack.Push(lua.LNil)
+		stateStack.Push(lua.LString("cecolla not exists:" + uuid))
+		return 2
 	}
 }
