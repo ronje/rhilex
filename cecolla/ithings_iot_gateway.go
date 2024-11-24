@@ -215,12 +215,36 @@ func (hd *IThingsGateway) Start(cctx typex.CCTX) error {
 					glogger.GLogger.Error(errUnmarshal)
 					return
 				}
+				// DataType = "bool"
+				// DataType = "int"
+				// DataType = "string"
+				// DataType = "struct"
+				// DataType = "float"
 				// 初始化本地属性槽
 				if response.Payload.ProductId == hd.mainConfig.ProductId {
 					hd.GatewaySchema = &response.Payload.Schema
 					for _, Property := range hd.GatewaySchema.Properties {
-						hd.DevicePropertiesSlot[fmt.Sprintf("%s:%s:%s",
-							hd.mainConfig.ProductId, hd.mainConfig.DeviceId, Property.Identifier)] = "0"
+						if Property.Type == "bool" {
+							hd.DevicePropertiesSlot[fmt.Sprintf("%s:%s:%s",
+								hd.mainConfig.ProductId, hd.mainConfig.DeviceId, Property.Identifier)] = false
+						}
+						if Property.Type == "int" {
+							hd.DevicePropertiesSlot[fmt.Sprintf("%s:%s:%s",
+								hd.mainConfig.ProductId, hd.mainConfig.DeviceId, Property.Identifier)] = 0
+						}
+						if Property.Type == "string" {
+							hd.DevicePropertiesSlot[fmt.Sprintf("%s:%s:%s",
+								hd.mainConfig.ProductId, hd.mainConfig.DeviceId, Property.Identifier)] = ""
+						}
+						if Property.Type == "float" {
+							hd.DevicePropertiesSlot[fmt.Sprintf("%s:%s:%s",
+								hd.mainConfig.ProductId, hd.mainConfig.DeviceId, Property.Identifier)] = 0
+						}
+						if Property.Type == "struct" {
+							hd.DevicePropertiesSlot[fmt.Sprintf("%s:%s:%s",
+								hd.mainConfig.ProductId, hd.mainConfig.DeviceId, Property.Identifier)] = nil
+						}
+
 					}
 					glogger.Debug("Get Gateway Schema Success:", hd.GatewaySchema.String())
 				}
@@ -228,9 +252,28 @@ func (hd *IThingsGateway) Start(cctx typex.CCTX) error {
 				if response.Payload.ProductId == hd.mainConfig.SubProduct {
 					hd.SubDeviceSchema = &response.Payload.Schema
 					for _, Property := range hd.SubDeviceSchema.Properties {
-						hd.DevicePropertiesSlot[fmt.Sprintf("%s:%s:%s",
-							hd.mainConfig.SubProduct, hd.mainConfig.DeviceId, Property.Identifier)] = "0"
+						if Property.Type == "bool" {
+							hd.DevicePropertiesSlot[fmt.Sprintf("%s:%s:%s",
+								hd.mainConfig.ProductId, hd.mainConfig.DeviceId, Property.Identifier)] = false
+						}
+						if Property.Type == "int" {
+							hd.DevicePropertiesSlot[fmt.Sprintf("%s:%s:%s",
+								hd.mainConfig.ProductId, hd.mainConfig.DeviceId, Property.Identifier)] = 0
+						}
+						if Property.Type == "string" {
+							hd.DevicePropertiesSlot[fmt.Sprintf("%s:%s:%s",
+								hd.mainConfig.ProductId, hd.mainConfig.DeviceId, Property.Identifier)] = ""
+						}
+						if Property.Type == "float" {
+							hd.DevicePropertiesSlot[fmt.Sprintf("%s:%s:%s",
+								hd.mainConfig.ProductId, hd.mainConfig.DeviceId, Property.Identifier)] = 0
+						}
+						if Property.Type == "struct" {
+							hd.DevicePropertiesSlot[fmt.Sprintf("%s:%s:%s",
+								hd.mainConfig.ProductId, hd.mainConfig.DeviceId, Property.Identifier)] = nil
+						}
 					}
+					glogger.Debug("Get SubDevice Schema Success:", hd.SubDeviceSchema.String())
 				}
 			})
 			if token0.Error() == nil {
@@ -507,6 +550,7 @@ func (hd *IThingsGateway) OnCtrl(cmd []byte, b []byte) (any, error) {
 			Data:      params,
 			Msg:       "success",
 		}
+		glogger.Debug("IthingsGetPropertyReply:", IthingsGetPropertyReply.String())
 		hd.client.Publish(fmt.Sprintf(_ithings_PropertyUpTopic, ctrlCmd.ProductId, ctrlCmd.DeviceId),
 			1, false, IthingsGetPropertyReply.String())
 		goto END
