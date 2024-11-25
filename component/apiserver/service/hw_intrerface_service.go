@@ -111,5 +111,14 @@ func GetLinuxPortsList() ([]string, error) {
 			availablePorts = append(availablePorts, filepath.Join(devDir, name))
 		}
 	}
-	return availablePorts, nil
+	// 去重
+	maps := map[string]bool{}
+	for _, v := range availablePorts {
+		maps[v] = true
+	}
+	result := []string{}
+	for k, _ := range maps {
+		result = append(result, k)
+	}
+	return result, nil
 }
