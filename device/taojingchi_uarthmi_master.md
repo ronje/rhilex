@@ -20,5 +20,5 @@
 
 ## 示例
 ```lua
-local err = tjchmi:Ctrl("WriteToHmi", "t0.txt=\"Hello\"")
+local err = tjchmi:WriteToHmi("$uuid", "WriteToHmi", "t0.txt=\"Hello\"")
 ```

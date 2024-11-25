@@ -16,9 +16,6 @@
 package rhilexlib
 
 import (
-	"fmt"
-	"time"
-
 	"github.com/hootrhino/rhilex/typex"
 
 	lua "github.com/hootrhino/gopher-lua"
@@ -26,8 +23,7 @@ import (
 
 /*
 *
-local err = tjchmi:WriteToHmi("WriteToHmi", "t0.txt=\"Hello\"")
-*
+local err = tjchmi:WriteToHmi("$uuid", "WriteToHmi", "t0.txt=\"Hello\"")
 *
 */
 func TJCWriteToHmi(rx typex.Rhilex) func(*lua.LState) int {
