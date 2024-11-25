@@ -180,12 +180,3 @@ func (gw *MBusEn13433MasterGateway) OnDCACall(UUID string, Command string, Args 
 func (gw *MBusEn13433MasterGateway) OnCtrl(cmd []byte, args []byte) ([]byte, error) {
 	return []byte{}, nil
 }
-
-func (gw *MBusEn13433MasterGateway) OnRead(cmd []byte, data []byte) (int, error) {
-
-	return 0, nil
-}
-
-func (gw *MBusEn13433MasterGateway) OnWrite(cmd []byte, b []byte) (int, error) {
-	return 0, nil
-}

@@ -15,16 +15,17 @@
 
 package common
 
-/**
- * 云边协同
- *
+/*
+*
+* 通用的含有主机:端口的这类配置
+*
  */
-type CecollaConfig struct {
-	Enable             *bool  `json:"enable"`             // 是否开启
-	CecollaId          string `json:"cecollaId"`          // Cecolla UUID
-	EnableCreateSchema *bool  `json:"enableCreateSchema"` // 是否允许设备创建物模型
+type HostConfig struct {
+	Host    string `json:"host" validate:"required" title:"服务地址"`
+	Port    int    `json:"port" validate:"required" title:"服务端口"`
+	Timeout int    `json:"timeout,omitempty" title:"连接超时"`
 }
 
-func (c *CecollaConfig) Validate() error {
+func (c *HostConfig) Validate() error {
 	return nil
 }

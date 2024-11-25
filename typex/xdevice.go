@@ -102,20 +102,13 @@ type XDevice interface {
 	Init(devId string, configMap map[string]interface{}) error
 	// 启动, 设备的工作进程
 	Start(CCTX) error
-	// 从设备里面读数据出来, 第一个参数一般作flag用, 也就是常说的指令类型
-	OnRead(cmd []byte, data []byte) (int, error)
-	// 把数据写入设备, 第一个参数一般作flag用, 也就是常说的指令类型
-	OnWrite(cmd []byte, data []byte) (int, error)
 	// 新特性, 适用于自定义协议读写
 	OnCtrl(cmd []byte, args []byte) ([]byte, error)
 	// 设备当前状态
 	Status() DeviceState
 	// 停止设备, 在这里释放资源,一般是先置状态为STOP,然后CancelContext()
 	Stop()
-	//
-	// 0.5.2 新增 Reload() error
-	//
-	// 链接指向真实设备，保存在内存里面，和SQLite里的数据是对应关系
+
 	Details() *Device
 	// 状态
 	SetState(DeviceState)

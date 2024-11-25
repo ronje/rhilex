@@ -102,18 +102,6 @@ func (hd *TemplateDevice) Start(cctx typex.CCTX) error {
 	return nil                  // 返回 nil，表示启动成功
 }
 
-// OnRead 方法是 TemplateDevice 的读取回调函数。它接受命令和数据字节切片作为参数，
-// 但在这个实现中，它什么也没做，只是返回 0 和 nil。
-func (hd *TemplateDevice) OnRead(cmd []byte, data []byte) (int, error) {
-	return 0, nil // 返回 0 表示没有数据读取，nil 表示没有错误
-}
-
-// OnWrite 方法是 TemplateDevice 的写入回调函数。它接受命令和数据字节切片作为参数，
-// 但在这个实现中，它什么也没做，只是返回 0 和 nil。
-func (hd *TemplateDevice) OnWrite(cmd []byte, b []byte) (int, error) {
-	return 0, nil // 返回 0 表示没有数据写入，nil 表示没有错误
-}
-
 // Stop 方法用于停止 TemplateDevice 实例。它将设备状态设置为 DEV_DOWN 并调用取消函数。
 func (hd *TemplateDevice) Stop() {
 	hd.status = typex.DEV_DOWN // 设置设备状态为 DOWN

@@ -219,16 +219,6 @@ func (sd *genericSnmpDevice) Start(cctx typex.CCTX) error {
 	return nil
 }
 
-// 从设备里面读数据出来
-func (sd *genericSnmpDevice) OnRead(cmd []byte, data []byte) (int, error) {
-	return 0, nil
-}
-
-// 把数据写入设备
-func (sd *genericSnmpDevice) OnWrite(cmd []byte, _ []byte) (int, error) {
-	return 0, nil
-}
-
 // 设备当前状态
 func (sd *genericSnmpDevice) Status() typex.DeviceState {
 	return sd.status

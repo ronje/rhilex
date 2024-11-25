@@ -15,6 +15,11 @@ type S1200Config struct {
 	AutoRequest *bool        `json:"autoRequest" title:"启动轮询"`
 	Blocks      []S1200Block `json:"blocks" validate:"required" title:"采集配置"` // Db
 }
+
+func (c *S1200Config) Validate() error {
+	return nil
+}
+
 type S1200Block struct {
 	Tag       string `json:"tag" validate:"required" title:"数据tag"` // 数据tag
 	Type      string `json:"type" validate:"required" title:"地址"`   // MB | DB |FB

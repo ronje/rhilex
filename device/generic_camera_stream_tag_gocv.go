@@ -133,13 +133,6 @@ func (vc *videoCamera) Start(cctx typex.CCTX) error {
 	return nil
 }
 
-func (vc *videoCamera) OnRead(cmd []byte, data []byte) (int, error) {
-	return 0, nil
-}
-
-func (vc *videoCamera) OnWrite(cmd []byte, data []byte) (int, error) {
-	return 0, nil
-}
 
 /*
 *

@@ -14,7 +14,6 @@ import (
 	"github.com/adrianmo/go-nmea"
 	aislib "github.com/hootrhino/go-ais"
 	"github.com/hootrhino/rhilex/common"
-	"github.com/hootrhino/rhilex/component/uartctrl"
 
 	serial "github.com/hootrhino/goserial"
 	"github.com/hootrhino/rhilex/glogger"
@@ -81,9 +80,8 @@ func (aism *AISDeviceMaster) Init(devId string, configMap map[string]interface{}
 	if !utils.SContains([]string{"UART", "TCP"}, aism.mainConfig.CommonConfig.Mode) {
 		return errors.New("unsupported mode, only can be one of 'TCP' or 'RTU'")
 	}
-	// CheckSerialBusy
-	if err := uartctrl.CheckSerialBusy(aism.mainConfig.UartConfig.Uart); err != nil {
-		return err
+	if err := aism.mainConfig.UartConfig.Validate(); err != nil {
+		return nil
 	}
 	return nil
 }
@@ -250,16 +248,6 @@ func (aism *AISDeviceMaster) Start(cctx typex.CCTX) error {
 	}
 	aism.status = typex.DEV_DOWN
 	return fmt.Errorf("Invalid work mode:%s", aism.mainConfig.CommonConfig.Mode)
-}
-
-// 从设备里面读数据出来
-func (aism *AISDeviceMaster) OnRead(cmd []byte, data []byte) (int, error) {
-	return 0, nil
-}
-
-// 把数据写入设备
-func (aism *AISDeviceMaster) OnWrite(cmd []byte, _ []byte) (int, error) {
-	return 0, nil
 }
 
 // 设备当前状态

@@ -27,7 +27,6 @@ import (
 	"github.com/hootrhino/rhilex/common"
 	"github.com/hootrhino/rhilex/component/intercache"
 	"github.com/hootrhino/rhilex/component/interdb"
-	"github.com/hootrhino/rhilex/component/uartctrl"
 	"github.com/hootrhino/rhilex/device/cjt1882004"
 	"github.com/hootrhino/rhilex/glogger"
 	"github.com/hootrhino/rhilex/typex"
@@ -113,8 +112,8 @@ func (gw *CJT188_2004_MasterGateway) Init(devId string, configMap map[string]int
 		return errors.New("unsupported mode, only can be one of 'TCP' or 'UART'")
 	}
 	// CheckSerialBusy
-	if err := uartctrl.CheckSerialBusy(gw.mainConfig.UartConfig.Uart); err != nil {
-		return err
+	if err := gw.mainConfig.UartConfig.Validate(); err != nil {
+		return nil
 	}
 	var DLT645_ModbusPointList []CJT188_2004_DataPoint
 	PointLoadErr := interdb.DB().Table("m_cjt1882004_data_points").
@@ -353,13 +352,4 @@ func (gw *CJT188_2004_MasterGateway) OnDCACall(UUID string, Command string, Args
 
 func (gw *CJT188_2004_MasterGateway) OnCtrl(cmd []byte, args []byte) ([]byte, error) {
 	return []byte{}, nil
-}
-
-func (gw *CJT188_2004_MasterGateway) OnRead(cmd []byte, data []byte) (int, error) {
-
-	return 0, nil
-}
-
-func (gw *CJT188_2004_MasterGateway) OnWrite(cmd []byte, b []byte) (int, error) {
-	return 0, nil
 }

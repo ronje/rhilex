@@ -204,22 +204,6 @@ func (s1200 *SIEMENS_PLC) Start(cctx typex.CCTX) error {
 	return nil
 }
 
-// 从设备里面读数据出来
-func (s1200 *SIEMENS_PLC) OnRead(cmd []byte, data []byte) (int, error) {
-	return 0, nil
-}
-
-// 把数据写入设备
-//
-// db.Address:int, db.Start:int, db.Size:int, rData[]
-
-func (s1200 *SIEMENS_PLC) OnWrite(cmd []byte, data []byte) (int, error) {
-	blocks := []__SiemensDataPoint{}
-	if err := json.Unmarshal(data, &blocks); err != nil {
-		return 0, err
-	}
-	return s1200.Write(cmd, data)
-}
 
 // 设备当前状态
 func (s1200 *SIEMENS_PLC) Status() typex.DeviceState {

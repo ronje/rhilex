@@ -223,12 +223,3 @@ func (br *BacnetRouter) OnCtrl(cmd []byte, args []byte) ([]byte, error) {
 	}
 	return nil, fmt.Errorf("unsupported cmd: %v", cmd)
 }
-
-func (br *BacnetRouter) OnRead(cmd []byte, data []byte) (int, error) {
-
-	return 0, nil
-}
-
-func (br *BacnetRouter) OnWrite(cmd []byte, b []byte) (int, error) {
-	return 0, nil
-}

@@ -17,7 +17,6 @@ package device
 
 import (
 	"context"
-	"encoding/binary"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -463,71 +462,6 @@ func (mdev *GenericModbusMaster) TCPRead() []ReadRegisterValue {
 	return mdev.modbusRead()
 }
 
-// 从设备里面读数据出来
-func (mdev *GenericModbusMaster) OnRead(cmd []byte, data []byte) (int, error) {
-	return 0, nil
-}
-
-// 把数据写入设备
-func (mdev *GenericModbusMaster) OnWrite(cmd []byte, data []byte) (int, error) {
-	RegisterW := common.RegisterW{}
-	if err := json.Unmarshal(data, &RegisterW); err != nil {
-		return 0, err
-	}
-	dataMap := [1]common.RegisterW{RegisterW}
-	for _, r := range dataMap {
-		if mdev.mainConfig.CommonConfig.Mode == "TCP" {
-			mdev.tcpHandler.SlaveId = 0x01
-		}
-		if mdev.mainConfig.CommonConfig.Mode == "UART" {
-			mdev.rtuHandler.SlaveId = r.SlaverId
-		}
-		// 5
-		if r.Function == common.WRITE_SINGLE_COIL {
-			if len(r.Values) > 0 {
-				if r.Values[0] == 0 {
-					_, err := mdev.Client.WriteSingleCoil(r.Address,
-						binary.BigEndian.Uint16([]byte{0x00, 0x00}))
-					if err != nil {
-						return 0, err
-					}
-				}
-				if r.Values[0] == 1 {
-					_, err := mdev.Client.WriteSingleCoil(r.Address,
-						binary.BigEndian.Uint16([]byte{0xFF, 0x00}))
-					if err != nil {
-						return 0, err
-					}
-				}
-
-			}
-
-		}
-		// 15
-		if r.Function == common.WRITE_MULTIPLE_COILS {
-			_, err := mdev.Client.WriteMultipleCoils(r.Address, r.Quantity, r.Values)
-			if err != nil {
-				return 0, err
-			}
-		}
-		// 6
-		if r.Function == common.WRITE_SINGLE_HOLDING_REGISTER {
-			_, err := mdev.Client.WriteSingleRegister(r.Address, binary.BigEndian.Uint16(r.Values))
-			if err != nil {
-				return 0, err
-			}
-		}
-		// 16
-		if r.Function == common.WRITE_MULTIPLE_HOLDING_REGISTERS {
-			_, err := mdev.Client.WriteMultipleRegisters(r.Address,
-				uint16(len(r.Values))/2, maybePrependZero(r.Values))
-			if err != nil {
-				return 0, err
-			}
-		}
-	}
-	return 0, nil
-}
 func maybePrependZero(slice []byte) []byte {
 	if len(slice)%2 != 0 {
 		slice = append([]byte{0}, slice...)

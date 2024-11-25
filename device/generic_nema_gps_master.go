@@ -167,13 +167,7 @@ func (gpsd *NemaGpsMasterDevice) SetState(status typex.DeviceState) {
 func (gpsd *NemaGpsMasterDevice) OnDCACall(UUID string, Command string, Args interface{}) typex.DCAResult {
 	return typex.DCAResult{}
 }
-func (gpsd *NemaGpsMasterDevice) OnRead(cmd []byte, data []byte) (int, error) {
-	return 0, nil
-}
 
-func (gpsd *NemaGpsMasterDevice) OnWrite(cmd []byte, b []byte) (int, error) {
-	return 0, nil
-}
 
 // GPGGAData holds the parsed data from a GPGGA NMEA sentence
 type GPGGAData struct {

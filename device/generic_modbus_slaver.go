@@ -403,11 +403,3 @@ func (mdev *ModbusSlaver) OnCtrl(cmd []byte, args []byte) ([]byte, error) {
 	}
 	return nil, nil
 }
-
-func (mdev *ModbusSlaver) OnRead(cmd []byte, data []byte) (int, error) {
-	return 0, nil
-}
-
-func (mdev *ModbusSlaver) OnWrite(cmd []byte, b []byte) (int, error) {
-	return 0, nil
-}

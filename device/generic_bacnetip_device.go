@@ -265,10 +265,6 @@ func (dev *GenericBacnetIpDevice) Start(cctx typex.CCTX) error {
 	return nil
 }
 
-func (dev *GenericBacnetIpDevice) OnRead(cmd []byte, data []byte) (int, error) {
-	return 0, nil
-}
-
 type ReadBacnetValue struct {
 	Tag              string      `json:"tag"`
 	DeviceId         uint32      `json:"deviceId"`

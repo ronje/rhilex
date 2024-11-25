@@ -15,16 +15,16 @@
 
 package common
 
-/**
- * 云边协同
- *
- */
-type CecollaConfig struct {
-	Enable             *bool  `json:"enable"`             // 是否开启
-	CecollaId          string `json:"cecollaId"`          // Cecolla UUID
-	EnableCreateSchema *bool  `json:"enableCreateSchema"` // 是否允许设备创建物模型
+type GenericMqttConfig struct {
+	Host      string   `json:"host" validate:"required" title:"服务地址"`
+	Port      int      `json:"port" validate:"required" title:"服务端口"`
+	ClientId  string   `json:"clientId" validate:"required" title:"客户端ID"`
+	Username  string   `json:"username" validate:"required" title:"连接账户"`
+	Password  string   `json:"password" validate:"required" title:"连接密码"`
+	Qos       int      `json:"qos" validate:"required" title:"数据质量"`
+	SubTopics []string `json:"subTopics" title:"订阅topic组"`
 }
 
-func (c *CecollaConfig) Validate() error {
+func (c *GenericMqttConfig) Validate() error {
 	return nil
 }
