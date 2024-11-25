@@ -125,7 +125,7 @@ func (uart *TaoJingChiHmiDevice) Start(cctx typex.CCTX) error {
 // 从设备里面读数据出来:
 // t1.txt="OK"\xff\xff\xff
 func (uart *TaoJingChiHmiDevice) OnCtrl(cmd []byte, args []byte) ([]byte, error) {
-	if string(cmd) == "Write" {
+	if string(cmd) == "WriteToHmi" {
 		// 陶晶池指令默认需要加上包尾 \xFF\xFF\xFF
 		args = append(args, "\xFF\xFF\xFF"...)
 		_, err := uart.serialPort.Write(args)

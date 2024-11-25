@@ -390,6 +390,12 @@ func LoadRuleLibGroup(e typex.Rhilex, scope, uuid string, LState *lua.LState) {
 		}
 		AddRuleLibToGroup(e, LState, "haas506ld1", Funcs)
 	}
+	{
+		Funcs := map[string]func(l *lua.LState) int{
+			"WriteToHmi": rhilexlib.TJCWriteToHmi(e),
+		}
+		AddRuleLibToGroup(e, LState, "tjchmi", Funcs)
+	}
 }
 
 /*
