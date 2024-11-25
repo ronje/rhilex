@@ -1,4 +1,4 @@
-package common
+package resconfig
 
 const (
 	READ_COIL                        = 1  //  Read Coil

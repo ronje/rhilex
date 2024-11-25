@@ -13,9 +13,9 @@ import (
 
 	"github.com/adrianmo/go-nmea"
 	aislib "github.com/hootrhino/go-ais"
-	"github.com/hootrhino/rhilex/common"
 
 	serial "github.com/hootrhino/goserial"
+	"github.com/hootrhino/rhilex/resconfig"
 	"github.com/hootrhino/rhilex/glogger"
 	"github.com/hootrhino/rhilex/typex"
 	"github.com/hootrhino/rhilex/utils"
@@ -33,8 +33,8 @@ type _AISCommonConfig struct {
 }
 type _AISDeviceMasterConfig struct {
 	CommonConfig _AISCommonConfig  `json:"commonConfig" validate:"required"`
-	HostConfig   common.HostConfig `json:"hostConfig"`
-	UartConfig   common.UartConfig `json:"uartConfig"`
+	HostConfig   resconfig.HostConfig `json:"hostConfig"`
+	UartConfig   resconfig.UartConfig `json:"uartConfig"`
 }
 type AISDeviceMaster struct {
 	typex.XStatus
@@ -56,7 +56,7 @@ func NewAISDeviceMaster(e typex.Rhilex) typex.XDevice {
 	aism := new(AISDeviceMaster)
 	aism.RuleEngine = e
 	aism.mainConfig = _AISDeviceMasterConfig{
-		HostConfig: common.HostConfig{
+		HostConfig: resconfig.HostConfig{
 			Host:    "127.0.0.1",
 			Port:    6005,
 			Timeout: 3000,

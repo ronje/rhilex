@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/hootrhino/rhilex/common"
+	"github.com/hootrhino/rhilex/resconfig"
 	"github.com/hootrhino/rhilex/glogger"
 	"github.com/hootrhino/rhilex/typex"
 	"github.com/hootrhino/rhilex/utils"
@@ -20,14 +20,14 @@ import (
 type coAPInEndSource struct {
 	typex.XStatus
 	router     *mux.Router
-	mainConfig common.HostConfig
+	mainConfig resconfig.HostConfig
 	status     typex.SourceState
 }
 
 func NewCoAPInEndSource(e typex.Rhilex) typex.XSource {
 	c := coAPInEndSource{}
 	c.router = mux.NewRouter()
-	c.mainConfig = common.HostConfig{}
+	c.mainConfig = resconfig.HostConfig{}
 	c.RuleEngine = e
 	return &c
 }

@@ -23,7 +23,7 @@ import (
 	"net"
 	"time"
 
-	"github.com/hootrhino/rhilex/common"
+	"github.com/hootrhino/rhilex/resconfig"
 	"github.com/hootrhino/rhilex/component/intercache"
 	"github.com/hootrhino/rhilex/component/interdb"
 	userproto "github.com/hootrhino/rhilex/device/useprotocol"
@@ -54,8 +54,8 @@ type GenericUserProtocolDataPoint struct {
  */
 type GenericUserProtocolConfig struct {
 	CommonConfig UserProtocolCommonConfig `json:"commonConfig" validate:"required"`
-	HostConfig   common.HostConfig        `json:"hostConfig"`
-	UartConfig   common.UartConfig        `json:"uartConfig"`
+	HostConfig   resconfig.HostConfig        `json:"hostConfig"`
+	UartConfig   resconfig.UartConfig        `json:"uartConfig"`
 }
 type GenericUserProtocolDevice struct {
 	typex.XStatus
@@ -82,12 +82,12 @@ func NewGenericUserProtocolDevice(e typex.Rhilex) typex.XDevice {
 				return &b
 			}(),
 		},
-		HostConfig: common.HostConfig{
+		HostConfig: resconfig.HostConfig{
 			Host:    "127.0.0.1",
 			Port:    502,
 			Timeout: 3000,
 		},
-		UartConfig: common.UartConfig{
+		UartConfig: resconfig.UartConfig{
 			Timeout:  3000,
 			Uart:     "COM1",
 			BaudRate: 9600,

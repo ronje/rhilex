@@ -26,10 +26,10 @@ import (
 
 	"time"
 
-	"github.com/hootrhino/rhilex/common"
 	intercache "github.com/hootrhino/rhilex/component/intercache"
 	"github.com/hootrhino/rhilex/component/interdb"
 	"github.com/hootrhino/rhilex/device/ithings"
+	"github.com/hootrhino/rhilex/resconfig"
 
 	modbus "github.com/hootrhino/gomodbus"
 	core "github.com/hootrhino/rhilex/config"
@@ -75,9 +75,9 @@ type ModbusMasterCommonConfig struct {
 }
 type ModbusMasterConfig struct {
 	CommonConfig  ModbusMasterCommonConfig `json:"commonConfig" validate:"required"`
-	HostConfig    common.HostConfig        `json:"hostConfig"`
-	UartConfig    common.UartConfig        `json:"uartConfig"`
-	CecollaConfig common.CecollaConfig     `json:"cecollaConfig"`
+	HostConfig    resconfig.HostConfig     `json:"hostConfig"`
+	UartConfig    resconfig.UartConfig     `json:"uartConfig"`
+	CecollaConfig resconfig.CecollaConfig  `json:"cecollaConfig"`
 }
 
 type ModbusMasterGroupedTag struct {
@@ -86,7 +86,7 @@ type ModbusMasterGroupedTag struct {
 	Address   uint16 `json:"address"`
 	Frequency int64  `json:"frequency"`
 	Quantity  uint16 `json:"quantity"`
-	Registers map[string]*common.RegisterRW
+	Registers map[string]*resconfig.RegisterRW
 }
 
 func (g *ModbusMasterGroupedTag) String() string {
@@ -110,8 +110,8 @@ type GenericModbusMaster struct {
 	//
 	mainConfig       ModbusMasterConfig
 	retryTimes       int
-	Registers        map[string]*common.RegisterRW
-	RegisterWithTags map[string]*common.RegisterRW
+	Registers        map[string]*resconfig.RegisterRW
+	RegisterWithTags map[string]*resconfig.RegisterRW
 	RegisterGroups   []*ModbusMasterGroupedTag
 }
 
@@ -139,12 +139,12 @@ func NewGenericModbusMaster(e typex.Rhilex) typex.XDevice {
 			}(),
 			MaxRegNum: 32,
 		},
-		HostConfig: common.HostConfig{
+		HostConfig: resconfig.HostConfig{
 			Host:    "127.0.0.1",
 			Port:    502,
 			Timeout: 3000,
 		},
-		UartConfig: common.UartConfig{
+		UartConfig: resconfig.UartConfig{
 			Timeout:  3000,
 			Uart:     "/dev/ttyS1",
 			BaudRate: 9600,
@@ -152,7 +152,7 @@ func NewGenericModbusMaster(e typex.Rhilex) typex.XDevice {
 			Parity:   "N",
 			StopBits: 1,
 		},
-		CecollaConfig: common.CecollaConfig{
+		CecollaConfig: resconfig.CecollaConfig{
 			Enable: func() *bool {
 				b := false
 				return &b
@@ -163,8 +163,8 @@ func NewGenericModbusMaster(e typex.Rhilex) typex.XDevice {
 			}(),
 		},
 	}
-	mdev.Registers = map[string]*common.RegisterRW{}
-	mdev.RegisterWithTags = map[string]*common.RegisterRW{}
+	mdev.Registers = map[string]*resconfig.RegisterRW{}
+	mdev.RegisterWithTags = map[string]*resconfig.RegisterRW{}
 	mdev.RegisterGroups = []*ModbusMasterGroupedTag{}
 	mdev.Busy = false
 	mdev.status = typex.DEV_DOWN
@@ -197,7 +197,7 @@ func (mdev *GenericModbusMaster) Init(devId string, configMap map[string]interfa
 		if ModbusPoint.Frequency < 1 {
 			return errors.New("'frequency' must grate than 50 millisecond")
 		}
-		mdev.RegisterWithTags[ModbusPoint.Tag] = &common.RegisterRW{
+		mdev.RegisterWithTags[ModbusPoint.Tag] = &resconfig.RegisterRW{
 			UUID:      ModbusPoint.UUID,
 			Tag:       ModbusPoint.Tag,
 			Alias:     ModbusPoint.Alias,
@@ -210,7 +210,7 @@ func (mdev *GenericModbusMaster) Init(devId string, configMap map[string]interfa
 			DataOrder: ModbusPoint.DataOrder,
 			Weight:    ModbusPoint.Weight,
 		}
-		mdev.Registers[ModbusPoint.UUID] = &common.RegisterRW{
+		mdev.Registers[ModbusPoint.UUID] = &resconfig.RegisterRW{
 			UUID:      ModbusPoint.UUID,
 			Tag:       ModbusPoint.Tag,
 			Alias:     ModbusPoint.Alias,
@@ -257,7 +257,7 @@ func (mdev *GenericModbusMaster) Init(devId string, configMap map[string]interfa
 	}
 	// 开启优化
 	if *mdev.mainConfig.CommonConfig.EnableOptimize {
-		rws := make([]*common.RegisterRW, len(mdev.Registers))
+		rws := make([]*resconfig.RegisterRW, len(mdev.Registers))
 		idx := 0
 		for _, val := range mdev.Registers {
 			rws[idx] = val
@@ -299,9 +299,9 @@ func (mdev *GenericModbusMaster) Init(devId string, configMap map[string]interfa
 3、限制单次数据采集数量为32个
 4、tag address必须连续
 */
-func (mdev *GenericModbusMaster) groupTags(registers []*common.RegisterRW) []*ModbusMasterGroupedTag {
+func (mdev *GenericModbusMaster) groupTags(registers []*resconfig.RegisterRW) []*ModbusMasterGroupedTag {
 
-	sort.Sort(common.RegisterList(registers))
+	sort.Sort(resconfig.RegisterList(registers))
 	result := make([]*ModbusMasterGroupedTag, 0)
 	for i := 0; i < len(registers); {
 		start := i
@@ -314,7 +314,7 @@ func (mdev *GenericModbusMaster) groupTags(registers []*common.RegisterRW) []*Mo
 			Frequency: registers[start].Frequency,
 		}
 		result = append(result, tagGroup)
-		tagGroup.Registers = make(map[string]*common.RegisterRW)
+		tagGroup.Registers = make(map[string]*resconfig.RegisterRW)
 
 		regMaxAddr := uint16(0)
 		for end < len(registers) {
@@ -669,7 +669,7 @@ func (mdev *GenericModbusMaster) modbusSingleRead() []ReadRegisterValue {
 			mdev.tcpHandler.SlaveId = 0x01
 		}
 		// 1 字节
-		if r.Function == common.READ_COIL {
+		if r.Function == resconfig.READ_COIL {
 			results, err = mdev.Client.ReadCoils(r.Address, r.Quantity)
 			lastTimes := uint64(time.Now().UnixMilli())
 			if err != nil {
@@ -737,7 +737,7 @@ func (mdev *GenericModbusMaster) modbusSingleRead() []ReadRegisterValue {
 
 		}
 		// 2 字节
-		if r.Function == common.READ_DISCRETE_INPUT {
+		if r.Function == resconfig.READ_DISCRETE_INPUT {
 			results, err = mdev.Client.ReadDiscreteInputs(r.Address, r.Quantity)
 			lastTimes := uint64(time.Now().UnixMilli())
 			if err != nil {
@@ -804,7 +804,7 @@ func (mdev *GenericModbusMaster) modbusSingleRead() []ReadRegisterValue {
 		}
 		// 2 字节
 		//
-		if r.Function == common.READ_HOLDING_REGISTERS {
+		if r.Function == resconfig.READ_HOLDING_REGISTERS {
 			results, err = mdev.Client.ReadHoldingRegisters(r.Address, r.Quantity)
 			lastTimes := uint64(time.Now().UnixMilli())
 			if err != nil {
@@ -870,7 +870,7 @@ func (mdev *GenericModbusMaster) modbusSingleRead() []ReadRegisterValue {
 			}
 		}
 		// 2 字节
-		if r.Function == common.READ_INPUT_REGISTERS {
+		if r.Function == resconfig.READ_INPUT_REGISTERS {
 			results, err = mdev.Client.ReadInputRegisters(r.Address, r.Quantity)
 			lastTimes := uint64(time.Now().UnixMilli())
 			if err != nil {

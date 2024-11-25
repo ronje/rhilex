@@ -13,19 +13,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-package common
+package resconfig
 
-/*
-*
-* 通用的含有主机:端口的这类配置
-*
- */
-type HostConfig struct {
-	Host    string `json:"host" validate:"required" title:"服务地址"`
-	Port    int    `json:"port" validate:"required" title:"服务端口"`
-	Timeout int    `json:"timeout,omitempty" title:"连接超时"`
-}
-
-func (c *HostConfig) Validate() error {
-	return nil
+type ConfigValidator interface {
+	Validate() error
 }

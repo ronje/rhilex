@@ -7,9 +7,9 @@ import (
 	"time"
 
 	"github.com/gosnmp/gosnmp"
-	"github.com/hootrhino/rhilex/common"
 	"github.com/hootrhino/rhilex/component/intercache"
 	"github.com/hootrhino/rhilex/component/interdb"
+	"github.com/hootrhino/rhilex/resconfig"
 
 	"github.com/hootrhino/rhilex/glogger"
 	"github.com/hootrhino/rhilex/typex"
@@ -35,8 +35,8 @@ type _SNMPCommonConfig struct {
 type _GSNMPConfig struct {
 	SchemaId      string                   `json:"schemaId"`
 	CommonConfig  _SNMPCommonConfig        `json:"commonConfig" validate:"required"`
-	SNMPConfig    common.GenericSnmpConfig `json:"snmpConfig" validate:"required"`
-	CecollaConfig common.CecollaConfig     `json:"cecollaConfig"`
+	SNMPConfig    resconfig.GenericSnmpConfig `json:"snmpConfig" validate:"required"`
+	CecollaConfig resconfig.CecollaConfig     `json:"cecollaConfig"`
 }
 
 type genericSnmpDevice struct {

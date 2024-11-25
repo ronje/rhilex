@@ -24,14 +24,14 @@ import (
 	"time"
 
 	serial "github.com/hootrhino/goserial"
-	"github.com/hootrhino/rhilex/common"
+	"github.com/hootrhino/rhilex/resconfig"
 	"github.com/hootrhino/rhilex/glogger"
 	"github.com/hootrhino/rhilex/typex"
 	"github.com/hootrhino/rhilex/utils"
 )
 
 type TaoJingChiHmiMainConfig struct {
-	UartConfig common.UartConfig `json:"uartConfig"`
+	UartConfig resconfig.UartConfig `json:"uartConfig"`
 }
 
 type TaoJingChiHmiDevice struct {
@@ -52,7 +52,7 @@ func NewTaoJingChiHmiDevice(e typex.Rhilex) typex.XDevice {
 	uart := new(TaoJingChiHmiDevice)
 	uart.locker = &sync.Mutex{}
 	uart.mainConfig = TaoJingChiHmiMainConfig{
-		UartConfig: common.UartConfig{
+		UartConfig: resconfig.UartConfig{
 			Uart:     "/dev/ttyS1",
 			BaudRate: 9600,
 			Timeout:  30,

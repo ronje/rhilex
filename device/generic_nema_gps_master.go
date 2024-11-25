@@ -13,7 +13,7 @@ import (
 	"time"
 
 	serial "github.com/hootrhino/goserial"
-	"github.com/hootrhino/rhilex/common"
+	"github.com/hootrhino/rhilex/resconfig"
 	"github.com/hootrhino/rhilex/component/intercache"
 	"github.com/hootrhino/rhilex/glogger"
 	"github.com/hootrhino/rhilex/typex"
@@ -27,7 +27,7 @@ type NemaGpsConfig struct {
 
 type NemaGpsMainConfig struct {
 	GpsConfig  NemaGpsConfig     `json:"gpsConfig" validate:"required"`
-	UartConfig common.UartConfig `json:"uartConfig" validate:"required"`
+	UartConfig resconfig.UartConfig `json:"uartConfig" validate:"required"`
 }
 
 type NemaGpsMasterDevice struct {
@@ -52,7 +52,7 @@ func NewNemaGpsMasterDevice(e typex.Rhilex) typex.XDevice {
 			Parse: new(bool),
 			GwSN:  "rhilex",
 		},
-		UartConfig: common.UartConfig{
+		UartConfig: resconfig.UartConfig{
 			Timeout:  3000,
 			Uart:     "/dev/ttyS1",
 			BaudRate: 9600,
@@ -167,7 +167,6 @@ func (gpsd *NemaGpsMasterDevice) SetState(status typex.DeviceState) {
 func (gpsd *NemaGpsMasterDevice) OnDCACall(UUID string, Command string, Args interface{}) typex.DCAResult {
 	return typex.DCAResult{}
 }
-
 
 // GPGGAData holds the parsed data from a GPGGA NMEA sentence
 type GPGGAData struct {

@@ -24,7 +24,7 @@ import (
 	"time"
 
 	serial "github.com/hootrhino/goserial"
-	"github.com/hootrhino/rhilex/common"
+	"github.com/hootrhino/rhilex/resconfig"
 	"github.com/hootrhino/rhilex/component/intercache"
 	"github.com/hootrhino/rhilex/component/interdb"
 	"github.com/hootrhino/rhilex/device/cjt1882004"
@@ -41,17 +41,17 @@ type CJT188_2004_DataPoint struct {
 	Alias     string `json:"alias"`
 	Frequency int64  `json:"frequency"`
 }
-type CJT188_2004_MasterGatewayCommonConfig struct {
+type CJT188_2004_MasterGatewayresconfigConfig struct {
 	Mode         string `json:"mode" validate:"required"` // UART | TCP
 	AutoRequest  *bool  `json:"autoRequest" validate:"required"`
 	BatchRequest *bool  `json:"batchRequest" validate:"required"`
 }
 
 type CJT188_2004_MasterGatewayMainConfig struct {
-	CommonConfig  CJT188_2004_MasterGatewayCommonConfig `json:"commonConfig" validate:"required"`
-	HostConfig    common.HostConfig                     `json:"hostConfig"`
-	UartConfig    common.UartConfig                     `json:"uartConfig"`
-	CecollaConfig common.CecollaConfig                  `json:"cecollaConfig"`
+	resconfigConfig  CJT188_2004_MasterGatewayresconfigConfig `json:"resconfigConfig" validate:"required"`
+	HostConfig    resconfig.HostConfig                     `json:"hostConfig"`
+	UartConfig    resconfig.UartConfig                     `json:"uartConfig"`
+	CecollaConfig resconfig.CecollaConfig                  `json:"cecollaConfig"`
 }
 
 /**
@@ -72,7 +72,7 @@ func NewCJT188_2004_MasterGateway(e typex.Rhilex) typex.XDevice {
 	gw := new(CJT188_2004_MasterGateway)
 	gw.RuleEngine = e
 	gw.mainConfig = CJT188_2004_MasterGatewayMainConfig{
-		CommonConfig: CJT188_2004_MasterGatewayCommonConfig{
+		resconfigConfig: CJT188_2004_MasterGatewayresconfigConfig{
 			Mode: "UART",
 			AutoRequest: func() *bool {
 				b := false
@@ -83,11 +83,11 @@ func NewCJT188_2004_MasterGateway(e typex.Rhilex) typex.XDevice {
 				return &b
 			}(),
 		},
-		HostConfig: common.HostConfig{
+		HostConfig: resconfig.HostConfig{
 			Host: "127.0.0.1",
 			Port: 10065,
 		},
-		UartConfig: common.UartConfig{
+		UartConfig: resconfig.UartConfig{
 			Timeout:  3000,
 			Uart:     "/dev/ttyS1",
 			BaudRate: 2400,
@@ -108,7 +108,7 @@ func (gw *CJT188_2004_MasterGateway) Init(devId string, configMap map[string]int
 		glogger.GLogger.Error(err)
 		return err
 	}
-	if !utils.SContains([]string{"UART", "TCP"}, gw.mainConfig.CommonConfig.Mode) {
+	if !utils.SContains([]string{"UART", "TCP"}, gw.mainConfig.resconfigConfig.Mode) {
 		return errors.New("unsupported mode, only can be one of 'TCP' or 'UART'")
 	}
 	// CheckSerialBusy
@@ -147,7 +147,7 @@ func (gw *CJT188_2004_MasterGateway) Init(devId string, configMap map[string]int
 func (gw *CJT188_2004_MasterGateway) Start(cctx typex.CCTX) error {
 	gw.Ctx = cctx.Ctx
 	gw.CancelCTX = cctx.CancelCTX
-	if gw.mainConfig.CommonConfig.Mode == "UART" {
+	if gw.mainConfig.resconfigConfig.Mode == "UART" {
 		config := serial.Config{
 			Address:  gw.mainConfig.UartConfig.Uart,
 			BaudRate: gw.mainConfig.UartConfig.BaudRate,
@@ -163,12 +163,12 @@ func (gw *CJT188_2004_MasterGateway) Start(cctx typex.CCTX) error {
 		}
 		gw.uartHandler = cjt1882004.NewCJT188ClientHandler(serialPort)
 		gw.uartHandler.SetLogger(glogger.Logrus)
-		if *gw.mainConfig.CommonConfig.AutoRequest {
+		if *gw.mainConfig.resconfigConfig.AutoRequest {
 			go gw.work(gw.uartHandler)
 		}
 		goto END
 	}
-	if gw.mainConfig.CommonConfig.Mode == "TCP" {
+	if gw.mainConfig.resconfigConfig.Mode == "TCP" {
 		tcpconn, errDial := net.Dial("tcp",
 			fmt.Sprintf("%s:%d", gw.mainConfig.HostConfig.Host,
 				gw.mainConfig.HostConfig.Port))
@@ -177,7 +177,7 @@ func (gw *CJT188_2004_MasterGateway) Start(cctx typex.CCTX) error {
 		}
 		gw.tcpHandler = cjt1882004.NewCJT188ClientHandler(tcpconn)
 		gw.uartHandler.SetLogger(glogger.Logrus)
-		if *gw.mainConfig.CommonConfig.AutoRequest {
+		if *gw.mainConfig.resconfigConfig.AutoRequest {
 			go gw.work(gw.tcpHandler)
 		}
 		goto END
@@ -274,7 +274,7 @@ func (gw *CJT188_2004_MasterGateway) work(handler *cjt1882004.CJT188ClientHandle
 			NewValue.Status = 1
 			NewValue.ErrMsg = ""
 			intercache.SetValue(gw.PointId, DataPoint.UUID, NewValue)
-			if !*gw.mainConfig.CommonConfig.BatchRequest {
+			if !*gw.mainConfig.resconfigConfig.BatchRequest {
 				if bytes, err := json.Marshal(CJT1882004ReadData{
 					MeterId: DataPoint.MeterId,
 					Tag:     DataPoint.Tag,
@@ -294,7 +294,7 @@ func (gw *CJT188_2004_MasterGateway) work(handler *cjt1882004.CJT188ClientHandle
 			}
 			time.Sleep(time.Duration(DataPoint.Frequency) * time.Millisecond)
 		}
-		if *gw.mainConfig.CommonConfig.BatchRequest {
+		if *gw.mainConfig.resconfigConfig.BatchRequest {
 			if len(cjt1882004ReadDataList) > 0 {
 				if bytes, err := json.Marshal(cjt1882004ReadDataList); err != nil {
 					glogger.GLogger.Error(err)
@@ -307,12 +307,12 @@ func (gw *CJT188_2004_MasterGateway) work(handler *cjt1882004.CJT188ClientHandle
 	}
 }
 func (gw *CJT188_2004_MasterGateway) Status() typex.DeviceState {
-	if gw.mainConfig.CommonConfig.Mode == "UART" {
+	if gw.mainConfig.resconfigConfig.Mode == "UART" {
 		if gw.uartHandler == nil {
 			return typex.DEV_DOWN
 		}
 	}
-	if gw.mainConfig.CommonConfig.Mode == "TCP" {
+	if gw.mainConfig.resconfigConfig.Mode == "TCP" {
 		if gw.tcpHandler == nil {
 			return typex.DEV_DOWN
 		}
@@ -325,12 +325,12 @@ func (gw *CJT188_2004_MasterGateway) Stop() {
 	if gw.CancelCTX != nil {
 		gw.CancelCTX()
 	}
-	if gw.mainConfig.CommonConfig.Mode == "UART" {
+	if gw.mainConfig.resconfigConfig.Mode == "UART" {
 		if gw.uartHandler != nil {
 			gw.uartHandler.Close()
 		}
 	}
-	if gw.mainConfig.CommonConfig.Mode == "TCP" {
+	if gw.mainConfig.resconfigConfig.Mode == "TCP" {
 		if gw.tcpHandler != nil {
 			gw.tcpHandler.Close()
 		}

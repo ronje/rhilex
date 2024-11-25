@@ -19,10 +19,10 @@ import (
 	"errors"
 	"time"
 
-	"github.com/hootrhino/rhilex/common"
 	"github.com/hootrhino/rhilex/component/intercache"
 	"github.com/hootrhino/rhilex/component/interdb"
 	"github.com/hootrhino/rhilex/glogger"
+	"github.com/hootrhino/rhilex/resconfig"
 	"github.com/hootrhino/rhilex/typex"
 	"github.com/hootrhino/rhilex/utils"
 )
@@ -46,14 +46,14 @@ type MBusEn13433MasterGatewayCommonConfig struct {
 }
 
 type MBusConfig struct {
-	HostConfig common.HostConfig `json:"hostConfig"`
+	HostConfig resconfig.HostConfig `json:"hostConfig"`
 }
 
 type MBusEn13433MasterGatewayMainConfig struct {
 	CommonConfig  MBusEn13433MasterGatewayCommonConfig `json:"commonConfig" validate:"required"`
 	MBusConfig    MBusConfig                           `json:"MBusConfig"`
-	UartConfig    common.UartConfig                    `json:"uartConfig"`
-	CecollaConfig common.CecollaConfig                 `json:"cecollaConfig"`
+	UartConfig    resconfig.UartConfig                 `json:"uartConfig"`
+	CecollaConfig resconfig.CecollaConfig              `json:"cecollaConfig"`
 }
 
 /**
@@ -84,12 +84,12 @@ func NewMBusEn13433MasterGateway(e typex.Rhilex) typex.XDevice {
 			}(),
 		},
 		MBusConfig: MBusConfig{
-			HostConfig: common.HostConfig{
+			HostConfig: resconfig.HostConfig{
 				Host: "127.0.0.1",
 				Port: 10065,
 			},
 		},
-		UartConfig: common.UartConfig{
+		UartConfig: resconfig.UartConfig{
 			Timeout:  3000,
 			Uart:     "/dev/ttyS1",
 			BaudRate: 9600,

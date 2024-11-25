@@ -8,7 +8,7 @@ import (
 	"net"
 	"time"
 
-	"github.com/hootrhino/rhilex/common"
+	"github.com/hootrhino/rhilex/resconfig"
 	"github.com/hootrhino/rhilex/component/apiserver/model"
 	"github.com/hootrhino/rhilex/component/intercache"
 	"github.com/hootrhino/rhilex/component/interdb"
@@ -47,7 +47,7 @@ type bacnetDataPoint struct {
 type BacnetMainConfig struct {
 	BacnetConfig  bacnetConfig         `json:"bacnetConfig" validate:"required"`
 	CommonConfig  bacnetCommonConfig   `json:"commonConfig" validate:"required"`
-	CecollaConfig common.CecollaConfig `json:"cecollaConfig"`
+	CecollaConfig resconfig.CecollaConfig `json:"cecollaConfig"`
 }
 type GenericBacnetIpDevice struct {
 	typex.XStatus

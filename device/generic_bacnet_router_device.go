@@ -24,7 +24,7 @@ import (
 	bacnet "github.com/hootrhino/gobacnet"
 	"github.com/hootrhino/gobacnet/apdus"
 	"github.com/hootrhino/gobacnet/btypes"
-	"github.com/hootrhino/rhilex/common"
+	"github.com/hootrhino/rhilex/resconfig"
 	"github.com/hootrhino/rhilex/component/apiserver/model"
 	"github.com/hootrhino/rhilex/component/intercache"
 	"github.com/hootrhino/rhilex/component/interdb"
@@ -44,7 +44,7 @@ type BacnetRouterConfig struct {
 
 type BacnetRouterMainConfig struct {
 	BacnetRouterConfig BacnetRouterConfig   `json:"bacnetRouterConfig" validate:"required"`
-	CecollaConfig      common.CecollaConfig `json:"cecollaConfig"`
+	CecollaConfig      resconfig.CecollaConfig `json:"cecollaConfig"`
 }
 
 type BacnetRouter struct {

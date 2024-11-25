@@ -23,7 +23,7 @@ import (
 	"time"
 
 	serial "github.com/hootrhino/goserial"
-	"github.com/hootrhino/rhilex/common"
+	"github.com/hootrhino/rhilex/resconfig"
 	"github.com/hootrhino/rhilex/component/intercache"
 	"github.com/hootrhino/rhilex/component/interdb"
 	"github.com/hootrhino/rhilex/device/szy2062016"
@@ -49,9 +49,9 @@ type SZY206_2016_MasterGatewayCommonConfig struct {
 
 type SZY206_2016_MasterGatewayMainConfig struct {
 	CommonConfig  SZY206_2016_MasterGatewayCommonConfig `json:"commonConfig" validate:"required"`
-	HostConfig    common.HostConfig                     `json:"hostConfig"`
-	UartConfig    common.UartConfig                     `json:"uartConfig"`
-	CecollaConfig common.CecollaConfig                  `json:"cecollaConfig"`
+	HostConfig    resconfig.HostConfig                     `json:"hostConfig"`
+	UartConfig    resconfig.UartConfig                     `json:"uartConfig"`
+	CecollaConfig resconfig.CecollaConfig                  `json:"cecollaConfig"`
 }
 
 /**
@@ -83,11 +83,11 @@ func NewSZY206_2016_MasterGateway(e typex.Rhilex) typex.XDevice {
 				return &b
 			}(),
 		},
-		HostConfig: common.HostConfig{
+		HostConfig: resconfig.HostConfig{
 			Host: "127.0.0.1",
 			Port: 10065,
 		},
-		UartConfig: common.UartConfig{
+		UartConfig: resconfig.UartConfig{
 			Timeout:  3000,
 			Uart:     "/dev/ttyS1",
 			BaudRate: 2400,
