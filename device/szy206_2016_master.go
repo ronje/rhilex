@@ -23,11 +23,11 @@ import (
 	"time"
 
 	serial "github.com/hootrhino/goserial"
-	"github.com/hootrhino/rhilex/resconfig"
 	"github.com/hootrhino/rhilex/component/intercache"
 	"github.com/hootrhino/rhilex/component/interdb"
 	"github.com/hootrhino/rhilex/device/szy2062016"
 	"github.com/hootrhino/rhilex/glogger"
+	"github.com/hootrhino/rhilex/resconfig"
 	"github.com/hootrhino/rhilex/typex"
 	"github.com/hootrhino/rhilex/utils"
 )
@@ -49,9 +49,9 @@ type SZY206_2016_MasterGatewayCommonConfig struct {
 
 type SZY206_2016_MasterGatewayMainConfig struct {
 	CommonConfig  SZY206_2016_MasterGatewayCommonConfig `json:"commonConfig" validate:"required"`
-	HostConfig    resconfig.HostConfig                     `json:"hostConfig"`
-	UartConfig    resconfig.UartConfig                     `json:"uartConfig"`
-	CecollaConfig resconfig.CecollaConfig                  `json:"cecollaConfig"`
+	HostConfig    resconfig.HostConfig                  `json:"hostConfig"`
+	UartConfig    resconfig.UartConfig                  `json:"uartConfig"`
+	CecollaConfig resconfig.CecollaConfig               `json:"cecollaConfig"`
 }
 
 /**

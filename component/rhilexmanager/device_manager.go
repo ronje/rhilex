@@ -37,6 +37,18 @@ func InitDeviceTypeManager(e typex.Rhilex) {
 }
 
 func LoadAllDeviceType(e typex.Rhilex) {
+	DefaultDeviceTypeManager.Register(typex.GENERIC_NEMA_GNS_PROTOCOL,
+		&typex.XConfig{
+			Engine:    e,
+			NewDevice: device.NewNemaGpsMasterDevice,
+		},
+	)
+	DefaultDeviceTypeManager.Register(typex.TAOJINGCHI_UARTHMI_MASTER,
+		&typex.XConfig{
+			Engine:    e,
+			NewDevice: device.NewTaoJingChiHmiDevice,
+		},
+	)
 	DefaultDeviceTypeManager.Register(typex.SZY2062016_MASTER,
 		&typex.XConfig{
 			Engine:    e,

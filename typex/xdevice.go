@@ -84,6 +84,7 @@ const (
 	GENERIC_USER_PROTOCOL       DeviceType = "GENERIC_USER_PROTOCOL"       // 自定义协议
 	GENERIC_AIS_RECEIVER        DeviceType = "GENERIC_AIS_RECEIVER"        // 通用AIS
 	GENERIC_NEMA_GNS_PROTOCOL   DeviceType = "GENERIC_NEMA_GNS_PROTOCOL"   // GPS采集器
+	TAOJINGCHI_UARTHMI_MASTER   DeviceType = "TAOJINGCHI_UARTHMI_MASTER"   // 陶晶池串口屏
 )
 
 type DCAModel struct {
