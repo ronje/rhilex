@@ -318,19 +318,21 @@ func CreateDevice(c *gin.Context, ruleEngine typex.Rhilex) {
 	}
 	deviceConfig := DeviceConfig{}
 	json.Unmarshal(configJson, &deviceConfig)
-	if *deviceConfig.CecollaConfig.Enable {
-		Cecolla := ruleEngine.GetCecolla(deviceConfig.CecollaConfig.CecollaId)
-		if Cecolla == nil {
-			c.JSON(common.HTTP_OK, common.Error400(fmt.Errorf("Cecolla not exists:%s",
-				deviceConfig.CecollaConfig.CecollaId)))
-			return
-		}
-		value := intercache.GetValue("__CecollaBinding", deviceConfig.CecollaConfig.CecollaId)
-		if value.Value != nil {
-			c.JSON(common.HTTP_OK, common.Error400(fmt.Errorf("Cecolla already bind to device:%s", value.Value)))
-			return
-		}
+	if deviceConfig.CecollaConfig.Enable != nil {
+		if *deviceConfig.CecollaConfig.Enable {
+			Cecolla := ruleEngine.GetCecolla(deviceConfig.CecollaConfig.CecollaId)
+			if Cecolla == nil {
+				c.JSON(common.HTTP_OK, common.Error400(fmt.Errorf("Cecolla not exists:%s",
+					deviceConfig.CecollaConfig.CecollaId)))
+				return
+			}
+			value := intercache.GetValue("__CecollaBinding", deviceConfig.CecollaConfig.CecollaId)
+			if value.Value != nil {
+				c.JSON(common.HTTP_OK, common.Error400(fmt.Errorf("Cecolla already bind to device:%s", value.Value)))
+				return
+			}
 
+		}
 	}
 
 	if err := ruleEngine.CheckDeviceType(typex.DeviceType(form.Type)); err != nil {
@@ -426,18 +428,20 @@ func UpdateDevice(c *gin.Context, ruleEngine typex.Rhilex) {
 	}
 	deviceConfig := DeviceConfig{}
 	json.Unmarshal(configJson, &deviceConfig)
-	if *deviceConfig.CecollaConfig.Enable {
-		if Cecolla := ruleEngine.GetCecolla(deviceConfig.CecollaConfig.CecollaId); Cecolla == nil {
-			c.JSON(common.HTTP_OK, common.Error400(fmt.Errorf("Cecolla not exists:%s",
-				deviceConfig.CecollaConfig.CecollaId)))
-			return
-		}
-		value := intercache.GetValue("__CecollaBinding", deviceConfig.CecollaConfig.CecollaId)
-		if value.Value != nil {
-			c.JSON(common.HTTP_OK, common.Error400(fmt.Errorf("Cecolla already bind to device:%s", value.Value)))
-			return
-		}
+	if deviceConfig.CecollaConfig.Enable != nil {
+		if *deviceConfig.CecollaConfig.Enable {
+			if Cecolla := ruleEngine.GetCecolla(deviceConfig.CecollaConfig.CecollaId); Cecolla == nil {
+				c.JSON(common.HTTP_OK, common.Error400(fmt.Errorf("Cecolla not exists:%s",
+					deviceConfig.CecollaConfig.CecollaId)))
+				return
+			}
+			value := intercache.GetValue("__CecollaBinding", deviceConfig.CecollaConfig.CecollaId)
+			if value.Value != nil {
+				c.JSON(common.HTTP_OK, common.Error400(fmt.Errorf("Cecolla already bind to device:%s", value.Value)))
+				return
+			}
 
+		}
 	}
 
 	// 检查个人版的创建权限: 以下三种情况，以及2个数量
