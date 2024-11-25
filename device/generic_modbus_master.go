@@ -462,13 +462,6 @@ func (mdev *GenericModbusMaster) TCPRead() []ReadRegisterValue {
 	return mdev.modbusRead()
 }
 
-func maybePrependZero(slice []byte) []byte {
-	if len(slice)%2 != 0 {
-		slice = append([]byte{0}, slice...)
-	}
-	return slice
-}
-
 // 设备当前状态
 func (mdev *GenericModbusMaster) Status() typex.DeviceState {
 	// 容错5次
