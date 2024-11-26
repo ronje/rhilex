@@ -16,6 +16,8 @@
 package rhilexlib
 
 import (
+	"encoding/json"
+
 	"github.com/hootrhino/rhilex/typex"
 
 	lua "github.com/hootrhino/gopher-lua"
@@ -23,19 +25,32 @@ import (
 
 /*
 *
-local err = tjchmi:WriteToHmi("$uuid", "WriteToHmi", "t0.txt=\"Hello\"")
+
+	local err = tjchmi:WriteToHmi("$uuid", {
+		"t0.txt=\"Hello-1\"",
+		"t1.txt=\"Hello-2\"",
+		"t2.txt=\"Hello-3\""
+	})
+
 *
 */
 func TJCWriteToHmi(rx typex.Rhilex) func(*lua.LState) int {
 	return func(l *lua.LState) int {
-		// write(uuid,cmd,data)
 		devUUID := l.ToString(2)
-		cmd := l.ToString(3)
-		data := l.ToString(4)
+		data := l.ToTable(3)
 		Device := rx.GetDevice(devUUID)
+		args := []string{}
+		data.ForEach(func(l1, l2 lua.LValue) {
+			args = append(args, l2.String())
+		})
 		if Device != nil {
 			if Device.Device.Status() == typex.DEV_UP {
-				_, err := Device.Device.OnCtrl([]byte(cmd), []byte(data))
+				bytes, errMarshal := json.Marshal(args)
+				if errMarshal != nil {
+					l.Push(lua.LString(errMarshal.Error()))
+					return 1
+				}
+				_, err := Device.Device.OnCtrl([]byte("WriteToHmi"), bytes)
 				if err != nil {
 					l.Push(lua.LString(err.Error()))
 					return 1

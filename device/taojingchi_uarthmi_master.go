@@ -16,6 +16,8 @@
 package device
 
 import (
+	"encoding/json"
+	"errors"
 	"strings"
 
 	"fmt"
@@ -24,8 +26,8 @@ import (
 	"time"
 
 	serial "github.com/hootrhino/goserial"
-	"github.com/hootrhino/rhilex/resconfig"
 	"github.com/hootrhino/rhilex/glogger"
+	"github.com/hootrhino/rhilex/resconfig"
 	"github.com/hootrhino/rhilex/typex"
 	"github.com/hootrhino/rhilex/utils"
 )
@@ -107,30 +109,62 @@ func (uart *TaoJingChiHmiDevice) Start(cctx typex.CCTX) error {
 				return
 			default:
 			}
-			N, err := uart.serialPort.Read(buffer[0:])
+			data, err := readUntilEndMarker(uart.serialPort, buffer[:])
 			if err != nil {
-				if strings.Contains(err.Error(), "timeout") {
-					uart.RuleEngine.WorkDevice(uart.Details(), string(buffer[:N]))
-					continue
-				}
-				uart.SetState(typex.DEV_DOWN)
+				glogger.Error(err)
+				uart.status = typex.DEV_DOWN
+				return
 			}
-			uart.RuleEngine.WorkDevice(uart.Details(), string(buffer[:N]))
+			uart.RuleEngine.WorkDevice(uart.Details(), string(data))
 		}
 	}(uart)
 	uart.status = typex.DEV_UP
 	return nil
 }
 
+// 读取数据直到遇到 \xFF\xFF\xFF 结尾
+func readUntilEndMarker(serialPort serial.Port, buffer []byte) ([]byte, error) {
+	if len(buffer) < 3 {
+		return nil, errors.New("buffer is too small to hold end marker")
+	}
+	var data []byte
+	// 读取数据直到遇到结束标记 \xFF\xFF\xFF
+	for {
+		readBytes, err := serialPort.Read(buffer)
+		if err != nil {
+			if strings.Contains(err.Error(), "timeout") {
+				continue
+			}
+			return nil, err
+		}
+		if readBytes >= 3 &&
+			buffer[readBytes-3] == 0xFF &&
+			buffer[readBytes-2] == 0xFF &&
+			buffer[readBytes-1] == 0xFF {
+			return append(data, buffer[:readBytes-3]...), nil
+		}
+		data = append(data, buffer[:readBytes]...)
+		if readBytes > 2 && buffer[readBytes-2] == 0xFF && buffer[readBytes-1] == 0xFF {
+			copy(buffer, buffer[readBytes-2:])
+		}
+	}
+}
+
 // 从设备里面读数据出来:
 // t1.txt="OK"\xff\xff\xff
 func (uart *TaoJingChiHmiDevice) OnCtrl(cmd []byte, args []byte) ([]byte, error) {
+
 	if string(cmd) == "WriteToHmi" {
-		// 陶晶池指令默认需要加上包尾 \xFF\xFF\xFF
-		args = append(args, "\xFF\xFF\xFF"...)
-		_, err := uart.serialPort.Write(args)
-		if err != nil {
-			return nil, err
+		cmds := []string{}
+		if errUnmarshal := json.Unmarshal(args, &cmds); errUnmarshal != nil {
+			return nil, errUnmarshal
+		}
+		for _, ctrl := range cmds {
+			// 陶晶池指令默认需要加上包尾 \xFF\xFF\xFF
+			_, err := uart.serialPort.Write([]byte(ctrl + "\xFF\xFF\xFF"))
+			if err != nil {
+				return nil, err
+			}
 		}
 		return []byte{}, nil
 	}
