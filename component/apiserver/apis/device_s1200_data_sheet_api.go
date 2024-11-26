@@ -470,6 +470,7 @@ func parseSiemensPointExcel(
 		Type := row[3]
 		Order := row[4]
 		Weight, _ := strconv.ParseFloat(row[5], 32)
+		limitedWeight := float64(int(Weight*100)) / 100.0
 		if Weight == 0 {
 			Weight = 1 // 防止解析异常的时候系数0
 		}
@@ -488,7 +489,7 @@ func parseSiemensPointExcel(
 			DataBlockType:  Type,
 			DataBlockOrder: utils.GetDefaultDataOrder(Type, Order),
 			Frequency:      &Frequency,
-			Weight:         &Weight,
+			Weight:         &limitedWeight,
 		}
 		list = append(list, model)
 	}

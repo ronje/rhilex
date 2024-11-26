@@ -438,13 +438,14 @@ func parseDlt6452007MasterPointExcel(r io.Reader, sheetName string,
 		Alias := row[2]
 		Frequency, _ := strconv.ParseUint(row[3], 10, 64)
 		Weight, _ := strconv.ParseFloat(row[4], 64)
+		limitedWeight := float64(int(Weight*100)) / 100.0
 		// "MeterId", "Tag", "Alias", "Frequency", "Weight"
 		if err := CheckDlt6452007MasterDataPoints(Dlt6452007MasterPointVo{
 			MeterId:   MeterId,
 			Tag:       Tag,
 			Alias:     Alias,
 			Frequency: Frequency,
-			Weight:    Weight,
+			Weight:    limitedWeight,
 		}); err != nil {
 			return nil, err
 		}

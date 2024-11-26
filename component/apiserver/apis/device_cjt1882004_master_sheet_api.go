@@ -56,8 +56,8 @@ type Cjt1882004MasterPointVo struct {
 	MeterId       string      `json:"meterId"`
 	Tag           string      `json:"tag"`
 	Alias         string      `json:"alias"`
-	Frequency     uint64      `json:"frequency"`
-	Weight        float64     `json:"weight"`
+	Frequency     *uint64     `json:"frequency"`
+	Weight        *float64    `json:"weight"`
 	Status        int         `json:"status"`        // 运行时数据
 	LastFetchTime uint64      `json:"lastFetchTime"` // 运行时数据
 	Value         interface{} `json:"value"`         // 运行时数据
@@ -146,8 +146,8 @@ func Cjt1882004MasterSheetPageList(c *gin.Context, ruleEngine typex.Rhilex) {
 			MeterId:       record.MeterId,
 			Tag:           record.Tag,
 			Alias:         record.Alias,
-			Frequency:     *record.Frequency,
-			Weight:        *record.Weight,
+			Frequency:     record.Frequency,
+			Weight:        record.Weight,
 			LastFetchTime: value.LastFetchTime,
 			ErrMsg:        value.ErrMsg,
 		}
@@ -245,10 +245,10 @@ func CheckCjt1882004MasterDataPoints(M Cjt1882004MasterPointVo) error {
 	if err := checkStringLength(M.Alias, "alias", 64); err != nil {
 		return err
 	}
-	if M.Frequency < 1 {
+	if *M.Frequency < 1 {
 		return fmt.Errorf("'frequency' must be greater than 50ms")
 	}
-	if M.Frequency > 100000 {
+	if *M.Frequency > 100000 {
 		return fmt.Errorf("'frequency' must be less than 100s")
 	}
 	return nil
@@ -286,8 +286,8 @@ func Cjt1882004MasterSheetUpdate(c *gin.Context, ruleEngine typex.Rhilex) {
 				MeterId:    Cjt1882004MasterDataPoint.MeterId,
 				Tag:        Cjt1882004MasterDataPoint.Tag,
 				Alias:      Cjt1882004MasterDataPoint.Alias,
-				Frequency:  &Cjt1882004MasterDataPoint.Frequency,
-				Weight:     &Cjt1882004MasterDataPoint.Weight,
+				Frequency:  Cjt1882004MasterDataPoint.Frequency,
+				Weight:     Cjt1882004MasterDataPoint.Weight,
 			}
 			err0 := service.InsertCjt1882004Point(NewRow)
 			if err0 != nil {
@@ -301,8 +301,8 @@ func Cjt1882004MasterSheetUpdate(c *gin.Context, ruleEngine typex.Rhilex) {
 				MeterId:    Cjt1882004MasterDataPoint.MeterId,
 				Tag:        Cjt1882004MasterDataPoint.Tag,
 				Alias:      Cjt1882004MasterDataPoint.Alias,
-				Frequency:  &Cjt1882004MasterDataPoint.Frequency,
-				Weight:     &Cjt1882004MasterDataPoint.Weight,
+				Frequency:  Cjt1882004MasterDataPoint.Frequency,
+				Weight:     Cjt1882004MasterDataPoint.Weight,
 			}
 			err0 := service.UpdateCjt1882004Point(OldRow)
 			if err0 != nil {
@@ -437,13 +437,14 @@ func parseCjt1882004MasterPointExcel(r io.Reader, sheetName string,
 		Alias := row[2]
 		Frequency, _ := strconv.ParseUint(row[3], 10, 64)
 		Weight, _ := strconv.ParseFloat(row[4], 64)
+		limitedWeight := float64(int(Weight*100)) / 100.0
 		// "MeterId", "Tag", "Alias", "Frequency", "Weight"
 		if err := CheckCjt1882004MasterDataPoints(Cjt1882004MasterPointVo{
 			MeterId:   MeterId,
 			Tag:       Tag,
 			Alias:     Alias,
-			Frequency: Frequency,
-			Weight:    Weight,
+			Frequency: &Frequency,
+			Weight:    &limitedWeight,
 		}); err != nil {
 			return nil, err
 		}

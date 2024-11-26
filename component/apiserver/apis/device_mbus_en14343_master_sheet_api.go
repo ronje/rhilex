@@ -463,6 +463,7 @@ func parseMBusMasterPointExcel(r io.Reader, sheetName string,
 		Frequency, _ := strconv.ParseUint(row[5], 10, 64)
 		DataLength, _ := strconv.ParseUint(row[6], 10, 64)
 		Weight, _ := strconv.ParseFloat(row[7], 64)
+		limitedWeight := float64(int(Weight*100)) / 100.0
 		if err := CheckMBusMasterDataPoints(MBusMasterPointVo{
 			SlaverId:     slaverId,
 			Type:         Type,
@@ -471,7 +472,7 @@ func parseMBusMasterPointExcel(r io.Reader, sheetName string,
 			Alias:        Alias,
 			Frequency:    &Frequency,
 			DataLength:   &DataLength,
-			Weight:       &Weight,
+			Weight:       &limitedWeight,
 		}); err != nil {
 			return nil, err
 		}

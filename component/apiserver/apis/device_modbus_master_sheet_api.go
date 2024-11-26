@@ -537,6 +537,7 @@ func parseModbusMasterPointExcel(r io.Reader, sheetName string,
 		Type := row[7]
 		Order := row[8]
 		Weight, _ := strconv.ParseFloat(row[9], 32)
+		limitedWeight := float64(int(Weight*100)) / 100.0
 		if Weight == 0 {
 			Weight = 1 // 防止解析异常的时候系数0
 		}
@@ -556,7 +557,7 @@ func parseModbusMasterPointExcel(r io.Reader, sheetName string,
 			Quantity:  &Quantity,
 			DataType:  Type,
 			DataOrder: utils.GetDefaultDataOrder(Type, Order),
-			Weight:    &Weight,
+			Weight:    &limitedWeight,
 		}); err != nil {
 			return nil, err
 		}
