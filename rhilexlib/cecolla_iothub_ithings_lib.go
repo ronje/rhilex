@@ -164,7 +164,7 @@ func IthingsPropertyReport(rx typex.Rhilex) func(*lua.LState) int {
 	return func(stateStack *lua.LState) int {
 		uuid := stateStack.ToString(2)
 		productId := stateStack.ToString(3)
-		deviceId := stateStack.ToString(4)
+		deviceName := stateStack.ToString(4)
 		luaTable := stateStack.ToTable(5)
 		identifiers := []string{}
 		luaTable.ForEach(func(i, v lua.LValue) {
@@ -175,7 +175,7 @@ func IthingsPropertyReport(rx typex.Rhilex) func(*lua.LState) int {
 			if Cecolla.Cecolla != nil {
 				getPropertiesCmd := GetPropertiesCmd{
 					ProductId:   productId,
-					DeviceId:    deviceId,
+					DeviceName:  deviceName,
 					Identifiers: identifiers,
 				}
 				bytes, errMarshal := json.Marshal(getPropertiesCmd)
@@ -204,7 +204,7 @@ func IthingsGetPropertyReplySuccess(rx typex.Rhilex) func(*lua.LState) int {
 		uuid := stateStack.ToString(2)
 		token := stateStack.ToString(3)
 		productId := stateStack.ToString(4)
-		deviceId := stateStack.ToString(5)
+		deviceName := stateStack.ToString(4)
 		luaTable := stateStack.ToTable(6)
 		identifiers := []string{}
 		luaTable.ForEach(func(i, v lua.LValue) {
@@ -216,7 +216,7 @@ func IthingsGetPropertyReplySuccess(rx typex.Rhilex) func(*lua.LState) int {
 				getPropertiesCmd := GetPropertiesCmd{
 					Token:       token,
 					ProductId:   productId,
-					DeviceId:    deviceId,
+					DeviceName:  deviceName,
 					Identifiers: identifiers,
 				}
 				bytes, errMarshal := json.Marshal(getPropertiesCmd)
@@ -244,7 +244,7 @@ func IthingsGetPropertyReplySuccess(rx typex.Rhilex) func(*lua.LState) int {
 type GetPropertiesCmd struct {
 	Token       string   `json:"token"`
 	ProductId   string   `json:"productID"`
-	DeviceId    string   `json:"deviceID"`
+	DeviceName  string   `json:"deviceName"`
 	Identifiers []string `json:"identifiers"`
 }
 
@@ -252,7 +252,7 @@ func IthingsGetProperties(rx typex.Rhilex) func(*lua.LState) int {
 	return func(stateStack *lua.LState) int {
 		uuid := stateStack.ToString(2)
 		productId := stateStack.ToString(3)
-		deviceId := stateStack.ToString(4)
+		deviceName := stateStack.ToString(4)
 		luaTable := stateStack.ToTable(5)
 		identifiers := []string{}
 		luaTable.ForEach(func(i, v lua.LValue) {
@@ -263,7 +263,7 @@ func IthingsGetProperties(rx typex.Rhilex) func(*lua.LState) int {
 			if Cecolla.Cecolla != nil {
 				getPropertiesCmd := GetPropertiesCmd{
 					ProductId:   productId,
-					DeviceId:    deviceId,
+					DeviceName:  deviceName,
 					Identifiers: identifiers,
 				}
 				bytes, errMarshal := json.Marshal(getPropertiesCmd)

@@ -262,6 +262,12 @@ func CovertAnyType(v any) string {
 		return fmt.Sprintf("%d", v)
 	case int64:
 		return fmt.Sprintf("%d", v)
+	case uint16:
+		return fmt.Sprintf("%d", v)
+	case uint32:
+		return fmt.Sprintf("%d", v)
+	case uint64:
+		return fmt.Sprintf("%d", v)
 	case float32:
 		return fmt.Sprintf("%.4f", float32(T))
 	case float64:
@@ -278,6 +284,12 @@ func CovertAnyType(v any) string {
 		return fmt.Sprintf("%d", *T)
 	case *int64:
 		return fmt.Sprintf("%d", *T)
+	case *uint16:
+		return fmt.Sprintf("%d", *T)
+	case *uint32:
+		return fmt.Sprintf("%d", *T)
+	case *uint64:
+		return fmt.Sprintf("%d", *T)
 	case *float32:
 		return fmt.Sprintf("%.4f", float32(*T))
 	case *float64:
@@ -285,7 +297,7 @@ func CovertAnyType(v any) string {
 	case string:
 		return T
 	}
-	return ""
+	return "0.0"
 }
 
 /**

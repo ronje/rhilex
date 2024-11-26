@@ -22,11 +22,11 @@ import (
 )
 
 type SubDeviceParam struct {
-	Timestamp int64  `json:"timestamp"`
-	ProductId string `json:"productID"`
-	DeviceId  string `json:"deviceID"`
-	Param     string `json:"param"`
-	Value     any    `json:"value"`
+	Timestamp  int64  `json:"timestamp"`
+	ProductId  string `json:"productID"`
+	DeviceName string `json:"deviceName"`
+	Param      string `json:"param"`
+	Value      any    `json:"value"`
 }
 
 func (O SubDeviceParam) String() string {
@@ -76,8 +76,8 @@ func (O IthingsCreateSchemaPropertie) String() string {
 
 // 子设备订阅
 type SubDeviceTopic struct {
-	ProductId string `json:"productID"`
-	DeviceId  string `json:"deviceID"`
+	ProductId  string `json:"productID"`
+	DeviceName string `json:"deviceName"`
 }
 
 /*

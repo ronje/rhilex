@@ -228,7 +228,7 @@ func (mdev *GenericModbusMaster) Init(devId string, configMap map[string]interfa
 			UUID:          ModbusPoint.UUID,
 			Status:        0,
 			LastFetchTime: LastFetchTime,
-			Value:         "",
+			Value:         "0",
 			ErrMsg:        "--",
 		})
 		subDevicesAlias[ModbusPoint.Alias] = ModbusPoint.Alias
@@ -239,14 +239,14 @@ func (mdev *GenericModbusMaster) Init(devId string, configMap map[string]interfa
 		if *mdev.mainConfig.CecollaConfig.Enable {
 			cecolla := mdev.RuleEngine.GetCecolla(mdev.mainConfig.CecollaConfig.CecollaId)
 			if cecolla != nil {
-				ProductId, DeviceId, err := ithings.ParseProductInfo(Alias)
+				ProductId, DeviceName, err := ithings.ParseProductInfo(Alias)
 				if err != nil {
 					glogger.Error(err)
 				} else {
 					param := ithings.SubDeviceParam{
-						Timestamp: int64(LastFetchTime),
-						ProductId: ProductId,
-						DeviceId:  DeviceId,
+						Timestamp:  int64(LastFetchTime),
+						ProductId:  ProductId,
+						DeviceName: DeviceName,
 					}
 					_, errOnCtrl := cecolla.Cecolla.OnCtrl([]byte("SubDeviceSetOnline"), []byte(param.String()))
 					if errOnCtrl != nil {
@@ -703,16 +703,16 @@ func (mdev *GenericModbusMaster) modbusSingleRead() []ReadRegisterValue {
 			if *mdev.mainConfig.CecollaConfig.Enable {
 				cecolla := mdev.RuleEngine.GetCecolla(mdev.mainConfig.CecollaConfig.CecollaId)
 				if cecolla != nil {
-					ProductId, DeviceId, err := ithings.ParseProductInfo(r.Alias)
+					ProductId, DeviceName, err := ithings.ParseProductInfo(r.Alias)
 					if err != nil {
 						glogger.Error(err)
 					} else {
 						param := ithings.SubDeviceParam{
-							Timestamp: int64(lastTimes),
-							Param:     r.Tag,
-							ProductId: ProductId,
-							DeviceId:  DeviceId,
-							Value:     AnyValue,
+							Timestamp:  int64(lastTimes),
+							Param:      r.Tag,
+							ProductId:  ProductId,
+							DeviceName: DeviceName,
+							Value:      AnyValue,
 						}
 						_, OnCtrl := cecolla.Cecolla.OnCtrl([]byte("PackReportSubDeviceParams"), []byte(param.String()))
 						if OnCtrl != nil {
@@ -770,16 +770,16 @@ func (mdev *GenericModbusMaster) modbusSingleRead() []ReadRegisterValue {
 			if *mdev.mainConfig.CecollaConfig.Enable {
 				cecolla := mdev.RuleEngine.GetCecolla(mdev.mainConfig.CecollaConfig.CecollaId)
 				if cecolla != nil {
-					ProductId, DeviceId, err := ithings.ParseProductInfo(r.Alias)
+					ProductId, DeviceName, err := ithings.ParseProductInfo(r.Alias)
 					if err != nil {
 						glogger.Error(err)
 					} else {
 						param := ithings.SubDeviceParam{
-							Timestamp: int64(lastTimes),
-							Param:     r.Tag,
-							ProductId: ProductId,
-							DeviceId:  DeviceId,
-							Value:     AnyValue,
+							Timestamp:  int64(lastTimes),
+							Param:      r.Tag,
+							ProductId:  ProductId,
+							DeviceName: DeviceName,
+							Value:      AnyValue,
 						}
 						_, OnCtrl := cecolla.Cecolla.OnCtrl([]byte("PackReportSubDeviceParams"), []byte(param.String()))
 						if OnCtrl != nil {
@@ -837,16 +837,16 @@ func (mdev *GenericModbusMaster) modbusSingleRead() []ReadRegisterValue {
 			if *mdev.mainConfig.CecollaConfig.Enable {
 				cecolla := mdev.RuleEngine.GetCecolla(mdev.mainConfig.CecollaConfig.CecollaId)
 				if cecolla != nil {
-					ProductId, DeviceId, err := ithings.ParseProductInfo(r.Alias)
+					ProductId, DeviceName, err := ithings.ParseProductInfo(r.Alias)
 					if err != nil {
 						glogger.Error(err)
 					} else {
 						param := ithings.SubDeviceParam{
-							Timestamp: int64(lastTimes),
-							Param:     r.Tag,
-							ProductId: ProductId,
-							DeviceId:  DeviceId,
-							Value:     AnyValue,
+							Timestamp:  int64(lastTimes),
+							Param:      r.Tag,
+							ProductId:  ProductId,
+							DeviceName: DeviceName,
+							Value:      AnyValue,
 						}
 						_, errOnCtrl := cecolla.Cecolla.OnCtrl([]byte("PackReportSubDeviceParams"), []byte(param.String()))
 						if errOnCtrl != nil {
@@ -903,16 +903,16 @@ func (mdev *GenericModbusMaster) modbusSingleRead() []ReadRegisterValue {
 			if *mdev.mainConfig.CecollaConfig.Enable {
 				cecolla := mdev.RuleEngine.GetCecolla(mdev.mainConfig.CecollaConfig.CecollaId)
 				if cecolla != nil {
-					ProductId, DeviceId, err := ithings.ParseProductInfo(r.Alias)
+					ProductId, DeviceName, err := ithings.ParseProductInfo(r.Alias)
 					if err != nil {
 						glogger.Error(err)
 					} else {
 						param := ithings.SubDeviceParam{
-							Timestamp: int64(lastTimes),
-							Param:     r.Tag,
-							ProductId: ProductId,
-							DeviceId:  DeviceId,
-							Value:     AnyValue,
+							Timestamp:  int64(lastTimes),
+							Param:      r.Tag,
+							ProductId:  ProductId,
+							DeviceName: DeviceName,
+							Value:      AnyValue,
 						}
 						_, OnCtrl := cecolla.Cecolla.OnCtrl([]byte("PackReportSubDeviceParams"), []byte(param.String()))
 						if OnCtrl != nil {

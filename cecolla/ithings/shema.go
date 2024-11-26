@@ -253,9 +253,9 @@ func (O IthingsCreateSchema) String() string {
 }
 
 type IthingsCreateSchemaPropertie struct {
-	Id        string `json:"id"`
-	Name      string `json:"name"`
-	Type      string `json:"type"`
-	ProductId string `json:"productID,omitempty"`
-	DeviceId  string `json:"deviceID,omitempty"`
+	Id         string `json:"id"`
+	Name       string `json:"name"`
+	Type       string `json:"type"`
+	ProductId  string `json:"productID,omitempty"`
+	DeviceName string `json:"deviceName,omitempty"`
 }
