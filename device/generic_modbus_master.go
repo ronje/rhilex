@@ -28,6 +28,7 @@ import (
 
 	intercache "github.com/hootrhino/rhilex/component/intercache"
 	"github.com/hootrhino/rhilex/component/interdb"
+	"github.com/hootrhino/rhilex/device/dmodbus"
 	"github.com/hootrhino/rhilex/device/ithings"
 	"github.com/hootrhino/rhilex/resconfig"
 
@@ -86,7 +87,7 @@ type ModbusMasterGroupedTag struct {
 	Address   uint16 `json:"address"`
 	Frequency int64  `json:"frequency"`
 	Quantity  uint16 `json:"quantity"`
-	Registers map[string]*resconfig.RegisterRW
+	Registers map[string]*dmodbus.ModbusRegister
 }
 
 func (g *ModbusMasterGroupedTag) String() string {
@@ -110,8 +111,8 @@ type GenericModbusMaster struct {
 	//
 	mainConfig       ModbusMasterConfig
 	retryTimes       int
-	Registers        map[string]*resconfig.RegisterRW
-	RegisterWithTags map[string]*resconfig.RegisterRW
+	Registers        map[string]*dmodbus.ModbusRegister
+	RegisterWithTags map[string]*dmodbus.ModbusRegister
 	RegisterGroups   []*ModbusMasterGroupedTag
 }
 
@@ -163,8 +164,8 @@ func NewGenericModbusMaster(e typex.Rhilex) typex.XDevice {
 			}(),
 		},
 	}
-	mdev.Registers = map[string]*resconfig.RegisterRW{}
-	mdev.RegisterWithTags = map[string]*resconfig.RegisterRW{}
+	mdev.Registers = map[string]*dmodbus.ModbusRegister{}
+	mdev.RegisterWithTags = map[string]*dmodbus.ModbusRegister{}
 	mdev.RegisterGroups = []*ModbusMasterGroupedTag{}
 	mdev.Busy = false
 	mdev.status = typex.DEV_DOWN
@@ -197,7 +198,7 @@ func (mdev *GenericModbusMaster) Init(devId string, configMap map[string]interfa
 		if ModbusPoint.Frequency < 1 {
 			return errors.New("'frequency' must grate than 50 millisecond")
 		}
-		mdev.RegisterWithTags[ModbusPoint.Tag] = &resconfig.RegisterRW{
+		mdev.RegisterWithTags[ModbusPoint.Tag] = &dmodbus.ModbusRegister{
 			UUID:      ModbusPoint.UUID,
 			Tag:       ModbusPoint.Tag,
 			Alias:     ModbusPoint.Alias,
@@ -210,7 +211,7 @@ func (mdev *GenericModbusMaster) Init(devId string, configMap map[string]interfa
 			DataOrder: ModbusPoint.DataOrder,
 			Weight:    ModbusPoint.Weight,
 		}
-		mdev.Registers[ModbusPoint.UUID] = &resconfig.RegisterRW{
+		mdev.Registers[ModbusPoint.UUID] = &dmodbus.ModbusRegister{
 			UUID:      ModbusPoint.UUID,
 			Tag:       ModbusPoint.Tag,
 			Alias:     ModbusPoint.Alias,
@@ -257,7 +258,7 @@ func (mdev *GenericModbusMaster) Init(devId string, configMap map[string]interfa
 	}
 	// 开启优化
 	if *mdev.mainConfig.CommonConfig.EnableOptimize {
-		rws := make([]*resconfig.RegisterRW, len(mdev.Registers))
+		rws := make([]*dmodbus.ModbusRegister, len(mdev.Registers))
 		idx := 0
 		for _, val := range mdev.Registers {
 			rws[idx] = val
@@ -299,9 +300,9 @@ func (mdev *GenericModbusMaster) Init(devId string, configMap map[string]interfa
 3、限制单次数据采集数量为32个
 4、tag address必须连续
 */
-func (mdev *GenericModbusMaster) groupTags(registers []*resconfig.RegisterRW) []*ModbusMasterGroupedTag {
+func (mdev *GenericModbusMaster) groupTags(registers []*dmodbus.ModbusRegister) []*ModbusMasterGroupedTag {
 
-	sort.Sort(resconfig.RegisterList(registers))
+	sort.Sort(dmodbus.RegisterList(registers))
 	result := make([]*ModbusMasterGroupedTag, 0)
 	for i := 0; i < len(registers); {
 		start := i
@@ -314,7 +315,7 @@ func (mdev *GenericModbusMaster) groupTags(registers []*resconfig.RegisterRW) []
 			Frequency: registers[start].Frequency,
 		}
 		result = append(result, tagGroup)
-		tagGroup.Registers = make(map[string]*resconfig.RegisterRW)
+		tagGroup.Registers = make(map[string]*dmodbus.ModbusRegister)
 
 		regMaxAddr := uint16(0)
 		for end < len(registers) {
@@ -646,10 +647,10 @@ func (mdev *GenericModbusMaster) modbusRead() []ReadRegisterValue {
 func (mdev *GenericModbusMaster) modbusSingleRead() []ReadRegisterValue {
 	var err error
 	var results []byte
-	RegisterRWs := []ReadRegisterValue{}
+	ModbusRegisters := []ReadRegisterValue{}
 	count := len(mdev.Registers)
 	if mdev.Client == nil {
-		return RegisterRWs
+		return ModbusRegisters
 	}
 	// modbusRead: 当读多字节寄存器的时候，需要考虑UTF8
 	// Modbus收到的数据全部放进这个全局缓冲区内
@@ -662,7 +663,7 @@ func (mdev *GenericModbusMaster) modbusSingleRead() []ReadRegisterValue {
 			mdev.tcpHandler.SlaveId = 0x01
 		}
 		// 1 字节
-		if r.Function == resconfig.READ_COIL {
+		if r.Function == dmodbus.READ_COIL {
 			results, err = mdev.Client.ReadCoils(r.Address, r.Quantity)
 			lastTimes := uint64(time.Now().UnixMilli())
 			if err != nil {
@@ -690,7 +691,7 @@ func (mdev *GenericModbusMaster) modbusSingleRead() []ReadRegisterValue {
 				Value:         Value,
 				LastFetchTime: lastTimes,
 			}
-			RegisterRWs = append(RegisterRWs, Reg)
+			ModbusRegisters = append(ModbusRegisters, Reg)
 			intercache.SetValue(mdev.PointId, uuid, intercache.CacheValue{
 				UUID:          uuid,
 				Status:        1,
@@ -730,7 +731,7 @@ func (mdev *GenericModbusMaster) modbusSingleRead() []ReadRegisterValue {
 
 		}
 		// 2 字节
-		if r.Function == resconfig.READ_DISCRETE_INPUT {
+		if r.Function == dmodbus.READ_DISCRETE_INPUT {
 			results, err = mdev.Client.ReadDiscreteInputs(r.Address, r.Quantity)
 			lastTimes := uint64(time.Now().UnixMilli())
 			if err != nil {
@@ -757,7 +758,7 @@ func (mdev *GenericModbusMaster) modbusSingleRead() []ReadRegisterValue {
 				Value:         Value,
 				LastFetchTime: lastTimes,
 			}
-			RegisterRWs = append(RegisterRWs, Reg)
+			ModbusRegisters = append(ModbusRegisters, Reg)
 			intercache.SetValue(mdev.PointId, uuid, intercache.CacheValue{
 				UUID:          uuid,
 				Status:        1,
@@ -797,7 +798,7 @@ func (mdev *GenericModbusMaster) modbusSingleRead() []ReadRegisterValue {
 		}
 		// 2 字节
 		//
-		if r.Function == resconfig.READ_HOLDING_REGISTERS {
+		if r.Function == dmodbus.READ_HOLDING_REGISTERS {
 			results, err = mdev.Client.ReadHoldingRegisters(r.Address, r.Quantity)
 			lastTimes := uint64(time.Now().UnixMilli())
 			if err != nil {
@@ -824,7 +825,7 @@ func (mdev *GenericModbusMaster) modbusSingleRead() []ReadRegisterValue {
 				Value:         Value,
 				LastFetchTime: lastTimes,
 			}
-			RegisterRWs = append(RegisterRWs, Reg)
+			ModbusRegisters = append(ModbusRegisters, Reg)
 			intercache.SetValue(mdev.PointId, uuid, intercache.CacheValue{
 				UUID:          uuid,
 				Status:        1,
@@ -863,7 +864,7 @@ func (mdev *GenericModbusMaster) modbusSingleRead() []ReadRegisterValue {
 			}
 		}
 		// 2 字节
-		if r.Function == resconfig.READ_INPUT_REGISTERS {
+		if r.Function == dmodbus.READ_INPUT_REGISTERS {
 			results, err = mdev.Client.ReadInputRegisters(r.Address, r.Quantity)
 			lastTimes := uint64(time.Now().UnixMilli())
 			if err != nil {
@@ -890,7 +891,7 @@ func (mdev *GenericModbusMaster) modbusSingleRead() []ReadRegisterValue {
 				Value:         Value,
 				LastFetchTime: lastTimes,
 			}
-			RegisterRWs = append(RegisterRWs, Reg)
+			ModbusRegisters = append(ModbusRegisters, Reg)
 			intercache.SetValue(mdev.PointId, uuid, intercache.CacheValue{
 				UUID:          uuid,
 				Status:        1,
@@ -930,5 +931,5 @@ func (mdev *GenericModbusMaster) modbusSingleRead() []ReadRegisterValue {
 		}
 		time.Sleep(time.Duration(r.Frequency) * time.Millisecond)
 	}
-	return RegisterRWs
+	return ModbusRegisters
 }

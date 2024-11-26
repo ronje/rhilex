@@ -27,6 +27,7 @@ import (
 	mbserver "github.com/hootrhino/gomodbus-server"
 	serial "github.com/hootrhino/goserial"
 	"github.com/hootrhino/rhilex/component/intercache"
+	"github.com/hootrhino/rhilex/device/dmodbus"
 	"github.com/hootrhino/rhilex/glogger"
 	"github.com/hootrhino/rhilex/resconfig"
 	"github.com/hootrhino/rhilex/typex"
@@ -49,7 +50,7 @@ type ModbusSlaver struct {
 	typex.XStatus
 	status           typex.DeviceState
 	mainConfig       ModbusSlaverConfig
-	registers        map[string]*resconfig.RegisterRW
+	registers        map[string]*dmodbus.ModbusRegister
 	server           *mbserver.Server
 	HoldingRegisters []uint16 // [5] = WriteSingleCoil
 	InputRegisters   []uint16 // [6] = WriteHoldingRegister
@@ -77,7 +78,7 @@ func NewGenericModbusSlaver(e typex.Rhilex) typex.XDevice {
 		},
 	}
 
-	mdev.registers = map[string]*resconfig.RegisterRW{}
+	mdev.registers = map[string]*dmodbus.ModbusRegister{}
 	mdev.status = typex.DEV_DOWN
 
 	return mdev

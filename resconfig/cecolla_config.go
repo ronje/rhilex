@@ -15,6 +15,8 @@
 
 package resconfig
 
+import "fmt"
+
 /**
  * 云边协同
  *
@@ -26,5 +28,8 @@ type CecollaConfig struct {
 }
 
 func (c *CecollaConfig) Validate() error {
+	if c.CecollaId == "" {
+		return fmt.Errorf("invalid cecollaId")
+	}
 	return nil
 }
