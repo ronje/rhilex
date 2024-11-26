@@ -15,17 +15,35 @@
 
 package resconfig
 
+import (
+	"errors"
+	"net"
+)
+
 /*
 *
 * 通用的含有主机:端口的这类配置
 *
  */
 type HostConfig struct {
-	Host    string `json:"host" validate:"required" title:"服务地址"`
-	Port    int    `json:"port" validate:"required" title:"服务端口"`
-	Timeout int    `json:"timeout,omitempty" title:"连接超时"`
+	Host    string `json:"host" validate:"required"`
+	Port    int    `json:"port" validate:"required"`
+	Timeout int    `json:"timeout" validate:"required"`
 }
 
-func (c *HostConfig) Validate() error {
+// Validate checks the HostConfig for valid values.
+func (hc *HostConfig) Validate() error {
+	if hc.Host == "" {
+		return errors.New("host config error: host cannot be empty")
+	}
+	if net.ParseIP(hc.Host) == nil {
+		return errors.New("host config error: host must be a valid IP address")
+	}
+	if hc.Port <= 0 || hc.Port > 65535 {
+		return errors.New("host config error: port must be a valid number between 1 and 65535")
+	}
+	if hc.Timeout < 0 {
+		return errors.New("host config error: timeout must be a non-negative number")
+	}
 	return nil
 }

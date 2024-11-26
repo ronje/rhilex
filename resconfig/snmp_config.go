@@ -15,6 +15,11 @@
 
 package resconfig
 
+import (
+	"errors"
+	"net"
+)
+
 /*
 *
 * SNMP 配置
@@ -22,17 +27,36 @@ package resconfig
  */
 type GenericSnmpConfig struct {
 	// Target is an ipv4 address.
-	Target string `json:"target" validate:"required" title:"Target" info:"Target"`
+	Target string `json:"target" validate:"required"`
 	// Port is a port.
-	Port uint16 `json:"port" validate:"required" title:"Port" info:"Port"`
+	Port uint16 `json:"port" validate:"required"`
 	// Transport is the transport protocol to use ("udp" or "tcp"); if unset "udp" will be used.
-	Transport string `json:"transport" validate:"required" title:"Transport" info:"Transport"`
+	Transport string `json:"transport" validate:"required"`
 	// Community is an SNMP Community string.
-	Community string `json:"community" validate:"required" title:"Community" info:"Community"`
+	Community string `json:"community" validate:"required"`
 	// 1 2 3
-	Version uint8 `json:"version" validate:"required" title:"Community" info:"Community"`
+	Version uint8 `json:"version" validate:"required"`
 }
 
-func (c *GenericSnmpConfig) Validate() error {
+// Validate checks the GenericSnmpConfig for valid values.
+func (cfg *GenericSnmpConfig) Validate() error {
+	if cfg.Target == "" {
+		return errors.New("snmp config error: target cannot be empty")
+	}
+	if net.ParseIP(cfg.Target) == nil {
+		return errors.New("snmp config error: target must be a valid IPv4 address")
+	}
+	if cfg.Port == 0 || cfg.Port > uint16(65535) {
+		return errors.New("snmp config error: port must be a valid number between 1 and 65535")
+	}
+	if cfg.Transport != "udp" && cfg.Transport != "tcp" {
+		return errors.New("snmp config error: transport must be 'udp' or 'tcp'")
+	}
+	if cfg.Community == "" {
+		return errors.New("snmp config error: community cannot be empty")
+	}
+	if cfg.Version < 1 || cfg.Version > 3 {
+		return errors.New("snmp config error: version must be 1, 2, or 3")
+	}
 	return nil
 }

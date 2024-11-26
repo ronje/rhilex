@@ -15,6 +15,8 @@
 
 package resconfig
 
+import "errors"
+
 type GenericMqttConfig struct {
 	Host      string   `json:"host" validate:"required" title:"服务地址"`
 	Port      int      `json:"port" validate:"required" title:"服务端口"`
@@ -25,6 +27,26 @@ type GenericMqttConfig struct {
 	SubTopics []string `json:"subTopics" title:"订阅topic组"`
 }
 
-func (c *GenericMqttConfig) Validate() error {
+func (cfg *GenericMqttConfig) Validate() error {
+	if cfg.Host == "" {
+		return errors.New("mqtt config error: host cannot be empty")
+	}
+	if cfg.Port <= 0 || cfg.Port > 65535 {
+		return errors.New("mqtt config error: port must be a valid number between 1 and 65535")
+	}
+	if cfg.ClientId == "" {
+		return errors.New("mqtt config error: client ID cannot be empty")
+	}
+	if cfg.Qos < 0 || cfg.Qos > 2 {
+		return errors.New("mqtt config error: QoS must be 0, 1, or 2")
+	}
+	if len(cfg.SubTopics) == 0 {
+		return errors.New("mqtt config error: at least one subscription topic is required")
+	}
+	for _, topic := range cfg.SubTopics {
+		if topic == "" {
+			return errors.New("mqtt config error: subscription topics cannot be empty")
+		}
+	}
 	return nil
 }
