@@ -528,6 +528,9 @@ func (O CtrlCmd) String() string {
  *
  */
 func (mdev *GenericModbusMaster) OnCtrl(cmd []byte, args []byte) ([]byte, error) {
+	if mdev.Client == nil {
+		return nil, fmt.Errorf("invalid serial port handle")
+	}
 	glogger.Debug("GenericModbusMaster.OnCtrl, CMD=", string(cmd), ", Args=", string(args))
 	// 根据Tag来写点位
 	if string(cmd) == "WriteToSheetRegisterWithTag" {

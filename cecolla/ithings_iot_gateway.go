@@ -396,6 +396,9 @@ type GetPropertiesCmd struct {
  *
  */
 func (hd *IThingsGateway) OnCtrl(cmd []byte, b []byte) (any, error) {
+	if hd.client == nil {
+		return nil, fmt.Errorf("invalid mqtt connection")
+	}
 	Cmd := string(cmd)
 	// 获取某个产品某个设备的某个属性,用于子设备数据获取
 	if Cmd == "GetProperties" {
