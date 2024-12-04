@@ -22,12 +22,12 @@ import (
 	"strings"
 
 	"github.com/gin-gonic/gin"
-	"github.com/hootrhino/rhilex/archsupport/haas506"
-	"github.com/hootrhino/rhilex/archsupport/rhilexg1"
-	"github.com/hootrhino/rhilex/archsupport/rhilexpro1"
 	common "github.com/hootrhino/rhilex/component/apiserver/common"
 	"github.com/hootrhino/rhilex/component/apiserver/model"
 	"github.com/hootrhino/rhilex/component/apiserver/service"
+	"github.com/hootrhino/rhilex/periphery/haas506"
+	"github.com/hootrhino/rhilex/periphery/rhilexg1"
+	"github.com/hootrhino/rhilex/periphery/rhilexpro1"
 	"github.com/hootrhino/rhilex/typex"
 )
 

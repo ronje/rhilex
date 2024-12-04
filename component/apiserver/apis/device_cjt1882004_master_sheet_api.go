@@ -56,7 +56,8 @@ type Cjt1882004MasterPointVo struct {
 	MeterId       string      `json:"meterId"`
 	Tag           string      `json:"tag"`
 	Alias         string      `json:"alias"`
-	Frequency     uint64      `json:"frequency"`
+	Frequency     *uint64     `json:"frequency"`
+	Weight        *float64    `json:"weight"`
 	Status        int         `json:"status"`        // 运行时数据
 	LastFetchTime uint64      `json:"lastFetchTime"` // 运行时数据
 	Value         interface{} `json:"value"`         // 运行时数据
@@ -79,7 +80,7 @@ func Cjt1882004MasterPointsExport(c *gin.Context, ruleEngine typex.Rhilex) {
 		c.JSON(common.HTTP_OK, common.Error400(result.Error))
 		return
 	}
-	Headers := []string{"MeterId", "Tag", "Alias", "Frequency"}
+	Headers := []string{"MeterId", "Tag", "Alias", "Frequency", "Weight"}
 	xlsx := excelize.NewFile()
 	defer func() {
 		if err := xlsx.Close(); err != nil {
@@ -94,6 +95,7 @@ func Cjt1882004MasterPointsExport(c *gin.Context, ruleEngine typex.Rhilex) {
 			record.Tag,
 			record.Alias,
 			fmt.Sprintf("%d", record.Frequency),
+			fmt.Sprintf("%.2f", *record.Weight),
 		}
 		cell, _ = excelize.CoordinatesToCellName(1, idx+2)
 		xlsx.SetSheetRow("Sheet1", cell, &Row)
@@ -145,6 +147,7 @@ func Cjt1882004MasterSheetPageList(c *gin.Context, ruleEngine typex.Rhilex) {
 			Tag:           record.Tag,
 			Alias:         record.Alias,
 			Frequency:     record.Frequency,
+			Weight:        record.Weight,
 			LastFetchTime: value.LastFetchTime,
 			ErrMsg:        value.ErrMsg,
 		}
@@ -242,10 +245,10 @@ func CheckCjt1882004MasterDataPoints(M Cjt1882004MasterPointVo) error {
 	if err := checkStringLength(M.Alias, "alias", 64); err != nil {
 		return err
 	}
-	if M.Frequency < 1 {
+	if *M.Frequency < 1 {
 		return fmt.Errorf("'frequency' must be greater than 50ms")
 	}
-	if M.Frequency > 100000 {
+	if *M.Frequency > 100000 {
 		return fmt.Errorf("'frequency' must be less than 100s")
 	}
 	return nil
@@ -284,6 +287,7 @@ func Cjt1882004MasterSheetUpdate(c *gin.Context, ruleEngine typex.Rhilex) {
 				Tag:        Cjt1882004MasterDataPoint.Tag,
 				Alias:      Cjt1882004MasterDataPoint.Alias,
 				Frequency:  Cjt1882004MasterDataPoint.Frequency,
+				Weight:     Cjt1882004MasterDataPoint.Weight,
 			}
 			err0 := service.InsertCjt1882004Point(NewRow)
 			if err0 != nil {
@@ -298,6 +302,7 @@ func Cjt1882004MasterSheetUpdate(c *gin.Context, ruleEngine typex.Rhilex) {
 				Tag:        Cjt1882004MasterDataPoint.Tag,
 				Alias:      Cjt1882004MasterDataPoint.Alias,
 				Frequency:  Cjt1882004MasterDataPoint.Frequency,
+				Weight:     Cjt1882004MasterDataPoint.Weight,
 			}
 			err0 := service.UpdateCjt1882004Point(OldRow)
 			if err0 != nil {
@@ -407,35 +412,39 @@ func parseCjt1882004MasterPointExcel(r io.Reader, sheetName string,
 		return nil, err
 	}
 	// 判断首行标头
-	// "MeterId", "Tag", "Alias", "Frequency"
+	// "MeterId", "Tag", "Alias", "Frequency", "Weight"
 	err1 := errors.New(" Invalid Sheet Header")
-	if len(rows[0]) < 4 {
+	if len(rows[0]) < 5 {
 		return nil, err1
 	}
-	// "MeterId", "Tag", "Alias", "Frequency"
+	// "MeterId", "Tag", "Alias", "Frequency", "Weight"
 
 	// 严格检查表结构
 	if rows[0][0] != "MeterId" ||
 		rows[0][1] != "Tag" ||
 		rows[0][2] != "Alias" ||
-		rows[0][3] != "Frequency" {
+		rows[0][3] != "Frequency" ||
+		rows[0][4] != "Weight" {
 		return nil, err1
 	}
 
 	list = make([]model.MCjt1882004DataPoint, 0)
-	// "MeterId", "Tag", "Alias", "Frequency"
+	// "MeterId", "Tag", "Alias", "Frequency", "Weight"
 	for i := 1; i < len(rows); i++ {
 		row := rows[i]
 		MeterId := row[0]
 		Tag := row[1]
 		Alias := row[2]
 		Frequency, _ := strconv.ParseUint(row[3], 10, 64)
-		// "MeterId", "Tag", "Alias", "Frequency"
+		Weight, _ := strconv.ParseFloat(row[4], 64)
+		limitedWeight := float64(int(Weight*100)) / 100.0
+		// "MeterId", "Tag", "Alias", "Frequency", "Weight"
 		if err := CheckCjt1882004MasterDataPoints(Cjt1882004MasterPointVo{
 			MeterId:   MeterId,
 			Tag:       Tag,
 			Alias:     Alias,
-			Frequency: Frequency,
+			Frequency: &Frequency,
+			Weight:    &limitedWeight,
 		}); err != nil {
 			return nil, err
 		}
@@ -446,7 +455,8 @@ func parseCjt1882004MasterPointExcel(r io.Reader, sheetName string,
 			MeterId:    MeterId,
 			Tag:        Tag,
 			Alias:      Alias,
-			Frequency:  Frequency,
+			Frequency:  &Frequency,
+			Weight:     &Weight,
 		}
 		list = append(list, model)
 	}

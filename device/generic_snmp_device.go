@@ -7,9 +7,9 @@ import (
 	"time"
 
 	"github.com/gosnmp/gosnmp"
-	"github.com/hootrhino/rhilex/common"
 	"github.com/hootrhino/rhilex/component/intercache"
 	"github.com/hootrhino/rhilex/component/interdb"
+	"github.com/hootrhino/rhilex/resconfig"
 
 	"github.com/hootrhino/rhilex/glogger"
 	"github.com/hootrhino/rhilex/typex"
@@ -33,9 +33,10 @@ type _SNMPCommonConfig struct {
 }
 
 type _GSNMPConfig struct {
-	SchemaId     string                   `json:"schemaId"`
-	CommonConfig _SNMPCommonConfig        `json:"commonConfig" validate:"required"`
-	SNMPConfig   common.GenericSnmpConfig `json:"snmpConfig" validate:"required"`
+	SchemaId      string                   `json:"schemaId"`
+	CommonConfig  _SNMPCommonConfig        `json:"commonConfig" validate:"required"`
+	SNMPConfig    resconfig.GenericSnmpConfig `json:"snmpConfig" validate:"required"`
+	CecollaConfig resconfig.CecollaConfig     `json:"cecollaConfig"`
 }
 
 type genericSnmpDevice struct {
@@ -123,7 +124,7 @@ func (sd *genericSnmpDevice) Init(devId string, configMap map[string]interface{}
 			Status:        0,
 			LastFetchTime: LastFetchTime,
 			Value:         "",
-			ErrMsg:        "Loading",
+			ErrMsg:        "--",
 		})
 	}
 	if sd.mainConfig.SchemaId != "" {
@@ -216,16 +217,6 @@ func (sd *genericSnmpDevice) Start(cctx typex.CCTX) error {
 	}(sd)
 	sd.status = typex.DEV_UP
 	return nil
-}
-
-// 从设备里面读数据出来
-func (sd *genericSnmpDevice) OnRead(cmd []byte, data []byte) (int, error) {
-	return 0, nil
-}
-
-// 把数据写入设备
-func (sd *genericSnmpDevice) OnWrite(cmd []byte, _ []byte) (int, error) {
-	return 0, nil
 }
 
 // 设备当前状态

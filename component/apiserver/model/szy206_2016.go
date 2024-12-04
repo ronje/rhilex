@@ -23,5 +23,6 @@ type MSzy2062016DataPoint struct {
 	MeterType  string
 	Tag        string
 	Alias      string
-	Frequency  uint64
+	Frequency  *uint64  `gorm:"default:50"`
+	Weight     *float64 `gorm:"default:1"`
 }

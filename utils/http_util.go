@@ -108,7 +108,7 @@ func Download(url, param, filePath string) error {
 		body, _ := io.ReadAll(req.Body)
 		response := response{}
 		json.Unmarshal(body, &response)
-		return fmt.Errorf(response.String())
+		return fmt.Errorf("error:%s", response.String())
 	}
 	out, err := os.Create(filePath)
 	if err != nil {

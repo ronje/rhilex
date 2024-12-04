@@ -17,7 +17,7 @@ package rhilexlib
 
 import (
 	lua "github.com/hootrhino/gopher-lua"
-	haas506 "github.com/hootrhino/rhilex/archsupport/haas506"
+	haas506 "github.com/hootrhino/rhilex/periphery/haas506"
 	"github.com/hootrhino/rhilex/typex"
 )
 

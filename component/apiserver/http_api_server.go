@@ -16,7 +16,6 @@ import (
 	"github.com/hootrhino/rhilex/component/apiserver/service"
 	"github.com/hootrhino/rhilex/component/applet"
 	"github.com/hootrhino/rhilex/component/interdb"
-	"github.com/hootrhino/rhilex/component/trailer"
 
 	"github.com/hootrhino/rhilex/glogger"
 	"github.com/hootrhino/rhilex/typex"
@@ -52,44 +51,25 @@ func NewHttpApiServer(ruleEngine typex.Rhilex) *ApiServerPlugin {
  */
 func initRhilex(engine typex.Rhilex) {
 	go GetCpuUsage()
-	//
-	// Load inend from sqlite
-	//
+	for _, mCecolla := range service.AllCecollas() {
+		if err := server.LoadNewestCecolla(mCecolla.UUID, engine); err != nil {
+			glogger.GLogger.Error("Cecolla load failed:", err)
+		}
+	}
 	for _, minEnd := range service.AllMInEnd() {
 		if err := server.LoadNewestInEnd(minEnd.UUID, engine); err != nil {
 			glogger.GLogger.Error("InEnd load failed:", err)
 		}
 	}
-
-	//
-	// Load out from sqlite
-	//
 	for _, mOutEnd := range service.AllMOutEnd() {
 		if err := server.LoadNewestOutEnd(mOutEnd.UUID, engine); err != nil {
 			glogger.GLogger.Error("OutEnd load failed:", err)
 		}
 	}
-	// 加载设备
 	for _, mDevice := range service.AllDevices() {
 		glogger.GLogger.Debug("LoadNewestDevice mDevice.BindRules: ", mDevice.BindRules.String())
 		if err := server.LoadNewestDevice(mDevice.UUID, engine); err != nil {
 			glogger.GLogger.Error("Device load failed:", err)
-		}
-
-	}
-	// 加载外挂
-	for _, mGoods := range service.AllGoods() {
-		newGoods := trailer.GoodsInfo{
-			UUID:        mGoods.UUID,
-			AutoStart:   mGoods.AutoStart,
-			LocalPath:   mGoods.LocalPath,
-			NetAddr:     mGoods.NetAddr,
-			Args:        mGoods.Args,
-			ExecuteType: mGoods.ExecuteType,
-			Description: mGoods.Description,
-		}
-		if err := trailer.StartProcess(newGoods); err != nil {
-			glogger.GLogger.Error("Goods load failed:", err)
 		}
 	}
 	//
@@ -127,7 +107,7 @@ func (hs *ApiServerPlugin) Init(config *ini.Section) error {
 		&model.MRule{},
 		&model.MUser{},
 		&model.MDevice{},
-		&model.MGoods{},
+		&model.MCecolla{},
 		&model.MApplet{},
 		&model.MGenericGroup{},
 		&model.MGenericGroupRelation{},
@@ -171,6 +151,8 @@ func (hs *ApiServerPlugin) Init(config *ini.Section) error {
 func (hs *ApiServerPlugin) LoadRoute() {
 	// User
 	apis.InitUserRoute()
+	// CE collaboration
+	apis.InitCecollaRoute()
 	// In End
 	apis.InitInEndRoute()
 	// Rules

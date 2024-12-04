@@ -93,7 +93,7 @@ func StartCronRebootCron(expr string) error {
 	__DefaultCronRebootExecutor.Cron.Stop()
 	var err error
 	__DefaultCronRebootExecutor.CronEntryID, err = __DefaultCronRebootExecutor.Cron.AddFunc(expr, func() {
-		if core.GlobalConfig.AppDebugMode {
+		if core.GlobalConfig.DebugMode {
 			glogger.GLogger.Debug("Start Cron Reboot Cron:", expr)
 		}
 		if runtime.GOOS == "linux" {

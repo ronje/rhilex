@@ -1,0 +1,24 @@
+syntax = "proto3";
+
+option go_package = "./;activation";
+
+package activation;
+
+message ActivationRequest {
+  string sn = 1;
+  string iface = 2;
+  string mac = 3;
+  string username = 4;
+  string password = 5;
+}
+
+message ActivationResponse {
+  bool success = 1;
+  string certificate = 2;
+  string privatekey = 3;
+  string license = 4;
+}
+
+service DeviceActivation {
+  rpc ActivateDevice (ActivationRequest) returns (ActivationResponse);
+}

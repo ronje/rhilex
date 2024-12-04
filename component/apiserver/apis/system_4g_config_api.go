@@ -19,8 +19,8 @@ import (
 	"os"
 
 	"github.com/gin-gonic/gin"
-	"github.com/hootrhino/rhilex/archsupport/haas506"
 	common "github.com/hootrhino/rhilex/component/apiserver/common"
+	"github.com/hootrhino/rhilex/periphery/haas506"
 	"github.com/hootrhino/rhilex/typex"
 )
 

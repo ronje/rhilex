@@ -6,8 +6,6 @@ import (
 	"encoding/json"
 
 	lua "github.com/hootrhino/gopher-lua"
-	"github.com/hootrhino/rhilex/common"
-	"github.com/hootrhino/rhilex/glogger"
 	"github.com/hootrhino/rhilex/typex"
 )
 
@@ -81,49 +79,7 @@ func F4(rx typex.Rhilex, uuid string) func(*lua.LState) int {
 
 func F5(rx typex.Rhilex, uuid string) func(*lua.LState) int {
 	return func(l *lua.LState) int {
-		devUUID := l.ToString(2)
-		slaverId := l.ToNumber(3)
-		Address := l.ToNumber(4)
-		Values := l.ToString(5)
-		HexValues, err := hex.DecodeString(Values)
-		if err != nil {
-			l.Push(lua.LString(err.Error()))
-			return 1
-		}
-		for _, v := range HexValues {
-			if v > 1 {
-				l.Push(lua.LString("Value Only Support '00' or '01'"))
-				return 1
-			}
-		}
-		Device := rx.GetDevice(devUUID)
-		if Device == nil {
-			l.Push(lua.LString("Device is not exists"))
-			return 1
-		}
 
-		if Device.Type != typex.GENERIC_MODBUS_MASTER {
-			l.Push(lua.LString("Only support GENERIC_MODBUS device"))
-			return 1
-		}
-		if Device.Device.Status() != typex.DEV_UP {
-			l.Push(lua.LString("device down:" + devUUID))
-			return 1
-		}
-		args, _ := json.Marshal([]common.RegisterW{
-			{
-				Function: 5,
-				SlaverId: byte(slaverId),
-				Address:  uint16(Address),
-				Values:   HexValues,
-			},
-		})
-		_, err0 := Device.Device.OnWrite([]byte("F5"), args)
-		if err0 != nil {
-			l.Push(lua.LString(err0.Error()))
-			return 1
-		}
-		l.Push(lua.LNil)
 		return 1
 	}
 }
@@ -136,43 +92,7 @@ func F5(rx typex.Rhilex, uuid string) func(*lua.LState) int {
  */
 func F6(rx typex.Rhilex, uuid string) func(*lua.LState) int {
 	return func(l *lua.LState) int {
-		devUUID := l.ToString(2)
-		slaverId := l.ToNumber(3)
-		Address := l.ToNumber(4)
-		Values := l.ToString(5) // 必须是单个字节: 000100010001
-		HexValues, err := hex.DecodeString(Values)
-		if err != nil {
-			l.Push(lua.LString(err.Error()))
-			return 1
-		}
-		Device := rx.GetDevice(devUUID)
-		if Device == nil {
-			l.Push(lua.LString("Device is not exists"))
-			return 1
-		}
 
-		if Device.Type != typex.GENERIC_MODBUS_MASTER {
-			l.Push(lua.LString("Only support GENERIC_MODBUS device"))
-			return 1
-		}
-		if Device.Device.Status() != typex.DEV_UP {
-			l.Push(lua.LString("device down:" + devUUID))
-			return 1
-		}
-		args, _ := json.Marshal(common.RegisterW{
-			Function: 6,
-			SlaverId: byte(slaverId),
-			Address:  uint16(Address),
-			Quantity: uint16(1), //2字节
-			Values:   HexValues,
-		})
-		_, err0 := Device.Device.OnWrite([]byte("F6"), args)
-		if err0 != nil {
-			glogger.GLogger.Error(err0)
-			l.Push(lua.LString(err0.Error()))
-			return 1
-		}
-		l.Push(lua.LNil)
 		return 1
 	}
 }
@@ -186,43 +106,7 @@ func F6(rx typex.Rhilex, uuid string) func(*lua.LState) int {
 */
 func F15(rx typex.Rhilex, uuid string) func(*lua.LState) int {
 	return func(l *lua.LState) int {
-		devUUID := l.ToString(2)
-		slaverId := l.ToNumber(3)
-		Address := l.ToNumber(4)
-		Quantity := l.ToNumber(5) // 必须是单个字节: 000100010001
-		Values := l.ToString(6)   // 必须是单个字节: 000100010001
-		HexValues, err := hex.DecodeString(Values)
-		if err != nil {
-			l.Push(lua.LString(err.Error()))
-			return 1
-		}
-		Device := rx.GetDevice(devUUID)
-		if Device == nil {
-			l.Push(lua.LString("Device is not exists"))
-			return 1
-		}
-		if Device.Type != typex.GENERIC_MODBUS_MASTER {
-			l.Push(lua.LString("Only support GENERIC_MODBUS device"))
-			return 1
-		}
-		if Device.Device.Status() != typex.DEV_UP {
-			l.Push(lua.LString("device down:" + devUUID))
-			return 1
-		}
-		args, _ := json.Marshal(common.RegisterW{
-			Function: 15,
-			SlaverId: byte(slaverId),
-			Address:  uint16(Address),
-			Quantity: uint16(Quantity),
-			Values:   HexValues,
-		})
-		_, err0 := Device.Device.OnWrite([]byte("F15"), args)
-		if err0 != nil {
-			glogger.GLogger.Error(err0)
-			l.Push(lua.LString(err0.Error()))
-			return 1
-		}
-		l.Push(lua.LNil)
+
 		return 1
 	}
 }
@@ -234,43 +118,7 @@ func F15(rx typex.Rhilex, uuid string) func(*lua.LState) int {
  */
 func F16(rx typex.Rhilex, uuid string) func(*lua.LState) int {
 	return func(l *lua.LState) int {
-		devUUID := l.ToString(2)
-		slaverId := l.ToNumber(3)
-		Address := l.ToNumber(4)
-		Quantity := l.ToNumber(5) //
-		Values := l.ToString(6)   //
-		HexValues, err := hex.DecodeString(Values)
-		if err != nil {
-			l.Push(lua.LString(err.Error()))
-			return 1
-		}
-		Device := rx.GetDevice(devUUID)
-		if Device == nil {
-			l.Push(lua.LString("Device is not exists"))
-			return 1
-		}
-		if Device.Type != typex.GENERIC_MODBUS_MASTER {
-			l.Push(lua.LString("Only support GENERIC_MODBUS device"))
-			return 1
-		}
-		if Device.Device.Status() != typex.DEV_UP {
-			l.Push(lua.LString("device down:" + devUUID))
-			return 1
-		}
-		args, _ := json.Marshal(common.RegisterW{
-			Function: 16,
-			SlaverId: byte(slaverId),
-			Address:  uint16(Address),
-			Quantity: uint16(Quantity),
-			Values:   HexValues,
-		})
-		_, err0 := Device.Device.OnWrite([]byte("F16"), args)
-		if err0 != nil {
-			glogger.GLogger.Error(err0)
-			l.Push(lua.LString(err0.Error()))
-			return 1
-		}
-		l.Push(lua.LNil)
+
 		return 1
 	}
 }
@@ -348,4 +196,43 @@ func calculateCRC(data []byte) uint16 {
 		}
 	}
 	return crc
+}
+
+// POST -> temp , 0x0001
+type CtrlCmd struct {
+	Tag   string `json:"tag"`   // 点位表的Tag
+	Value string `json:"value"` // 写的值
+}
+
+func (O CtrlCmd) String() string {
+	bytes, _ := json.Marshal(O)
+	return string(bytes)
+}
+
+/**
+ * 设备控制
+ *
+ */
+func WriteToModbusSheetRegisterWithTag(rx typex.Rhilex) func(*lua.LState) int {
+	return func(stateStack *lua.LState) int {
+		uuid := stateStack.ToString(2)
+		args := stateStack.ToString(3)
+		Device := rx.GetDevice(uuid)
+		if Device != nil {
+			if Device.Device != nil {
+				ctrlCmd := CtrlCmd{}
+				if errUnmarshal := json.Unmarshal([]byte(args), &ctrlCmd); errUnmarshal != nil {
+					stateStack.Push(lua.LString(errUnmarshal.Error()))
+					return 1
+				}
+				_, err := Device.Device.OnCtrl([]byte("WriteToModbusSheetRegisterWithTag"), []byte(ctrlCmd.String()))
+				if err != nil {
+					stateStack.Push(lua.LString(err.Error()))
+					return 1
+				}
+			}
+		}
+		stateStack.Push(lua.LNil)
+		return 1
+	}
 }

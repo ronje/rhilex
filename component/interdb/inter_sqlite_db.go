@@ -52,7 +52,7 @@ func InitInterDb(engine typex.Rhilex) error {
 	__Sqlite = &SqliteDAO{name: "Sqlite3", engine: engine}
 
 	var err error
-	if core.GlobalConfig.AppDebugMode {
+	if core.GlobalConfig.DebugMode {
 		__Sqlite.db, err = gorm.Open(sqlite.Open(__DEFAULT_DB_PATH), &gorm.Config{
 			Logger:                 logger.Default.LogMode(logger.Info),
 			SkipDefaultTransaction: false,

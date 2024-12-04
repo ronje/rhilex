@@ -29,7 +29,7 @@ func DebugAPP(rx typex.Rhilex, uuid string) func(*lua.LState) int {
 		for i := 1; i <= top; i++ {
 			content += L.ToStringMeta(L.Get(i)).String()
 			if i != top {
-				content += "\t"
+				content += "  "
 			}
 		}
 		glogger.GLogger.WithFields(logrus.Fields{
@@ -51,7 +51,7 @@ func DebugRule(rx typex.Rhilex, uuid string) func(*lua.LState) int {
 		for i := 1; i <= top; i++ {
 			content += L.ToStringMeta(L.Get(i)).String()
 			if i != top {
-				content += "\t"
+				content += "  "
 			}
 		}
 		// ::::TEST_RULE:::: 用来标记是否是测试数据
@@ -73,6 +73,24 @@ func DebugRule(rx typex.Rhilex, uuid string) func(*lua.LState) int {
 			}).Info(content)
 		}
 
+		return 0
+	}
+}
+
+// 输出
+func DebugCecolla(rx typex.Rhilex, uuid string) func(*lua.LState) int {
+	return func(L *lua.LState) int {
+		top := L.GetTop()
+		content := ""
+		for i := 1; i <= top; i++ {
+			content += L.ToStringMeta(L.Get(i)).String()
+			if i != top {
+				content += "  "
+			}
+		}
+		glogger.GLogger.WithFields(logrus.Fields{
+			"topic": "cecolla/console/" + uuid,
+		}).Info(content)
 		return 0
 	}
 }

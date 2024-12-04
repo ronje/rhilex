@@ -92,12 +92,3 @@ func (hd *KNXGateway) OnDCACall(UUID string, Command string, Args interface{}) t
 func (hd *KNXGateway) OnCtrl(cmd []byte, args []byte) ([]byte, error) {
 	return []byte{}, nil
 }
-
-func (hd *KNXGateway) OnRead(cmd []byte, data []byte) (int, error) {
-
-	return 0, nil
-}
-
-func (hd *KNXGateway) OnWrite(cmd []byte, b []byte) (int, error) {
-	return 0, nil
-}

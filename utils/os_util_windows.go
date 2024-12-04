@@ -1,10 +1,12 @@
 package utils
 
 import (
+	"context"
 	"fmt"
 	"net"
 	"os"
 	"os/exec"
+	"time"
 )
 
 /*
@@ -49,7 +51,9 @@ func CatOsRelease() (map[string]string, error) {
 *
  */
 func OsExecute(name string, arg ...string) error {
-	nmcliCmd := exec.Command(name, arg...)
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	nmcliCmd := exec.CommandContext(ctx, name, arg...)
 	output, err := nmcliCmd.CombinedOutput()
 	if err != nil {
 		return fmt.Errorf("error when executing[%s %v]:%s", name, arg, err.Error()+", output:"+string(output))

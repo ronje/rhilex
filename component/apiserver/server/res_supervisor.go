@@ -67,7 +67,7 @@ func StartInSupervisor(InCtx context.Context, in *typex.InEnd, ruleEngine typex.
 			glogger.GLogger.Debugf(info)
 			internotify.Push(internotify.BaseEvent{
 				Type:  `WARNING`,
-				Event: "event.inend.down",
+				Event: "event.inend.down." + UUID,
 				Ts:    uint64(time.Now().UnixMilli()),
 				Info:  info,
 			})
@@ -130,7 +130,7 @@ func StartOutSupervisor(OutCtx context.Context, out *typex.OutEnd, ruleEngine ty
 			glogger.GLogger.Debugf(info)
 			internotify.Push(internotify.BaseEvent{
 				Type:  `WARNING`,
-				Event: "event.outend.down",
+				Event: "event.outend.down." + UUID,
 				Ts:    uint64(time.Now().UnixMilli()),
 				Info:  info,
 			})
@@ -197,12 +197,79 @@ func StartDeviceSupervisor(DeviceCtx context.Context, device *typex.Device, rule
 			glogger.GLogger.Debugf(info)
 			internotify.Push(internotify.BaseEvent{
 				Type:  `WARNING`,
-				Event: "event.device.down",
+				Event: "event.device.down." + UUID,
 				Ts:    uint64(time.Now().UnixMilli()),
 				Info:  info,
 			})
 			time.Sleep(4 * time.Second)
 			go LoadNewestDevice(UUID, ruleEngine)
+			return
+		}
+		<-ticker.C
+	}
+}
+
+/*
+*
+* 设备监控器 5秒检查一下状态
+*
+ */
+func StartCecollaSupervisor(CecollaCtx context.Context, cecolla *typex.Cecolla, ruleEngine typex.Rhilex) {
+	UUID := cecolla.UUID
+	ticker := time.NewTicker(time.Duration(time.Second * 5))
+	defer ticker.Stop()
+	SuperVisor := supervisor.RegisterSuperVisor(cecolla.UUID)
+	glogger.GLogger.Debugf("Register SuperVisor For Cecolla:%s", SuperVisor.SlaverId)
+	defer supervisor.UnRegisterSuperVisor(SuperVisor.SlaverId)
+
+	for {
+		select {
+		case <-typex.GCTX.Done():
+			{
+				glogger.GLogger.Debugf("Global Context cancel:%v, supervisor exit", UUID)
+				return
+			}
+		case <-SuperVisor.Ctx.Done():
+			{
+				glogger.GLogger.Debugf("SuperVisor Context cancel:%v, supervisor exit", UUID)
+				return
+			}
+		case <-CecollaCtx.Done():
+			{
+				glogger.GLogger.Debugf("Cecolla Context cancel:%v, supervisor exit", UUID)
+				return
+			}
+		default:
+		}
+		// 被删除后就直接退出监督进程
+		currentCecolla := ruleEngine.GetCecolla(UUID)
+		if currentCecolla == nil {
+			glogger.GLogger.Debugf("Cecolla:%v Deleted, supervisor exit", UUID)
+			return
+		}
+
+		// 资源可能不会及时DOWN
+		currentCecollaStatus := currentCecolla.Cecolla.Status()
+		if currentCecollaStatus == typex.CEC_DOWN {
+			ErrMsg := ""
+			Slot := intercache.GetSlot("__DefaultRuleEngine")
+			if Slot != nil {
+				CacheValue, ok := Slot[currentCecolla.UUID]
+				if ok {
+					ErrMsg = CacheValue.ErrMsg
+				}
+			}
+			info := fmt.Sprintf("Cecolla:(%s,%s) DOWN, supervisor try to Restart, error message: %s",
+				UUID, currentCecolla.Name, ErrMsg)
+			glogger.GLogger.Debugf(info)
+			internotify.Push(internotify.BaseEvent{
+				Type:  `WARNING`,
+				Event: "event.cecolla.down." + UUID,
+				Ts:    uint64(time.Now().UnixMilli()),
+				Info:  info,
+			})
+			time.Sleep(4 * time.Second)
+			go LoadNewestCecolla(UUID, ruleEngine)
 			return
 		}
 		<-ticker.C

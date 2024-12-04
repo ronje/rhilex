@@ -17,7 +17,7 @@ package rhilexlib
 
 import (
 	lua "github.com/hootrhino/gopher-lua"
-	en6400 "github.com/hootrhino/rhilex/archsupport/en6400"
+	en6400 "github.com/hootrhino/rhilex/periphery/en6400"
 	"github.com/hootrhino/rhilex/typex"
 )
 

@@ -111,16 +111,6 @@ func (hd *GenericHttpDevice) Start(cctx typex.CCTX) error {
 	return nil
 }
 
-func (hd *GenericHttpDevice) OnRead(cmd []byte, data []byte) (int, error) {
-
-	return 0, nil
-}
-
-// 把数据写入设备
-func (hd *GenericHttpDevice) OnWrite(cmd []byte, b []byte) (int, error) {
-	return 0, nil
-}
-
 // 设备当前状态
 func (hd *GenericHttpDevice) Status() typex.DeviceState {
 	return hd.status

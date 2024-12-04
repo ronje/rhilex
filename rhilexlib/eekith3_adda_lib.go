@@ -2,7 +2,7 @@ package rhilexlib
 
 import (
 	lua "github.com/hootrhino/gopher-lua"
-	rhilexg1 "github.com/hootrhino/rhilex/archsupport/rhilexg1"
+	rhilexg1 "github.com/hootrhino/rhilex/periphery/rhilexg1"
 	"github.com/hootrhino/rhilex/typex"
 )
 

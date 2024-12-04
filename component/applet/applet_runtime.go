@@ -28,18 +28,18 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-var __DefaultappletRuntime *appletRuntime
+var __DefaultAppletRuntime *AppletRuntime
 
-func InitApplet(re typex.Rhilex) *appletRuntime {
-	__DefaultappletRuntime = &appletRuntime{
+func InitAppletRuntime(re typex.Rhilex) *AppletRuntime {
+	__DefaultAppletRuntime = &AppletRuntime{
 		RuleEngine:   re,
 		locker:       sync.Mutex{},
 		Applications: make(map[string]*Application),
 	}
-	return __DefaultappletRuntime
+	return __DefaultAppletRuntime
 }
-func AppRuntime() *appletRuntime {
-	return __DefaultappletRuntime
+func AppRuntime() *AppletRuntime {
+	return __DefaultAppletRuntime
 }
 
 /*
@@ -48,8 +48,8 @@ func AppRuntime() *appletRuntime {
 *
  */
 func LoadApp(app *Application, luaSource string) error {
-	__DefaultappletRuntime.locker.Lock()
-	defer __DefaultappletRuntime.locker.Unlock()
+	__DefaultAppletRuntime.locker.Lock()
+	defer __DefaultAppletRuntime.locker.Unlock()
 	// 重新读
 	app.VM().DoString(string(luaSource))
 	// 检查函数入口
@@ -64,10 +64,10 @@ func LoadApp(app *Application, luaSource string) error {
 	fMain := *AppMainVM.(*lua.LFunction)
 	app.SetMainFunc(&fMain)
 	// 加载库
-	// LoadAppLib(app, __DefaultappletRuntime.RuleEngine)
-	luaruntime.LoadRuleLibGroup(__DefaultappletRuntime.RuleEngine, app.UUID, app.VM())
+	// LoadAppLib(app, __DefaultAppletRuntime.RuleEngine)
+	luaruntime.LoadRuleLibGroup(__DefaultAppletRuntime.RuleEngine, "APPLET", app.UUID, app.VM())
 	// 加载到内存里
-	__DefaultappletRuntime.Applications[app.UUID] = app
+	__DefaultAppletRuntime.Applications[app.UUID] = app
 	return nil
 }
 
@@ -77,16 +77,19 @@ func LoadApp(app *Application, luaSource string) error {
 *
  */
 func StartApp(uuid string) error {
-	__DefaultappletRuntime.locker.Lock()
-	defer __DefaultappletRuntime.locker.Unlock()
-	app, ok := __DefaultappletRuntime.Applications[uuid]
+	// 默认的参数
+	return StartAppWithArgs(uuid, lua.LBool(false))
+}
+func StartAppWithArgs(uuid string, args ...lua.LValue) error {
+	__DefaultAppletRuntime.locker.Lock()
+	defer __DefaultAppletRuntime.locker.Unlock()
+	app, ok := __DefaultAppletRuntime.Applications[uuid]
 	if !ok {
 		return fmt.Errorf("Application not exists:%s", uuid)
 	}
 	if app.AppState == 1 {
 		return fmt.Errorf("Application already started:%s", uuid)
 	}
-	args := lua.LBool(false) // Main的参数，未来准备扩展
 	ctx, cancel := context.WithCancel(typex.GCTX)
 	app.SetCnC(ctx, cancel)
 	go func(app *Application) {
@@ -107,7 +110,7 @@ func StartApp(uuid string) error {
 					return 0
 				},
 			},
-		}, args)
+		}, args...)
 		if err == nil {
 			if app.KilledBy == "RHILEX" {
 				glogger.GLogger.Infof("Application %s Killed By RHILEX", app.UUID)
@@ -179,11 +182,11 @@ func StartApp(uuid string) error {
 *
  */
 func RemoveApp(uuid string) error {
-	__DefaultappletRuntime.locker.Lock()
-	defer __DefaultappletRuntime.locker.Unlock()
-	if app, ok := __DefaultappletRuntime.Applications[uuid]; ok {
+	__DefaultAppletRuntime.locker.Lock()
+	defer __DefaultAppletRuntime.locker.Unlock()
+	if app, ok := __DefaultAppletRuntime.Applications[uuid]; ok {
 		app.Remove()
-		delete(__DefaultappletRuntime.Applications, uuid)
+		delete(__DefaultAppletRuntime.Applications, uuid)
 	}
 	glogger.GLogger.Info("App removed:", uuid)
 	return nil
@@ -195,9 +198,9 @@ func RemoveApp(uuid string) error {
 *
  */
 func StopApp(uuid string) error {
-	__DefaultappletRuntime.locker.Lock()
-	defer __DefaultappletRuntime.locker.Unlock()
-	if app, ok := __DefaultappletRuntime.Applications[uuid]; ok {
+	__DefaultAppletRuntime.locker.Lock()
+	defer __DefaultAppletRuntime.locker.Unlock()
+	if app, ok := __DefaultAppletRuntime.Applications[uuid]; ok {
 		app.Stop()
 	}
 	glogger.GLogger.Info("App removed:", uuid)
@@ -210,9 +213,9 @@ func StopApp(uuid string) error {
 *
  */
 func UpdateApp(app Application) error {
-	__DefaultappletRuntime.locker.Lock()
-	defer __DefaultappletRuntime.locker.Unlock()
-	if oldApp, ok := __DefaultappletRuntime.Applications[app.UUID]; ok {
+	__DefaultAppletRuntime.locker.Lock()
+	defer __DefaultAppletRuntime.locker.Unlock()
+	if oldApp, ok := __DefaultAppletRuntime.Applications[app.UUID]; ok {
 		oldApp.Name = app.Name
 		oldApp.AutoStart = app.AutoStart
 		oldApp.Version = app.Version
@@ -223,7 +226,7 @@ func UpdateApp(app Application) error {
 
 }
 func GetApp(uuid string) *Application {
-	if app, ok := __DefaultappletRuntime.Applications[uuid]; ok {
+	if app, ok := __DefaultAppletRuntime.Applications[uuid]; ok {
 		return app
 	}
 	return nil
@@ -235,23 +238,23 @@ func GetApp(uuid string) *Application {
 *
  */
 func AppCount() int {
-	return len(__DefaultappletRuntime.Applications)
+	return len(__DefaultAppletRuntime.Applications)
 }
 func AllApp() []*Application {
 	return ListApp()
 }
 func ListApp() []*Application {
 	apps := []*Application{}
-	for _, v := range __DefaultappletRuntime.Applications {
+	for _, v := range __DefaultAppletRuntime.Applications {
 		apps = append(apps, v)
 	}
 	return apps
 }
 
 func Stop() {
-	__DefaultappletRuntime.locker.Lock()
-	defer __DefaultappletRuntime.locker.Unlock()
-	for _, app := range __DefaultappletRuntime.Applications {
+	__DefaultAppletRuntime.locker.Lock()
+	defer __DefaultAppletRuntime.locker.Unlock()
+	for _, app := range __DefaultAppletRuntime.Applications {
 		glogger.GLogger.Info("Stop App:", app.UUID)
 		app.Stop()
 		glogger.GLogger.Info("Stop App:", app.UUID, " Successfully")
@@ -260,5 +263,5 @@ func Stop() {
 
 }
 func GetRhilex() typex.Rhilex {
-	return __DefaultappletRuntime.RuleEngine
+	return __DefaultAppletRuntime.RuleEngine
 }

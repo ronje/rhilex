@@ -26,7 +26,7 @@ import (
 * 管理器
 *
  */
-type appletRuntime struct {
+type AppletRuntime struct {
 	locker       sync.Mutex
 	RuleEngine   typex.Rhilex
 	Applications map[string]*Application

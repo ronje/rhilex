@@ -88,7 +88,6 @@ func (m *mongoTarget) Start(cctx typex.CCTX) error {
 	m.collection = client.Database(m.mainConfig.MongoConfig.Database).
 		Collection(m.mainConfig.MongoConfig.Collection)
 	m.client = client
-	m.Enable = true
 	m.status = typex.SOURCE_UP
 	// 补发数据
 	if *m.mainConfig.MongoConfig.CacheOfflineData {

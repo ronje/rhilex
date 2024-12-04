@@ -17,11 +17,7 @@ package utils
 
 import (
 	"crypto/md5"
-	"crypto/rand"
-	"crypto/rsa"
-	"crypto/x509"
 	"encoding/base64"
-	"encoding/pem"
 	"fmt"
 	"io"
 	"os"
@@ -30,16 +26,39 @@ import (
 	"strings"
 	"time"
 
+	"github.com/hootrhino/rhilex-common-misc/misc"
 	"github.com/hootrhino/rhilex/ossupport"
 )
 
-func RSADecrypt(License, Key []byte) ([]byte, error) {
-	block, _ := pem.Decode(Key)
-	privateKey, err := x509.ParsePKCS1PrivateKey(block.Bytes)
-	if err != nil {
-		return nil, err
+/**
+ * 打印一个边框
+ *
+ */
+func BeautyPrintInfo(title string, info string) {
+	lines := strings.Split(info, "\n")
+	maxLength := 0
+
+	// 找到最长的行
+	for _, line := range lines {
+		if len(line) > maxLength {
+			maxLength = len(line)
+		}
 	}
-	return rsa.DecryptPKCS1v15(rand.Reader, privateKey, License)
+
+	// 打印顶部边框
+	fmt.Println("+" + strings.Repeat("-", maxLength+2) + "+")
+
+	// 打印标题
+	fmt.Printf("| %-*s |\n", maxLength, title)
+	fmt.Println("+" + strings.Repeat("-", maxLength+2) + "+")
+
+	// 打印内容
+	for _, line := range lines {
+		fmt.Printf("| %-*s |\n", maxLength, line)
+	}
+
+	// 打印底部边框
+	fmt.Println("+" + strings.Repeat("-", maxLength+2) + "+")
 }
 
 /*
@@ -77,8 +96,7 @@ func (ll *LocalLicense) ToString() string {
 ** Authorize Password : %s
 ** Begin Authorize    : %s
 ** End Authorize      : %s
-** Authorized MAC     : %s
-`,
+** Authorized MAC     : %s`,
 		ll.Type,
 		ll.DeviceID,
 		ll.AuthorizeAdmin,
@@ -128,32 +146,38 @@ func ParseAuthInfo(info string) (LocalLicense, error) {
 	ll.EndAuthorize = endAuthorize
 	return ll, nil
 }
+
+// 验证
 func ValidateLicense(key_path, license_path string) (LocalLicense, error) {
 	LocalLicense := LocalLicense{}
-	licBytesB64, err := os.ReadFile(license_path)
-	if err != nil {
-		return LocalLicense, err
+	licBytesB64, err0 := os.ReadFile(license_path)
+	if err0 != nil {
+		return LocalLicense, fmt.Errorf("license file load error")
 	}
-	keyBytes, err := os.ReadFile(key_path)
-	if err != nil {
-		return LocalLicense, err
+	keyBytes, err1 := os.ReadFile(key_path)
+	if err1 != nil {
+		return LocalLicense, fmt.Errorf("public key file load error")
 	}
-	licBytes, err := base64.StdEncoding.DecodeString(string(licBytesB64))
-	if err != nil {
-		return LocalLicense, err
+	licBytes, err2 := base64.StdEncoding.DecodeString(string(licBytesB64))
+	if err2 != nil {
+		return LocalLicense, fmt.Errorf("license decode error")
 	}
-	adminSalt, err := RSADecrypt(licBytes, keyBytes)
+	privateKey, errParse := misc.ParsePrivateKey(keyBytes)
+	if errParse != nil {
+		return LocalLicense, fmt.Errorf("key parse error")
+	}
+	adminSalt, err := misc.RSADecrypt(licBytes, privateKey)
 	if err != nil {
-		return LocalLicense, err
+		return LocalLicense, fmt.Errorf("license decrypt error")
 	}
 
-	LocalLicense, err = ParseAuthInfo(string(adminSalt))
-	if err != nil {
-		return LocalLicense, err
+	LocalLicense, errParseAuth := ParseAuthInfo(string(adminSalt))
+	if errParseAuth != nil {
+		return LocalLicense, fmt.Errorf("license parse error")
 	}
 	//
 	if !LocalLicense.ValidateTime() {
-		return LocalLicense, fmt.Errorf("Invalid Auth Time!")
+		return LocalLicense, fmt.Errorf("license expired")
 	}
 	localMac := ""
 	var err3 error
@@ -164,10 +188,10 @@ func ValidateLicense(key_path, license_path string) (LocalLicense, error) {
 		localMac, err3 = ossupport.GetLinuxMacAddr(LocalLicense.Iface)
 	}
 	if err3 != nil {
-		return LocalLicense, err3
+		return LocalLicense, fmt.Errorf("device hardware info fetch error")
 	}
 	if localMac != LocalLicense.MAC {
-		return LocalLicense, fmt.Errorf("Local mac is not matched!")
+		return LocalLicense, fmt.Errorf("license validate failed, not matched")
 	}
 	return LocalLicense, nil
 }

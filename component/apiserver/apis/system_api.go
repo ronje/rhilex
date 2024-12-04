@@ -7,11 +7,6 @@ import (
 	"strconv"
 	"time"
 
-	archsupport "github.com/hootrhino/rhilex/archsupport"
-	"github.com/hootrhino/rhilex/archsupport/en6400"
-	"github.com/hootrhino/rhilex/archsupport/haas506"
-	"github.com/hootrhino/rhilex/archsupport/rhilexg1"
-	"github.com/hootrhino/rhilex/archsupport/rhilexpro1"
 	common "github.com/hootrhino/rhilex/component/apiserver/common"
 	"github.com/hootrhino/rhilex/component/apiserver/server"
 	"github.com/hootrhino/rhilex/component/apiserver/service"
@@ -22,6 +17,11 @@ import (
 	core "github.com/hootrhino/rhilex/config"
 	"github.com/hootrhino/rhilex/glogger"
 	"github.com/hootrhino/rhilex/ossupport"
+	"github.com/hootrhino/rhilex/periphery"
+	"github.com/hootrhino/rhilex/periphery/en6400"
+	"github.com/hootrhino/rhilex/periphery/haas506"
+	"github.com/hootrhino/rhilex/periphery/rhilexg1"
+	"github.com/hootrhino/rhilex/periphery/rhilexpro1"
 	"github.com/hootrhino/rhilex/utils"
 
 	"github.com/gin-gonic/gin"
@@ -268,7 +268,7 @@ func GetVideos(c *gin.Context, ruleEngine typex.Rhilex) {
 *
  */
 func GetGpuInfo(c *gin.Context, ruleEngine typex.Rhilex) {
-	GpuInfos, err := archsupport.GetGpuInfoWithNvidiaSmi()
+	GpuInfos, err := periphery.GetGpuInfoWithNvidiaSmi()
 	if err != nil {
 		glogger.GLogger.Error(err)
 	}
@@ -299,7 +299,7 @@ func GetDeviceCtrlTree(c *gin.Context, ruleEngine typex.Rhilex) {
 		c.JSON(common.HTTP_OK, common.OkWithData(haas506.GetSysDevTree()))
 		return
 	}
-	c.JSON(common.HTTP_OK, common.OkWithData(archsupport.DefaultDeviceTree()))
+	c.JSON(common.HTTP_OK, common.OkWithData(periphery.DefaultDeviceTree()))
 }
 
 /**

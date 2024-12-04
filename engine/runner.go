@@ -31,6 +31,8 @@ import (
 	ini "gopkg.in/ini.v1"
 
 	apiServer "github.com/hootrhino/rhilex/component/apiserver"
+	"github.com/hootrhino/rhilex/component/globalinit"
+	"github.com/hootrhino/rhilex/component/performance"
 	"github.com/hootrhino/rhilex/component/rhilexmanager"
 	core "github.com/hootrhino/rhilex/config"
 	glogger "github.com/hootrhino/rhilex/glogger"
@@ -45,16 +47,16 @@ func RunRhilex(iniPath string) {
 		mainConfig.AppId,
 		mainConfig.LogLevel,
 		mainConfig.EnableConsole,
-		mainConfig.AppDebugMode,
-		mainConfig.LogPath,
+		mainConfig.DebugMode,
 		mainConfig.LogMaxSize,
 		mainConfig.LogMaxBackups,
 		mainConfig.LogMaxAge,
 		mainConfig.LogCompress,
 	)
+	globalinit.InitGlobalInitManager()
 	glogger.StartNewRealTimeLogger(mainConfig.LogLevel)
-	core.SetDebugMode(mainConfig.EnablePProf)
-	core.SetGomaxProcs(mainConfig.GomaxProcs)
+	performance.SetDebugMode(mainConfig.EnablePProf)
+	performance.SetGomaxProcs(mainConfig.GomaxProcs)
 	//
 	c := make(chan os.Signal, 1)
 	signal.Notify(c, syscall.SIGINT, syscall.SIGABRT, syscall.SIGTERM)

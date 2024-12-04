@@ -63,7 +63,7 @@ func errorHandler(c *gin.Context, info Info) {
 }
 func StartRhilexApiServer(ruleEngine typex.Rhilex, port int) {
 	gin.SetMode(gin.ReleaseMode)
-	// if core.GlobalConfig.AppDebugMode {
+	// if core.GlobalConfig.DebugMode {
 	// 	gin.SetMode(gin.DebugMode)
 	// } else {
 	// 	gin.SetMode(gin.ReleaseMode)
@@ -101,7 +101,7 @@ func StartRhilexApiServer(ruleEngine typex.Rhilex, port int) {
 	server.ginEngine.Use(Cros())
 	server.ginEngine.GET("/ws", glogger.WsLogger)
 	server.ginEngine.Use(gin.CustomRecovery(func(c *gin.Context, err any) {
-		if core.GlobalConfig.AppDebugMode {
+		if core.GlobalConfig.DebugMode {
 			debug.PrintStack()
 			os.Exit(1)
 			panic(err)
@@ -194,6 +194,12 @@ func initStaticModel() {
 	service.InitGenericGroup(&model.MGenericGroup{
 		UUID:   "DROOT",
 		Type:   "DEVICE",
+		Name:   "DefaultGroup",
+		Parent: "NULL",
+	})
+	service.InitGenericGroup(&model.MGenericGroup{
+		UUID:   "CEROOT",
+		Type:   "CECOLLA",
 		Name:   "DefaultGroup",
 		Parent: "NULL",
 	})

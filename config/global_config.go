@@ -16,17 +16,11 @@
 package core
 
 import (
-	"context"
-	"fmt"
-	"log"
-	"net/http"
-	"os"
-	"runtime"
-	"time"
-
-	"github.com/hootrhino/rhilex/glogger"
+	"encoding/json"
+	"github.com/hootrhino/rhilex/component/intercache"
 	"github.com/hootrhino/rhilex/typex"
-	"github.com/hootrhino/rhilex/utils"
+	"log"
+	"os"
 
 	"gopkg.in/ini.v1"
 )
@@ -35,10 +29,10 @@ var GlobalConfig typex.RhilexConfig
 
 // Init config, First to run!
 func InitGlobalConfig(path string) typex.RhilexConfig {
-	log.Println("Init rhilex config:", path)
+	log.Println("[RHILEX INIT] Init config:", path)
 	cfg, err := ini.ShadowLoad(path)
 	if err != nil {
-		log.Fatalf("Fail to read config file: %v", err)
+		log.Fatalf("[RHILEX INIT] Load config failed: %v Make sure your config path is valid", err)
 		os.Exit(1)
 	}
 	GlobalConfig = typex.RhilexConfig{
@@ -49,9 +43,8 @@ func InitGlobalConfig(path string) typex.RhilexConfig {
 		GomaxProcs:            0,
 		EnablePProf:           false,
 		EnableConsole:         false,
-		AppDebugMode:          false,
+		DebugMode:             false,
 		LogLevel:              "info",
-		LogPath:               "rhilex-running-log",
 		LogMaxSize:            5,     // MB
 		LogMaxBackups:         5,     // Per
 		LogMaxAge:             7,     // days
@@ -62,68 +55,31 @@ func InitGlobalConfig(path string) typex.RhilexConfig {
 		DataSchemaSecret:      []string{"rhilex-secret"},
 	}
 	if err := cfg.Section("app").MapTo(&GlobalConfig); err != nil {
-		log.Fatalf("Fail to map config file: %v", err)
+		log.Fatalf("[RHILEX INIT] Fail to map config file: %v", err)
 		os.Exit(1)
 	}
-	log.Println("rhilex config init successfully")
+	log.Println("[RHILEX INIT] RHILEX config init successfully")
 	return GlobalConfig
 }
 
 /*
 *
-* 设置go的线程，通常=0 不需要配置
+* 从全局缓存器获取设备的配置
 *
  */
-func SetGomaxProcs(GomaxProcs int) {
-	if GomaxProcs > 0 {
-		if GlobalConfig.GomaxProcs < runtime.NumCPU() {
-			runtime.GOMAXPROCS(GlobalConfig.GomaxProcs)
+func GetDeviceConfigMap(deviceUuid string) map[string]interface{} {
+	Slot := intercache.GetSlot("__DeviceConfigMap")
+	Value, ok := Slot[deviceUuid]
+	if !ok {
+		return nil
+	}
+	configMap := map[string]interface{}{}
+	switch T := Value.Value.(type) {
+	case []byte:
+		err := json.Unmarshal(T, &configMap)
+		if err != nil {
+			return nil
 		}
 	}
-}
-
-/*
-*
-* 设置性能，通常用来Debug用，生产环境建议关闭
-*
- */
-func SetDebugMode(EnablePProf bool) {
-
-	//------------------------------------------------------
-	// pprof: https://segmentfault.com/a/1190000016412013
-	//------------------------------------------------------
-	if EnablePProf {
-		log.Println("Start PProf debug at: 0.0.0.0:6060")
-		runtime.SetMutexProfileFraction(1)
-		runtime.SetBlockProfileRate(1)
-		runtime.SetCPUProfileRate(1)
-		go http.ListenAndServe("0.0.0.0:6060", nil)
-	}
-	if EnablePProf {
-		go func() {
-			readyDebug := false
-			for {
-				select {
-				case <-context.Background().Done():
-					{
-						glogger.GLogger.Info("PProf exited")
-						return
-					}
-				default:
-					{
-						time.Sleep(utils.GiveMeSeconds(3))
-						if !readyDebug {
-							fmt.Printf("HeapObjects,\tHeapAlloc,\tTotalAlloc,\tHeapSys")
-							fmt.Printf(",\tHeapIdle,\tHeapReleased,\tHeapIdle-HeapReleased")
-							fmt.Println()
-						}
-						readyDebug = true
-						utils.TraceMemStats()
-					}
-				}
-			}
-
-		}()
-
-	}
+	return configMap
 }

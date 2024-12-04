@@ -22,5 +22,6 @@ type MCjt1882004DataPoint struct {
 	MeterId    string
 	Tag        string
 	Alias      string
-	Frequency  uint64
+	Frequency  *uint64  `gorm:"default:50"`
+	Weight     *float64 `gorm:"default:1"`
 }

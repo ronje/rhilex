@@ -12,6 +12,7 @@ import (
 	"time"
 
 	httpserver "github.com/hootrhino/rhilex/component/apiserver"
+	"github.com/hootrhino/rhilex/component/performance"
 	"github.com/hootrhino/rhilex/component/rhilexmanager"
 
 	core "github.com/hootrhino/rhilex/config"
@@ -76,16 +77,15 @@ func RunTestEngine() typex.Rhilex {
 		mainConfig.AppId,
 		mainConfig.LogLevel,
 		mainConfig.EnableConsole,
-		mainConfig.AppDebugMode,
-		mainConfig.LogPath,
+		mainConfig.DebugMode,
 		mainConfig.LogMaxSize,
 		mainConfig.LogMaxBackups,
 		mainConfig.LogMaxAge,
 		mainConfig.LogCompress,
 	)
 	glogger.StartNewRealTimeLogger(core.GlobalConfig.LogLevel)
-	core.SetDebugMode(mainConfig.EnablePProf)
-	core.SetGomaxProcs(mainConfig.GomaxProcs)
+	performance.SetDebugMode(mainConfig.EnablePProf)
+	performance.SetGomaxProcs(mainConfig.GomaxProcs)
 	return engine.InitRuleEngine(mainConfig)
 }
 

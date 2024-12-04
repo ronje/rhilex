@@ -59,7 +59,7 @@ type SiemensPointVo struct {
 	Alias          string      `json:"alias"`
 	DataOrder      string      `json:"dataOrder"` // 字节序
 	DataType       string      `json:"dataType"`
-	Frequency      *int64      `json:"frequency"`
+	Frequency      *uint64     `json:"frequency"`
 	Weight         *float64    `json:"weight"`        // 权重
 	Status         int         `json:"status"`        // 运行时数据
 	LastFetchTime  uint64      `json:"lastFetchTime"` // 运行时数据
@@ -470,11 +470,12 @@ func parseSiemensPointExcel(
 		Type := row[3]
 		Order := row[4]
 		Weight, _ := strconv.ParseFloat(row[5], 32)
+		limitedWeight := float64(int(Weight*100)) / 100.0
 		if Weight == 0 {
 			Weight = 1 // 防止解析异常的时候系数0
 		}
 		frequency, _ := strconv.ParseUint(row[6], 10, 64)
-		Frequency := int64(frequency)
+		Frequency := uint64(frequency)
 		_, errParse1 := utils.ParseSiemensDB(SiemensAddress)
 		if errParse1 != nil {
 			return nil, errParse1
@@ -488,7 +489,7 @@ func parseSiemensPointExcel(
 			DataBlockType:  Type,
 			DataBlockOrder: utils.GetDefaultDataOrder(Type, Order),
 			Frequency:      &Frequency,
-			Weight:         &Weight,
+			Weight:         &limitedWeight,
 		}
 		list = append(list, model)
 	}

@@ -48,16 +48,6 @@ func (hd *videoCamera) Start(cctx typex.CCTX) error {
 	return nil
 }
 
-func (hd *videoCamera) OnRead(cmd []byte, data []byte) (int, error) {
-
-	return 0, nil
-}
-
-// 把数据写入设备
-func (hd *videoCamera) OnWrite(cmd []byte, b []byte) (int, error) {
-	return 0, nil
-}
-
 // 设备当前状态
 func (hd *videoCamera) Status() typex.DeviceState {
 	return hd.status

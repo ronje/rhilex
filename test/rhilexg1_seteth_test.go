@@ -18,7 +18,7 @@ package test
 import (
 	"testing"
 
-	"github.com/hootrhino/rhilex/archsupport/rhilexg1"
+	"github.com/hootrhino/rhilex/periphery/rhilexg1"
 )
 
 // go test -timeout 30s -run ^Test_gen_eth_config github.com/hootrhino/rhilex/test -v -count=1

@@ -23,12 +23,11 @@ import (
 	"time"
 
 	serial "github.com/hootrhino/goserial"
-	"github.com/hootrhino/rhilex/common"
 	"github.com/hootrhino/rhilex/component/intercache"
 	"github.com/hootrhino/rhilex/component/interdb"
-	"github.com/hootrhino/rhilex/component/uartctrl"
 	"github.com/hootrhino/rhilex/device/szy2062016"
 	"github.com/hootrhino/rhilex/glogger"
+	"github.com/hootrhino/rhilex/resconfig"
 	"github.com/hootrhino/rhilex/typex"
 	"github.com/hootrhino/rhilex/utils"
 )
@@ -49,9 +48,10 @@ type SZY206_2016_MasterGatewayCommonConfig struct {
 }
 
 type SZY206_2016_MasterGatewayMainConfig struct {
-	CommonConfig SZY206_2016_MasterGatewayCommonConfig `json:"commonConfig" validate:"required"`
-	HostConfig   common.HostConfig                     `json:"hostConfig"`
-	UartConfig   common.UartConfig                     `json:"uartConfig"`
+	CommonConfig  SZY206_2016_MasterGatewayCommonConfig `json:"commonConfig" validate:"required"`
+	HostConfig    resconfig.HostConfig                  `json:"hostConfig"`
+	UartConfig    resconfig.UartConfig                  `json:"uartConfig"`
+	CecollaConfig resconfig.CecollaConfig               `json:"cecollaConfig"`
 }
 
 /**
@@ -83,11 +83,11 @@ func NewSZY206_2016_MasterGateway(e typex.Rhilex) typex.XDevice {
 				return &b
 			}(),
 		},
-		HostConfig: common.HostConfig{
+		HostConfig: resconfig.HostConfig{
 			Host: "127.0.0.1",
 			Port: 10065,
 		},
-		UartConfig: common.UartConfig{
+		UartConfig: resconfig.UartConfig{
 			Timeout:  3000,
 			Uart:     "/dev/ttyS1",
 			BaudRate: 2400,
@@ -111,9 +111,8 @@ func (gw *SZY206_2016_MasterGateway) Init(devId string, configMap map[string]int
 	if !utils.SContains([]string{"UART", "TCP"}, gw.mainConfig.CommonConfig.Mode) {
 		return errors.New("unsupported mode, only can be one of 'TCP' or 'UART'")
 	}
-	// CheckSerialBusy
-	if err := uartctrl.CheckSerialBusy(gw.mainConfig.UartConfig.Uart); err != nil {
-		return err
+	if err := gw.mainConfig.UartConfig.Validate(); err != nil {
+		return nil
 	}
 	var DLT645_ModbusPointList []SZY206_2016_DataPoint
 	PointLoadErr := interdb.DB().Table("m_szy2062016_data_points").
@@ -139,7 +138,7 @@ func (gw *SZY206_2016_MasterGateway) Init(devId string, configMap map[string]int
 			Status:        0,
 			LastFetchTime: LastFetchTime,
 			Value:         "0",
-			ErrMsg:        "Loading",
+			ErrMsg:        "--",
 		})
 	}
 	return nil
@@ -354,13 +353,4 @@ func (gw *SZY206_2016_MasterGateway) OnDCACall(UUID string, Command string, Args
 
 func (gw *SZY206_2016_MasterGateway) OnCtrl(cmd []byte, args []byte) ([]byte, error) {
 	return []byte{}, nil
-}
-
-func (gw *SZY206_2016_MasterGateway) OnRead(cmd []byte, data []byte) (int, error) {
-
-	return 0, nil
-}
-
-func (gw *SZY206_2016_MasterGateway) OnWrite(cmd []byte, b []byte) (int, error) {
-	return 0, nil
 }

@@ -24,6 +24,7 @@ import (
 	bacnet "github.com/hootrhino/gobacnet"
 	"github.com/hootrhino/gobacnet/apdus"
 	"github.com/hootrhino/gobacnet/btypes"
+	"github.com/hootrhino/rhilex/resconfig"
 	"github.com/hootrhino/rhilex/component/apiserver/model"
 	"github.com/hootrhino/rhilex/component/intercache"
 	"github.com/hootrhino/rhilex/component/interdb"
@@ -42,7 +43,8 @@ type BacnetRouterConfig struct {
 }
 
 type BacnetRouterMainConfig struct {
-	BacnetRouterConfig BacnetRouterConfig `json:"bacnetRouterConfig" validate:"required"`
+	BacnetRouterConfig BacnetRouterConfig   `json:"bacnetRouterConfig" validate:"required"`
+	CecollaConfig      resconfig.CecollaConfig `json:"cecollaConfig"`
 }
 
 type BacnetRouter struct {
@@ -220,13 +222,4 @@ func (br *BacnetRouter) OnCtrl(cmd []byte, args []byte) ([]byte, error) {
 		return nil, fmt.Errorf("Tag not exists: %v", setValue.Tag)
 	}
 	return nil, fmt.Errorf("unsupported cmd: %v", cmd)
-}
-
-func (br *BacnetRouter) OnRead(cmd []byte, data []byte) (int, error) {
-
-	return 0, nil
-}
-
-func (br *BacnetRouter) OnWrite(cmd []byte, b []byte) (int, error) {
-	return 0, nil
 }

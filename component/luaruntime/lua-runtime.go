@@ -87,7 +87,7 @@ func VerifyLuaSyntax(r *typex.Rule) error {
 }
 
 // 临时校验语法
-func ValidateAppletSyntax(bytes []byte) error {
+func ValidateLuaSyntax(bytes []byte) error {
 	// 把虚拟机参数全部设置为0是为了防止误操作产生垃圾数据
 	tempVm := lua.NewState(lua.Options{
 		SkipOpenLibs:     true,
@@ -111,6 +111,16 @@ func ValidateAppletSyntax(bytes []byte) error {
 	return nil
 }
 
+// 临时校验语法
+func ValidateCecollaletSyntax(bytes []byte) error {
+	return ValidateLuaSyntax(bytes)
+}
+
+// 临时校验语法
+func ValidateAppletSyntax(bytes []byte) error {
+	return ValidateLuaSyntax(bytes)
+}
+
 /*
 *
   - 分组加入函数
@@ -130,7 +140,7 @@ func AddRuleLibToGroup(rx typex.Rhilex, LState *lua.LState,
 	LState.Push(table)
 }
 
-func LoadRuleLibGroup(e typex.Rhilex, uuid string, LState *lua.LState) {
+func LoadRuleLibGroup(e typex.Rhilex, scope, uuid string, LState *lua.LState) {
 	{
 		Funcs := map[string]func(l *lua.LState) int{
 			"ToHttp":       rhilexlib.DataToHttp(e, uuid),
@@ -146,9 +156,16 @@ func LoadRuleLibGroup(e typex.Rhilex, uuid string, LState *lua.LState) {
 		AddRuleLibToGroup(e, LState, "data", Funcs)
 	}
 	{
-		Funcs := map[string]func(l *lua.LState) int{
-			"Debug": rhilexlib.DebugRule(e, uuid),
-			"Throw": rhilexlib.Throw(e, uuid),
+		Funcs := map[string]func(l *lua.LState) int{}
+		Funcs["Throw"] = rhilexlib.Throw(e, uuid)
+		if scope == "RULE" {
+			Funcs["Debug"] = rhilexlib.DebugRule(e, uuid)
+		}
+		if scope == "CECOLLA" {
+			Funcs["Debug"] = rhilexlib.DebugCecolla(e, uuid)
+		}
+		if scope == "APPLET" {
+			Funcs["Debug"] = rhilexlib.DebugAPP(e, uuid)
 		}
 		AddRuleLibToGroup(e, LState, "_G", Funcs)
 	}
@@ -216,9 +233,7 @@ func LoadRuleLibGroup(e typex.Rhilex, uuid string, LState *lua.LState) {
 	}
 	{
 		Funcs := map[string]func(l *lua.LState) int{
-			"ReadDevice":  rhilexlib.ReadDevice(e, uuid),
-			"WriteDevice": rhilexlib.WriteDevice(e, uuid),
-			"CtrlDevice":  rhilexlib.CtrlDevice(e, uuid),
+			"CtrlDevice": rhilexlib.CtrlDevice(e, uuid),
 		}
 		AddRuleLibToGroup(e, LState, "device", Funcs)
 	}
@@ -231,11 +246,8 @@ func LoadRuleLibGroup(e typex.Rhilex, uuid string, LState *lua.LState) {
 	}
 	{
 		Funcs := map[string]func(l *lua.LState) int{
-			"F5":        rhilexlib.F5(e, uuid),
-			"F6":        rhilexlib.F6(e, uuid),
-			"F15":       rhilexlib.F15(e, uuid),
-			"F16":       rhilexlib.F16(e, uuid),
-			"ParseByte": rhilexlib.ParseModbusByte(e, uuid),
+			"WritePoint": rhilexlib.WriteToModbusSheetRegisterWithTag(e),
+			"ParseByte":  rhilexlib.ParseModbusByte(e, uuid),
 		}
 		AddRuleLibToGroup(e, LState, "modbus", Funcs)
 	}
@@ -322,14 +334,15 @@ func LoadRuleLibGroup(e typex.Rhilex, uuid string, LState *lua.LState) {
 	}
 	{
 		Funcs := map[string]func(l *lua.LState) int{
-			"CtrlReplySuccess":     rhilexlib.IthingsCtrlReplySuccess(e),
-			"CtrlReplyFailure":     rhilexlib.IthingsCtrlReplyFailure(e),
-			"ActionReplySuccess":   rhilexlib.IthingsActionReplySuccess(e),
-			"ActionReplyFailure":   rhilexlib.IthingsActionReplyFailure(e),
-			"PropertyReplySuccess": rhilexlib.IthingsPropertyReplySuccess(e),
-			"PropertyReplyFailure": rhilexlib.IthingsPropertyReplyFailure(e),
-			"PropertyReport":       rhilexlib.IthingsPropertyReport(e),
-			"GetPropertyReply":     rhilexlib.IthingsGetPropertyReply(e),
+			"CtrlReplySuccess":        rhilexlib.IthingsCtrlReplySuccess(e),
+			"CtrlReplyFailure":        rhilexlib.IthingsCtrlReplyFailure(e),
+			"ActionReplySuccess":      rhilexlib.IthingsActionReplySuccess(e),
+			"ActionReplyFailure":      rhilexlib.IthingsActionReplyFailure(e),
+			"PropertyReplySuccess":    rhilexlib.IthingsPropertyReplySuccess(e),
+			"PropertyReplyFailure":    rhilexlib.IthingsPropertyReplyFailure(e),
+			"PropertyReport":          rhilexlib.IthingsPropertyReport(e),
+			"GetProperties":           rhilexlib.IthingsGetProperties(e),
+			"GetPropertyReplySuccess": rhilexlib.IthingsGetPropertyReplySuccess(e),
 		}
 		AddRuleLibToGroup(e, LState, "ithings", Funcs)
 	}
@@ -376,6 +389,12 @@ func LoadRuleLibGroup(e typex.Rhilex, uuid string, LState *lua.LState) {
 			"GetAI5": rhilexlib.HAAS506_AI5_Get(e),
 		}
 		AddRuleLibToGroup(e, LState, "haas506ld1", Funcs)
+	}
+	{
+		Funcs := map[string]func(l *lua.LState) int{
+			"WriteToHmi": rhilexlib.TJCWriteToHmi(e),
+		}
+		AddRuleLibToGroup(e, LState, "tjchmi", Funcs)
 	}
 }
 

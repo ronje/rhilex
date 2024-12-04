@@ -57,7 +57,8 @@ type Szy2062016MasterPointVo struct {
 	MeterType     string      `json:"meterType"`
 	Tag           string      `json:"tag"`
 	Alias         string      `json:"alias"`
-	Frequency     uint64      `json:"frequency"`
+	Frequency     *uint64     `json:"frequency"`
+	Weight        *float64    `json:"weight"`
 	Status        int         `json:"status"`        // 运行时数据
 	LastFetchTime uint64      `json:"lastFetchTime"` // 运行时数据
 	Value         interface{} `json:"value"`         // 运行时数据
@@ -96,6 +97,7 @@ func Szy2062016MasterPointsExport(c *gin.Context, ruleEngine typex.Rhilex) {
 			record.Tag,
 			record.Alias,
 			fmt.Sprintf("%d", record.Frequency),
+			fmt.Sprintf("%.2f", *record.Weight),
 		}
 		cell, _ = excelize.CoordinatesToCellName(1, idx+2)
 		xlsx.SetSheetRow("Sheet1", cell, &Row)
@@ -147,6 +149,7 @@ func Szy2062016MasterSheetPageList(c *gin.Context, ruleEngine typex.Rhilex) {
 			Tag:           record.Tag,
 			Alias:         record.Alias,
 			Frequency:     record.Frequency,
+			Weight:        record.Weight,
 			LastFetchTime: value.LastFetchTime,
 			Value:         value.Value,
 			ErrMsg:        value.ErrMsg,
@@ -245,10 +248,10 @@ func CheckSzy2062016MasterDataPoints(M Szy2062016MasterPointVo) error {
 	if err := checkStringLength(M.Alias, "alias", 64); err != nil {
 		return err
 	}
-	if M.Frequency < 1 {
+	if *M.Frequency < 1 {
 		return fmt.Errorf("'frequency' must be greater than 50ms")
 	}
-	if M.Frequency > 100000 {
+	if *M.Frequency > 100000 {
 		return fmt.Errorf("'frequency' must be less than 100s")
 	}
 	return nil
@@ -288,6 +291,7 @@ func Szy2062016MasterSheetUpdate(c *gin.Context, ruleEngine typex.Rhilex) {
 				Tag:        Szy2062016MasterDataPoint.Tag,
 				Alias:      Szy2062016MasterDataPoint.Alias,
 				Frequency:  Szy2062016MasterDataPoint.Frequency,
+				Weight:     Szy2062016MasterDataPoint.Weight,
 			}
 			err0 := service.InsertSzy2062016Point(NewRow)
 			if err0 != nil {
@@ -303,6 +307,7 @@ func Szy2062016MasterSheetUpdate(c *gin.Context, ruleEngine typex.Rhilex) {
 				Tag:        Szy2062016MasterDataPoint.Tag,
 				Alias:      Szy2062016MasterDataPoint.Alias,
 				Frequency:  Szy2062016MasterDataPoint.Frequency,
+				Weight:     Szy2062016MasterDataPoint.Weight,
 			}
 			err0 := service.UpdateSzy2062016Point(OldRow)
 			if err0 != nil {
@@ -429,7 +434,7 @@ func parseSzy2062016MasterPointExcel(r io.Reader, sheetName string,
 	}
 
 	list = make([]model.MSzy2062016DataPoint, 0)
-	// "MeterId", "MeterType", "Tag", "Alias", "Frequency"
+	// "MeterId", "MeterType", "Tag", "Alias", "Frequency", "Weight"
 	for i := 1; i < len(rows); i++ {
 		row := rows[i]
 		MeterId := row[0]
@@ -437,13 +442,16 @@ func parseSzy2062016MasterPointExcel(r io.Reader, sheetName string,
 		Tag := row[2]
 		Alias := row[3]
 		Frequency, _ := strconv.ParseUint(row[4], 10, 64)
-		// "MeterId", "MeterType", "Tag", "Alias", "Frequency"
+		Weight, _ := strconv.ParseFloat(row[5], 64)
+		limitedWeight := float64(int(Weight*100)) / 100.0
+		// "MeterId", "MeterType", "Tag", "Alias", "Frequency", "Weight"
 		if err := CheckSzy2062016MasterDataPoints(Szy2062016MasterPointVo{
 			MeterId:   MeterId,
 			MeterType: MeterType,
 			Tag:       Tag,
 			Alias:     Alias,
-			Frequency: Frequency,
+			Frequency: &Frequency,
+			Weight:    &limitedWeight,
 		}); err != nil {
 			return nil, err
 		}
@@ -455,7 +463,8 @@ func parseSzy2062016MasterPointExcel(r io.Reader, sheetName string,
 			MeterType:  MeterType,
 			Tag:        Tag,
 			Alias:      Alias,
-			Frequency:  Frequency,
+			Frequency:  &Frequency,
+			Weight:     &Weight,
 		}
 		list = append(list, model)
 	}

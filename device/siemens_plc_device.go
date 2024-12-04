@@ -10,10 +10,10 @@ import (
 	"time"
 
 	"github.com/hootrhino/rhilex/component/intercache"
+	"github.com/hootrhino/rhilex/resconfig"
 
 	"github.com/jinzhu/copier"
 
-	"github.com/hootrhino/rhilex/common"
 	"github.com/hootrhino/rhilex/component/interdb"
 	"github.com/hootrhino/rhilex/glogger"
 	"github.com/hootrhino/rhilex/typex"
@@ -57,8 +57,9 @@ type S1200Config struct {
 	Slot  int    `json:"slot" validate:"required"`  // 1
 }
 type S1200MainConfig struct {
-	CommonConfig S1200CommonConfig `json:"commonConfig" validate:"required"` // 通用配置
-	S1200Config  S1200Config       `json:"s1200Config" validate:"required"`  // 通用配置
+	CommonConfig  S1200CommonConfig    `json:"commonConfig" validate:"required"` // 通用配置
+	S1200Config   S1200Config          `json:"s1200Config" validate:"required"`  // 通用配置
+	CecollaConfig resconfig.CecollaConfig `json:"cecollaConfig"`
 }
 
 // https://www.ad.siemens.com.cn/productportal/prods/s7-1200_plc_easy_plus/07-Program/02-basic/01-Data_Type/01-basic.html
@@ -203,23 +204,6 @@ func (s1200 *SIEMENS_PLC) Start(cctx typex.CCTX) error {
 	return nil
 }
 
-// 从设备里面读数据出来
-func (s1200 *SIEMENS_PLC) OnRead(cmd []byte, data []byte) (int, error) {
-	return 0, nil
-}
-
-// 把数据写入设备
-//
-// db.Address:int, db.Start:int, db.Size:int, rData[]
-
-func (s1200 *SIEMENS_PLC) OnWrite(cmd []byte, data []byte) (int, error) {
-	blocks := []__SiemensDataPoint{}
-	if err := json.Unmarshal(data, &blocks); err != nil {
-		return 0, err
-	}
-	return s1200.Write(cmd, data)
-}
-
 // 设备当前状态
 func (s1200 *SIEMENS_PLC) Status() typex.DeviceState {
 	if s1200.client == nil {
@@ -263,7 +247,7 @@ func (s1200 *SIEMENS_PLC) Write(cmd []byte, data []byte) (int, error) {
 
 // 字节格式:[dbNumber1, start1, size1, dbNumber2, start2, size2]
 // 读: db --> dbNumber, start, size, buffer[]
-var rData = [common.T_2KB]byte{} // 一次最大接受2KB数据
+var rData = [resconfig.T_2KB]byte{} // 一次最大接受2KB数据
 // SIEMENS_PLC: 当读多字节寄存器的时候，需要考虑UTF8
 var __siemensReadResult = [256]byte{0}
 

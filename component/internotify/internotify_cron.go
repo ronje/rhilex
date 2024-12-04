@@ -36,7 +36,7 @@ func StartClearInterNotifyCron() {
 			return
 		default:
 		}
-		if core.GlobalConfig.AppDebugMode {
+		if core.GlobalConfig.DebugMode {
 			execInterNotifyCron(`-1 day`)
 			time.Sleep(60 * time.Second) // For test
 		} else {

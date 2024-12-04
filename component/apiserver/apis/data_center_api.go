@@ -288,7 +288,7 @@ func QueryDDLDataList(c *gin.Context, ruleEngine typex.Rhilex) {
 		c.JSON(common.HTTP_OK, common.Error400(err))
 		return
 	}
-	if !MSchema.Published {
+	if !*MSchema.Published {
 		c.JSON(common.HTTP_OK, common.Error("The schema must be published before it can be operated"))
 		return
 	}
@@ -340,7 +340,7 @@ func QueryDDLLastData(c *gin.Context, ruleEngine typex.Rhilex) {
 		c.JSON(common.HTTP_OK, common.Error400(err))
 		return
 	}
-	if !MSchema.Published {
+	if !*MSchema.Published {
 		c.JSON(common.HTTP_OK, common.Error("The schema must be published before it can be operated"))
 		return
 	}

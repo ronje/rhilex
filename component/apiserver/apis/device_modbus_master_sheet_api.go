@@ -16,6 +16,7 @@
 package apis
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
@@ -47,6 +48,7 @@ func InitModbusRoute() {
 		modbusMasterApi.POST(("/update"), server.AddRoute(ModbusMasterSheetUpdate))
 		modbusMasterApi.DELETE(("/delIds"), server.AddRoute(ModbusMasterSheetDelete))
 		modbusMasterApi.DELETE(("/delAll"), server.AddRoute(ModbusMasterSheetDeleteAll))
+		modbusMasterApi.POST(("/writeModbusSheet"), server.AddRoute(WriteModbusSheet))
 	}
 }
 
@@ -58,7 +60,7 @@ type ModbusMasterPointVo struct {
 	Function      *int        `json:"function"`
 	SlaverId      *byte       `json:"slaverId"`
 	Address       *uint16     `json:"address"`
-	Frequency     *int64      `json:"frequency"`
+	Frequency     *uint64     `json:"frequency"`
 	Quantity      *uint16     `json:"quantity"`
 	DataType      string      `json:"dataType"`      // 数据类型
 	DataOrder     string      `json:"dataOrder"`     // 字节序
@@ -274,7 +276,7 @@ func CheckModbusMasterDataPoints(M ModbusMasterPointVo) error {
 	if M.Address == nil {
 		return fmt.Errorf("missing required param 'address'")
 	}
-	if *M.Address > 65535 {
+	if *M.Address > uint16(65535) {
 		return fmt.Errorf("'address' must be in the range of 0-65535")
 	}
 
@@ -282,7 +284,7 @@ func CheckModbusMasterDataPoints(M ModbusMasterPointVo) error {
 	if M.Function == nil {
 		return fmt.Errorf("missing required param 'function'")
 	}
-	if *M.Function < 1 || *M.Function > 4 {
+	if *M.Function < int(1) || *M.Function > int(4) {
 		return fmt.Errorf("'function' only supports values of 1, 2, 3, or 4")
 	}
 
@@ -290,7 +292,7 @@ func CheckModbusMasterDataPoints(M ModbusMasterPointVo) error {
 	if M.SlaverId == nil {
 		return fmt.Errorf("missing required param 'slaverId'")
 	}
-	if *M.SlaverId > 255 {
+	if *M.SlaverId > uint8(255) {
 		return fmt.Errorf("'slaverId' must be in the range of 0-255")
 	}
 
@@ -298,10 +300,10 @@ func CheckModbusMasterDataPoints(M ModbusMasterPointVo) error {
 	if M.Frequency == nil {
 		return fmt.Errorf("missing required param 'frequency'")
 	}
-	if *M.Frequency < 1 {
+	if *M.Frequency < uint64(1) {
 		return fmt.Errorf("'frequency' must be greater than 50ms")
 	}
-	if *M.Frequency > 100000 {
+	if *M.Frequency > uint64(100000) {
 		return fmt.Errorf("'frequency' must be less than 100s")
 	}
 
@@ -316,6 +318,7 @@ func CheckModbusMasterDataPoints(M ModbusMasterPointVo) error {
 		"I":        {"A"},
 		"Q":        {"A"},
 		"BYTE":     {"A"},
+		"BOOL":     {"A"},
 		"INT16":    {"AB", "BA"},
 		"UINT16":   {"AB", "BA"},
 		"RAW":      {"ABCD", "DCBA", "CDAB"},
@@ -534,13 +537,14 @@ func parseModbusMasterPointExcel(r io.Reader, sheetName string,
 		Type := row[7]
 		Order := row[8]
 		Weight, _ := strconv.ParseFloat(row[9], 32)
+		limitedWeight := float64(int(Weight*100)) / 100.0
 		if Weight == 0 {
 			Weight = 1 // 防止解析异常的时候系数0
 		}
 		Function := int(function)
 		SlaverId := byte(slaverId)
 		Address := uint16(address)
-		Frequency := int64(frequency)
+		Frequency := uint64(frequency)
 		Quantity := uint16(quantity)
 
 		if err := CheckModbusMasterDataPoints(ModbusMasterPointVo{
@@ -553,7 +557,7 @@ func parseModbusMasterPointExcel(r io.Reader, sheetName string,
 			Quantity:  &Quantity,
 			DataType:  Type,
 			DataOrder: utils.GetDefaultDataOrder(Type, Order),
-			Weight:    &Weight,
+			Weight:    &limitedWeight,
 		}); err != nil {
 			return nil, err
 		}
@@ -575,4 +579,39 @@ func parseModbusMasterPointExcel(r io.Reader, sheetName string,
 		list = append(list, model)
 	}
 	return list, nil
+}
+
+/**
+ * 给某个云边发指令
+ *
+ */
+// POST -> temp , 0x0001
+type CtrlCmd struct {
+	UUID    string `json:"uuid"`    // 设备UUID
+	PointId string `json:"pointId"` // 点位Point Id
+	Tag     string `json:"tag"`     // 点位表的Tag
+	Value   string `json:"value"`   // 写的值
+}
+
+func (O CtrlCmd) String() string {
+	bytes, _ := json.Marshal(O)
+	return string(bytes)
+}
+func WriteModbusSheet(c *gin.Context, ruleEngine typex.Rhilex) {
+	form := CtrlCmd{}
+	if err := c.ShouldBindJSON(&form); err != nil {
+		c.JSON(common.HTTP_OK, common.Error400(err))
+		return
+	}
+	device := ruleEngine.GetDevice(form.UUID)
+	if device != nil {
+		_, errOnCtrl := device.Device.OnCtrl([]byte("WriteToSheetRegister"), []byte(form.String()))
+		if errOnCtrl != nil {
+			c.JSON(common.HTTP_OK, common.Error400(errOnCtrl))
+			return
+		}
+		c.JSON(common.HTTP_OK, common.Ok())
+		return
+	}
+	c.JSON(common.HTTP_OK, common.Error("Device not exists:"+form.UUID))
 }

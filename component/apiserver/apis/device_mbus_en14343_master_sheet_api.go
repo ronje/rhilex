@@ -57,9 +57,10 @@ type MBusMasterPointVo struct {
 	Type          string      `json:"type"`
 	Tag           string      `json:"tag"`
 	Alias         string      `json:"alias"`
+	Manufacturer  string      `json:"manufacturer"`
 	Frequency     *uint64     `json:"frequency"`
 	DataLength    *uint64     `json:"dataLength"`
-	Manufacturer  string      `json:"manufacturer"`
+	Weight        *float64    `json:"weight"`
 	Status        int         `json:"status"`        // 运行时数据
 	LastFetchTime uint64      `json:"lastFetchTime"` // 运行时数据
 	Value         interface{} `json:"value"`         // 运行时数据
@@ -84,7 +85,7 @@ func MBusMasterPointsExport(c *gin.Context, ruleEngine typex.Rhilex) {
 		c.JSON(common.HTTP_OK, common.Error400(result.Error))
 		return
 	}
-	Headers := []string{"slaverId", "type", "manufacturer", "tag", "alias", "frequency", "dataLength"}
+	Headers := []string{"SlaverId", "Type", "Manufacturer", "Tag", "Alias", "Frequency", "DataLength", "Weight"}
 
 	xlsx := excelize.NewFile()
 	defer func() {
@@ -103,6 +104,7 @@ func MBusMasterPointsExport(c *gin.Context, ruleEngine typex.Rhilex) {
 			record.Alias,
 			fmt.Sprintf("%d", *record.Frequency),
 			fmt.Sprintf("%d", *record.DataLength),
+			fmt.Sprintf("%.2f", *record.Weight),
 		}
 		cell, _ = excelize.CoordinatesToCellName(1, idx+2)
 		xlsx.SetSheetRow("Sheet1", cell, &Row)
@@ -142,7 +144,7 @@ func MBusMasterSheetPageList(c *gin.Context, ruleEngine typex.Rhilex) {
 		return
 	}
 	recordsVo := []MBusMasterPointVo{}
-	// "slaverId", "type", "manufacturer", "tag", "alias", "frequency", "dataLength"
+	// "SlaverId", "Type", "Manufacturer", "Tag", "Alias", "Frequency", "DataLength", "Weight"
 	for _, record := range records {
 		Slot := intercache.GetSlot(deviceUuid)
 		value, ok := Slot[record.UUID]
@@ -156,6 +158,7 @@ func MBusMasterSheetPageList(c *gin.Context, ruleEngine typex.Rhilex) {
 			Alias:         record.Alias,
 			Frequency:     record.Frequency,
 			DataLength:    record.DataLength,
+			Weight:        record.Weight,
 			LastFetchTime: value.LastFetchTime,
 			Value:         value.Value,
 			ErrMsg:        value.ErrMsg,
@@ -279,7 +282,6 @@ func MBusMasterSheetUpdate(c *gin.Context, ruleEngine typex.Rhilex) {
 		DeviceUUID           string              `json:"device_uuid"`
 		MBusMasterDataPoints []MBusMasterPointVo `json:"data_points"`
 	}
-	//  MBusMasterDataPoints := [] MBusMasterPointVo{}
 	form := Form{}
 	err := c.ShouldBindJSON(&form)
 	if err != nil {
@@ -291,8 +293,6 @@ func MBusMasterSheetUpdate(c *gin.Context, ruleEngine typex.Rhilex) {
 			c.JSON(common.HTTP_OK, common.Error400(err))
 			return
 		}
-		// "slaverId", "type", "manufacturer", "tag", "alias", "frequency", "dataLength"
-
 		if MBusMasterDataPoint.UUID == "" ||
 			MBusMasterDataPoint.UUID == "new" ||
 			MBusMasterDataPoint.UUID == "copy" {
@@ -306,6 +306,7 @@ func MBusMasterSheetUpdate(c *gin.Context, ruleEngine typex.Rhilex) {
 				Alias:        MBusMasterDataPoint.Alias,
 				Frequency:    MBusMasterDataPoint.Frequency,
 				DataLength:   MBusMasterDataPoint.DataLength,
+				Weight:       MBusMasterDataPoint.Weight,
 			}
 			err0 := service.InsertMBusPoint(NewRow)
 			if err0 != nil {
@@ -323,6 +324,7 @@ func MBusMasterSheetUpdate(c *gin.Context, ruleEngine typex.Rhilex) {
 				Alias:        MBusMasterDataPoint.Alias,
 				Frequency:    MBusMasterDataPoint.Frequency,
 				DataLength:   MBusMasterDataPoint.DataLength,
+				Weight:       MBusMasterDataPoint.Weight,
 			}
 			err0 := service.UpdateMBusPoint(OldRow)
 			if err0 != nil {
@@ -432,25 +434,25 @@ func parseMBusMasterPointExcel(r io.Reader, sheetName string,
 		return nil, err
 	}
 	// 判断首行标头
-	// tag, alias, function, frequency, slaverId, address, quality
+	// "SlaverId", "Type", "Manufacturer", "Tag", "Alias", "Frequency", "DataLength", "Weight"
 	err1 := errors.New(" Invalid Sheet Header")
-	if len(rows[0]) < 7 {
+	if len(rows[0]) < 8 {
 		return nil, err1
 	}
-	// "slaverId", "type", "manufacturer", "tag", "alias", "frequency", "dataLength"
 	// 严格检查表结构
-	if rows[0][0] != "slaverId" ||
-		rows[0][1] != "type" ||
-		rows[0][2] != "manufacturer" ||
-		rows[0][3] != "tag" ||
-		rows[0][4] != "alias" ||
-		rows[0][5] != "frequency" ||
-		rows[0][6] != "dataLength" {
+	if rows[0][0] != "SlaverId" ||
+		rows[0][1] != "Type" ||
+		rows[0][2] != "Manufacturer" ||
+		rows[0][3] != "Tag" ||
+		rows[0][4] != "Alias" ||
+		rows[0][5] != "Frequency" ||
+		rows[0][6] != "DataLength" ||
+		rows[0][7] != "Weight" {
 		return nil, err1
 	}
 
 	list = make([]model.MMBusDataPoint, 0)
-	// "slaverId", "type", "manufacturer", "tag", "alias", "frequency", "dataLength"
+	// "SlaverId", "Type", "Manufacturer", "Tag", "Alias", "Frequency", "DataLength", "Weight"
 	for i := 1; i < len(rows); i++ {
 		row := rows[i]
 		slaverId := row[0]
@@ -460,6 +462,8 @@ func parseMBusMasterPointExcel(r io.Reader, sheetName string,
 		Alias := row[4]
 		Frequency, _ := strconv.ParseUint(row[5], 10, 64)
 		DataLength, _ := strconv.ParseUint(row[6], 10, 64)
+		Weight, _ := strconv.ParseFloat(row[7], 64)
+		limitedWeight := float64(int(Weight*100)) / 100.0
 		if err := CheckMBusMasterDataPoints(MBusMasterPointVo{
 			SlaverId:     slaverId,
 			Type:         Type,
@@ -468,6 +472,7 @@ func parseMBusMasterPointExcel(r io.Reader, sheetName string,
 			Alias:        Alias,
 			Frequency:    &Frequency,
 			DataLength:   &DataLength,
+			Weight:       &limitedWeight,
 		}); err != nil {
 			return nil, err
 		}
@@ -482,6 +487,7 @@ func parseMBusMasterPointExcel(r io.Reader, sheetName string,
 			Alias:        Alias,
 			Frequency:    &Frequency,
 			DataLength:   &DataLength,
+			Weight:       &Weight,
 		}
 		list = append(list, model)
 	}

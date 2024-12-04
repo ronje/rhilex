@@ -16,10 +16,12 @@
 package service
 
 import (
+	"context"
 	"fmt"
 	"math"
 	"os/exec"
 	"strings"
+	"time"
 )
 
 // GetMemPercent 获取Windows系统内存使用百分比
@@ -27,7 +29,9 @@ import (
 // FreePhysicalMemory=14309944
 // TotalVisibleMemorySize=25087752
 func GetMemPercent() (float64, error) {
-	cmd := exec.Command("wmic", "OS", "get", "FreePhysicalMemory,TotalVisibleMemorySize", "/value")
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	cmd := exec.CommandContext(ctx, "wmic", "OS", "get", "FreePhysicalMemory,TotalVisibleMemorySize", "/value")
 
 	output, err := cmd.CombinedOutput()
 	if err != nil {

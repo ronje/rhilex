@@ -86,12 +86,3 @@ func (hd *TemplateDevice) OnDCACall(UUID string, Command string, Args interface{
 func (hd *TemplateDevice) OnCtrl(cmd []byte, args []byte) ([]byte, error) {
 	return []byte{}, nil
 }
-
-func (hd *TemplateDevice) OnRead(cmd []byte, data []byte) (int, error) {
-
-	return 0, nil
-}
-
-func (hd *TemplateDevice) OnWrite(cmd []byte, b []byte) (int, error) {
-	return 0, nil
-}

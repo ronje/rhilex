@@ -13,10 +13,9 @@ import (
 
 	"github.com/adrianmo/go-nmea"
 	aislib "github.com/hootrhino/go-ais"
-	"github.com/hootrhino/rhilex/common"
-	"github.com/hootrhino/rhilex/component/uartctrl"
 
 	serial "github.com/hootrhino/goserial"
+	"github.com/hootrhino/rhilex/resconfig"
 	"github.com/hootrhino/rhilex/glogger"
 	"github.com/hootrhino/rhilex/typex"
 	"github.com/hootrhino/rhilex/utils"
@@ -34,8 +33,8 @@ type _AISCommonConfig struct {
 }
 type _AISDeviceMasterConfig struct {
 	CommonConfig _AISCommonConfig  `json:"commonConfig" validate:"required"`
-	HostConfig   common.HostConfig `json:"hostConfig"`
-	UartConfig   common.UartConfig `json:"uartConfig"`
+	HostConfig   resconfig.HostConfig `json:"hostConfig"`
+	UartConfig   resconfig.UartConfig `json:"uartConfig"`
 }
 type AISDeviceMaster struct {
 	typex.XStatus
@@ -57,7 +56,7 @@ func NewAISDeviceMaster(e typex.Rhilex) typex.XDevice {
 	aism := new(AISDeviceMaster)
 	aism.RuleEngine = e
 	aism.mainConfig = _AISDeviceMasterConfig{
-		HostConfig: common.HostConfig{
+		HostConfig: resconfig.HostConfig{
 			Host:    "127.0.0.1",
 			Port:    6005,
 			Timeout: 3000,
@@ -81,9 +80,8 @@ func (aism *AISDeviceMaster) Init(devId string, configMap map[string]interface{}
 	if !utils.SContains([]string{"UART", "TCP"}, aism.mainConfig.CommonConfig.Mode) {
 		return errors.New("unsupported mode, only can be one of 'TCP' or 'RTU'")
 	}
-	// CheckSerialBusy
-	if err := uartctrl.CheckSerialBusy(aism.mainConfig.UartConfig.Uart); err != nil {
-		return err
+	if err := aism.mainConfig.UartConfig.Validate(); err != nil {
+		return nil
 	}
 	return nil
 }
@@ -250,16 +248,6 @@ func (aism *AISDeviceMaster) Start(cctx typex.CCTX) error {
 	}
 	aism.status = typex.DEV_DOWN
 	return fmt.Errorf("Invalid work mode:%s", aism.mainConfig.CommonConfig.Mode)
-}
-
-// 从设备里面读数据出来
-func (aism *AISDeviceMaster) OnRead(cmd []byte, data []byte) (int, error) {
-	return 0, nil
-}
-
-// 把数据写入设备
-func (aism *AISDeviceMaster) OnWrite(cmd []byte, _ []byte) (int, error) {
-	return 0, nil
 }
 
 // 设备当前状态

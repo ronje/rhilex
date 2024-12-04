@@ -25,6 +25,6 @@ type MSiemensDataPoint struct {
 	Alias          string   `gorm:"not null"` // 别名
 	DataBlockType  string   `gorm:"not null"` // 类型 INT UINT....
 	DataBlockOrder string   `gorm:"not null"` // 字节序
-	Weight         *float64 `gorm:"not null"` // 权重
-	Frequency      *int64   `gorm:"not null"` // 采集频率
+	Frequency      *uint64  `gorm:"default:50"`
+	Weight         *float64 `gorm:"default:1"`
 }

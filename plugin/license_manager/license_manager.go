@@ -7,12 +7,11 @@ package licensemanager
 
 import (
 	"encoding/base64"
-	"fmt"
 	"os"
 	"runtime"
 	"time"
 
-	"github.com/hootrhino/rhilex/glogger"
+	"github.com/hootrhino/rhilex-common-misc/misc"
 	"github.com/hootrhino/rhilex/ossupport"
 	"github.com/hootrhino/rhilex/typex"
 	"github.com/hootrhino/rhilex/utils"
@@ -32,35 +31,34 @@ func NewLicenseManager(r typex.Rhilex) *LicenseManager {
 	return &LicenseManager{}
 }
 func validateLicense(key_path, license_path string) error {
-	errMsg := "License loading failed."
 	licBytesB64, err := os.ReadFile(license_path)
 	if err != nil {
-		fmt.Println(errMsg)
-		glogger.GLogger.Fatal(errMsg)
+		utils.CLog("[LOAD LICENSE] load license file failed")
 		os.Exit(0)
 	}
 	keyBytes, err := os.ReadFile(key_path)
 	if err != nil {
-		fmt.Println(errMsg)
-		glogger.GLogger.Fatal(errMsg)
+		utils.CLog("[LOAD LICENSE] load key file failed")
 		os.Exit(0)
 	}
-	licBytes, err := base64.StdEncoding.DecodeString(string(licBytesB64))
-	if err != nil {
-		fmt.Println(errMsg)
-		glogger.GLogger.Fatal(errMsg)
+	licBytes, err2 := base64.StdEncoding.DecodeString(string(licBytesB64))
+	if err2 != nil {
+		utils.CLog("[LOAD LICENSE] decode key file failed")
 		os.Exit(0)
 	}
-	adminSalt, err := RSADecrypt(licBytes, keyBytes)
+	privateKey, errParse := misc.ParsePrivateKey(keyBytes)
+	if errParse != nil {
+		utils.CLog("[LOAD LICENSE] parse key file failed")
+		os.Exit(0)
+	}
+	adminSalt, err := misc.RSADecrypt(licBytes, privateKey)
 	if err != nil {
-		fmt.Println(errMsg)
-		glogger.GLogger.Fatal(errMsg)
+		utils.CLog("[LOAD LICENSE] decrypt key file failed")
 		os.Exit(0)
 	}
 	LocalLicense, err := utils.ParseAuthInfo(string(adminSalt))
 	if err != nil {
-		fmt.Println(errMsg)
-		glogger.GLogger.Fatal(errMsg)
+		utils.CLog("[LOAD LICENSE] parse auth info failed")
 		os.Exit(0)
 	}
 	LocalLicense.License = string(licBytesB64)
@@ -70,8 +68,7 @@ func validateLicense(key_path, license_path string) error {
 	T2s := T2.Format("2006-01-02 15:04:05")
 	//
 	if !LocalLicense.ValidateTime() {
-		fmt.Printf("License has expired, Valid from %s to %s\n", T1s, T2s)
-		glogger.GLogger.Fatalf("License has expired, Valid from %s to %s", T1s, T2s)
+		utils.CLog("[LOAD LICENSE] License has expired, Valid from %s to %s\n", T1s, T2s)
 		os.Exit(0)
 	}
 	// validate local mac
@@ -84,40 +81,26 @@ func validateLicense(key_path, license_path string) error {
 		localMac, err3 = ossupport.GetLinuxMacAddr(LocalLicense.Iface)
 	}
 	if err3 != nil {
-		fmt.Println(errMsg)
-		fmt.Println(err3)
-		glogger.GLogger.Fatal(err3)
+		utils.CLog("[LOAD LICENSE] fetch local mac address failed")
 		os.Exit(0)
 	}
 	if localMac != LocalLicense.MAC {
-		fmt.Println(errMsg)
-		glogger.GLogger.Debugf("Local Mac:%s; certificate Mac:%s", localMac, LocalLicense.MAC)
-		glogger.GLogger.Fatal("Local certificate and hardware information do not match.")
+		utils.CLog("[LOAD LICENSE] Local Mac:%s; certificate Mac:%s", localMac, LocalLicense.MAC)
 		os.Exit(0)
 	}
 	typex.License = LocalLicense
-	fmt.Println("[∫∫] -----------------------------------")
-	fmt.Println("|>>| * Type     *", LocalLicense.Type)
-	fmt.Println("|>>| * DeviceID *", LocalLicense.DeviceID)
-	fmt.Println("|>>| * Admin    *", LocalLicense.AuthorizeAdmin)
-	fmt.Println("|>>| * MacAddr  *", LocalLicense.MAC)
-	fmt.Println("|>>| * Begin    *", T1s)
-	fmt.Println("|>>| * End      *", T2s)
-	fmt.Println("[∫∫] -----------------------------------")
+	utils.CLog("[LOAD LICENSE] license load success")
 	return nil
 }
 func (dm *LicenseManager) Init(section *ini.Section) error {
-	errMsg := "License loading failed."
 	license_path, err1 := section.GetKey("license_path")
 	if err1 != nil {
-		fmt.Println(errMsg)
-		glogger.GLogger.Fatal(errMsg)
+		utils.CLog("[LOAD LICENSE] load license file failed")
 		os.Exit(0)
 	}
 	key_path, err2 := section.GetKey("key_path")
 	if err2 != nil {
-		fmt.Println(errMsg)
-		glogger.GLogger.Fatal(errMsg)
+		utils.CLog("[LOAD LICENSE] load key file failed")
 		os.Exit(0)
 	}
 	return validateLicense(key_path.String(), license_path.String())

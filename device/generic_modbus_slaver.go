@@ -26,9 +26,10 @@ import (
 
 	mbserver "github.com/hootrhino/gomodbus-server"
 	serial "github.com/hootrhino/goserial"
-	"github.com/hootrhino/rhilex/common"
 	"github.com/hootrhino/rhilex/component/intercache"
+	"github.com/hootrhino/rhilex/device/dmodbus"
 	"github.com/hootrhino/rhilex/glogger"
+	"github.com/hootrhino/rhilex/resconfig"
 	"github.com/hootrhino/rhilex/typex"
 	"github.com/hootrhino/rhilex/utils"
 )
@@ -39,16 +40,17 @@ type ModbusSlaverCommonConfig struct {
 	SlaverId     int16  `json:"slaverId" validate:"required"`
 }
 type ModbusSlaverConfig struct {
-	CommonConfig ModbusSlaverCommonConfig `json:"commonConfig" validate:"required"`
-	HostConfig   common.HostConfig        `json:"hostConfig"`
-	UartConfig   common.UartConfig        `json:"uartConfig"`
+	CommonConfig  ModbusSlaverCommonConfig `json:"commonConfig" validate:"required"`
+	HostConfig    resconfig.HostConfig     `json:"hostConfig"`
+	UartConfig    resconfig.UartConfig     `json:"uartConfig"`
+	CecollaConfig resconfig.CecollaConfig  `json:"cecollaConfig"`
 }
 
 type ModbusSlaver struct {
 	typex.XStatus
 	status           typex.DeviceState
 	mainConfig       ModbusSlaverConfig
-	registers        map[string]*common.RegisterRW
+	registers        map[string]*dmodbus.ModbusRegister
 	server           *mbserver.Server
 	HoldingRegisters []uint16 // [5] = WriteSingleCoil
 	InputRegisters   []uint16 // [6] = WriteHoldingRegister
@@ -61,12 +63,12 @@ func NewGenericModbusSlaver(e typex.Rhilex) typex.XDevice {
 	mdev.RuleEngine = e
 	mdev.mainConfig = ModbusSlaverConfig{
 		CommonConfig: ModbusSlaverCommonConfig{Mode: "TCP", MaxRegisters: 64, SlaverId: 1},
-		HostConfig: common.HostConfig{
+		HostConfig: resconfig.HostConfig{
 			Host:    "0.0.0.0",
 			Port:    1502,
 			Timeout: 3000,
 		},
-		UartConfig: common.UartConfig{
+		UartConfig: resconfig.UartConfig{
 			Timeout:  3000,
 			Uart:     "/dev/ttyS1",
 			BaudRate: 9600,
@@ -76,7 +78,7 @@ func NewGenericModbusSlaver(e typex.Rhilex) typex.XDevice {
 		},
 	}
 
-	mdev.registers = map[string]*common.RegisterRW{}
+	mdev.registers = map[string]*dmodbus.ModbusRegister{}
 	mdev.status = typex.DEV_DOWN
 
 	return mdev
@@ -401,12 +403,4 @@ func (mdev *ModbusSlaver) OnCtrl(cmd []byte, args []byte) ([]byte, error) {
 		}
 	}
 	return nil, nil
-}
-
-func (mdev *ModbusSlaver) OnRead(cmd []byte, data []byte) (int, error) {
-	return 0, nil
-}
-
-func (mdev *ModbusSlaver) OnWrite(cmd []byte, b []byte) (int, error) {
-	return 0, nil
 }

@@ -23,10 +23,9 @@ import (
 	"time"
 
 	serial "github.com/hootrhino/goserial"
-	"github.com/hootrhino/rhilex/common"
+	"github.com/hootrhino/rhilex/resconfig"
 	"github.com/hootrhino/rhilex/component/intercache"
 	"github.com/hootrhino/rhilex/component/interdb"
-	"github.com/hootrhino/rhilex/component/uartctrl"
 	"github.com/hootrhino/rhilex/device/dlt6452007"
 	"github.com/hootrhino/rhilex/glogger"
 	"github.com/hootrhino/rhilex/typex"
@@ -48,9 +47,10 @@ type DLT645_2007_MasterGatewayCommonConfig struct {
 }
 
 type DLT645_2007_MasterGatewayMainConfig struct {
-	CommonConfig DLT645_2007_MasterGatewayCommonConfig `json:"commonConfig" validate:"required"`
-	HostConfig   common.HostConfig                     `json:"hostConfig"`
-	UartConfig   common.UartConfig                     `json:"uartConfig"`
+	CommonConfig  DLT645_2007_MasterGatewayCommonConfig `json:"commonConfig" validate:"required"`
+	HostConfig    resconfig.HostConfig                     `json:"hostConfig"`
+	UartConfig    resconfig.UartConfig                     `json:"uartConfig"`
+	CecollaConfig resconfig.CecollaConfig                  `json:"cecollaConfig"`
 }
 
 /**
@@ -82,11 +82,11 @@ func NewDLT645_2007_MasterGateway(e typex.Rhilex) typex.XDevice {
 				return &b
 			}(),
 		},
-		HostConfig: common.HostConfig{
+		HostConfig: resconfig.HostConfig{
 			Host: "127.0.0.1",
 			Port: 10065,
 		},
-		UartConfig: common.UartConfig{
+		UartConfig: resconfig.UartConfig{
 			Timeout:  3000,
 			Uart:     "/dev/ttyS1",
 			BaudRate: 2400,
@@ -110,9 +110,8 @@ func (gw *DLT645_2007_MasterGateway) Init(devId string, configMap map[string]int
 	if !utils.SContains([]string{"UART", "TCP"}, gw.mainConfig.CommonConfig.Mode) {
 		return errors.New("unsupported mode, only can be one of 'TCP' or 'UART'")
 	}
-	// CheckSerialBusy
-	if err := uartctrl.CheckSerialBusy(gw.mainConfig.UartConfig.Uart); err != nil {
-		return err
+	if err := gw.mainConfig.UartConfig.Validate(); err != nil {
+		return nil
 	}
 	var DLT645_ModbusPointList []DLT645_2007_DataPoint
 	PointLoadErr := interdb.DB().Table("m_dlt6452007_data_points").
@@ -137,7 +136,7 @@ func (gw *DLT645_2007_MasterGateway) Init(devId string, configMap map[string]int
 			Status:        0,
 			LastFetchTime: LastFetchTime,
 			Value:         "0",
-			ErrMsg:        "Loading",
+			ErrMsg:        "--",
 		})
 	}
 	return nil
@@ -350,13 +349,4 @@ func (gw *DLT645_2007_MasterGateway) OnDCACall(UUID string, Command string, Args
 
 func (gw *DLT645_2007_MasterGateway) OnCtrl(cmd []byte, args []byte) ([]byte, error) {
 	return []byte{}, nil
-}
-
-func (gw *DLT645_2007_MasterGateway) OnRead(cmd []byte, data []byte) (int, error) {
-
-	return 0, nil
-}
-
-func (gw *DLT645_2007_MasterGateway) OnWrite(cmd []byte, b []byte) (int, error) {
-	return 0, nil
 }

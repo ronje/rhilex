@@ -8,6 +8,7 @@ import (
 	"net"
 	"time"
 
+	"github.com/hootrhino/rhilex/resconfig"
 	"github.com/hootrhino/rhilex/component/apiserver/model"
 	"github.com/hootrhino/rhilex/component/intercache"
 	"github.com/hootrhino/rhilex/component/interdb"
@@ -44,8 +45,9 @@ type bacnetDataPoint struct {
 	property btypes.PropertyData
 }
 type BacnetMainConfig struct {
-	BacnetConfig bacnetConfig       `json:"bacnetConfig" validate:"required"`
-	CommonConfig bacnetCommonConfig `json:"commonConfig" validate:"required"`
+	BacnetConfig  bacnetConfig         `json:"bacnetConfig" validate:"required"`
+	CommonConfig  bacnetCommonConfig   `json:"commonConfig" validate:"required"`
+	CecollaConfig resconfig.CecollaConfig `json:"cecollaConfig"`
 }
 type GenericBacnetIpDevice struct {
 	typex.XStatus
@@ -110,7 +112,7 @@ func (dev *GenericBacnetIpDevice) Init(devId string, configMap map[string]interf
 			Status:        0,
 			LastFetchTime: uint64(time.Now().UnixMilli()),
 			Value:         "",
-			ErrMsg:        "Loading",
+			ErrMsg:        "--",
 		})
 		dev.SubDeviceDataPoints = append(dev.SubDeviceDataPoints, dataPoint)
 	}
@@ -261,10 +263,6 @@ func (dev *GenericBacnetIpDevice) Start(cctx typex.CCTX) error {
 
 	dev.status = typex.DEV_UP
 	return nil
-}
-
-func (dev *GenericBacnetIpDevice) OnRead(cmd []byte, data []byte) (int, error) {
-	return 0, nil
 }
 
 type ReadBacnetValue struct {

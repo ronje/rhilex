@@ -23,9 +23,9 @@ import (
 
 	serial "github.com/hootrhino/goserial"
 
-	"github.com/hootrhino/rhilex/common"
 	"github.com/hootrhino/rhilex/component/lostcache"
 	"github.com/hootrhino/rhilex/glogger"
+	"github.com/hootrhino/rhilex/resconfig"
 	"github.com/hootrhino/rhilex/typex"
 	"github.com/hootrhino/rhilex/utils"
 )
@@ -46,7 +46,7 @@ type GenericUartCommonConfig struct {
 
 type GenericUartMainConfig struct {
 	GenericUartCommonConfig GenericUartCommonConfig `json:"commonConfig" validate:"required"`
-	UartConfig              common.UartConfig       `json:"uartConfig"`
+	UartConfig              resconfig.UartConfig       `json:"uartConfig"`
 }
 type GenericUart struct {
 	typex.XStatus
@@ -70,7 +70,7 @@ func NewGenericUart(e typex.Rhilex) typex.XTarget {
 				return &b
 			}(),
 		},
-		UartConfig: common.UartConfig{
+		UartConfig: resconfig.UartConfig{
 			Timeout:  3000,
 			Uart:     "/dev/ttyS1",
 			BaudRate: 9600,

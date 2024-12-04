@@ -1,0 +1,187 @@
+{
+    "properties": [
+        {
+            "identifier": "sensorShort",
+            "tag": 1,
+            "name": "温度探头短路",
+            "desc": "",
+            "required": false,
+            "extendConfig": "",
+            "isCanSceneLinkage": 1,
+            "isShareAuthPerm": 0,
+            "funcGroup": 1,
+            "controlMode": 1,
+            "userPerm": 3,
+            "isHistory": 1,
+            "order": 0,
+            "mode": "r",
+            "define": {
+                "type": "bool",
+                "mapping": {
+                    "0": "关",
+                    "1": "开"
+                }
+            },
+            "isUseShadow": false,
+            "isNoRecord": false
+        },
+        {
+            "identifier": "sensorOpen",
+            "tag": 1,
+            "name": "温度探头开路",
+            "desc": "",
+            "required": false,
+            "extendConfig": "",
+            "isCanSceneLinkage": 1,
+            "isShareAuthPerm": 0,
+            "funcGroup": 1,
+            "controlMode": 1,
+            "userPerm": 3,
+            "isHistory": 1,
+            "order": 0,
+            "mode": "r",
+            "define": {
+                "type": "bool",
+                "mapping": {
+                    "0": "正常",
+                    "1": "故障"
+                }
+            },
+            "isUseShadow": false,
+            "isNoRecord": false
+        },
+        {
+            "identifier": "switch",
+            "tag": 2,
+            "name": "电源开关",
+            "desc": "",
+            "required": false,
+            "extendConfig": "{}",
+            "isCanSceneLinkage": 1,
+            "isShareAuthPerm": 0,
+            "funcGroup": 1,
+            "controlMode": 1,
+            "userPerm": 3,
+            "isHistory": 1,
+            "order": 0,
+            "mode": "rw",
+            "define": {
+                "type": "bool",
+                "mapping": {
+                    "0": "关",
+                    "1": "开"
+                }
+            },
+            "isUseShadow": false,
+            "isNoRecord": false
+        },
+        {
+            "identifier": "windSpeed",
+            "tag": 2,
+            "name": "风速",
+            "desc": "",
+            "required": false,
+            "extendConfig": "{}",
+            "isCanSceneLinkage": 1,
+            "isShareAuthPerm": 0,
+            "funcGroup": 1,
+            "controlMode": 1,
+            "userPerm": 3,
+            "isHistory": 1,
+            "order": 0,
+            "mode": "rw",
+            "define": {
+                "type": "enum",
+                "mapping": {
+                    "0": "高速",
+                    "1": "中速",
+                    "2": "低速",
+                    "3": "自动"
+                }
+            },
+            "isUseShadow": false,
+            "isNoRecord": false
+        },
+        {
+            "identifier": "mode",
+            "tag": 2,
+            "name": "模式",
+            "desc": "",
+            "required": false,
+            "extendConfig": "{}",
+            "isCanSceneLinkage": 1,
+            "isShareAuthPerm": 0,
+            "funcGroup": 1,
+            "controlMode": 1,
+            "userPerm": 3,
+            "isHistory": 1,
+            "order": 0,
+            "mode": "rw",
+            "define": {
+                "type": "enum",
+                "mapping": {
+                    "1": "制冷",
+                    "2": "制热",
+                    "3": "通风"
+                }
+            },
+            "isUseShadow": false,
+            "isNoRecord": false
+        },
+        {
+            "identifier": "roomTemp",
+            "tag": 2,
+            "name": "室内温度",
+            "desc": "",
+            "required": false,
+            "extendConfig": "{}",
+            "isCanSceneLinkage": 1,
+            "isShareAuthPerm": 0,
+            "funcGroup": 1,
+            "controlMode": 1,
+            "userPerm": 3,
+            "isHistory": 1,
+            "order": 0,
+            "mode": "r",
+            "define": {
+                "type": "float",
+                "min": "0.000",
+                "max": "99.000",
+                "start": "1.000",
+                "step": "1.000",
+                "unit": "℃"
+            },
+            "isUseShadow": false,
+            "isNoRecord": false
+        },
+        {
+            "identifier": "setTemp",
+            "tag": 2,
+            "name": "设置温度",
+            "desc": "",
+            "required": false,
+            "extendConfig": "",
+            "isCanSceneLinkage": 1,
+            "isShareAuthPerm": 0,
+            "funcGroup": 1,
+            "controlMode": 1,
+            "userPerm": 3,
+            "isHistory": 1,
+            "order": 0,
+            "mode": "rw",
+            "define": {
+                "type": "int",
+                "min": "5",
+                "max": "35",
+                "start": "5",
+                "step": "1",
+                "unit": "℃"
+            },
+            "isUseShadow": true,
+            "isNoRecord": false
+        }
+    ],
+    "profile": {
+        "productID": "00r"
+    }
+}

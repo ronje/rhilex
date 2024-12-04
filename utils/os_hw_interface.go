@@ -5,7 +5,8 @@ import (
 	"fmt"
 	"runtime"
 
-	archsupport "github.com/hootrhino/rhilex/archsupport"
+	"github.com/hootrhino/rhilex/ossupport"
+	"github.com/hootrhino/rhilex/periphery"
 )
 
 /*
@@ -82,7 +83,7 @@ func (m SystemDevices) String() string {
 func ShowGGpuAndCpuInfo() {
 	if runtime.GOARCH == "amd64" {
 		if runtime.GOOS == "windows" || runtime.GOOS == "linux" {
-			gpus, err1 := archsupport.GetGpuInfoWithNvidiaSmi()
+			gpus, err1 := periphery.GetGpuInfoWithNvidiaSmi()
 			if err1 == nil {
 				for _, gpu := range gpus {
 					fmt.Println("* Current GPU Device:", gpu.Name)
@@ -91,7 +92,7 @@ func ShowGGpuAndCpuInfo() {
 				fmt.Println("* GPU Device Not Found")
 			}
 			if runtime.GOOS == "linux" {
-				cpu, err2 := archsupport.GetLinuxCPUName()
+				cpu, err2 := periphery.GetLinuxCPUName()
 				if err2 == nil {
 					fmt.Println("* Current CPU Device:", cpu)
 				} else {
@@ -99,7 +100,7 @@ func ShowGGpuAndCpuInfo() {
 				}
 			}
 			if runtime.GOOS == "windows" {
-				cpu, err2 := archsupport.GetWindowsCPUName()
+				cpu, err2 := periphery.GetWindowsCPUName()
 				if err2 == nil {
 					fmt.Println("* Current CPU Device:", cpu)
 				} else {
@@ -109,5 +110,23 @@ func ShowGGpuAndCpuInfo() {
 			}
 			fmt.Println()
 		}
+	}
+
+}
+
+/**
+ * print all ips
+ *
+ */
+func ShowIpAddress() {
+	ipList, err := ossupport.GetAllIps()
+	if err != nil {
+		fmt.Println("x Get Ip Failed")
+	} else {
+		fmt.Printf("* Quick Access Address:\n")
+		for _, ip := range ipList {
+			fmt.Printf("-- %s\n", ip)
+		}
+		println()
 	}
 }

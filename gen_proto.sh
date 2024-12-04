@@ -32,9 +32,22 @@ echo ">>> Generate Trailer Proto OK."
 
 # AI Base
 echo ">>> Generating Aibase Proto..."
-protoc -I ./component/aibase/grpc --go_out ./component/aibase/grpc --go_opt paths=source_relative \
-    --go-grpc_out=./component/aibase/grpc --go-grpc_opt paths=source_relative \
+protoc -I ./component/aibase/grpc \
+    --go_out ./component/aibase/grpc \
+    --go_opt paths=source_relative \
+    --go-grpc_out=./component/aibase/grpc \
+    --go-grpc_opt paths=source_relative \
     ./component/aibase/grpc/aibase.proto
 echo ">>> Generate AIBase Proto OK."
+
+# Activation
+echo ">>> Generating Activation Proto..."
+protoc -I ./component/activation \
+    --go_out ./component/activation \
+    --go_opt paths=source_relative \
+    --go-grpc_out=./component/activation \
+    --go-grpc_opt paths=source_relative \
+    ./component/activation/activation.proto
+echo ">>> Generate Activation Proto OK."
 
 echo -e "\033[42;33m>>>\033[0m [FINISHED]"

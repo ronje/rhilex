@@ -5,7 +5,8 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/hootrhino/rhilex/common"
+	"github.com/hootrhino/rhilex/resconfig"
+
 	core "github.com/hootrhino/rhilex/config"
 	"github.com/hootrhino/rhilex/glogger"
 	"github.com/hootrhino/rhilex/typex"
@@ -17,13 +18,13 @@ import (
 type httpInEndSource struct {
 	typex.XStatus
 	engine     *gin.Engine
-	mainConfig common.HostConfig
+	mainConfig resconfig.HostConfig
 	status     typex.SourceState
 }
 
 func NewHttpInEndSource(e typex.Rhilex) typex.XSource {
 	h := httpInEndSource{}
-	if core.GlobalConfig.AppDebugMode {
+	if core.GlobalConfig.DebugMode {
 		gin.SetMode(gin.DebugMode)
 	} else {
 		gin.SetMode(gin.ReleaseMode)

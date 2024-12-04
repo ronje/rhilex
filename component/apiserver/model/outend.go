@@ -21,7 +21,6 @@ type MOutEnd struct {
 	RhilexModel
 	UUID        string `gorm:"uniqueIndex"`
 	Type        string `gorm:"not null"`
-	Enable      bool   `gorm:"not null"`
 	Name        string `gorm:"not null"`
 	Description string
 	Config      string

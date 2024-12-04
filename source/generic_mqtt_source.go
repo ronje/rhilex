@@ -6,8 +6,8 @@ import (
 	"time"
 
 	mqtt "github.com/eclipse/paho.mqtt.golang"
-	"github.com/hootrhino/rhilex/common"
 	"github.com/hootrhino/rhilex/glogger"
+	"github.com/hootrhino/rhilex/resconfig"
 	"github.com/hootrhino/rhilex/typex"
 	"github.com/hootrhino/rhilex/utils"
 )
@@ -20,13 +20,13 @@ type MqttMessage struct {
 type genericMqttSource struct {
 	typex.XStatus
 	client     mqtt.Client
-	mainConfig common.GenericMqttConfig
+	mainConfig resconfig.GenericMqttConfig
 	status     typex.SourceState
 }
 
 func NewGenericMqttSource(e typex.Rhilex) typex.XSource {
 	src := new(genericMqttSource)
-	src.mainConfig = common.GenericMqttConfig{
+	src.mainConfig = resconfig.GenericMqttConfig{
 		Port:     1883,
 		ClientId: fmt.Sprintf("rhilex_mqtt_source_%d", (time.Now().Second())),
 	}

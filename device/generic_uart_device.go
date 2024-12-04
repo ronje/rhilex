@@ -1,3 +1,18 @@
+// Copyright (C) 2024 wwhai
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Affero General Public License as
+// published by the Free Software Foundation, either version 3 of the
+// License, or (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Affero General Public License for more details.
+//
+// You should have received a copy of the GNU Affero General Public License
+// along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
 package device
 
 import (
@@ -12,33 +27,32 @@ import (
 	"time"
 
 	serial "github.com/hootrhino/goserial"
-	"github.com/hootrhino/rhilex/common"
-	"github.com/hootrhino/rhilex/component/uartctrl"
+	"github.com/hootrhino/rhilex/resconfig"
 	"github.com/hootrhino/rhilex/glogger"
 	"github.com/hootrhino/rhilex/typex"
 	"github.com/hootrhino/rhilex/utils"
 )
 
-type _UartCommonConfig struct {
+type GenericUartCommonConfig struct {
 	AutoRequest *bool `json:"autoRequest" validate:"required"`
 }
-type _UartRwConfig struct {
+type GenericUartRwConfig struct {
 	Tag        string `json:"tag" validate:"required"`
 	TimeSlice  uint64 `json:"timeSlice" validate:"required"`
 	ReadFormat string `json:"readFormat" validate:"required" myself:"RAW,HEX,UTF8"` // 读取格式, "RAW"|"HEX"|"UTF8"
 }
-type _UartMainConfig struct {
-	CommonConfig _UartCommonConfig `json:"commonConfig" validate:"required"`
-	RwConfig     _UartRwConfig     `json:"rwConfig" validate:"required"`
-	UartConfig   common.UartConfig `json:"uartConfig"`
+type GenericUartMainConfig struct {
+	CommonConfig GenericUartCommonConfig `json:"commonConfig" validate:"required"`
+	RwConfig     GenericUartRwConfig     `json:"rwConfig" validate:"required"`
+	UartConfig   resconfig.UartConfig       `json:"uartConfig"`
 }
 
-type genericUartDevice struct {
+type GenericUartDevice struct {
 	typex.XStatus
 	serialPort serial.Port
 	status     typex.DeviceState
 	RuleEngine typex.Rhilex
-	mainConfig _UartMainConfig
+	mainConfig GenericUartMainConfig
 	locker     sync.Locker
 }
 
@@ -48,21 +62,21 @@ type genericUartDevice struct {
 *
  */
 func NewGenericUartDevice(e typex.Rhilex) typex.XDevice {
-	uart := new(genericUartDevice)
+	uart := new(GenericUartDevice)
 	uart.locker = &sync.Mutex{}
-	uart.mainConfig = _UartMainConfig{
-		CommonConfig: _UartCommonConfig{
+	uart.mainConfig = GenericUartMainConfig{
+		CommonConfig: GenericUartCommonConfig{
 			AutoRequest: func() *bool {
 				b := true
 				return &b
 			}(),
 		},
-		RwConfig: _UartRwConfig{
+		RwConfig: GenericUartRwConfig{
 			TimeSlice:  50,
 			ReadFormat: "HEX",
 			Tag:        "uart",
 		},
-		UartConfig: common.UartConfig{
+		UartConfig: resconfig.UartConfig{
 			Timeout:  3000,
 			Uart:     "/dev/ttyS1",
 			BaudRate: 9600,
@@ -76,16 +90,15 @@ func NewGenericUartDevice(e typex.Rhilex) typex.XDevice {
 }
 
 //  初始化
-func (uart *genericUartDevice) Init(devId string, configMap map[string]interface{}) error {
+func (uart *GenericUartDevice) Init(devId string, configMap map[string]interface{}) error {
 	uart.PointId = devId
 
 	if err := utils.BindSourceConfig(configMap, &uart.mainConfig); err != nil {
 		glogger.GLogger.Error(err)
 		return err
 	}
-	// CheckSerialBusy
-	if err := uartctrl.CheckSerialBusy(uart.mainConfig.UartConfig.Uart); err != nil {
-		return err
+	if err := uart.mainConfig.UartConfig.Validate(); err != nil {
+		return nil
 	}
 	if uart.mainConfig.RwConfig.TimeSlice < 30 {
 		errA := fmt.Errorf("TimeSlice Must Great than 30, but current is: %v",
@@ -103,7 +116,7 @@ func (uart *genericUartDevice) Init(devId string, configMap map[string]interface
 }
 
 // 启动
-func (uart *genericUartDevice) Start(cctx typex.CCTX) error {
+func (uart *GenericUartDevice) Start(cctx typex.CCTX) error {
 	uart.Ctx = cctx.Ctx
 	uart.CancelCTX = cctx.CancelCTX
 
@@ -180,14 +193,7 @@ func (uart *genericUartDevice) Start(cctx typex.CCTX) error {
 }
 
 // 从设备里面读数据出来:
-//
-//	{
-//	    "tag":"data tag",
-//	    "value":"value s"
-//	}
-//
-// t1.txt="OK"\xff\xff\xff
-func (uart *genericUartDevice) OnCtrl(cmd []byte, args []byte) ([]byte, error) {
+func (uart *GenericUartDevice) OnCtrl(cmd []byte, args []byte) ([]byte, error) {
 	result := [2048]byte{}
 	if string(cmd) == "HEX" {
 		hexs, err1 := hex.DecodeString(string(cmd))
@@ -215,7 +221,7 @@ func (uart *genericUartDevice) OnCtrl(cmd []byte, args []byte) ([]byte, error) {
 }
 
 // 设备当前状态
-func (uart *genericUartDevice) Status() typex.DeviceState {
+func (uart *GenericUartDevice) Status() typex.DeviceState {
 	if uart.serialPort == nil {
 		uart.status = typex.DEV_DOWN
 	}
@@ -223,7 +229,7 @@ func (uart *genericUartDevice) Status() typex.DeviceState {
 }
 
 // 停止设备
-func (uart *genericUartDevice) Stop() {
+func (uart *GenericUartDevice) Stop() {
 	uart.status = typex.DEV_DOWN
 	if uart.CancelCTX != nil {
 		uart.CancelCTX()
@@ -234,22 +240,14 @@ func (uart *genericUartDevice) Stop() {
 
 }
 
-func (uart *genericUartDevice) Details() *typex.Device {
+func (uart *GenericUartDevice) Details() *typex.Device {
 	return uart.RuleEngine.GetDevice(uart.PointId)
 }
 
-func (uart *genericUartDevice) SetState(status typex.DeviceState) {
+func (uart *GenericUartDevice) SetState(status typex.DeviceState) {
 	uart.status = status
 }
 
-func (uart *genericUartDevice) OnDCACall(UUID string, Command string, Args interface{}) typex.DCAResult {
+func (uart *GenericUartDevice) OnDCACall(UUID string, Command string, Args interface{}) typex.DCAResult {
 	return typex.DCAResult{}
-}
-func (uart *genericUartDevice) OnRead(cmd []byte, data []byte) (int, error) {
-	return 0, nil
-}
-
-// 把数据写入设备
-func (uart *genericUartDevice) OnWrite(cmd []byte, b []byte) (int, error) {
-	return 0, nil
 }

@@ -64,7 +64,7 @@ func DeleteDataSchemaAndProperty(schemaUuid string) error {
 		return err
 	}
 	// 未发布的情况
-	if !MIotSchema.Published {
+	if !*MIotSchema.Published {
 		// Only Delete Schema
 		err2 := interdb.DB().Model(model.MIotSchema{}).Where("uuid=?", schemaUuid).Delete(&model.MIotSchema{}).Error
 		if err2 != nil {

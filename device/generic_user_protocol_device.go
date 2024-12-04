@@ -23,10 +23,9 @@ import (
 	"net"
 	"time"
 
-	"github.com/hootrhino/rhilex/common"
+	"github.com/hootrhino/rhilex/resconfig"
 	"github.com/hootrhino/rhilex/component/intercache"
 	"github.com/hootrhino/rhilex/component/interdb"
-	"github.com/hootrhino/rhilex/component/uartctrl"
 	userproto "github.com/hootrhino/rhilex/device/useprotocol"
 
 	serial "github.com/hootrhino/goserial"
@@ -55,8 +54,8 @@ type GenericUserProtocolDataPoint struct {
  */
 type GenericUserProtocolConfig struct {
 	CommonConfig UserProtocolCommonConfig `json:"commonConfig" validate:"required"`
-	HostConfig   common.HostConfig        `json:"hostConfig"`
-	UartConfig   common.UartConfig        `json:"uartConfig"`
+	HostConfig   resconfig.HostConfig        `json:"hostConfig"`
+	UartConfig   resconfig.UartConfig        `json:"uartConfig"`
 }
 type GenericUserProtocolDevice struct {
 	typex.XStatus
@@ -83,12 +82,12 @@ func NewGenericUserProtocolDevice(e typex.Rhilex) typex.XDevice {
 				return &b
 			}(),
 		},
-		HostConfig: common.HostConfig{
+		HostConfig: resconfig.HostConfig{
 			Host:    "127.0.0.1",
 			Port:    502,
 			Timeout: 3000,
 		},
-		UartConfig: common.UartConfig{
+		UartConfig: resconfig.UartConfig{
 			Timeout:  3000,
 			Uart:     "COM1",
 			BaudRate: 9600,
@@ -113,9 +112,8 @@ func (gw *GenericUserProtocolDevice) Init(devId string, configMap map[string]int
 	if !utils.SContains([]string{"UART", "TCP"}, gw.mainConfig.CommonConfig.Mode) {
 		return errors.New("unsupported mode, only can be one of 'TCP' or 'UART'")
 	}
-	// CheckSerialBusy
-	if err := uartctrl.CheckSerialBusy(gw.mainConfig.UartConfig.Uart); err != nil {
-		return err
+	if err := gw.mainConfig.UartConfig.Validate(); err != nil {
+		return nil
 	}
 	var DataPoints []GenericUserProtocolDataPoint
 	PointLoadErr := interdb.DB().Table("m_user_protocol_data_points").
@@ -140,7 +138,7 @@ func (gw *GenericUserProtocolDevice) Init(devId string, configMap map[string]int
 			Status:        0,
 			LastFetchTime: LastFetchTime,
 			Value:         "0",
-			ErrMsg:        "Loading",
+			ErrMsg:        "--",
 		})
 	}
 	return nil
@@ -263,26 +261,6 @@ func (gw *GenericUserProtocolDevice) work(handler *userproto.UserProtocolClientH
 			}
 		}
 	}
-}
-
-/*
-*
-* 数据读出来，对数据结构有要求, 其中Key必须是个数字或者数字字符串, 例如 1 or "1"
-*
- */
-func (gw *GenericUserProtocolDevice) OnRead(cmd []byte, data []byte) (int, error) {
-	return 0, errors.New("unknown read command:" + string(cmd))
-}
-
-/*
-*
-* 写进来的数据格式 参考@Protocol
-*
- */
-
-// 把数据写入设备
-func (gw *GenericUserProtocolDevice) OnWrite(cmd []byte, data []byte) (int, error) {
-	return 0, errors.New("unknown write command:" + string(cmd))
 }
 
 /*

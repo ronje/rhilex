@@ -145,7 +145,7 @@ func SnmpSheetPageList(c *gin.Context, ruleEngine typex.Rhilex) {
 			DeviceUUID: record.DeviceUuid,
 			Tag:        record.Tag,
 			Alias:      record.Alias,
-			Frequency:  &record.Frequency,
+			Frequency:  record.Frequency,
 			ErrMsg:     value.ErrMsg,
 		}
 		if ok {
@@ -268,7 +268,7 @@ func SnmpSheetUpdate(c *gin.Context, ruleEngine typex.Rhilex) {
 				Alias:      SnmpDataPoint.Alias,
 				DeviceUuid: form.DeviceUUID,
 				Oid:        SnmpDataPoint.Oid,
-				Frequency:  *SnmpDataPoint.Frequency,
+				Frequency:  SnmpDataPoint.Frequency,
 			}
 			err0 := service.InsertSnmpOid(NewRow)
 			if err0 != nil {
@@ -282,7 +282,7 @@ func SnmpSheetUpdate(c *gin.Context, ruleEngine typex.Rhilex) {
 				Alias:      SnmpDataPoint.Alias,
 				DeviceUuid: SnmpDataPoint.DeviceUUID,
 				Oid:        SnmpDataPoint.Oid,
-				Frequency:  *SnmpDataPoint.Frequency,
+				Frequency:  SnmpDataPoint.Frequency,
 			}
 			err0 := service.UpdateSnmpOid(OldRow)
 			if err0 != nil {
@@ -417,7 +417,7 @@ func parseSnmpOidExcel(r io.Reader, sheetName string,
 			Oid:        oid,
 			Tag:        tag,
 			Alias:      alias,
-			Frequency:  frequency,
+			Frequency:  &frequency,
 		}
 		list = append(list, model)
 	}
