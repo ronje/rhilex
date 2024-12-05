@@ -109,6 +109,8 @@ func (hs *ApiServerPlugin) Init(config *ini.Section) error {
 		&model.MDevice{},
 		&model.MCecolla{},
 		&model.MApplet{},
+		&model.MAlarmRule{},
+		&model.MAlarmLog{},
 		&model.MGenericGroup{},
 		&model.MGenericGroupRelation{},
 		&model.MNetworkConfig{},
@@ -211,6 +213,10 @@ func (hs *ApiServerPlugin) LoadRoute() {
 	apis.InitMqttSourceServerRoute()
 	// Cron Reboot
 	apis.InitCronRebootRoute()
+	// 告警规则
+	apis.LoadAlarmRuleRoute()
+	// 告警日志
+	apis.LoadAlarmLogRoute()
 }
 
 // ApiServerPlugin Start

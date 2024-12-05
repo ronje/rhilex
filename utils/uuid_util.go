@@ -30,6 +30,14 @@ func PluginUuid() string {
 	return MakeUUID("PLUGIN")
 }
 
+func AlarmLogUuid() string {
+	return MakeUUID("ALLOG")
+}
+
+func AlarmRuleUuid() string {
+	return MakeUUID("ALARM")
+}
+
 func GroupUuid() string {
 	return MakeUUID("GROUP")
 }
