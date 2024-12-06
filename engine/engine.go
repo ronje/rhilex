@@ -22,6 +22,7 @@ import (
 
 	lua "github.com/hootrhino/gopher-lua"
 	"github.com/hootrhino/rhilex/component/aibase"
+	"github.com/hootrhino/rhilex/component/alarmcenter"
 	"github.com/hootrhino/rhilex/component/applet"
 	"github.com/hootrhino/rhilex/component/cecollalet"
 	"github.com/hootrhino/rhilex/component/crontask"
@@ -81,8 +82,10 @@ func InitRuleEngine(config typex.RhilexConfig) typex.Rhilex {
 	}
 	// Init Security License
 	security.InitSecurityLicense()
-	// Internal DB
+	// Init Internal DB
 	interdb.InitInterDb(__DefaultRuleEngine)
+	// Init Alarm Center
+	alarmcenter.InitAlarmCenter(__DefaultRuleEngine)
 	// Data center: future version maybe support
 	datacenter.InitDataCenter(__DefaultRuleEngine)
 	// Lost Data Cache
@@ -126,9 +129,10 @@ func InitRuleEngine(config typex.RhilexConfig) typex.Rhilex {
 *
  */
 func (e *RuleEngine) Start() *typex.RhilexConfig {
-	// RuleEngine Cache Slot
+	// RuleEngine __DefaultRuleEngine
 	intercache.RegisterSlot("__DefaultRuleEngine")
-	intercache.RegisterSlot("__CecollaBinding")
+	// RegisterSlot __DeviceConfigMap
+	intercache.RegisterSlot("__DeviceConfigMap")
 	// Internal BUS
 	interqueue.StartXQueue()
 	return e.Config
@@ -145,7 +149,7 @@ func (e *RuleEngine) GetConfig() *typex.RhilexConfig {
 func (e *RuleEngine) Stop() {
 	glogger.GLogger.Info("Ready to stop RHILEX")
 	crontask.StopCronRebootExecutor()
-	// 资源
+	// 资源 TODO: 后期重构设备资源等，独立资源管理器。
 	for _, inEnd := range e.InEnds.Values() {
 		if inEnd.Source != nil {
 			glogger.GLogger.Infof("Stop InEnd:(%s,%s)", inEnd.Name, inEnd.UUID)
@@ -183,17 +187,20 @@ func (e *RuleEngine) Stop() {
 	// Stop transceiver
 	glogger.GLogger.Info("Stop transceiver")
 	transceiver.Stop()
-	// UnRegister __DefaultRuleEngine
-	intercache.UnRegisterSlot("__DefaultRuleEngine")
-	// UnRegister __DeviceConfigMap
-	intercache.UnRegisterSlot("__DeviceConfigMap")
-	// Cecolla bindinged Config
-	intercache.UnRegisterSlot("__CecollaBinding")
+	// Stop Alarm Center
+	glogger.GLogger.Info("Stop Alarm Center")
+	alarmcenter.Stop()
+	glogger.GLogger.Info("Stop Alarm Center Successfully")
 	// Stop PluginType Manager
 	glogger.GLogger.Info("Stop PluginType Manager")
 	rhilexmanager.DefaultPluginTypeManager.Stop()
 	glogger.GLogger.Info("Stop PluginType Successfully")
 	// END
+	// UnRegister __DefaultRuleEngine
+	intercache.UnRegisterSlot("__DefaultRuleEngine")
+	// UnRegister __DeviceConfigMap
+	intercache.UnRegisterSlot("__DeviceConfigMap")
+	//
 	glogger.GLogger.Info("Stop RHILEX successfully")
 	glogger.Close()
 }

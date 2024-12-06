@@ -16,6 +16,8 @@ package alarmcenter
 
 import (
 	"time"
+
+	"github.com/expr-lang/expr/vm"
 )
 
 // AlarmRule 告警规则
@@ -24,15 +26,17 @@ type AlarmRule struct {
 	Interval     time.Duration // 最小触发时间间隔
 	lastAlarm    time.Time     // 上次告警触发的时间
 	pendingCount int           // 当前累计的告警数量
+	program      *vm.Program
 }
 
 // NewAlarmRule 创建一个告警规则
-func NewAlarmRule(threshold int, interval time.Duration) *AlarmRule {
+func NewAlarmRule(threshold int, interval time.Duration, program *vm.Program) *AlarmRule {
 	return &AlarmRule{
 		Threshold:    threshold,
 		Interval:     interval,
 		lastAlarm:    time.Time{},
 		pendingCount: 0,
+		program:      program,
 	}
 }
 
@@ -42,7 +46,8 @@ func (ar *AlarmRule) AddLog() bool {
 	now := time.Now()
 
 	// 检查是否满足触发条件
-	if ar.pendingCount >= ar.Threshold || now.Sub(ar.lastAlarm) >= ar.Interval {
+	if ar.pendingCount >= ar.Threshold ||
+		now.Sub(ar.lastAlarm) >= ar.Interval {
 		ar.lastAlarm = now  // 更新最后触发时间
 		ar.pendingCount = 0 // 清空计数器
 		return true         // 触发告警
@@ -53,6 +58,16 @@ func (ar *AlarmRule) AddLog() bool {
 
 // Reset 重置告警状态
 func (ar *AlarmRule) Reset() {
+	ar.ResetLastAlarm()
+	ar.ResetPendingCount()
+}
+
+// Reset 重置告警状态
+func (ar *AlarmRule) ResetPendingCount() {
 	ar.pendingCount = 0
+}
+
+// Reset 重置告警状态
+func (ar *AlarmRule) ResetLastAlarm() {
 	ar.lastAlarm = time.Time{}
 }

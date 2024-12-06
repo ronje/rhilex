@@ -16,26 +16,31 @@ package test
 
 import (
 	"testing"
+	"time"
 
 	"github.com/hootrhino/rhilex/component/alarmcenter"
 )
 
-// go test -timeout 30s -run ^Test_alarmcenter$ github.com/hootrhino/rhilex/component/alarmcenter -v -count=1
-func Test_alarmcenter(t *testing.T) {
-	// engine := RunTestEngine()
-	// engine.Start()
-	alarmcenter.InitAlarmCenter(nil)
-	alarmcenter.LoadExpr("test", "temp > 10 && humi == 10 && oxy > 0")
+// go test -timeout 30s -run ^Test_alarm_Center_Normal$ github.com/hootrhino/rhilex/test -v -count=1
+func Test_alarm_Center_Normal(t *testing.T) {
+	engine := RunTestEngine()
+	engine.Start()
+	alarmcenter.InitAlarmCenter(engine)
+	Threshold := 10
+	Interval := 10 * time.Second
+	alarmcenter.LoadExpr("test", "temp > 10 && humi == 10 && oxy > 0", Threshold, Interval)
 	{
-		R, err := alarmcenter.RunExpr("test", map[string]any{
-			"temp": 12,
-			"humi": 10,
-			"oxy":  1,
-		})
-		if err != nil {
-			t.Fatal(err)
+		for i := 0; i < 20; i++ {
+			R, err := alarmcenter.RunExpr("test", map[string]any{
+				"temp": 12,
+				"humi": 10,
+				"oxy":  1,
+			})
+			if err != nil {
+				t.Fatal(err)
+			}
+			t.Log(R)
 		}
-		t.Log(R)
 	}
 
 	alarmcenter.RemoveExpr("test")
@@ -48,5 +53,39 @@ func Test_alarmcenter(t *testing.T) {
 		}
 		t.Log(R)
 	}
-	alarmcenter.FlushAlarmCenter()
+	alarmcenter.Stop()
+}
+
+// go test -timeout 30s -run ^Test_alarm_Center_Not_Effect$ github.com/hootrhino/rhilex/test -v -count=1
+
+func Test_alarm_Center_Not_Effect(t *testing.T) {
+	alarmcenter.InitAlarmCenter(nil)
+	Threshold := 100
+	Interval := 3 * time.Second
+	alarmcenter.LoadExpr("test", "temp > 10 && humi == 10 && oxy > 0", Threshold, Interval)
+	{
+		for i := 0; i < 2000; i++ {
+			R, err := alarmcenter.RunExpr("test", map[string]any{
+				"temp": 12,
+				"humi": 10,
+				"oxy":  1,
+			})
+			if err != nil {
+				t.Fatal(err)
+			}
+			t.Log(R)
+		}
+	}
+
+	alarmcenter.RemoveExpr("test")
+	{
+		R, err := alarmcenter.RunExpr("test", map[string]any{
+			"age": 120,
+		})
+		if err != nil {
+			t.Fatal(err)
+		}
+		t.Log(R)
+	}
+	alarmcenter.Stop()
 }

@@ -22,6 +22,7 @@ import (
 	"time"
 
 	lua "github.com/hootrhino/gopher-lua"
+	"github.com/hootrhino/rhilex/component/intercache"
 	"github.com/hootrhino/rhilex/component/luaruntime"
 	"github.com/hootrhino/rhilex/glogger"
 	"github.com/hootrhino/rhilex/typex"
@@ -36,6 +37,8 @@ func InitCecollaletRuntime(re typex.Rhilex) *CecollaletRuntime {
 		locker:      sync.Mutex{},
 		Cecollalets: make(map[string]*Cecollalet),
 	}
+	// Cecolla Config
+	intercache.RegisterSlot("__CecollaBinding")
 	return __DefaultCecollaletRuntime
 }
 
@@ -240,7 +243,8 @@ func Stop() {
 		cecollalet.Stop()
 		glogger.GLogger.Info("Stop Cecollalet:", cecollalet.UUID, " Successfully")
 	}
-	glogger.GLogger.Info("cecollaletlet stopped")
+	intercache.UnRegisterSlot("__CecollaBinding")
+	glogger.GLogger.Info("cecollalet stopped")
 
 }
 func GetRhilex() typex.Rhilex {

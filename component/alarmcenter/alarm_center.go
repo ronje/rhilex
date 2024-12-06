@@ -17,6 +17,8 @@ package alarmcenter
 
 import (
 	"errors"
+	"fmt"
+	"time"
 
 	"github.com/expr-lang/expr"
 	"github.com/expr-lang/expr/vm"
@@ -28,24 +30,60 @@ var __DefaultAlarmCenter *AlarmCenter
 
 type AlarmCenter struct {
 	e        typex.Rhilex
-	registry *orderedmap.OrderedMap[string, *vm.Program]
+	registry *orderedmap.OrderedMap[string, *AlarmRule]
 }
 
 func InitAlarmCenter(e typex.Rhilex) {
 	__DefaultAlarmCenter = &AlarmCenter{
 		e:        e,
-		registry: orderedmap.NewOrderedMap[string, *vm.Program](),
+		registry: orderedmap.NewOrderedMap[string, *AlarmRule](),
 	}
 }
 
 // Load Expr
-func LoadExpr(uuid, exprs string) (*vm.Program, error) {
+func LoadExpr(uuid, exprs string, Threshold int, Interval time.Duration) (*vm.Program, error) {
 	Program, err := expr.Compile(exprs, expr.AsBool())
 	if err != nil {
 		return nil, err
 	}
-	__DefaultAlarmCenter.registry.Set(uuid, Program)
+	__DefaultAlarmCenter.registry.Set(uuid, NewAlarmRule(Threshold, Interval, Program))
 	return Program, nil
+}
+
+// Run Expr
+func RunExpr(uuid string, in map[string]any) (bool, error) {
+	AlarmRule, ok := __DefaultAlarmCenter.registry.Get(uuid)
+	if ok {
+		output, err := expr.Run(AlarmRule.program, in)
+		switch T := output.(type) {
+		case bool:
+			if T {
+				// TODO 触发规则
+				if AlarmRule.AddLog() {
+					fmt.Println("================ ", in)
+				}
+			}
+		}
+		return false, err
+	}
+	return false, errors.New("Invalid Expr vm")
+}
+
+// Remove Expr
+func RemoveExpr(uuid string) {
+	__DefaultAlarmCenter.registry.Delete(uuid)
+}
+
+// 输入数据检查规则
+func Input(uuid string, in map[string]any) (bool, error) {
+	return RunExpr(uuid, in)
+}
+
+// Stop
+func Stop() {
+	for _, v := range __DefaultAlarmCenter.registry.Keys() {
+		__DefaultAlarmCenter.registry.Delete(v)
+	}
 }
 
 // 测试
@@ -56,27 +94,4 @@ func TestRunExpr(exprs string, in map[string]any) (bool, error) {
 	}
 	output, err := expr.Run(Program, in)
 	return output.(bool), err
-}
-
-// Run Expr
-func RunExpr(uuid string, in map[string]any) (bool, error) {
-	Program, ok := __DefaultAlarmCenter.registry.Get(uuid)
-	if ok {
-		// TODO: 这里有危险，应该增加资源限制控制.
-		output, err := expr.Run(Program, in)
-		return output.(bool), err
-	}
-	return false, errors.New("Invalid Expr vm")
-}
-
-// Remove Expr
-func RemoveExpr(uuid string) {
-	__DefaultAlarmCenter.registry.Delete(uuid)
-}
-
-// Flush
-func FlushAlarmCenter() {
-	for _, v := range __DefaultAlarmCenter.registry.Keys() {
-		__DefaultAlarmCenter.registry.Delete(v)
-	}
 }

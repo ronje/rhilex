@@ -15,12 +15,15 @@
 
 package model
 
-// 告警规则
+// 告警规则：
+// 举例：某个传感器达到30度的时候告警，但是这个冷却时间会有5分钟，如果不做限制会持续不断的生成大量日志
+// 在Interval时间内，发生了Threshold条告警才真实告警。
 type MAlarmRule struct {
 	RhilexModel
 	UUID        string `gorm:"uniqueIndex"` // UUID
 	Name        string `gorm:"not null"`    // 名称
 	Expr        string `gorm:"not null"`    // 表达式
 	Interval    uint64 `gorm:"not null"`    // 执行周期
+	Threshold   uint64 `gorm:"not null"`    // 单次触发的日志数量阈值
 	Description string // 描述
 }
