@@ -27,8 +27,8 @@ import (
 	"time"
 
 	serial "github.com/hootrhino/goserial"
-	"github.com/hootrhino/rhilex/resconfig"
 	"github.com/hootrhino/rhilex/glogger"
+	"github.com/hootrhino/rhilex/resconfig"
 	"github.com/hootrhino/rhilex/typex"
 	"github.com/hootrhino/rhilex/utils"
 )
@@ -42,9 +42,11 @@ type GenericUartRwConfig struct {
 	ReadFormat string `json:"readFormat" validate:"required" myself:"RAW,HEX,UTF8"` // 读取格式, "RAW"|"HEX"|"UTF8"
 }
 type GenericUartMainConfig struct {
-	CommonConfig GenericUartCommonConfig `json:"commonConfig" validate:"required"`
-	RwConfig     GenericUartRwConfig     `json:"rwConfig" validate:"required"`
-	UartConfig   resconfig.UartConfig       `json:"uartConfig"`
+	CommonConfig  GenericUartCommonConfig `json:"commonConfig" validate:"required"`
+	RwConfig      GenericUartRwConfig     `json:"rwConfig" validate:"required"`
+	UartConfig    resconfig.UartConfig    `json:"uartConfig"`
+	CecollaConfig resconfig.CecollaConfig `json:"cecollaConfig"`
+	AlarmConfig   resconfig.AlarmConfig   `json:"alarmConfig"`
 }
 
 type GenericUartDevice struct {
@@ -83,6 +85,22 @@ func NewGenericUartDevice(e typex.Rhilex) typex.XDevice {
 			DataBits: 8,
 			Parity:   "N",
 			StopBits: 1,
+		},
+		CecollaConfig: resconfig.CecollaConfig{
+			Enable: func() *bool {
+				b := false
+				return &b
+			}(),
+			EnableCreateSchema: func() *bool {
+				b := true
+				return &b
+			}(),
+		},
+		AlarmConfig: resconfig.AlarmConfig{
+			Enable: func() *bool {
+				b := false
+				return &b
+			}(),
 		},
 	}
 	uart.RuleEngine = e

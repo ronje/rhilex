@@ -23,10 +23,10 @@ import (
 	"net"
 	"time"
 
-	"github.com/hootrhino/rhilex/resconfig"
 	"github.com/hootrhino/rhilex/component/intercache"
 	"github.com/hootrhino/rhilex/component/interdb"
 	userproto "github.com/hootrhino/rhilex/device/useprotocol"
+	"github.com/hootrhino/rhilex/resconfig"
 
 	serial "github.com/hootrhino/goserial"
 	"github.com/hootrhino/rhilex/glogger"
@@ -53,9 +53,11 @@ type GenericUserProtocolDataPoint struct {
 *
  */
 type GenericUserProtocolConfig struct {
-	CommonConfig UserProtocolCommonConfig `json:"commonConfig" validate:"required"`
-	HostConfig   resconfig.HostConfig        `json:"hostConfig"`
-	UartConfig   resconfig.UartConfig        `json:"uartConfig"`
+	CommonConfig  UserProtocolCommonConfig `json:"commonConfig" validate:"required"`
+	HostConfig    resconfig.HostConfig     `json:"hostConfig"`
+	UartConfig    resconfig.UartConfig     `json:"uartConfig"`
+	CecollaConfig resconfig.CecollaConfig  `json:"cecollaConfig"`
+	AlarmConfig   resconfig.AlarmConfig    `json:"alarmConfig"`
 }
 type GenericUserProtocolDevice struct {
 	typex.XStatus
@@ -94,6 +96,22 @@ func NewGenericUserProtocolDevice(e typex.Rhilex) typex.XDevice {
 			DataBits: 8,
 			Parity:   "N",
 			StopBits: 1,
+		},
+		CecollaConfig: resconfig.CecollaConfig{
+			Enable: func() *bool {
+				b := false
+				return &b
+			}(),
+			EnableCreateSchema: func() *bool {
+				b := true
+				return &b
+			}(),
+		},
+		AlarmConfig: resconfig.AlarmConfig{
+			Enable: func() *bool {
+				b := false
+				return &b
+			}(),
 		},
 	}
 	gw.DataPoints = map[string]GenericUserProtocolDataPoint{}

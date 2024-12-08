@@ -8,10 +8,11 @@ import (
 	"net"
 	"time"
 
-	"github.com/hootrhino/rhilex/resconfig"
+	"github.com/hootrhino/rhilex/component/alarmcenter"
 	"github.com/hootrhino/rhilex/component/apiserver/model"
 	"github.com/hootrhino/rhilex/component/intercache"
 	"github.com/hootrhino/rhilex/component/interdb"
+	"github.com/hootrhino/rhilex/resconfig"
 
 	bacnet "github.com/hootrhino/gobacnet"
 	"github.com/hootrhino/gobacnet/apdus"
@@ -45,9 +46,10 @@ type bacnetDataPoint struct {
 	property btypes.PropertyData
 }
 type BacnetMainConfig struct {
-	BacnetConfig  bacnetConfig         `json:"bacnetConfig" validate:"required"`
-	CommonConfig  bacnetCommonConfig   `json:"commonConfig" validate:"required"`
+	BacnetConfig  bacnetConfig            `json:"bacnetConfig" validate:"required"`
+	CommonConfig  bacnetCommonConfig      `json:"commonConfig" validate:"required"`
 	CecollaConfig resconfig.CecollaConfig `json:"cecollaConfig"`
+	AlarmConfig   resconfig.AlarmConfig   `json:"alarmConfig"`
 }
 type GenericBacnetIpDevice struct {
 	typex.XStatus
@@ -77,6 +79,22 @@ func NewGenericBacnetIpDevice(e typex.Rhilex) typex.XDevice {
 			LocalPort: 47808,
 			DeviceId:  2580,
 			VendorId:  2580,
+		},
+		CecollaConfig: resconfig.CecollaConfig{
+			Enable: func() *bool {
+				b := false
+				return &b
+			}(),
+			EnableCreateSchema: func() *bool {
+				b := true
+				return &b
+			}(),
+		},
+		AlarmConfig: resconfig.AlarmConfig{
+			Enable: func() *bool {
+				b := false
+				return &b
+			}(),
 		},
 	}
 	g.SubDeviceDataPoints = make([]bacnetDataPoint, 0)
@@ -255,6 +273,15 @@ func (dev *GenericBacnetIpDevice) Start(cctx typex.CCTX) error {
 						glogger.GLogger.Debug(string(bytes))
 						dev.RuleEngine.WorkDevice(dev.Details(), string(bytes))
 					}
+				}
+			}
+			// 是否预警
+			if *dev.mainConfig.AlarmConfig.Enable {
+				Input := map[string]any{}
+				Input["data"] = ReadBacnetValues
+				_, err := alarmcenter.Input(dev.mainConfig.AlarmConfig.AlarmRuleId, Input)
+				if err != nil {
+					glogger.GLogger.Error(err)
 				}
 			}
 			<-ticker.C

@@ -24,6 +24,7 @@ import (
 	"time"
 
 	serial "github.com/hootrhino/goserial"
+	"github.com/hootrhino/rhilex/component/alarmcenter"
 	"github.com/hootrhino/rhilex/component/intercache"
 	"github.com/hootrhino/rhilex/component/interdb"
 	"github.com/hootrhino/rhilex/device/cjt1882004"
@@ -52,6 +53,7 @@ type CJT188_2004_MasterGatewayMainConfig struct {
 	HostConfig    resconfig.HostConfig                     `json:"hostConfig"`
 	UartConfig    resconfig.UartConfig                     `json:"uartConfig"`
 	CecollaConfig resconfig.CecollaConfig                  `json:"cecollaConfig"`
+	AlarmConfig   resconfig.AlarmConfig                    `json:"alarmConfig"`
 }
 
 /**
@@ -94,6 +96,22 @@ func NewCJT188_2004_MasterGateway(e typex.Rhilex) typex.XDevice {
 			DataBits: 8,
 			Parity:   "E",
 			StopBits: 1,
+		},
+		CecollaConfig: resconfig.CecollaConfig{
+			Enable: func() *bool {
+				b := false
+				return &b
+			}(),
+			EnableCreateSchema: func() *bool {
+				b := true
+				return &b
+			}(),
+		},
+		AlarmConfig: resconfig.AlarmConfig{
+			Enable: func() *bool {
+				b := false
+				return &b
+			}(),
 		},
 	}
 	gw.DataPoints = map[string]CJT188_2004_DataPoint{}
@@ -291,6 +309,15 @@ func (gw *CJT188_2004_MasterGateway) work(handler *cjt1882004.CJT188ClientHandle
 					Tag:     DataPoint.Tag,
 					Value:   Value,
 				})
+			}
+			// 是否预警
+			if *gw.mainConfig.AlarmConfig.Enable {
+				Input := map[string]any{}
+				Input["data"] = cjt1882004ReadDataList
+				_, err := alarmcenter.Input(gw.mainConfig.AlarmConfig.AlarmRuleId, Input)
+				if err != nil {
+					glogger.GLogger.Error(err)
+				}
 			}
 			time.Sleep(time.Duration(DataPoint.Frequency) * time.Millisecond)
 		}

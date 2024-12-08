@@ -23,11 +23,12 @@ import (
 	"time"
 
 	serial "github.com/hootrhino/goserial"
-	"github.com/hootrhino/rhilex/resconfig"
+	"github.com/hootrhino/rhilex/component/alarmcenter"
 	"github.com/hootrhino/rhilex/component/intercache"
 	"github.com/hootrhino/rhilex/component/interdb"
 	"github.com/hootrhino/rhilex/device/dlt6452007"
 	"github.com/hootrhino/rhilex/glogger"
+	"github.com/hootrhino/rhilex/resconfig"
 	"github.com/hootrhino/rhilex/typex"
 	"github.com/hootrhino/rhilex/utils"
 )
@@ -48,9 +49,10 @@ type DLT645_2007_MasterGatewayCommonConfig struct {
 
 type DLT645_2007_MasterGatewayMainConfig struct {
 	CommonConfig  DLT645_2007_MasterGatewayCommonConfig `json:"commonConfig" validate:"required"`
-	HostConfig    resconfig.HostConfig                     `json:"hostConfig"`
-	UartConfig    resconfig.UartConfig                     `json:"uartConfig"`
-	CecollaConfig resconfig.CecollaConfig                  `json:"cecollaConfig"`
+	HostConfig    resconfig.HostConfig                  `json:"hostConfig"`
+	UartConfig    resconfig.UartConfig                  `json:"uartConfig"`
+	CecollaConfig resconfig.CecollaConfig               `json:"cecollaConfig"`
+	AlarmConfig   resconfig.AlarmConfig                 `json:"alarmConfig"`
 }
 
 /**
@@ -93,6 +95,22 @@ func NewDLT645_2007_MasterGateway(e typex.Rhilex) typex.XDevice {
 			DataBits: 8,
 			Parity:   "E",
 			StopBits: 1,
+		},
+		CecollaConfig: resconfig.CecollaConfig{
+			Enable: func() *bool {
+				b := false
+				return &b
+			}(),
+			EnableCreateSchema: func() *bool {
+				b := true
+				return &b
+			}(),
+		},
+		AlarmConfig: resconfig.AlarmConfig{
+			Enable: func() *bool {
+				b := false
+				return &b
+			}(),
 		},
 	}
 	gw.DataPoints = map[string]DLT645_2007_DataPoint{}
@@ -289,6 +307,15 @@ func (gw *DLT645_2007_MasterGateway) work(handler *dlt6452007.DLT645ClientHandle
 					Value:   Value,
 				})
 			}
+			// 是否预警
+			if *gw.mainConfig.AlarmConfig.Enable {
+				Input := map[string]any{}
+				Input["data"] = DLT6452007ReadDataList
+				_, err := alarmcenter.Input(gw.mainConfig.AlarmConfig.AlarmRuleId, Input)
+				if err != nil {
+					glogger.GLogger.Error(err)
+				}
+			}
 			time.Sleep(time.Duration(DataPoint.Frequency) * time.Millisecond)
 		}
 		if *gw.mainConfig.CommonConfig.BatchRequest {
@@ -299,6 +326,15 @@ func (gw *DLT645_2007_MasterGateway) work(handler *dlt6452007.DLT645ClientHandle
 					glogger.GLogger.Debug(string(bytes))
 					gw.RuleEngine.WorkDevice(gw.Details(), string(bytes))
 				}
+			}
+		}
+		// 是否预警
+		if *gw.mainConfig.AlarmConfig.Enable {
+			Input := map[string]any{}
+			Input["data"] = DLT6452007ReadDataList
+			_, err := alarmcenter.Input(gw.mainConfig.AlarmConfig.AlarmRuleId, Input)
+			if err != nil {
+				glogger.GLogger.Error(err)
 			}
 		}
 	}

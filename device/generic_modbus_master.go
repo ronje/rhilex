@@ -26,6 +26,7 @@ import (
 
 	"time"
 
+	"github.com/hootrhino/rhilex/component/alarmcenter"
 	intercache "github.com/hootrhino/rhilex/component/intercache"
 	"github.com/hootrhino/rhilex/component/interdb"
 	"github.com/hootrhino/rhilex/device/dmodbus"
@@ -74,11 +75,14 @@ type ModbusMasterCommonConfig struct {
 	EnableOptimize *bool  `json:"enableOptimize" validate:"required"`
 	MaxRegNum      uint16 `json:"maxRegNum" validate:"required"`
 }
+
+// Modbus配置参数
 type ModbusMasterConfig struct {
 	CommonConfig  ModbusMasterCommonConfig `json:"commonConfig" validate:"required"`
 	HostConfig    resconfig.HostConfig     `json:"hostConfig"`
 	UartConfig    resconfig.UartConfig     `json:"uartConfig"`
 	CecollaConfig resconfig.CecollaConfig  `json:"cecollaConfig"`
+	AlarmConfig   resconfig.AlarmConfig    `json:"alarmConfig"`
 }
 
 type ModbusMasterGroupedTag struct {
@@ -160,6 +164,12 @@ func NewGenericModbusMaster(e typex.Rhilex) typex.XDevice {
 			}(),
 			EnableCreateSchema: func() *bool {
 				b := true
+				return &b
+			}(),
+		},
+		AlarmConfig: resconfig.AlarmConfig{
+			Enable: func() *bool {
+				b := false
 				return &b
 			}(),
 		},
@@ -415,6 +425,15 @@ func (mdev *GenericModbusMaster) Start(cctx typex.CCTX) error {
 						} else {
 							mdev.RuleEngine.WorkDevice(mdev.Details(), string(bytes))
 						}
+					}
+				}
+				// 是否预警
+				if *mdev.mainConfig.AlarmConfig.Enable {
+					Input := map[string]any{}
+					Input["data"] = ReadRegisterValues
+					_, err := alarmcenter.Input(mdev.mainConfig.AlarmConfig.AlarmRuleId, Input)
+					if err != nil {
+						glogger.GLogger.Error(err)
 					}
 				}
 			}
@@ -731,7 +750,6 @@ func (mdev *GenericModbusMaster) modbusSingleRead() []ReadRegisterValue {
 					mdev.RuleEngine.WorkDevice(mdev.Details(), string(bytes))
 				}
 			}
-
 		}
 		// 2 字节
 		if r.Function == dmodbus.READ_DISCRETE_INPUT {

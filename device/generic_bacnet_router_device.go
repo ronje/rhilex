@@ -24,11 +24,11 @@ import (
 	bacnet "github.com/hootrhino/gobacnet"
 	"github.com/hootrhino/gobacnet/apdus"
 	"github.com/hootrhino/gobacnet/btypes"
-	"github.com/hootrhino/rhilex/resconfig"
 	"github.com/hootrhino/rhilex/component/apiserver/model"
 	"github.com/hootrhino/rhilex/component/intercache"
 	"github.com/hootrhino/rhilex/component/interdb"
 	"github.com/hootrhino/rhilex/glogger"
+	"github.com/hootrhino/rhilex/resconfig"
 	"github.com/hootrhino/rhilex/typex"
 	"github.com/hootrhino/rhilex/utils"
 )
@@ -43,8 +43,9 @@ type BacnetRouterConfig struct {
 }
 
 type BacnetRouterMainConfig struct {
-	BacnetRouterConfig BacnetRouterConfig   `json:"bacnetRouterConfig" validate:"required"`
+	BacnetRouterConfig BacnetRouterConfig      `json:"bacnetRouterConfig" validate:"required"`
 	CecollaConfig      resconfig.CecollaConfig `json:"cecollaConfig"`
+	AlarmConfig        resconfig.AlarmConfig   `json:"alarmConfig"`
 }
 
 type BacnetRouter struct {
@@ -77,6 +78,22 @@ func NewBacnetRouter(e typex.Rhilex) typex.XDevice {
 			DeviceId:  2580,
 			VendorId:  2580,
 			NetWorkId: 2580,
+		},
+		CecollaConfig: resconfig.CecollaConfig{
+			Enable: func() *bool {
+				b := false
+				return &b
+			}(),
+			EnableCreateSchema: func() *bool {
+				b := true
+				return &b
+			}(),
+		},
+		AlarmConfig: resconfig.AlarmConfig{
+			Enable: func() *bool {
+				b := false
+				return &b
+			}(),
 		},
 	}
 	br.selfPropertyData = map[uint32][2]btypes.Object{}

@@ -54,6 +54,7 @@ type MBusEn13433MasterGatewayMainConfig struct {
 	MBusConfig    MBusConfig                           `json:"MBusConfig"`
 	UartConfig    resconfig.UartConfig                 `json:"uartConfig"`
 	CecollaConfig resconfig.CecollaConfig              `json:"cecollaConfig"`
+	AlarmConfig   resconfig.AlarmConfig                `json:"alarmConfig"`
 }
 
 /**
@@ -96,6 +97,22 @@ func NewMBusEn13433MasterGateway(e typex.Rhilex) typex.XDevice {
 			DataBits: 8,
 			Parity:   "N",
 			StopBits: 1,
+		},
+		CecollaConfig: resconfig.CecollaConfig{
+			Enable: func() *bool {
+				b := false
+				return &b
+			}(),
+			EnableCreateSchema: func() *bool {
+				b := true
+				return &b
+			}(),
+		},
+		AlarmConfig: resconfig.AlarmConfig{
+			Enable: func() *bool {
+				b := false
+				return &b
+			}(),
 		},
 	}
 	gw.MBusDataPoints = map[string]MBusDataPoint{}

@@ -52,6 +52,7 @@ type SZY206_2016_MasterGatewayMainConfig struct {
 	HostConfig    resconfig.HostConfig                  `json:"hostConfig"`
 	UartConfig    resconfig.UartConfig                  `json:"uartConfig"`
 	CecollaConfig resconfig.CecollaConfig               `json:"cecollaConfig"`
+	AlarmConfig   resconfig.AlarmConfig                 `json:"alarmConfig"`
 }
 
 /**
