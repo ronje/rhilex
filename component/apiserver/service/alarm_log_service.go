@@ -55,3 +55,14 @@ func PageAlarmLog(current, size int) (int64, []model.MAlarmLog) {
 	interdb.DB().Model(&model.MAlarmLog{}).Count(&count)
 	return count, MAlarmLogs
 }
+
+// 分页
+func PageAlarmLogByRuleId(ruleId string, current, size int) (int64, []model.MAlarmLog) {
+	sql := `SELECT * FROM m_alarm_logs where rule_id=? ORDER BY created_at DESC limit ? offset ?;`
+	MAlarmLogs := []model.MAlarmLog{}
+	offset := (current - 1) * size
+	interdb.DB().Raw(sql, ruleId, size, offset).Find(&MAlarmLogs)
+	var count int64
+	interdb.DB().Model(&model.MAlarmLog{}).Count(&count)
+	return count, MAlarmLogs
+}

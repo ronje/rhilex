@@ -41,7 +41,16 @@ func AlarmLogList(c *gin.Context, ruleEngine typex.Rhilex) {
 		c.JSON(common.HTTP_OK, common.Error400(err))
 		return
 	}
-	count, AlarmLogs := service.PageAlarmLog(pager.Current, pager.Size)
+	count := int64(0)
+	AlarmLogs := []model.MAlarmLog{}
+	ruleId, _ := c.GetQuery("ruleId")
+	if ruleId != "" {
+		ruleId, _ := c.GetQuery("ruleId")
+		count, AlarmLogs = service.PageAlarmLogByRuleId(ruleId, pager.Current, pager.Size)
+	} else {
+		count, AlarmLogs = service.PageAlarmLog(pager.Current, pager.Size)
+	}
+
 	AlarmLogVos := []AlarmLogVo{}
 	for _, AlarmLog := range AlarmLogs {
 		AlarmLogVos = append(AlarmLogVos, AlarmLogVo{
