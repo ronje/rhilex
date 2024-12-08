@@ -18,7 +18,8 @@ package model
 type MAlarmLog struct {
 	RhilexModel
 	UUID    string `gorm:"not null"` // UUID
-	Source  string `gorm:"not null"` // 告警源
+	RuleId  string `gorm:"not null"` // 规则ID
+	Source  string `gorm:"not null"` // 告警源，某个设备
 	Type    string `gorm:"not null"` // 告警级别：INFO | WARNING | ERROR | FATAL
 	Event   string `gorm:"not null"` // 字符串
 	Ts      uint64 `gorm:"not null"` // 时间戳

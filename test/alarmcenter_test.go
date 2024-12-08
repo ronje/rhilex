@@ -26,7 +26,7 @@ func Test_alarm_Center_Normal(t *testing.T) {
 	engine := RunTestEngine()
 	engine.Start()
 	alarmcenter.InitAlarmCenter(engine)
-	Threshold := 10
+	Threshold := uint64(10)
 	Interval := 10 * time.Second
 	alarmcenter.LoadExpr("test", "temp > 10 && humi == 10 && oxy > 0", Threshold, Interval)
 	{
@@ -60,7 +60,7 @@ func Test_alarm_Center_Normal(t *testing.T) {
 
 func Test_alarm_Center_Not_Effect(t *testing.T) {
 	alarmcenter.InitAlarmCenter(nil)
-	Threshold := 100
+	Threshold := uint64(100)
 	Interval := 3 * time.Second
 	alarmcenter.LoadExpr("test", "temp > 10 && humi == 10 && oxy > 0", Threshold, Interval)
 	{

@@ -13,7 +13,6 @@ import (
 func LoadAlarmLogRoute() {
 	api := server.RouteGroup(server.ContextUrl("/alarm_log"))
 	api.GET(("/list"), server.AddRoute(AlarmLogList))
-	api.POST(("/create"), server.AddRoute(CreateAlarmLog))
 	api.PUT(("/update"), server.AddRoute(UpdateAlarmLog))
 	api.DELETE(("/del"), server.AddRoute(DeleteAlarmLog))
 	api.GET(("/detail"), server.AddRoute(AlarmLogDetail))
@@ -22,6 +21,7 @@ func LoadAlarmLogRoute() {
 // 告警日志
 type AlarmLogVo struct {
 	UUID    string `json:"uuid"`
+	RuleId  string `json:"ruleId"`
 	Source  string `json:"source"`
 	Type    string `json:"type"`
 	Event   string `json:"event"`
@@ -46,6 +46,7 @@ func AlarmLogList(c *gin.Context, ruleEngine typex.Rhilex) {
 	for _, AlarmLog := range AlarmLogs {
 		AlarmLogVos = append(AlarmLogVos, AlarmLogVo{
 			UUID:    AlarmLog.UUID,
+			RuleId:  AlarmLog.RuleId,
 			Source:  AlarmLog.Source,
 			Type:    AlarmLog.Type,
 			Event:   AlarmLog.Event,
@@ -68,6 +69,7 @@ func AlarmLogDetail(c *gin.Context, ruleEngine typex.Rhilex) {
 	}
 	web_data := AlarmLogVo{
 		UUID:    AlarmLog.UUID,
+		RuleId:  AlarmLog.RuleId,
 		Source:  AlarmLog.Source,
 		Type:    AlarmLog.Type,
 		Event:   AlarmLog.Event,
@@ -107,6 +109,7 @@ func CreateAlarmLog(c *gin.Context, ruleEngine typex.Rhilex) {
 	}
 	Model := model.MAlarmLog{
 		UUID:    utils.AlarmLogUuid(),
+		RuleId:  AlarmLog.RuleId,
 		Source:  AlarmLog.Source,
 		Type:    AlarmLog.Type,
 		Event:   AlarmLog.Event,
@@ -134,6 +137,7 @@ func UpdateAlarmLog(c *gin.Context, ruleEngine typex.Rhilex) {
 	}
 	Model := model.MAlarmLog{
 		UUID:    AlarmLog.UUID,
+		RuleId:  AlarmLog.RuleId,
 		Source:  AlarmLog.Source,
 		Type:    AlarmLog.Type,
 		Event:   AlarmLog.Event,
