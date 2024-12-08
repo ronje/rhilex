@@ -28,37 +28,26 @@ import (
 	"gorm.io/gorm/logger"
 )
 
-const __DEFAULT_DB_PATH string = "./rhilex.db?cache=shared&mode=rwc"
+const __LOSTCACHE_DB_PATH string = "./rhilex_lostcache.db?cache=shared&mode=rwc"
 
-var __Sqlite *SqliteDAO
-
-/*
-*
-* Sqlite 数据持久层
-*
- */
-type SqliteDAO struct {
-	engine typex.Rhilex
-	name   string   // 框架可以根据名称来选择不同的数据库驱动,为以后扩展准备
-	db     *gorm.DB // Sqlite 驱动
-}
+var __LostCache *SqliteDAO
 
 /*
 *
 * 初始化DAO
 *
  */
-func InitInterDb(engine typex.Rhilex) error {
-	__Sqlite = &SqliteDAO{name: "Sqlite3", engine: engine}
+func InitLostCacheDb(engine typex.Rhilex) error {
+	__LostCache = &SqliteDAO{name: "Sqlite3", engine: engine}
 
 	var err error
 	if core.GlobalConfig.DebugMode {
-		__Sqlite.db, err = gorm.Open(sqlite.Open(__DEFAULT_DB_PATH), &gorm.Config{
+		__LostCache.db, err = gorm.Open(sqlite.Open(__LOSTCACHE_DB_PATH), &gorm.Config{
 			Logger:                 logger.Default.LogMode(logger.Info),
 			SkipDefaultTransaction: false,
 		})
 	} else {
-		__Sqlite.db, err = gorm.Open(sqlite.Open(__DEFAULT_DB_PATH), &gorm.Config{
+		__LostCache.db, err = gorm.Open(sqlite.Open(__LOSTCACHE_DB_PATH), &gorm.Config{
 			Logger:                 logger.Default.LogMode(logger.Error),
 			SkipDefaultTransaction: false,
 		})
@@ -66,7 +55,8 @@ func InitInterDb(engine typex.Rhilex) error {
 	if err != nil {
 		glogger.GLogger.Fatal(err)
 	}
-	__Sqlite.db.Exec("VACUUM;")
+
+	__LostCache.db.Exec("VACUUM;")
 	return err
 }
 
@@ -75,8 +65,8 @@ func InitInterDb(engine typex.Rhilex) error {
 * 停止
 *
  */
-func Stop() {
-	__Sqlite.db = nil
+func StopLostCacheDb() {
+	__LostCache.db = nil
 	runtime.GC()
 }
 
@@ -85,17 +75,8 @@ func Stop() {
 * 返回数据库查询句柄
 *
  */
-func DB() *gorm.DB {
-	return __Sqlite.db
-}
-
-/*
-*
-* 返回名称
-*
- */
-func Name() string {
-	return __Sqlite.name
+func LostCacheDb() *gorm.DB {
+	return __LostCache.db
 }
 
 /*
@@ -103,6 +84,6 @@ func Name() string {
 * 注册数据模型
 *
  */
-func RegisterModel(dist ...interface{}) {
-	__Sqlite.db.AutoMigrate(dist...)
+func LostCacheDbRegisterModel(dist ...interface{}) {
+	__LostCache.db.AutoMigrate(dist...)
 }

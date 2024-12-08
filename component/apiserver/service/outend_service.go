@@ -23,7 +23,7 @@ import (
 // -----------------------------------------------------------------------------------
 func GetMOutEnd(id string) (*model.MOutEnd, error) {
 	m := new(model.MOutEnd)
-	if err := interdb.DB().First(m).Error; err != nil {
+	if err := interdb.InterDb().First(m).Error; err != nil {
 		return nil, err
 	} else {
 		return m, nil
@@ -31,7 +31,7 @@ func GetMOutEnd(id string) (*model.MOutEnd, error) {
 }
 func GetMOutEndWithUUID(uuid string) (*model.MOutEnd, error) {
 	m := new(model.MOutEnd)
-	if err := interdb.DB().Where("uuid=?", uuid).First(m).Error; err != nil {
+	if err := interdb.InterDb().Where("uuid=?", uuid).First(m).Error; err != nil {
 		return nil, err
 	} else {
 		return m, nil
@@ -39,19 +39,19 @@ func GetMOutEndWithUUID(uuid string) (*model.MOutEnd, error) {
 }
 
 func InsertMOutEnd(o *model.MOutEnd) error {
-	return interdb.DB().Table("m_out_ends").Create(o).Error
+	return interdb.InterDb().Table("m_out_ends").Create(o).Error
 }
 
 func DeleteMOutEnd(uuid string) error {
-	return interdb.DB().Where("uuid=?", uuid).Delete(&model.MOutEnd{}).Error
+	return interdb.InterDb().Where("uuid=?", uuid).Delete(&model.MOutEnd{}).Error
 }
 
 func UpdateMOutEnd(uuid string, o *model.MOutEnd) error {
 	m := model.MOutEnd{}
-	if err := interdb.DB().Where("uuid=?", uuid).First(&m).Error; err != nil {
+	if err := interdb.InterDb().Where("uuid=?", uuid).First(&m).Error; err != nil {
 		return err
 	} else {
-		interdb.DB().Model(m).Updates(*o)
+		interdb.InterDb().Model(m).Updates(*o)
 		return nil
 	}
 }

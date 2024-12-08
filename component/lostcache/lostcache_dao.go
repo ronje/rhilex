@@ -18,12 +18,13 @@ package lostcache
 import (
 	"fmt"
 
+	"github.com/hootrhino/rhilex/component/interdb"
 	core "github.com/hootrhino/rhilex/config"
 	"gorm.io/gorm"
 )
 
 func CreateLostDataTable(deviceId string) {
-	__Sqlite.db.Transaction(func(tx *gorm.DB) error {
+	interdb.LostCacheDb().Transaction(func(tx *gorm.DB) error {
 		sql1 := `
 		CREATE TABLE IF NOT EXISTS "lost_data_%s" (
 			id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -55,7 +56,7 @@ func CreateLostDataTable(deviceId string) {
 }
 func DeleteLostDataTable(deviceId string) {
 	sql := `DROP TABLE IF EXISTS "lost_data_%s";`
-	__Sqlite.db.Exec(fmt.Sprintf(sql, deviceId))
+	interdb.LostCacheDb().Exec(fmt.Sprintf(sql, deviceId))
 }
 
 /**
@@ -63,11 +64,11 @@ func DeleteLostDataTable(deviceId string) {
  *
  */
 func SaveLostCacheData(deviceId string, data CacheDataDto) error {
-	__Sqlite.db.Table(fmt.Sprintf("lost_data_%s", deviceId)).Create(&CacheData{
+	interdb.LostCacheDb().Table(fmt.Sprintf("lost_data_%s", deviceId)).Create(&CacheData{
 		TargetId: data.TargetId,
 		Data:     data.Data,
 	})
-	return __Sqlite.db.Error
+	return interdb.LostCacheDb().Error
 }
 
 /**
@@ -76,8 +77,8 @@ func SaveLostCacheData(deviceId string, data CacheDataDto) error {
  */
 func GetLostCacheData(deviceId string) ([]CacheDataDto, error) {
 	dataDto := []CacheDataDto{}
-	__Sqlite.db.Table(fmt.Sprintf("lost_data_%s", deviceId)).Where("target_id=?", deviceId).Find(&dataDto)
-	return dataDto, __Sqlite.db.Error
+	interdb.LostCacheDb().Table(fmt.Sprintf("lost_data_%s", deviceId)).Where("target_id=?", deviceId).Find(&dataDto)
+	return dataDto, interdb.LostCacheDb().Error
 
 }
 
@@ -86,7 +87,7 @@ func GetLostCacheData(deviceId string) ([]CacheDataDto, error) {
  *
  */
 func DeleteLostCacheData(deviceId string, dbId uint) {
-	__Sqlite.db.Table(fmt.Sprintf("lost_data_%s", deviceId)).Where("id=?", dbId).Delete(&CacheData{})
+	interdb.LostCacheDb().Table(fmt.Sprintf("lost_data_%s", deviceId)).Where("id=?", dbId).Delete(&CacheData{})
 }
 
 /**
@@ -94,5 +95,5 @@ func DeleteLostCacheData(deviceId string, dbId uint) {
  *
  */
 func ClearLostCacheData(deviceId string) {
-	__Sqlite.db.Table(fmt.Sprintf("lost_data_%s", deviceId)).Where("target_id=?", deviceId).Delete(&CacheData{})
+	interdb.LostCacheDb().Table(fmt.Sprintf("lost_data_%s", deviceId)).Where("target_id=?", deviceId).Delete(&CacheData{})
 }

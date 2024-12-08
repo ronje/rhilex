@@ -33,7 +33,7 @@ import (
 *
  */
 func InitDataSchemaCache(e typex.Rhilex) {
-	interdb.DB().Exec(fmt.Sprintf(`
+	interdb.InterDb().Exec(fmt.Sprintf(`
 	CREATE TRIGGER IF NOT EXISTS limit_m_internal_notifies
 	AFTER INSERT ON m_internal_notifies
 	WHEN (SELECT COUNT(*) FROM m_internal_notifies) > %d
@@ -48,10 +48,10 @@ func InitDataSchemaCache(e typex.Rhilex) {
 	`, 300, 300))
 	intercache.RegisterSlot("__DataSchema")
 	MIotSchemas := []model.MIotSchema{}
-	interdb.DB().Model(model.MIotSchema{}).Find(&MIotSchemas)
+	interdb.InterDb().Model(model.MIotSchema{}).Find(&MIotSchemas)
 	for _, MIotSchema := range MIotSchemas {
 		MIotProperties := []model.MIotProperty{}
-		interdb.DB().Model(model.MIotProperty{}).
+		interdb.InterDb().Model(model.MIotProperty{}).
 			Where("schema_id=?", MIotSchema.UUID).Find(&MIotProperties)
 		for _, MIotProperty := range MIotProperties {
 			CacheIoTProperty := &IoTProperty{

@@ -109,7 +109,7 @@ func SchemaDDLDetail(c *gin.Context, ruleEngine typex.Rhilex) {
 		Unit: "",
 	})
 	records := []ddl_define{}
-	tx := interdb.DB()
+	tx := interdb.InterDb()
 	result := tx.Model(&model.MIotProperty{}).Select("id,name,type,uuid,unit,rule").
 		Where("schema_id=?", uuid).Find(&records)
 	if result.Error != nil {
@@ -176,7 +176,7 @@ func ExportData(c *gin.Context, ruleEngine typex.Rhilex) {
 	cell, _ := excelize.CoordinatesToCellName(1, 1)
 	xlsx.SetSheetRow("Sheet1", cell, &Headers)
 	tableName := fmt.Sprintf("data_center_%s", uuid)
-	rows, Error := datacenter.DB().Table(tableName).Rows()
+	rows, Error := interdb.DataCenterDb().Table(tableName).Rows()
 	if Error != nil {
 		c.JSON(common.HTTP_OK, common.Error400(Error))
 		return
@@ -222,7 +222,7 @@ func ExportData(c *gin.Context, ruleEngine typex.Rhilex) {
 func ClearSchemaData(c *gin.Context, ruleEngine typex.Rhilex) {
 	uuid, _ := c.GetQuery("uuid")
 	tableName := fmt.Sprintf("data_center_%s", uuid)
-	TxDbError := datacenter.DB().Transaction(func(tx *gorm.DB) error {
+	TxDbError := interdb.DataCenterDb().Transaction(func(tx *gorm.DB) error {
 		{
 			err := tx.Exec(fmt.Sprintf("DELETE FROM %s;", tableName)).Error
 			if err != nil {
@@ -292,7 +292,7 @@ func QueryDDLDataList(c *gin.Context, ruleEngine typex.Rhilex) {
 		c.JSON(common.HTTP_OK, common.Error("The schema must be published before it can be operated"))
 		return
 	}
-	DbTx := datacenter.DB().Scopes(service.Paginate(*pager))
+	DbTx := interdb.DataCenterDb().Scopes(service.Paginate(*pager))
 	records := []map[string]interface{}{}
 	tableName := fmt.Sprintf("data_center_%s", uuid)
 	// Default order by ts desc
@@ -346,7 +346,7 @@ func QueryDDLLastData(c *gin.Context, ruleEngine typex.Rhilex) {
 	}
 	tableName := fmt.Sprintf("data_center_%s", uuid)
 	record := map[string]interface{}{}
-	result := datacenter.DB().Select(selectFields).
+	result := interdb.DataCenterDb().Select(selectFields).
 		Table(tableName).Order("create_at DESC").Limit(1).Scan(&record)
 	if result.Error != nil {
 		c.JSON(common.HTTP_OK, common.Error400(result.Error))

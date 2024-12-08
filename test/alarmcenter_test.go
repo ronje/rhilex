@@ -53,7 +53,7 @@ func Test_alarm_Center_Normal(t *testing.T) {
 		}
 		t.Log(R)
 	}
-	alarmcenter.Stop()
+	alarmcenter.StopAlarmCenter()
 }
 
 // go test -timeout 30s -run ^Test_alarm_Center_Not_Effect$ github.com/hootrhino/rhilex/test -v -count=1
@@ -87,5 +87,5 @@ func Test_alarm_Center_Not_Effect(t *testing.T) {
 		}
 		t.Log(R)
 	}
-	alarmcenter.Stop()
+	alarmcenter.StopAlarmCenter()
 }

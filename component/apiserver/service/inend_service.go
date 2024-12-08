@@ -22,7 +22,7 @@ import (
 // -----------------------------------------------------------------------------------
 func GetMInEnd(uuid string) (*model.MInEnd, error) {
 	m := new(model.MInEnd)
-	if err := interdb.DB().Table("m_in_ends").Where("uuid=?", uuid).First(m).Error; err != nil {
+	if err := interdb.InterDb().Table("m_in_ends").Where("uuid=?", uuid).First(m).Error; err != nil {
 		return nil, err
 	} else {
 		return m, nil
@@ -30,7 +30,7 @@ func GetMInEnd(uuid string) (*model.MInEnd, error) {
 }
 func GetMInEndWithUUID(uuid string) (*model.MInEnd, error) {
 	m := new(model.MInEnd)
-	if err := interdb.DB().Table("m_in_ends").Where("uuid=?", uuid).First(m).Error; err != nil {
+	if err := interdb.InterDb().Table("m_in_ends").Where("uuid=?", uuid).First(m).Error; err != nil {
 		return nil, err
 	} else {
 		return m, nil
@@ -38,19 +38,19 @@ func GetMInEndWithUUID(uuid string) (*model.MInEnd, error) {
 }
 
 func InsertMInEnd(i *model.MInEnd) error {
-	return interdb.DB().Table("m_in_ends").Create(i).Error
+	return interdb.InterDb().Table("m_in_ends").Create(i).Error
 }
 
 func DeleteMInEnd(uuid string) error {
-	return interdb.DB().Where("uuid=?", uuid).Delete(&model.MInEnd{}).Error
+	return interdb.InterDb().Where("uuid=?", uuid).Delete(&model.MInEnd{}).Error
 }
 
 func UpdateMInEnd(uuid string, i *model.MInEnd) error {
 	m := model.MInEnd{}
-	if err := interdb.DB().Where("uuid=?", uuid).First(&m).Error; err != nil {
+	if err := interdb.InterDb().Where("uuid=?", uuid).First(&m).Error; err != nil {
 		return err
 	} else {
-		interdb.DB().Model(m).Updates(*i)
+		interdb.InterDb().Model(m).Updates(*i)
 		return nil
 	}
 }

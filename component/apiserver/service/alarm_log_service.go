@@ -26,22 +26,22 @@ import (
 
 func GetMAlarmLogWithUUID(uuid string) (*model.MAlarmLog, error) {
 	m := model.MAlarmLog{}
-	return &m, interdb.DB().Where("uuid=?", uuid).First(&m).Error
+	return &m, interdb.AlarmDb().Where("uuid=?", uuid).First(&m).Error
 }
 
 // 删除AlarmLog
 func DeleteAlarmLog(uuid string) error {
-	return interdb.DB().Where("uuid=?", uuid).Delete(&model.MAlarmLog{}).Error
+	return interdb.AlarmDb().Where("uuid=?", uuid).Delete(&model.MAlarmLog{}).Error
 }
 
 // 创建AlarmLog
 func InsertAlarmLog(AlarmLog *model.MAlarmLog) error {
-	return interdb.DB().Create(AlarmLog).Error
+	return interdb.AlarmDb().Create(AlarmLog).Error
 }
 
 // 更新AlarmLog
 func UpdateAlarmLog(AlarmLog *model.MAlarmLog) error {
-	return interdb.DB().Model(&model.MAlarmLog{}).
+	return interdb.AlarmDb().Model(&model.MAlarmLog{}).
 		Where("uuid=?", AlarmLog.UUID).Updates(*AlarmLog).Error
 }
 
@@ -49,10 +49,11 @@ func UpdateAlarmLog(AlarmLog *model.MAlarmLog) error {
 func PageAlarmLog(current, size int) (int64, []model.MAlarmLog) {
 	sql := `SELECT * FROM m_alarm_logs ORDER BY created_at DESC limit ? offset ?;`
 	MAlarmLogs := []model.MAlarmLog{}
+	tx := interdb.AlarmDb()
 	offset := (current - 1) * size
-	interdb.DB().Raw(sql, size, offset).Find(&MAlarmLogs)
+	tx.Raw(sql, size, offset).Find(&MAlarmLogs)
 	var count int64
-	interdb.DB().Model(&model.MAlarmLog{}).Count(&count)
+	tx.Model(&model.MAlarmLog{}).Count(&count)
 	return count, MAlarmLogs
 }
 
@@ -60,9 +61,10 @@ func PageAlarmLog(current, size int) (int64, []model.MAlarmLog) {
 func PageAlarmLogByRuleId(ruleId string, current, size int) (int64, []model.MAlarmLog) {
 	sql := `SELECT * FROM m_alarm_logs where rule_id=? ORDER BY created_at DESC limit ? offset ?;`
 	MAlarmLogs := []model.MAlarmLog{}
+	tx := interdb.AlarmDb()
 	offset := (current - 1) * size
-	interdb.DB().Raw(sql, ruleId, size, offset).Find(&MAlarmLogs)
+	tx.Raw(sql, ruleId, size, offset).Find(&MAlarmLogs)
 	var count int64
-	interdb.DB().Model(&model.MAlarmLog{}).Count(&count)
+	tx.Model(&model.MAlarmLog{}).Count(&count)
 	return count, MAlarmLogs
 }

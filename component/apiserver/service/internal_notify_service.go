@@ -26,7 +26,7 @@ import (
 *
  */
 func InsertInternalNotify(m model.MInternalNotify) error {
-	return interdb.DB().Model(&m).Save(&m).Error
+	return interdb.InterDb().Model(&m).Save(&m).Error
 }
 
 /*
@@ -36,7 +36,7 @@ func InsertInternalNotify(m model.MInternalNotify) error {
  */
 func AllInternalNotifiesHeader() []model.MInternalNotify {
 	m := []model.MInternalNotify{}
-	interdb.DB().Table("m_internal_notifies").Where("status=1").Limit(6).Find(&m)
+	interdb.InterDb().Table("m_internal_notifies").Where("status=1").Limit(6).Find(&m)
 	return m
 }
 
@@ -47,7 +47,7 @@ func AllInternalNotifiesHeader() []model.MInternalNotify {
  */
 func AllInternalNotifies() []model.MInternalNotify {
 	m := []model.MInternalNotify{}
-	interdb.DB().Table("m_internal_notifies").Where("status=1").Limit(100).Find(&m)
+	interdb.InterDb().Table("m_internal_notifies").Where("status=1").Limit(100).Find(&m)
 	return m
 }
 
@@ -57,7 +57,7 @@ func AllInternalNotifies() []model.MInternalNotify {
 *
  */
 func ClearInternalNotifies() error {
-	return interdb.DB().Exec("DELETE FROM m_internal_notifies;VACUUM;").Error
+	return interdb.InterDb().Exec("DELETE FROM m_internal_notifies;VACUUM;").Error
 }
 
 /*
@@ -66,6 +66,6 @@ func ClearInternalNotifies() error {
 *
  */
 func ReadInternalNotifies(uuid string) error {
-	return interdb.DB().Table("m_internal_notifies").
+	return interdb.InterDb().Table("m_internal_notifies").
 		Where("uuid=?", uuid).Delete(&model.MInternalNotify{}).Error
 }

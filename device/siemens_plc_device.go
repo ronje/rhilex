@@ -114,7 +114,7 @@ func (s1200 *SIEMENS_PLC) Init(devId string, configMap map[string]interface{}) e
 	// DataSchema = schema.load(uuid)
 	// DataSchema.update(k, v)
 	var list []__SiemensDataPoint
-	errDb := interdb.DB().Table("m_siemens_data_points").
+	errDb := interdb.InterDb().Table("m_siemens_data_points").
 		Where("device_uuid=?", devId).Find(&list).Error
 	if errDb != nil {
 		return errDb

@@ -133,14 +133,14 @@ func UpdateUserLuaTemplate(c *gin.Context, ruleEngine typex.Rhilex) {
  */
 func DeleteUserLuaTemplate(c *gin.Context, ruleEngine typex.Rhilex) {
 	uuid, _ := c.GetQuery("uuid")
-	txErr := interdb.DB().Transaction(func(tx *gorm.DB) error {
+	txErr := interdb.InterDb().Transaction(func(tx *gorm.DB) error {
 		Group := service.GetResourceGroup(uuid)
 		if err1 := service.DeleteUserLuaTemplate(uuid); err1 != nil {
 			c.JSON(common.HTTP_OK, common.Error400(err1))
 			return err1
 		}
 		// 解除关联
-		err2 := interdb.DB().Where("gid=? and rid =?", Group.UUID, uuid).
+		err2 := interdb.InterDb().Where("gid=? and rid =?", Group.UUID, uuid).
 			Delete(&model.MGenericGroupRelation{}).Error
 		if err2 != nil {
 			return err2

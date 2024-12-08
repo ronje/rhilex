@@ -204,10 +204,10 @@ CREATE TABLE m_modbus_data_points (
 
 ## 加载点位
 
-interdb是RHILEX自带的内部存储器，如果在接入设备里面使用全局数据库, 直接用`interdb.DB()`，以Modbus加载点位表为例：
+interdb是RHILEX自带的内部存储器，如果在接入设备里面使用全局数据库, 直接用`interdb.InterDb()`，以Modbus加载点位表为例：
 ```go
 var ModbusPointList []ModbusPoint
-modbusPointLoadErr := interdb.DB().Table("m_modbus_data_points").
+modbusPointLoadErr := interdb.InterDb().Table("m_modbus_data_points").
 	Where("device_uuid=?", devId).Find(&ModbusPointList).Error
 if modbusPointLoadErr != nil {
 	return modbusPointLoadErr

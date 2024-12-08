@@ -28,31 +28,31 @@ import (
 // InsertSnmpOid 插入Snmp点位表
 func InsertSnmpOids(list []model.MSnmpOid) error {
 	m := model.MSnmpOid{}
-	return interdb.DB().Model(m).Create(list).Error
+	return interdb.InterDb().Model(m).Create(list).Error
 }
 
 // InsertSnmpOid 插入Snmp点位表
 func InsertSnmpOid(P model.MSnmpOid) error {
-	return interdb.DB().Model(P).Create(&P).Error
+	return interdb.InterDb().Model(P).Create(&P).Error
 }
 
 // DeleteSnmpOidByDevice 删除Snmp点位与设备
 func DeleteSnmpOidByDevice(uuids []string, deviceUuid string) error {
-	return interdb.DB().
+	return interdb.InterDb().
 		Where("uuid IN ? AND device_uuid=?", uuids, deviceUuid).
 		Delete(&model.MSnmpOid{}).Error
 }
 
 // DeleteAllSnmpOidByDevice 删除Snmp点位与设备
 func DeleteAllSnmpOidByDevice(deviceUuid string) error {
-	return interdb.DB().
+	return interdb.InterDb().
 		Where("device_uuid=?", deviceUuid).
 		Delete(&model.MSnmpOid{}).Error
 }
 
 // 更新DataSchema
 func UpdateSnmpOid(MSnmpOid model.MSnmpOid) error {
-	return interdb.DB().Model(model.MSnmpOid{}).
+	return interdb.InterDb().Model(model.MSnmpOid{}).
 		Where("device_uuid=? AND uuid=?",
 			MSnmpOid.DeviceUuid, MSnmpOid.UUID).
 		Updates(MSnmpOid).Error

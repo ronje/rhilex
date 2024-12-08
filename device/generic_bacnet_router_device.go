@@ -115,7 +115,7 @@ func (br *BacnetRouter) Init(devId string, configMap map[string]interface{}) err
 		return err
 	}
 	var MBacnetRouterDataPoints []model.MBacnetRouterDataPoint
-	err = interdb.DB().Table("m_bacnet_router_data_points").
+	err = interdb.InterDb().Table("m_bacnet_router_data_points").
 		Where("device_uuid=?", devId).Find(&MBacnetRouterDataPoints).Error
 	if err != nil {
 		glogger.GLogger.Error(err)

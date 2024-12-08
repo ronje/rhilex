@@ -18,8 +18,8 @@ package service
 import (
 	"fmt"
 
-	"github.com/hootrhino/rhilex/component/interdb"
 	"github.com/hootrhino/rhilex/component/apiserver/model"
+	"github.com/hootrhino/rhilex/component/interdb"
 )
 
 /*
@@ -30,7 +30,7 @@ import (
 // InsertSiemensPointPosition 插入Siemens点位表
 func InsertSiemensPointPositions(list []model.MSiemensDataPoint) error {
 	m := model.MSiemensDataPoint{}
-	return interdb.DB().Model(m).Create(list).Error
+	return interdb.InterDb().Model(m).Create(list).Error
 }
 
 // InsertSiemensPointPosition 插入Siemens点位表
@@ -38,31 +38,31 @@ func InsertSiemensPointPosition(P model.MSiemensDataPoint) error {
 	IgnoreUUID := P.UUID
 	Count := int64(0)
 	P.UUID = ""
-	interdb.DB().Model(P).Where(P).Count(&Count)
+	interdb.InterDb().Model(P).Where(P).Count(&Count)
 	if Count > 0 {
 		return fmt.Errorf("already exists same record:%s", IgnoreUUID)
 	}
 	P.UUID = IgnoreUUID
-	return interdb.DB().Model(P).Create(&P).Error
+	return interdb.InterDb().Model(P).Create(&P).Error
 }
 
 // DeleteSiemensPointByDevice 删除Siemens点位与设备
 func DeleteSiemensPointByDevice(uuids []string, deviceUuid string) error {
-	return interdb.DB().
+	return interdb.InterDb().
 		Where("uuid IN ? AND device_uuid=?", uuids, deviceUuid).
 		Delete(&model.MSiemensDataPoint{}).Error
 }
 
 // DeleteAllSiemensPointByDevice 删除Siemens点位与设备
 func DeleteAllSiemensPointByDevice(deviceUuid string) error {
-	return interdb.DB().
+	return interdb.InterDb().
 		Where("device_uuid=?", deviceUuid).
 		Delete(&model.MSiemensDataPoint{}).Error
 }
 
 // 更新DataSchema
 func UpdateSiemensPoint(MSiemensDataPoint model.MSiemensDataPoint) error {
-	return interdb.DB().Model(model.MSiemensDataPoint{}).
+	return interdb.InterDb().Model(model.MSiemensDataPoint{}).
 		Where("device_uuid=? AND uuid=?",
 			MSiemensDataPoint.DeviceUuid, MSiemensDataPoint.UUID).
 		Updates(MSiemensDataPoint).Error

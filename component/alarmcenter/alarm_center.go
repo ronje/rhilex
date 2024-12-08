@@ -38,6 +38,14 @@ func InitAlarmCenter(e typex.Rhilex) {
 		e:        e,
 		registry: orderedmap.NewOrderedMap[string, *AlarmRule](),
 	}
+
+}
+
+// Stop
+func StopAlarmCenter() {
+	for _, v := range __DefaultAlarmCenter.registry.Keys() {
+		__DefaultAlarmCenter.registry.Delete(v)
+	}
 }
 
 // Load Expr
@@ -77,13 +85,6 @@ func RemoveExpr(uuid string) {
 // 输入数据检查规则
 func Input(uuid string, in map[string]any) (bool, error) {
 	return RunExpr(uuid, in)
-}
-
-// Stop
-func Stop() {
-	for _, v := range __DefaultAlarmCenter.registry.Keys() {
-		__DefaultAlarmCenter.registry.Delete(v)
-	}
 }
 
 // 测试

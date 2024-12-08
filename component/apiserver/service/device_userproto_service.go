@@ -24,35 +24,35 @@ import (
 
 func InsertUserProtocolPoints(list []model.MUserProtocolDataPoint) error {
 	m := model.MUserProtocolDataPoint{}
-	return interdb.DB().Model(m).Create(list).Error
+	return interdb.InterDb().Model(m).Create(list).Error
 }
 
 func InsertUserProtocolPoint(P model.MUserProtocolDataPoint) error {
 	IgnoreUUID := P.UUID
 	Count := int64(0)
 	P.UUID = ""
-	interdb.DB().Model(P).Where(P).Count(&Count)
+	interdb.InterDb().Model(P).Where(P).Count(&Count)
 	if Count > 0 {
 		return fmt.Errorf("already exists same record:%s", IgnoreUUID)
 	}
 	P.UUID = IgnoreUUID
-	return interdb.DB().Model(P).Create(&P).Error
+	return interdb.InterDb().Model(P).Create(&P).Error
 }
 
 func DeleteUserProtocolPointByDevice(uuids []string, deviceUuid string) error {
-	return interdb.DB().
+	return interdb.InterDb().
 		Where("uuid IN ? AND device_uuid=?", uuids, deviceUuid).
 		Delete(&model.MUserProtocolDataPoint{}).Error
 }
 
 func DeleteAllMUserProtocolByDevice(deviceUuid string) error {
-	return interdb.DB().
+	return interdb.InterDb().
 		Where("device_uuid=?", deviceUuid).
 		Delete(&model.MUserProtocolDataPoint{}).Error
 }
 
 func UpdateUserProtocolPoint(MUserProtocolDataPoint model.MUserProtocolDataPoint) error {
-	return interdb.DB().Model(model.MUserProtocolDataPoint{}).
+	return interdb.InterDb().Model(model.MUserProtocolDataPoint{}).
 		Where("device_uuid=? AND uuid=?",
 			MUserProtocolDataPoint.DeviceUuid, MUserProtocolDataPoint.UUID).
 		Updates(MUserProtocolDataPoint).Error

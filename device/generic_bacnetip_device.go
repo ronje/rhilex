@@ -113,7 +113,7 @@ func (dev *GenericBacnetIpDevice) Init(devId string, configMap map[string]interf
 		return err
 	}
 	var dataPoints []model.MBacnetDataPoint
-	err = interdb.DB().Table("m_bacnet_data_points").
+	err = interdb.InterDb().Table("m_bacnet_data_points").
 		Where("device_uuid=?", devId).Find(&dataPoints).Error
 
 	for _, mDataPoint := range dataPoints {

@@ -24,35 +24,35 @@ import (
 
 func InsertDlt6452007Points(list []model.MDlt6452007DataPoint) error {
 	m := model.MDlt6452007DataPoint{}
-	return interdb.DB().Model(m).Create(list).Error
+	return interdb.InterDb().Model(m).Create(list).Error
 }
 
 func InsertDlt6452007Point(P model.MDlt6452007DataPoint) error {
 	IgnoreUUID := P.UUID
 	Count := int64(0)
 	P.UUID = ""
-	interdb.DB().Model(P).Where(P).Count(&Count)
+	interdb.InterDb().Model(P).Where(P).Count(&Count)
 	if Count > 0 {
 		return fmt.Errorf("already exists same record:%s", IgnoreUUID)
 	}
 	P.UUID = IgnoreUUID
-	return interdb.DB().Model(P).Create(&P).Error
+	return interdb.InterDb().Model(P).Create(&P).Error
 }
 
 func DeleteDlt6452007PointByDevice(uuids []string, deviceUuid string) error {
-	return interdb.DB().
+	return interdb.InterDb().
 		Where("uuid IN ? AND device_uuid=?", uuids, deviceUuid).
 		Delete(&model.MDlt6452007DataPoint{}).Error
 }
 
 func DeleteAllMDlt6452007ByDevice(deviceUuid string) error {
-	return interdb.DB().
+	return interdb.InterDb().
 		Where("device_uuid=?", deviceUuid).
 		Delete(&model.MDlt6452007DataPoint{}).Error
 }
 
 func UpdateDlt6452007Point(MDlt6452007DataPoint model.MDlt6452007DataPoint) error {
-	return interdb.DB().Model(model.MDlt6452007DataPoint{}).
+	return interdb.InterDb().Model(model.MDlt6452007DataPoint{}).
 		Where("device_uuid=? AND uuid=?",
 			MDlt6452007DataPoint.DeviceUuid, MDlt6452007DataPoint.UUID).
 		Updates(MDlt6452007DataPoint).Error

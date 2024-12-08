@@ -123,7 +123,7 @@ func (sd *genericSnmpDevice) Init(devId string, configMap map[string]interface{}
 		return err
 	}
 	snmpOids := []snmpOid{}
-	snmpOidLoadErr := interdb.DB().Table("m_snmp_oids").
+	snmpOidLoadErr := interdb.InterDb().Table("m_snmp_oids").
 		Where("device_uuid=?", devId).Find(&snmpOids).Error
 	if snmpOidLoadErr != nil {
 		return snmpOidLoadErr
@@ -147,7 +147,7 @@ func (sd *genericSnmpDevice) Init(devId string, configMap map[string]interface{}
 	}
 	if sd.mainConfig.SchemaId != "" {
 		var SchemaProperties []SnmpSchemaProperty
-		dataSchemaLoadError := interdb.DB().Table("m_iot_properties").
+		dataSchemaLoadError := interdb.InterDb().Table("m_iot_properties").
 			Where("schema_id=?", sd.mainConfig.SchemaId).Find(&SchemaProperties).Error
 		if dataSchemaLoadError != nil {
 			return dataSchemaLoadError

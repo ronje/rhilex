@@ -24,7 +24,7 @@ import "github.com/hootrhino/rhilex/component/interdb"
  */
 func CountModel(m any) int64 {
 	var count int64
-	interdb.DB().Model(m).Count(&count)
+	interdb.InterDb().Model(m).Count(&count)
 	return count
 }
 
@@ -35,6 +35,6 @@ func CountModel(m any) int64 {
  */
 func CountTable(table string) int64 {
 	var count int64
-	interdb.DB().Table(table).Count(&count)
+	interdb.InterDb().Table(table).Count(&count)
 	return count
 }

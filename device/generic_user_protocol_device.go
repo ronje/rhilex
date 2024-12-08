@@ -134,7 +134,7 @@ func (gw *GenericUserProtocolDevice) Init(devId string, configMap map[string]int
 		return nil
 	}
 	var DataPoints []GenericUserProtocolDataPoint
-	PointLoadErr := interdb.DB().Table("m_user_protocol_data_points").
+	PointLoadErr := interdb.InterDb().Table("m_user_protocol_data_points").
 		Where("device_uuid=?", devId).Find(&DataPoints).Error
 	if PointLoadErr != nil {
 		return PointLoadErr

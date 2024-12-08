@@ -14,7 +14,6 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 package service
 
-
 import (
 	"github.com/hootrhino/rhilex/component/apiserver/model"
 	"github.com/hootrhino/rhilex/component/interdb"
@@ -23,51 +22,51 @@ import (
 // -----------------------------------------------------------------------------------
 func GetMRule(uuid string) (*model.MRule, error) {
 	m := new(model.MRule)
-	return m, interdb.DB().Where("uuid=?", uuid).First(m).Error
+	return m, interdb.InterDb().Where("uuid=?", uuid).First(m).Error
 }
 func GetAllMRule() ([]model.MRule, error) {
 	m := []model.MRule{}
-	return m, interdb.DB().Find(&m).Error
+	return m, interdb.InterDb().Find(&m).Error
 }
 
 func GetMRuleWithUUID(uuid string) (*model.MRule, error) {
 	m := new(model.MRule)
-	return m, interdb.DB().Where("uuid=?", uuid).First(m).Error
+	return m, interdb.InterDb().Where("uuid=?", uuid).First(m).Error
 }
 
 func InsertMRule(r *model.MRule) error {
-	return interdb.DB().Table("m_rules").Create(r).Error
+	return interdb.InterDb().Table("m_rules").Create(r).Error
 }
 
 func DeleteMRule(uuid string) error {
-	return interdb.DB().Table("m_rules").Where("uuid=?", uuid).Delete(&model.MRule{}).Error
+	return interdb.InterDb().Table("m_rules").Where("uuid=?", uuid).Delete(&model.MRule{}).Error
 }
 
 func UpdateMRule(uuid string, r *model.MRule) error {
-	return interdb.DB().Model(r).Where("uuid=?", uuid).Updates(*r).Error
+	return interdb.InterDb().Model(r).Where("uuid=?", uuid).Updates(*r).Error
 }
 
 // -----------------------------------------------------------------------------------
 func AllMRules() []model.MRule {
 	rules := []model.MRule{}
-	interdb.DB().Table("m_rules").Find(&rules)
+	interdb.InterDb().Table("m_rules").Find(&rules)
 	return rules
 }
 
 func AllMInEnd() []model.MInEnd {
 	inends := []model.MInEnd{}
-	interdb.DB().Table("m_in_ends").Find(&inends)
+	interdb.InterDb().Table("m_in_ends").Find(&inends)
 	return inends
 }
 
 func AllMOutEnd() []model.MOutEnd {
 	outends := []model.MOutEnd{}
-	interdb.DB().Table("m_out_ends").Find(&outends)
+	interdb.InterDb().Table("m_out_ends").Find(&outends)
 	return outends
 }
 
 func AllMUser() []model.MUser {
 	users := []model.MUser{}
-	interdb.DB().Find(&users)
+	interdb.InterDb().Find(&users)
 	return users
 }

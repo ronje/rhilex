@@ -22,7 +22,7 @@ import (
 
 func AllDevices() []model.MDevice {
 	devices := []model.MDevice{}
-	interdb.DB().Find(&devices)
+	interdb.InterDb().Find(&devices)
 	return devices
 }
 
@@ -31,40 +31,40 @@ func AllDevices() []model.MDevice {
 // 获取设备列表
 func GetMDeviceWithUUID(uuid string) (*model.MDevice, error) {
 	m := new(model.MDevice)
-	return m, interdb.DB().Where("uuid=?", uuid).First(m).Error
+	return m, interdb.InterDb().Where("uuid=?", uuid).First(m).Error
 }
 
 // 检查名称是否重复
 func CheckDeviceCount(T string) int64 {
 	Count := int64(0)
-	interdb.DB().Model(model.MDevice{}).Where("type=?", T).Count(&Count)
+	interdb.InterDb().Model(model.MDevice{}).Where("type=?", T).Count(&Count)
 	return Count
 }
 
 // 检查名称是否重复
 func CheckDeviceNameDuplicate(name string) bool {
 	Count := int64(0)
-	interdb.DB().Model(model.MDevice{}).Where("name=?", name).Count(&Count)
+	interdb.InterDb().Model(model.MDevice{}).Where("name=?", name).Count(&Count)
 	return Count > 0
 }
 
 // 删除设备
 func DeleteDevice(uuid string) error {
-	return interdb.DB().Where("uuid=?", uuid).Delete(&model.MDevice{}).Error
+	return interdb.InterDb().Where("uuid=?", uuid).Delete(&model.MDevice{}).Error
 }
 
 // 创建设备
 func InsertDevice(o *model.MDevice) error {
-	return interdb.DB().Table("m_devices").Create(o).Error
+	return interdb.InterDb().Table("m_devices").Create(o).Error
 }
 
 // 更新设备信息
 func UpdateDevice(uuid string, o *model.MDevice) error {
 	m := model.MDevice{}
-	if err := interdb.DB().Where("uuid=?", uuid).First(&m).Error; err != nil {
+	if err := interdb.InterDb().Where("uuid=?", uuid).First(&m).Error; err != nil {
 		return err
 	} else {
-		interdb.DB().Model(m).Updates(*o)
+		interdb.InterDb().Model(m).Updates(*o)
 		return nil
 	}
 }
@@ -85,7 +85,7 @@ WHERE uuid IN (
 ) ORDER BY created_at DESC;`
 
 	m := []model.MDevice{}
-	interdb.DB().Raw(`SELECT * FROM m_devices `+sql, gid).Find(&m)
+	interdb.InterDb().Raw(`SELECT * FROM m_devices `+sql, gid).Find(&m)
 	return m
 
 }
@@ -93,9 +93,9 @@ func PageDevice(current, size int) (int64, []model.MDevice) {
 	sql := `SELECT * FROM m_devices ORDER BY created_at DESC limit ? offset ?;`
 	MDevices := []model.MDevice{}
 	offset := (current - 1) * size
-	interdb.DB().Raw(sql, size, offset).Find(&MDevices)
+	interdb.InterDb().Raw(sql, size, offset).Find(&MDevices)
 	var count int64
-	interdb.DB().Model(&model.MDevice{}).Count(&count)
+	interdb.InterDb().Model(&model.MDevice{}).Count(&count)
 	return count, MDevices
 }
 
@@ -115,7 +115,7 @@ SELECT * FROM m_devices WHERE uuid IN (
 ) ORDER BY created_at DESC limit ? offset ?;`
 	MDevices := []model.MDevice{}
 	offset := (current - 1) * size
-	interdb.DB().Raw(sql, gid, size, offset).Find(&MDevices)
+	interdb.InterDb().Raw(sql, gid, size, offset).Find(&MDevices)
 	var count int64
 	countSql := `SELECT count(id)
 FROM m_devices
@@ -129,6 +129,6 @@ WHERE type = 'DEVICE' AND
 gid = ?
 );
 `
-	interdb.DB().Raw(countSql, gid).Scan(&count)
+	interdb.InterDb().Raw(countSql, gid).Scan(&count)
 	return count, MDevices
 }

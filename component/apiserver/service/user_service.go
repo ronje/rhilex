@@ -22,27 +22,27 @@ import (
 
 func GetMUser(username string) (*model.MUser, error) {
 	m := new(model.MUser)
-	return m, interdb.DB().Where("username=?", username).First(m).Error
+	return m, interdb.InterDb().Where("username=?", username).First(m).Error
 }
 func Login(username, pwd string) (*model.MUser, error) {
 	m := new(model.MUser)
-	return m, interdb.DB().
+	return m, interdb.InterDb().
 		Where("username=? AND password=?", username, pwd).
 		First(m).Error
 }
 
 func InsertMUser(o *model.MUser) error {
-	return interdb.DB().Model(o).Create(o).Error
+	return interdb.InterDb().Model(o).Create(o).Error
 }
 func InitMUser(o *model.MUser) error {
-	return interdb.DB().Model(o).FirstOrCreate(o).Error
+	return interdb.InterDb().Model(o).FirstOrCreate(o).Error
 }
 func ClearAllUser() error {
-	return interdb.DB().Model(&model.MUser{}).Exec(`DELETE FROM m_users`).Error
+	return interdb.InterDb().Model(&model.MUser{}).Exec(`DELETE FROM m_users`).Error
 }
 
 func UpdateMUser(oldName string, o *model.MUser) error {
-	return interdb.DB().Model(o).
+	return interdb.InterDb().Model(o).
 		Where("username=?", oldName).
 		Updates(*o).Error
 }

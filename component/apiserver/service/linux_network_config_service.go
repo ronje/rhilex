@@ -10,14 +10,14 @@ import (
 
 func GetEthConfig(Interface string) (model.MNetworkConfig, error) {
 	MNetworkConfig := model.MNetworkConfig{}
-	err := interdb.DB().
+	err := interdb.InterDb().
 		Where("interface=? AND type =\"ETHNET\"", Interface).
 		Find(&MNetworkConfig).Error
 	return MNetworkConfig, err
 }
 
 func UpdateEthConfig(MNetworkConfig model.MNetworkConfig) error {
-	return interdb.DB().Transaction(func(tx *gorm.DB) error {
+	return interdb.InterDb().Transaction(func(tx *gorm.DB) error {
 		var existingConfig model.MNetworkConfig
 		if err := tx.Where("interface = ? AND type = ?", MNetworkConfig.Interface, "ETHNET").
 			First(&existingConfig).Error; err != nil {
@@ -32,7 +32,7 @@ func UpdateEthConfig(MNetworkConfig model.MNetworkConfig) error {
 
 func AllEthConfig() ([]model.MNetworkConfig, error) {
 	MNetworkConfig := []model.MNetworkConfig{}
-	err := interdb.DB().
+	err := interdb.InterDb().
 		Where("type =\"ETHNET\"").
 		Find(&MNetworkConfig).Error
 	return MNetworkConfig, err

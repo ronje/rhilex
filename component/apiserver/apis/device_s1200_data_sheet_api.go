@@ -79,7 +79,7 @@ func SiemensPointsExport(c *gin.Context, ruleEngine typex.Rhilex) {
 	deviceUuid, _ := c.GetQuery("device_uuid")
 
 	var records []model.MSiemensDataPoint
-	result := interdb.DB().Table("m_siemens_data_points").
+	result := interdb.InterDb().Table("m_siemens_data_points").
 		Where("device_uuid=?", deviceUuid).Find(&records)
 	if result.Error != nil {
 		c.JSON(common.HTTP_OK, common.Error400(result.Error))
@@ -131,10 +131,10 @@ func SiemensSheetPageList(c *gin.Context, ruleEngine typex.Rhilex) {
 		return
 	}
 	deviceUuid, _ := c.GetQuery("device_uuid")
-	db := interdb.DB()
+	db := interdb.InterDb()
 	tx := db.Scopes(service.Paginate(*pager))
 	var count int64
-	err1 := interdb.DB().Model(&model.MSiemensDataPoint{}).
+	err1 := interdb.InterDb().Model(&model.MSiemensDataPoint{}).
 		Where("device_uuid=?", deviceUuid).Count(&count).Error
 	if err1 != nil {
 		c.JSON(common.HTTP_OK, common.Error400(err1))
@@ -386,7 +386,7 @@ func SiemensSheetImport(c *gin.Context, ruleEngine typex.Rhilex) {
 		Type string
 	}
 	Device := DeviceDto{}
-	errDb := interdb.DB().Table("m_devices").
+	errDb := interdb.InterDb().Table("m_devices").
 		Where("uuid=?", deviceUuid).Find(&Device).Error
 	if errDb != nil {
 		c.JSON(common.HTTP_OK, common.Error400(errDb))

@@ -167,7 +167,7 @@ func StartInternalEventQueue(IB1 *InternalEventBus) {
 					continue
 				}
 				// glogger.GLogger.Debug("Internal Event:", Event)
-				interdb.DB().Table("m_internal_notifies").Save(&MInternalNotify{
+				interdb.InterDb().Table("m_internal_notifies").Save(&MInternalNotify{
 					UUID:    utils.MakeUUID("NOTIFY"),
 					Type:    Event.Type,  // INFO | ERROR | WARNING
 					Status:  1,           // Default unread

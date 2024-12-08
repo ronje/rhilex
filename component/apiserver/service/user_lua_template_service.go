@@ -18,14 +18,14 @@ package service
 import (
 	"fmt"
 
-	"github.com/hootrhino/rhilex/component/interdb"
 	"github.com/hootrhino/rhilex/component/apiserver/model"
+	"github.com/hootrhino/rhilex/component/interdb"
 )
 
 // 获取UserLuaTemplate列表
 func AllUserLuaTemplate() []model.MUserLuaTemplate {
 	m := []model.MUserLuaTemplate{}
-	interdb.DB().Find(&m)
+	interdb.InterDb().Find(&m)
 	return m
 
 }
@@ -40,7 +40,7 @@ func SearchUserLuaTemplate(label, detail string) []model.MUserLuaTemplate {
 SELECT * FROM m_user_lua_templates
 WHERE label like "%%%s%%"
 OR detail like "%%%s%%"`
-	interdb.DB().Raw(fmt.Sprintf(sql, label, detail)).Scan(&m)
+	interdb.InterDb().Raw(fmt.Sprintf(sql, label, detail)).Scan(&m)
 	return m
 }
 
@@ -58,7 +58,7 @@ SELECT m_generic_groups.*
  WHERE m_generic_group_relations.rid = ?;
 `
 	m := model.MGenericGroup{}
-	interdb.DB().Raw(sql, rid).Find(&m)
+	interdb.InterDb().Raw(sql, rid).Find(&m)
 	return m
 }
 
@@ -69,23 +69,23 @@ SELECT m_generic_groups.*
  */
 func GetUserLuaTemplateWithUUID(uuid string) (model.MUserLuaTemplate, error) {
 	m := model.MUserLuaTemplate{}
-	err := interdb.DB().Where("uuid=?", uuid).First(&m).Error
+	err := interdb.InterDb().Where("uuid=?", uuid).First(&m).Error
 	return m, err
 }
 
 // 删除UserLuaTemplate
 func DeleteUserLuaTemplate(uuid string) error {
-	return interdb.DB().Where("uuid=?", uuid).Delete(&model.MUserLuaTemplate{}).Error
+	return interdb.InterDb().Where("uuid=?", uuid).Delete(&model.MUserLuaTemplate{}).Error
 }
 
 // 创建UserLuaTemplate
 func InsertUserLuaTemplate(UserLuaTemplate model.MUserLuaTemplate) error {
-	return interdb.DB().Create(&UserLuaTemplate).Error
+	return interdb.InterDb().Create(&UserLuaTemplate).Error
 }
 
 // 更新UserLuaTemplate
 func UpdateUserLuaTemplate(UserLuaTemplate model.MUserLuaTemplate) error {
-	return interdb.DB().
+	return interdb.InterDb().
 		Model(UserLuaTemplate).
 		Where("uuid=?", UserLuaTemplate.UUID).
 		Updates(&UserLuaTemplate).Error

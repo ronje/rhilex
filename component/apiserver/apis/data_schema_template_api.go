@@ -143,7 +143,7 @@ func GenerateSchemaTemplate(c *gin.Context, ruleEngine typex.Rhilex) {
 
 // TEMP_HUMIDITY
 func _Template_TEMP_HUMIDITY(schemaId string) error {
-	tx := interdb.DB()
+	tx := interdb.InterDb()
 	count := int64(0)
 	tx.Model(model.MIotProperty{}).Where("schema_id = ? and (name=? or name =?)",
 		schemaId, "temperature", "humidity").Count(&count)
@@ -168,7 +168,7 @@ VALUES
 
 // SWITCH_STATUS
 func _Template_SWITCH_STATUS(schemaId string) error {
-	tx := interdb.DB()
+	tx := interdb.InterDb()
 	count := int64(0)
 	tx.Model(model.MIotProperty{}).Where("schema_id = ? and name=?",
 		schemaId, "status").Count(&count)
@@ -191,7 +191,7 @@ VALUES
 
 // WATER_QUALITY
 func _Template_WATER_QUALITY(schemaId string) error {
-	tx := interdb.DB()
+	tx := interdb.InterDb()
 	count := int64(0)
 	tx.Model(model.MIotProperty{}).Where("schema_id = ? and (name=? or name=? or name =? or name =? or name =? or name=?)",
 		schemaId, "ph", "turbidity", "turbidity", "dissolved_oxygen", "conductivity", "temperature").Count(&count)
@@ -232,7 +232,7 @@ VALUES
 
 // AIR_QUALITY
 func _Template_AIR_QUALITY(schemaId string) error {
-	tx := interdb.DB()
+	tx := interdb.InterDb()
 	count := int64(0)
 	tx.Model(model.MIotProperty{}).Where("schema_id = ? and (name=? or name=? or name =? or name =? or name =? or name=?)",
 		schemaId, "pm25", "pm10", "co2", "tvoc", "temperature", "humidity").Count(&count)
@@ -277,7 +277,7 @@ VALUES
 
 // MOTION_SENSOR
 func _Template_MOTION_SENSOR(schemaId string) error {
-	tx := interdb.DB()
+	tx := interdb.InterDb()
 	count := int64(0)
 	tx.Model(model.MIotProperty{}).Where("schema_id = ? and (name=? or name=? or name =?)",
 		schemaId, "detected", "intensity", "battery").Count(&count)
@@ -310,7 +310,7 @@ VALUES
 
 // SMART_METER
 func _Template_SMART_METER(schemaId string) error {
-	tx := interdb.DB()
+	tx := interdb.InterDb()
 	count := int64(0)
 	tx.Model(model.MIotProperty{}).Where("schema_id = ? and (name=? or name=? or name =? or name =?)",
 		schemaId, "energy_consumption", "current", "voltage", "power_factor").Count(&count)
@@ -347,7 +347,7 @@ VALUES
 
 // SOIL_MOISTURE
 func _Template_SOIL_MOISTURE(schemaId string) error {
-	tx := interdb.DB()
+	tx := interdb.InterDb()
 	count := int64(0)
 	tx.Model(model.MIotProperty{}).Where("schema_id = ? and (name=? or name=? or name =?)",
 		schemaId, "moisture", "temperature", "ec").Count(&count)
@@ -380,7 +380,7 @@ VALUES
 
 // GPS_TRACKER
 func _Template_GPS_TRACKER(schemaId string) error {
-	tx := interdb.DB()
+	tx := interdb.InterDb()
 	count := int64(0)
 	tx.Model(model.MIotProperty{}).Where("schema_id = ? and (name=? or name=? or name=? or name=? or name=?)",
 		schemaId, "latitude", "longitude", "altitude", "speed", "battery").Count(&count)
@@ -415,7 +415,7 @@ VALUES
 
 // SMOKE_DETECTOR
 func _Template_SMOKE_DETECTOR(schemaId string) error {
-	tx := interdb.DB()
+	tx := interdb.InterDb()
 	count := int64(0)
 	tx.Model(model.MIotProperty{}).Where("schema_id = ? and (name=? or name=? or name=? or name=? or name=?)",
 		schemaId, "smoke_detected", "co_level", "battery", "last_tested").Count(&count)
@@ -447,7 +447,7 @@ VALUES
 
 // SMART_LOCK
 func _Template_SMART_LOCK(schemaId string) error {
-	tx := interdb.DB()
+	tx := interdb.InterDb()
 	count := int64(0)
 	tx.Model(model.MIotProperty{}).Where("schema_id = ? and (name=? or name=? or name=? or name=? or name=?)",
 		schemaId, "lock_status", "access_method", "user_id", "battery").Count(&count)
@@ -479,7 +479,7 @@ VALUES
 
 // SIX_AXIS_ACCELEROMETER
 func _Template_SIX_AXIS_ACCELEROMETER(schemaId string) error {
-	tx := interdb.DB()
+	tx := interdb.InterDb()
 	count := int64(0)
 	tx.Model(model.MIotProperty{}).Where("schema_id = ? and (name=? or name=? or name=? or name=? or name=? or name=? or name=?)",
 		schemaId, "accel_x", "accel_y", "accel_z", "gyro_x", "gyro_y", "gyro_z", "temperature", "battery").Count(&count)

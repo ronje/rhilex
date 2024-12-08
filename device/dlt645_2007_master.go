@@ -132,7 +132,7 @@ func (gw *DLT645_2007_MasterGateway) Init(devId string, configMap map[string]int
 		return nil
 	}
 	var DLT645_ModbusPointList []DLT645_2007_DataPoint
-	PointLoadErr := interdb.DB().Table("m_dlt6452007_data_points").
+	PointLoadErr := interdb.InterDb().Table("m_dlt6452007_data_points").
 		Where("device_uuid=?", devId).Find(&DLT645_ModbusPointList).Error
 	if PointLoadErr != nil {
 		return PointLoadErr

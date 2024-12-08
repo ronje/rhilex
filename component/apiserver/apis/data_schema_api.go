@@ -266,7 +266,7 @@ func PublishSchema(c *gin.Context, ruleEngine typex.Rhilex) {
 		return
 	}
 	var records []model.MIotProperty
-	result := interdb.DB().Order("created_at DESC").
+	result := interdb.InterDb().Order("created_at DESC").
 		Find(&records, &model.MIotProperty{SchemaId: MSchema.UUID})
 	if result.Error != nil {
 		c.JSON(common.HTTP_OK, common.Error400(result.Error))
@@ -297,7 +297,7 @@ func PublishSchema(c *gin.Context, ruleEngine typex.Rhilex) {
 			DefaultValue: ioTPropertyRuleVo.GetDefaultValue(),
 		})
 	}
-	txErr := interdb.DB().Transaction(func(tx *gorm.DB) error {
+	txErr := interdb.InterDb().Transaction(func(tx *gorm.DB) error {
 		// Publish Schema
 		True := true
 		MSchema.Published = &True
@@ -314,16 +314,16 @@ func PublishSchema(c *gin.Context, ruleEngine typex.Rhilex) {
 		if err1 != nil {
 			return err1
 		}
-		errTransaction := datacenter.DB().Transaction(func(datacenterTx *gorm.DB) error {
-			if err2 := datacenter.DB().Exec(sql).Error; err2 != nil {
+		errTransaction := interdb.DataCenterDb().Transaction(func(datacenterTx *gorm.DB) error {
+			if err2 := interdb.DataCenterDb().Exec(sql).Error; err2 != nil {
 				return err2
 			}
 			idxSql1 := `CREATE INDEX IF NOT EXISTS idx_id ON %s (id DESC);`
-			if errIdx1 := datacenter.DB().Exec(fmt.Sprintf(idxSql1, tableName)).Error; errIdx1 != nil {
+			if errIdx1 := interdb.DataCenterDb().Exec(fmt.Sprintf(idxSql1, tableName)).Error; errIdx1 != nil {
 				return errIdx1
 			}
 			idxSql2 := `CREATE INDEX IF NOT EXISTS idx_create_at ON %s (create_at DESC);`
-			if errIdx2 := datacenter.DB().Exec(fmt.Sprintf(idxSql2, tableName)).Error; errIdx2 != nil {
+			if errIdx2 := interdb.DataCenterDb().Exec(fmt.Sprintf(idxSql2, tableName)).Error; errIdx2 != nil {
 				return errIdx2
 			}
 			// 防止数据爆炸撑死数据库，10000条数据大概吃10Mb硬盘.
@@ -341,7 +341,7 @@ func PublishSchema(c *gin.Context, ruleEngine typex.Rhilex) {
 				);
 			END;
 			`
-			if errTrigger := datacenter.DB().Exec(fmt.Sprintf(trigger, tableName, tableName,
+			if errTrigger := interdb.DataCenterDb().Exec(fmt.Sprintf(trigger, tableName, tableName,
 				tableName, tableName, tableName, tableName)).Error; errTrigger != nil {
 				return errTrigger
 			}
@@ -561,10 +561,10 @@ func IotSchemaPropertyPageList(c *gin.Context, ruleEngine typex.Rhilex) {
 		return
 	}
 	schemaUuid, _ := c.GetQuery("schema_uuid")
-	db := interdb.DB()
+	db := interdb.InterDb()
 	tx := db.Scopes(service.Paginate(*pager))
 	var count int64
-	err1 := interdb.DB().Model(&model.MIotProperty{}).
+	err1 := interdb.InterDb().Model(&model.MIotProperty{}).
 		Where("schema_id=?", schemaUuid).Count(&count).Error
 	if err1 != nil {
 		c.JSON(common.HTTP_OK, common.Error400(err1))

@@ -196,7 +196,7 @@ func (mdev *GenericModbusMaster) Init(devId string, configMap map[string]interfa
 
 	// 合并数据库里面的点位表
 	var ModbusPointList []ModbusPoint
-	modbusPointLoadErr := interdb.DB().Table("m_modbus_data_points").
+	modbusPointLoadErr := interdb.InterDb().Table("m_modbus_data_points").
 		Where("device_uuid=?", devId).Find(&ModbusPointList).Error
 	if modbusPointLoadErr != nil {
 		return modbusPointLoadErr

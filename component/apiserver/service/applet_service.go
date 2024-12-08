@@ -27,13 +27,13 @@ import (
 // 获取App列表
 func AllApp() []model.MApplet {
 	m := []model.MApplet{}
-	interdb.DB().Find(&m)
+	interdb.InterDb().Find(&m)
 	return m
 
 }
 func GetMAppWithUUID(uuid string) (*model.MApplet, error) {
 	m := model.MApplet{}
-	if err := interdb.DB().Where("uuid=?", uuid).First(&m).Error; err != nil {
+	if err := interdb.InterDb().Where("uuid=?", uuid).First(&m).Error; err != nil {
 		return nil, err
 	} else {
 		return &m, nil
@@ -42,21 +42,21 @@ func GetMAppWithUUID(uuid string) (*model.MApplet, error) {
 
 // 删除App
 func DeleteApp(uuid string) error {
-	return interdb.DB().Where("uuid=?", uuid).Delete(&model.MApplet{}).Error
+	return interdb.InterDb().Where("uuid=?", uuid).Delete(&model.MApplet{}).Error
 }
 
 // 创建App
 func InsertApp(app *model.MApplet) error {
-	return interdb.DB().Create(app).Error
+	return interdb.InterDb().Create(app).Error
 }
 
 // 更新App
 func UpdateApp(app *model.MApplet) error {
 	m := model.MApplet{}
-	if err := interdb.DB().Where("uuid=?", app.UUID).First(&m).Error; err != nil {
+	if err := interdb.InterDb().Where("uuid=?", app.UUID).First(&m).Error; err != nil {
 		return err
 	} else {
-		interdb.DB().Model(m).Where("uuid=?", app.UUID).Updates(*app)
+		interdb.InterDb().Model(m).Where("uuid=?", app.UUID).Updates(*app)
 		return nil
 	}
 }

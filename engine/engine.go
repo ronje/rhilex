@@ -33,7 +33,6 @@ import (
 	"github.com/hootrhino/rhilex/component/intermetric"
 	"github.com/hootrhino/rhilex/component/internotify"
 	"github.com/hootrhino/rhilex/component/interqueue"
-	"github.com/hootrhino/rhilex/component/lostcache"
 	"github.com/hootrhino/rhilex/component/luaexecutor"
 	"github.com/hootrhino/rhilex/component/orderedmap"
 	"github.com/hootrhino/rhilex/component/rhilexmanager"
@@ -83,13 +82,11 @@ func InitRuleEngine(config typex.RhilexConfig) typex.Rhilex {
 	// Init Security License
 	security.InitSecurityLicense()
 	// Init Internal DB
-	interdb.InitInterDb(__DefaultRuleEngine)
+	interdb.InitAll(__DefaultRuleEngine)
 	// Init Alarm Center
 	alarmcenter.InitAlarmCenter(__DefaultRuleEngine)
 	// Data center: future version maybe support
 	datacenter.InitDataCenter(__DefaultRuleEngine)
-	// Lost Data Cache
-	lostcache.InitLostCacheDb(__DefaultRuleEngine)
 	// Internal kv Store
 	interkv.InitInterKVStore(core.GlobalConfig.MaxKvStoreSize)
 	// SuperVisor Admin
@@ -189,7 +186,7 @@ func (e *RuleEngine) Stop() {
 	transceiver.Stop()
 	// Stop Alarm Center
 	glogger.GLogger.Info("Stop Alarm Center")
-	alarmcenter.Stop()
+	alarmcenter.StopAlarmCenter()
 	glogger.GLogger.Info("Stop Alarm Center Successfully")
 	// Stop PluginType Manager
 	glogger.GLogger.Info("Stop PluginType Manager")
@@ -200,7 +197,10 @@ func (e *RuleEngine) Stop() {
 	intercache.UnRegisterSlot("__DefaultRuleEngine")
 	// UnRegister __DeviceConfigMap
 	intercache.UnRegisterSlot("__DeviceConfigMap")
-	//
+	// Stop Internal Database
+	glogger.GLogger.Info("Stop Internal Database")
+	interdb.StopAll()
+	glogger.GLogger.Info("Stop Internal Database Successfully")
 	glogger.GLogger.Info("Stop RHILEX successfully")
 	glogger.Close()
 }

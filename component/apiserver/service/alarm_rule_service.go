@@ -26,22 +26,22 @@ import (
 
 func GetMAlarmRuleWithUUID(uuid string) (*model.MAlarmRule, error) {
 	m := model.MAlarmRule{}
-	return &m, interdb.DB().Where("uuid=?", uuid).First(&m).Error
+	return &m, interdb.InterDb().Where("uuid=?", uuid).First(&m).Error
 }
 
 // 删除AlarmRule
 func DeleteAlarmRule(uuid string) error {
-	return interdb.DB().Where("uuid=?", uuid).Delete(&model.MAlarmRule{}).Error
+	return interdb.InterDb().Where("uuid=?", uuid).Delete(&model.MAlarmRule{}).Error
 }
 
 // 创建AlarmRule
 func InsertAlarmRule(AlarmRule *model.MAlarmRule) error {
-	return interdb.DB().Create(AlarmRule).Error
+	return interdb.InterDb().Create(AlarmRule).Error
 }
 
 // 更新AlarmRule
 func UpdateAlarmRule(AlarmRule *model.MAlarmRule) error {
-	return interdb.DB().Model(&model.MAlarmRule{}).
+	return interdb.InterDb().Model(&model.MAlarmRule{}).
 		Where("uuid=?", AlarmRule.UUID).Updates(*AlarmRule).Error
 }
 
@@ -50,8 +50,8 @@ func PageAlarmRule(current, size int) (int64, []model.MAlarmRule) {
 	sql := `SELECT * FROM m_alarm_rules ORDER BY created_at DESC limit ? offset ?;`
 	MAlarmRules := []model.MAlarmRule{}
 	offset := (current - 1) * size
-	interdb.DB().Raw(sql, size, offset).Find(&MAlarmRules)
+	interdb.InterDb().Raw(sql, size, offset).Find(&MAlarmRules)
 	var count int64
-	interdb.DB().Model(&model.MAlarmRule{}).Count(&count)
+	interdb.InterDb().Model(&model.MAlarmRule{}).Count(&count)
 	return count, MAlarmRules
 }

@@ -88,7 +88,7 @@ func PageInternalNotifies(c *gin.Context, ruleEngine typex.Rhilex) {
 		c.JSON(common.HTTP_OK, common.Error("Query size too large, Must less than 100"))
 		return
 	}
-	DbTx := interdb.DB().Scopes(service.Paginate(*pager))
+	DbTx := interdb.InterDb().Scopes(service.Paginate(*pager))
 	records := []InternalNotifyVo{}
 	result := DbTx.Model(model.MInternalNotify{}).Order("id DESC").Scan(&records)
 	if result.Error != nil {
@@ -96,7 +96,7 @@ func PageInternalNotifies(c *gin.Context, ruleEngine typex.Rhilex) {
 		return
 	}
 	var count int64
-	err1 := interdb.DB().Model(&model.MInternalNotify{}).Count(&count).Error
+	err1 := interdb.InterDb().Model(&model.MInternalNotify{}).Count(&count).Error
 	if err1 != nil {
 		c.JSON(common.HTTP_OK, common.Error400(err1))
 		return
