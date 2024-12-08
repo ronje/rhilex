@@ -22,15 +22,15 @@ import (
 
 // AlarmRule 告警规则
 type AlarmRule struct {
-	Threshold    int           // 单次触发的日志数量阈值
+	Threshold    uint64        // 单次触发的日志数量阈值
 	Interval     time.Duration // 最小触发时间间隔
 	lastAlarm    time.Time     // 上次告警触发的时间
-	pendingCount int           // 当前累计的告警数量
+	pendingCount uint64        // 当前累计的告警数量
 	program      *vm.Program
 }
 
 // NewAlarmRule 创建一个告警规则
-func NewAlarmRule(threshold int, interval time.Duration, program *vm.Program) *AlarmRule {
+func NewAlarmRule(threshold uint64, interval time.Duration, program *vm.Program) *AlarmRule {
 	return &AlarmRule{
 		Threshold:    threshold,
 		Interval:     interval,

@@ -1,7 +1,10 @@
 package apis
 
 import (
+	"time"
+
 	"github.com/gin-gonic/gin"
+	"github.com/hootrhino/rhilex/component/alarmcenter"
 	common "github.com/hootrhino/rhilex/component/apiserver/common"
 	"github.com/hootrhino/rhilex/component/apiserver/model"
 	"github.com/hootrhino/rhilex/component/apiserver/server"
@@ -17,6 +20,8 @@ func LoadAlarmRuleRoute() {
 	api.PUT(("/update"), server.AddRoute(UpdateAlarmRule))
 	api.DELETE(("/del"), server.AddRoute(DeleteAlarmRule))
 	api.GET(("/detail"), server.AddRoute(AlarmRuleDetail))
+	api.POST(("/testRule"), server.AddRoute(AlarmRuleTest))
+	api.POST(("/verifySyntax"), server.AddRoute(VerifySyntax))
 }
 
 // 告警规则
@@ -87,6 +92,7 @@ func DeleteAlarmRule(c *gin.Context, ruleEngine typex.Rhilex) {
 		c.JSON(common.HTTP_OK, common.Error400(err))
 		return
 	}
+	alarmcenter.RemoveExpr(uuid)
 	c.JSON(common.HTTP_OK, common.Ok())
 }
 
@@ -102,6 +108,15 @@ func CreateAlarmRule(c *gin.Context, ruleEngine typex.Rhilex) {
 		c.JSON(common.HTTP_OK, common.Error400(err))
 		return
 	}
+	ok, errVerifyExpr := alarmcenter.VerifyExpr(AlarmRule.Expr)
+	if errVerifyExpr != nil {
+		c.JSON(common.HTTP_OK, common.Error400(errVerifyExpr))
+		return
+	}
+	if !ok {
+		c.JSON(common.HTTP_OK, common.Error("invalid expr result:"+AlarmRule.Expr))
+		return
+	}
 	Model := model.MAlarmRule{
 		UUID:        utils.AlarmRuleUuid(),
 		Name:        AlarmRule.Name,
@@ -112,6 +127,12 @@ func CreateAlarmRule(c *gin.Context, ruleEngine typex.Rhilex) {
 	}
 	if err := service.InsertAlarmRule(&Model); err != nil {
 		c.JSON(common.HTTP_OK, common.Error400(err))
+		return
+	}
+	_, errLoadExpr := alarmcenter.LoadExpr(Model.UUID, Model.Expr, Model.Threshold,
+		time.Duration(Model.Interval)*time.Second)
+	if errLoadExpr != nil {
+		c.JSON(common.HTTP_OK, common.Error400(errLoadExpr))
 		return
 	}
 	c.JSON(common.HTTP_OK, common.Ok())
@@ -141,4 +162,52 @@ func UpdateAlarmRule(c *gin.Context, ruleEngine typex.Rhilex) {
 		return
 	}
 	c.JSON(common.HTTP_OK, common.Ok())
+}
+
+// 验证表达式语法
+
+func VerifySyntax(c *gin.Context, ruleEngine typex.Rhilex) {
+	type Form struct {
+		Expr string `json:"expr"`
+	}
+	form := Form{}
+	if err := c.ShouldBindJSON(&form); err != nil {
+		c.JSON(common.HTTP_OK, common.Error400(err))
+		return
+	}
+	ok, err := alarmcenter.VerifyExpr(form.Expr)
+	if err != nil {
+		c.JSON(common.HTTP_OK, common.Error400(err))
+		return
+	}
+	if !ok {
+		c.JSON(common.HTTP_OK, common.Error("invalid expr result:"+form.Expr))
+		return
+	}
+	c.JSON(common.HTTP_OK, common.Ok())
+
+}
+
+// AlarmRuleTest
+func AlarmRuleTest(c *gin.Context, ruleEngine typex.Rhilex) {
+	type Form struct {
+		Expr string         `json:"expr"`
+		Data map[string]any `json:"data"`
+	}
+	form := Form{}
+	if err := c.ShouldBindJSON(&form); err != nil {
+		c.JSON(common.HTTP_OK, common.Error400(err))
+		return
+	}
+	ok, err := alarmcenter.TestRunExpr(form.Expr, form.Data)
+	if err != nil {
+		c.JSON(common.HTTP_OK, common.Error400(err))
+		return
+	}
+	if !ok {
+		c.JSON(common.HTTP_OK, common.Error("invalid expr result:"+form.Expr))
+		return
+	}
+	c.JSON(common.HTTP_OK, common.Ok())
+
 }

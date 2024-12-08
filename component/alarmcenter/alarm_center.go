@@ -41,7 +41,7 @@ func InitAlarmCenter(e typex.Rhilex) {
 }
 
 // Load Expr
-func LoadExpr(uuid, exprs string, Threshold int, Interval time.Duration) (*vm.Program, error) {
+func LoadExpr(uuid, exprs string, Threshold uint64, Interval time.Duration) (*vm.Program, error) {
 	Program, err := expr.Compile(exprs, expr.AsBool())
 	if err != nil {
 		return nil, err
@@ -60,7 +60,7 @@ func RunExpr(uuid string, in map[string]any) (bool, error) {
 			if T {
 				// TODO 触发规则
 				if AlarmRule.AddLog() {
-					fmt.Println("================ ", in)
+					fmt.Println("====== AlarmRule.AddLog() ========== ", in)
 				}
 			}
 		}
@@ -84,6 +84,15 @@ func Stop() {
 	for _, v := range __DefaultAlarmCenter.registry.Keys() {
 		__DefaultAlarmCenter.registry.Delete(v)
 	}
+}
+
+// 测试
+func VerifyExpr(exprs string) (bool, error) {
+	_, err := expr.Compile(exprs, expr.AsBool())
+	if err != nil {
+		return false, err
+	}
+	return true, nil
 }
 
 // 测试
