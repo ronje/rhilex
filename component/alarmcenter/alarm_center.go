@@ -42,6 +42,7 @@ func InitAlarmCenter(e typex.Rhilex) {
 		registry: orderedmap.NewOrderedMap[string, *AlarmRule](),
 		caches:   []MAlarmLog{},
 	}
+	InitAlarmDb(e)
 	go func() {
 		for {
 			select {
@@ -60,7 +61,6 @@ func InitAlarmCenter(e typex.Rhilex) {
 			time.Sleep(1 * time.Second)
 		}
 	}()
-	InitAlarmDb(e)
 }
 
 // Stop
