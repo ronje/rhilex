@@ -100,12 +100,10 @@ func RunExpr(ruleId, Source string, in map[string]any) (bool, error) {
 						Summary: "WARNING",
 						Info:    AlarmRule.program.Source().String(),
 					})
-					if AlarmRule.HandleId != "" {
-						Target := __DefaultAlarmCenter.e.GetOutEnd(AlarmRule.HandleId)
-						if Target != nil {
-							if Target.Target != nil {
-								Target.Target.To(T)
-							}
+					Target := __DefaultAlarmCenter.e.GetOutEnd(AlarmRule.HandleId)
+					if Target != nil {
+						if Target.Target != nil {
+							Target.Target.To(T)
 						}
 					}
 				}
