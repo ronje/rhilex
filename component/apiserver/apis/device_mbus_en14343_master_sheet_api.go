@@ -158,7 +158,7 @@ func MBusMasterSheetPageList(c *gin.Context, ruleEngine typex.Rhilex) {
 			Alias:         record.Alias,
 			Frequency:     record.Frequency,
 			DataLength:    record.DataLength,
-			Weight:        record.Weight,
+			Weight:        record.Weight.ToFloat64(),
 			LastFetchTime: value.LastFetchTime,
 			Value:         value.Value,
 			ErrMsg:        value.ErrMsg,
@@ -306,7 +306,7 @@ func MBusMasterSheetUpdate(c *gin.Context, ruleEngine typex.Rhilex) {
 				Alias:        MBusMasterDataPoint.Alias,
 				Frequency:    MBusMasterDataPoint.Frequency,
 				DataLength:   MBusMasterDataPoint.DataLength,
-				Weight:       MBusMasterDataPoint.Weight,
+				Weight:       model.NewDecimal(*MBusMasterDataPoint.Weight),
 			}
 			err0 := service.InsertMBusPoint(NewRow)
 			if err0 != nil {
@@ -324,7 +324,7 @@ func MBusMasterSheetUpdate(c *gin.Context, ruleEngine typex.Rhilex) {
 				Alias:        MBusMasterDataPoint.Alias,
 				Frequency:    MBusMasterDataPoint.Frequency,
 				DataLength:   MBusMasterDataPoint.DataLength,
-				Weight:       MBusMasterDataPoint.Weight,
+				Weight:       model.NewDecimal(*MBusMasterDataPoint.Weight),
 			}
 			err0 := service.UpdateMBusPoint(OldRow)
 			if err0 != nil {
@@ -487,7 +487,7 @@ func parseMBusMasterPointExcel(r io.Reader, sheetName string,
 			Alias:        Alias,
 			Frequency:    &Frequency,
 			DataLength:   &DataLength,
-			Weight:       &Weight,
+			Weight:       model.NewDecimal(Weight),
 		}
 		list = append(list, model)
 	}

@@ -17,12 +17,11 @@ package model
 // 告警日志
 type MAlarmLog struct {
 	RhilexModel
-	UUID    string `gorm:"not null"` // UUID
-	RuleId  string `gorm:"not null"` // 规则ID
-	Source  string `gorm:"not null"` // 告警源，某个设备
-	Type    string `gorm:"not null"` // 告警级别：INFO | WARNING | ERROR | FATAL
-	Event   string `gorm:"not null"` // 字符串
-	Ts      uint64 `gorm:"not null"` // 时间戳
-	Summary string `gorm:"not null"` // 概览
-	Info    string `gorm:"not null"` // 内容
+	UUID      string `gorm:"not null"` // UUID
+	RuleId    string `gorm:"not null"` // 规则ID
+	Source    string `gorm:"not null"` // 告警源，某个设备
+	EventType string `gorm:"not null"` // 事件标识
+	Ts        uint64 `gorm:"not null"` // 时间戳
+	Summary   string `gorm:"not null"` // 概览
+	Info      string `gorm:"not null"` // 内容
 }

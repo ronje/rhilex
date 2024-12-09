@@ -23,6 +23,11 @@ import (
 // -------------------------------------------------------------------------------------
 // AlarmRule Dao
 // -------------------------------------------------------------------------------------
+func AllAlarmRules() []model.MAlarmRule {
+	AlarmRules := []model.MAlarmRule{}
+	interdb.InterDb().Find(&AlarmRules)
+	return AlarmRules
+}
 
 func GetMAlarmRuleWithUUID(uuid string) (*model.MAlarmRule, error) {
 	m := model.MAlarmRule{}

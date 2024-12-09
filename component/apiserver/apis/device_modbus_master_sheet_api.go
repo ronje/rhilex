@@ -172,7 +172,7 @@ func ModbusMasterSheetPageList(c *gin.Context, ruleEngine typex.Rhilex) {
 			Quantity:      record.Quantity,
 			DataType:      record.DataType,
 			DataOrder:     record.DataOrder,
-			Weight:        record.Weight,
+			Weight:        record.Weight.ToFloat64(),
 			LastFetchTime: value.LastFetchTime, // 运行时
 			Value:         value.Value,         // 运行时
 			ErrMsg:        value.ErrMsg,        // 运行时
@@ -389,7 +389,7 @@ func ModbusMasterSheetUpdate(c *gin.Context, ruleEngine typex.Rhilex) {
 				Quantity:   ModbusMasterDataPoint.Quantity,
 				DataType:   ModbusMasterDataPoint.DataType,
 				DataOrder:  ModbusMasterDataPoint.DataOrder,
-				Weight:     utils.HandleZeroValue(ModbusMasterDataPoint.Weight),
+				Weight:     model.NewDecimal(*utils.HandleZeroValue(ModbusMasterDataPoint.Weight)),
 			}
 			err0 := service.InsertModbusPointPosition(NewRow)
 			if err0 != nil {
@@ -409,7 +409,7 @@ func ModbusMasterSheetUpdate(c *gin.Context, ruleEngine typex.Rhilex) {
 				Quantity:   ModbusMasterDataPoint.Quantity,
 				DataType:   ModbusMasterDataPoint.DataType,
 				DataOrder:  ModbusMasterDataPoint.DataOrder,
-				Weight:     utils.HandleZeroValue(ModbusMasterDataPoint.Weight),
+				Weight:     model.NewDecimal(*utils.HandleZeroValue(ModbusMasterDataPoint.Weight)),
 			}
 			err0 := service.UpdateModbusPoint(OldRow)
 			if err0 != nil {
@@ -574,7 +574,7 @@ func parseModbusMasterPointExcel(r io.Reader, sheetName string,
 			Quantity:   &Quantity,
 			DataType:   Type,
 			DataOrder:  utils.GetDefaultDataOrder(Type, Order),
-			Weight:     &Weight,
+			Weight:     model.NewDecimal(Weight),
 		}
 		list = append(list, model)
 	}

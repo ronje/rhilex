@@ -277,12 +277,15 @@ func (dev *GenericBacnetIpDevice) Start(cctx typex.CCTX) error {
 			}
 			// 是否预警
 			if *dev.mainConfig.AlarmConfig.Enable {
-				Input := map[string]any{}
-				Input["data"] = ReadBacnetValues
-				_, err := alarmcenter.Input(dev.mainConfig.AlarmConfig.AlarmRuleId, dev.PointId, Input)
-				if err != nil {
-					glogger.GLogger.Error(err)
+				if len(ReadBacnetValues) > 0 {
+					Input := map[string]any{}
+					Input["data"] = ReadBacnetValues
+					_, err := alarmcenter.Input(dev.mainConfig.AlarmConfig.AlarmRuleId, dev.PointId, Input)
+					if err != nil {
+						glogger.GLogger.Error(err)
+					}
 				}
+
 			}
 			<-ticker.C
 		}

@@ -24,11 +24,11 @@ type RhilexModel struct {
 // 告警日志
 type MAlarmLog struct {
 	RhilexModel
-	UUID    string `gorm:"not null"` // UUID
-	RuleId  string `gorm:"not null"` // 规则ID
-	Source  string `gorm:"not null"` // 告警源，某个设备
-	Type    string `gorm:"not null"` // 告警级别：INFO | WARNING | ERROR | FATAL
-	Ts      uint64 `gorm:"not null"` // 时间戳
-	Summary string `gorm:"not null"` // 概览
-	Info    string `gorm:"not null"` // 内容
+	UUID      string `gorm:"not null"` // UUID
+	RuleId    string `gorm:"not null"` // 规则ID
+	Source    string `gorm:"not null"` // 告警源，某个设备
+	EventType string `gorm:"not null"` // 告警标识符
+	Ts        uint64 `gorm:"not null"` // 时间戳
+	Summary   string `gorm:"not null"` // 概览
+	Info      string `gorm:"not null"` // 内容
 }

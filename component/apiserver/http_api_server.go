@@ -5,6 +5,7 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/hootrhino/rhilex/component/alarmcenter"
 	"github.com/hootrhino/rhilex/component/crontask"
 	dataschema "github.com/hootrhino/rhilex/component/dataschema"
 	"github.com/hootrhino/rhilex/component/internotify"
@@ -51,6 +52,15 @@ func NewHttpApiServer(ruleEngine typex.Rhilex) *ApiServerPlugin {
  */
 func initRhilex(engine typex.Rhilex) {
 	go GetCpuUsage()
+	for _, mAlarmRule := range service.AllAlarmRules() {
+		alarmcenter.LoadExpr(
+			mAlarmRule.UUID,
+			mAlarmRule.Expr,
+			mAlarmRule.Threshold,
+			time.Duration(mAlarmRule.Interval),
+			"WARNING",
+		)
+	}
 	for _, mCecolla := range service.AllCecollas() {
 		if err := server.LoadNewestCecolla(mCecolla.UUID, engine); err != nil {
 			glogger.GLogger.Error("Cecolla load failed:", err)

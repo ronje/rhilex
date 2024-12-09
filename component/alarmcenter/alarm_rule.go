@@ -24,6 +24,7 @@ import (
 type AlarmRule struct {
 	Threshold    uint64        // 单次触发的日志数量阈值
 	Interval     time.Duration // 最小触发时间间隔
+	EventType    string        // 告警标识
 	HandleId     string        // 事件处理器，目前是北向ID
 	lastAlarm    time.Time     // 上次告警触发的时间
 	pendingCount uint64        // 当前累计的告警数量
@@ -31,10 +32,12 @@ type AlarmRule struct {
 }
 
 // NewAlarmRule 创建一个告警规则
-func NewAlarmRule(threshold uint64, interval time.Duration, program *vm.Program) *AlarmRule {
+func NewAlarmRule(threshold uint64, interval time.Duration,
+	EventType string, program *vm.Program) *AlarmRule {
 	return &AlarmRule{
 		Threshold:    threshold,
 		Interval:     interval,
+		EventType:    EventType,
 		lastAlarm:    time.Time{},
 		pendingCount: 0,
 		program:      program,

@@ -23,6 +23,7 @@ type MAlarmRule struct {
 	UUID        string `gorm:"uniqueIndex"` // UUID
 	Name        string `gorm:"not null"`    // 名称
 	Expr        string `gorm:"not null"`    // 表达式
+	EventType   string `gorm:"not null"`    // 事件标识
 	Interval    uint64 `gorm:"not null"`    // 执行周期
 	Threshold   uint64 `gorm:"not null"`    // 单次触发的日志数量阈值
 	HandleId    string // 事件处理器，目前是北向ID

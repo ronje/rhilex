@@ -20,14 +20,13 @@ func LoadAlarmLogRoute() {
 
 // 告警日志
 type AlarmLogVo struct {
-	UUID    string `json:"uuid"`
-	RuleId  string `json:"ruleId"`
-	Source  string `json:"source"`
-	Type    string `json:"type"`
-	Event   string `json:"event"`
-	Ts      uint64 `json:"ts"`
-	Summary string `json:"summary"`
-	Info    string `json:"info"`
+	UUID      string `json:"uuid"`
+	RuleId    string `json:"ruleId"`
+	Source    string `json:"source"`
+	EventType string `json:"eventType"`
+	Ts        uint64 `json:"ts"`
+	Summary   string `json:"summary"`
+	Info      string `json:"info"`
 }
 
 /*
@@ -54,14 +53,13 @@ func AlarmLogList(c *gin.Context, ruleEngine typex.Rhilex) {
 	AlarmLogVos := []AlarmLogVo{}
 	for _, AlarmLog := range AlarmLogs {
 		AlarmLogVos = append(AlarmLogVos, AlarmLogVo{
-			UUID:    AlarmLog.UUID,
-			RuleId:  AlarmLog.RuleId,
-			Source:  AlarmLog.Source,
-			Type:    AlarmLog.Type,
-			Event:   AlarmLog.Event,
-			Ts:      AlarmLog.Ts,
-			Summary: AlarmLog.Summary,
-			Info:    AlarmLog.Info,
+			UUID:      AlarmLog.UUID,
+			RuleId:    AlarmLog.RuleId,
+			Source:    AlarmLog.Source,
+			EventType: AlarmLog.EventType,
+			Ts:        AlarmLog.Ts,
+			Summary:   AlarmLog.Summary,
+			Info:      AlarmLog.Info,
 		})
 	}
 	Result := service.WrapPageResult(*pager, AlarmLogVos, count)
@@ -77,14 +75,13 @@ func AlarmLogDetail(c *gin.Context, ruleEngine typex.Rhilex) {
 		return
 	}
 	web_data := AlarmLogVo{
-		UUID:    AlarmLog.UUID,
-		RuleId:  AlarmLog.RuleId,
-		Source:  AlarmLog.Source,
-		Type:    AlarmLog.Type,
-		Event:   AlarmLog.Event,
-		Ts:      AlarmLog.Ts,
-		Summary: AlarmLog.Summary,
-		Info:    AlarmLog.Info,
+		UUID:      AlarmLog.UUID,
+		RuleId:    AlarmLog.RuleId,
+		Source:    AlarmLog.Source,
+		EventType: AlarmLog.EventType,
+		Ts:        AlarmLog.Ts,
+		Summary:   AlarmLog.Summary,
+		Info:      AlarmLog.Info,
 	}
 	c.JSON(common.HTTP_OK, common.OkWithData(web_data))
 }
@@ -117,14 +114,13 @@ func CreateAlarmLog(c *gin.Context, ruleEngine typex.Rhilex) {
 		return
 	}
 	Model := model.MAlarmLog{
-		UUID:    utils.AlarmLogUuid(),
-		RuleId:  AlarmLog.RuleId,
-		Source:  AlarmLog.Source,
-		Type:    AlarmLog.Type,
-		Event:   AlarmLog.Event,
-		Ts:      AlarmLog.Ts,
-		Summary: AlarmLog.Summary,
-		Info:    AlarmLog.Info,
+		UUID:      utils.AlarmLogUuid(),
+		RuleId:    AlarmLog.RuleId,
+		Source:    AlarmLog.Source,
+		EventType: AlarmLog.EventType,
+		Ts:        AlarmLog.Ts,
+		Summary:   AlarmLog.Summary,
+		Info:      AlarmLog.Info,
 	}
 	if err := service.InsertAlarmLog(&Model); err != nil {
 		c.JSON(common.HTTP_OK, common.Error400(err))
@@ -145,14 +141,13 @@ func UpdateAlarmLog(c *gin.Context, ruleEngine typex.Rhilex) {
 		return
 	}
 	Model := model.MAlarmLog{
-		UUID:    AlarmLog.UUID,
-		RuleId:  AlarmLog.RuleId,
-		Source:  AlarmLog.Source,
-		Type:    AlarmLog.Type,
-		Event:   AlarmLog.Event,
-		Ts:      AlarmLog.Ts,
-		Summary: AlarmLog.Summary,
-		Info:    AlarmLog.Info,
+		UUID:      AlarmLog.UUID,
+		RuleId:    AlarmLog.RuleId,
+		Source:    AlarmLog.Source,
+		EventType: AlarmLog.EventType,
+		Ts:        AlarmLog.Ts,
+		Summary:   AlarmLog.Summary,
+		Info:      AlarmLog.Info,
 	}
 	if err := service.UpdateAlarmLog(&Model); err != nil {
 		c.JSON(common.HTTP_OK, common.Error400(err))

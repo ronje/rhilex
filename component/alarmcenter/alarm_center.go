@@ -22,10 +22,10 @@ import (
 
 	"github.com/expr-lang/expr"
 	"github.com/expr-lang/expr/vm"
-	"github.com/google/uuid"
 	"github.com/hootrhino/rhilex/component/orderedmap"
 	"github.com/hootrhino/rhilex/glogger"
 	"github.com/hootrhino/rhilex/typex"
+	"github.com/hootrhino/rhilex/utils"
 )
 
 var __DefaultAlarmCenter *AlarmCenter
@@ -72,12 +72,12 @@ func StopAlarmCenter() {
 }
 
 // Load Expr
-func LoadExpr(uuid, exprs string, Threshold uint64, Interval time.Duration) (*vm.Program, error) {
+func LoadExpr(uuid, exprs string, Threshold uint64, Interval time.Duration, Type string) (*vm.Program, error) {
 	Program, err := expr.Compile(exprs, expr.AsBool())
 	if err != nil {
 		return nil, err
 	}
-	__DefaultAlarmCenter.registry.Set(uuid, NewAlarmRule(Threshold, Interval, Program))
+	__DefaultAlarmCenter.registry.Set(uuid, NewAlarmRule(Threshold, Interval, Type, Program))
 	return Program, nil
 }
 
@@ -92,17 +92,18 @@ func RunExpr(ruleId, Source string, in map[string]any) (bool, error) {
 			if T {
 				if AlarmRule.AddLog() {
 					__DefaultAlarmCenter.caches = append(__DefaultAlarmCenter.caches, MAlarmLog{
-						UUID:    uuid.NewString(),
-						Ts:      uint64(time.Now().UnixMilli()),
-						RuleId:  ruleId,
-						Source:  Source,
-						Type:    "WARNING",
-						Summary: "WARNING",
-						Info:    AlarmRule.program.Source().String(),
+						UUID:      utils.AlarmLogUuid(),
+						Ts:        uint64(time.Now().UnixMilli()),
+						RuleId:    ruleId,
+						Source:    Source,
+						EventType: AlarmRule.EventType,
+						Summary:   "WARNING",
+						Info:      AlarmRule.program.Source().String(),
 					})
 					Target := __DefaultAlarmCenter.e.GetOutEnd(AlarmRule.HandleId)
 					if Target != nil {
 						if Target.Target != nil {
+
 							Target.Target.To(T)
 						}
 					}

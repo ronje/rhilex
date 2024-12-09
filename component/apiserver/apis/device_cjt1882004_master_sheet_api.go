@@ -147,7 +147,7 @@ func Cjt1882004MasterSheetPageList(c *gin.Context, ruleEngine typex.Rhilex) {
 			Tag:           record.Tag,
 			Alias:         record.Alias,
 			Frequency:     record.Frequency,
-			Weight:        record.Weight,
+			Weight:        record.Weight.ToFloat64(),
 			LastFetchTime: value.LastFetchTime,
 			ErrMsg:        value.ErrMsg,
 		}
@@ -287,7 +287,7 @@ func Cjt1882004MasterSheetUpdate(c *gin.Context, ruleEngine typex.Rhilex) {
 				Tag:        Cjt1882004MasterDataPoint.Tag,
 				Alias:      Cjt1882004MasterDataPoint.Alias,
 				Frequency:  Cjt1882004MasterDataPoint.Frequency,
-				Weight:     Cjt1882004MasterDataPoint.Weight,
+				Weight:     model.NewDecimal(*Cjt1882004MasterDataPoint.Weight),
 			}
 			err0 := service.InsertCjt1882004Point(NewRow)
 			if err0 != nil {
@@ -302,7 +302,7 @@ func Cjt1882004MasterSheetUpdate(c *gin.Context, ruleEngine typex.Rhilex) {
 				Tag:        Cjt1882004MasterDataPoint.Tag,
 				Alias:      Cjt1882004MasterDataPoint.Alias,
 				Frequency:  Cjt1882004MasterDataPoint.Frequency,
-				Weight:     Cjt1882004MasterDataPoint.Weight,
+				Weight:     model.NewDecimal(*Cjt1882004MasterDataPoint.Weight),
 			}
 			err0 := service.UpdateCjt1882004Point(OldRow)
 			if err0 != nil {
@@ -456,7 +456,7 @@ func parseCjt1882004MasterPointExcel(r io.Reader, sheetName string,
 			Tag:        Tag,
 			Alias:      Alias,
 			Frequency:  &Frequency,
-			Weight:     &Weight,
+			Weight:     model.NewDecimal(Weight),
 		}
 		list = append(list, model)
 	}

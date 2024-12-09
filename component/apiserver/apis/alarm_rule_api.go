@@ -29,6 +29,7 @@ type AlarmRuleVo struct {
 	UUID        string `json:"uuid"`
 	Name        string `json:"name"`
 	Expr        string `json:"expr"`
+	EventType   string `json:"eventType"`
 	Interval    uint64 `json:"interval"`
 	Threshold   uint64 `json:"threshold"`
 	HandleId    string `json:"handleId"` // 事件处理器，目前是北向ID
@@ -53,6 +54,7 @@ func AlarmRuleList(c *gin.Context, ruleEngine typex.Rhilex) {
 			UUID:        AlarmRule.UUID,
 			Name:        AlarmRule.Name,
 			Expr:        AlarmRule.Expr,
+			EventType:   AlarmRule.EventType,
 			Interval:    AlarmRule.Interval,
 			Threshold:   AlarmRule.Threshold,
 			HandleId:    AlarmRule.HandleId,
@@ -75,6 +77,7 @@ func AlarmRuleDetail(c *gin.Context, ruleEngine typex.Rhilex) {
 		UUID:        AlarmRule.UUID,
 		Name:        AlarmRule.Name,
 		Expr:        AlarmRule.Expr,
+		EventType:   AlarmRule.EventType,
 		Interval:    AlarmRule.Interval,
 		Threshold:   AlarmRule.Threshold,
 		HandleId:    AlarmRule.HandleId,
@@ -124,6 +127,7 @@ func CreateAlarmRule(c *gin.Context, ruleEngine typex.Rhilex) {
 		UUID:        utils.AlarmRuleUuid(),
 		Name:        AlarmRule.Name,
 		Expr:        AlarmRule.Expr,
+		EventType:   AlarmRule.EventType,
 		Interval:    AlarmRule.Interval,
 		Threshold:   AlarmRule.Threshold,
 		HandleId:    AlarmRule.HandleId,
@@ -134,7 +138,7 @@ func CreateAlarmRule(c *gin.Context, ruleEngine typex.Rhilex) {
 		return
 	}
 	_, errLoadExpr := alarmcenter.LoadExpr(Model.UUID, Model.Expr, Model.Threshold,
-		time.Duration(Model.Interval)*time.Second)
+		time.Duration(Model.Interval)*time.Second, "WARNING")
 	if errLoadExpr != nil {
 		c.JSON(common.HTTP_OK, common.Error400(errLoadExpr))
 		return
@@ -157,6 +161,7 @@ func UpdateAlarmRule(c *gin.Context, ruleEngine typex.Rhilex) {
 		UUID:        AlarmRule.UUID,
 		Name:        AlarmRule.Name,
 		Expr:        AlarmRule.Expr,
+		EventType:   AlarmRule.EventType,
 		Interval:    AlarmRule.Interval,
 		Threshold:   AlarmRule.Threshold,
 		HandleId:    AlarmRule.HandleId,

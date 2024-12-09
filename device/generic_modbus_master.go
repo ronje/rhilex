@@ -429,11 +429,13 @@ func (mdev *GenericModbusMaster) Start(cctx typex.CCTX) error {
 				}
 				// 是否预警
 				if *mdev.mainConfig.AlarmConfig.Enable {
-					Input := map[string]any{}
-					Input["data"] = ReadRegisterValues
-					_, err := alarmcenter.Input(mdev.mainConfig.AlarmConfig.AlarmRuleId, mdev.PointId, Input)
-					if err != nil {
-						glogger.GLogger.Error(err)
+					if len(ReadRegisterValues) > 0 {
+						Input := map[string]any{}
+						Input["data"] = ReadRegisterValues
+						_, err := alarmcenter.Input(mdev.mainConfig.AlarmConfig.AlarmRuleId, mdev.PointId, Input)
+						if err != nil {
+							glogger.GLogger.Error(err)
+						}
 					}
 				}
 			}
