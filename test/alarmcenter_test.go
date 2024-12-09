@@ -31,7 +31,7 @@ func Test_alarm_Center_Normal(t *testing.T) {
 	alarmcenter.LoadExpr("test", "temp > 10 && humi == 10 && oxy > 0", Threshold, Interval)
 	{
 		for i := 0; i < 20; i++ {
-			R, err := alarmcenter.RunExpr("test", map[string]any{
+			R, err := alarmcenter.RunExpr("test", "test", map[string]any{
 				"temp": 12,
 				"humi": 10,
 				"oxy":  1,
@@ -45,7 +45,7 @@ func Test_alarm_Center_Normal(t *testing.T) {
 
 	alarmcenter.RemoveExpr("test")
 	{
-		R, err := alarmcenter.RunExpr("test", map[string]any{
+		R, err := alarmcenter.RunExpr("test", "test", map[string]any{
 			"age": 120,
 		})
 		if err != nil {
@@ -65,7 +65,7 @@ func Test_alarm_Center_Not_Effect(t *testing.T) {
 	alarmcenter.LoadExpr("test", "temp > 10 && humi == 10 && oxy > 0", Threshold, Interval)
 	{
 		for i := 0; i < 2000; i++ {
-			R, err := alarmcenter.RunExpr("test", map[string]any{
+			R, err := alarmcenter.RunExpr("test", "test", map[string]any{
 				"temp": 12,
 				"humi": 10,
 				"oxy":  1,
@@ -79,7 +79,7 @@ func Test_alarm_Center_Not_Effect(t *testing.T) {
 
 	alarmcenter.RemoveExpr("test")
 	{
-		R, err := alarmcenter.RunExpr("test", map[string]any{
+		R, err := alarmcenter.RunExpr("test", "test", map[string]any{
 			"age": 120,
 		})
 		if err != nil {
