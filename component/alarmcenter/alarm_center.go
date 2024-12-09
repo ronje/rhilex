@@ -112,7 +112,7 @@ func RunExpr(ruleId, Source string, in map[string]any) (bool, error) {
 		}
 		return false, err
 	}
-	return false, errors.New("Invalid Expr vm")
+	return false, errors.New("AlarmRule not exists in registry:" + ruleId)
 }
 
 // Remove Expr
