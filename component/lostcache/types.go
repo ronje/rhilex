@@ -13,14 +13,20 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-package interdb
+package lostcache
 
-import "github.com/hootrhino/rhilex/typex"
+import (
+	"github.com/hootrhino/rhilex/typex"
+	"gorm.io/gorm"
+)
 
-func InitAll(e typex.Rhilex) {
-	InitInterDb(e)
-}
-
-func StopAll() {
-	StopInterDb()
+/*
+*
+* Sqlite 数据持久层
+*
+ */
+type SqliteDAO struct {
+	engine typex.Rhilex
+	name   string   // 框架可以根据名称来选择不同的数据库驱动,为以后扩展准备
+	db     *gorm.DB // Sqlite 驱动
 }

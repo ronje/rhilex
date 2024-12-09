@@ -19,6 +19,7 @@ import (
 	"fmt"
 
 	"github.com/hootrhino/rhilex/component/apiserver/model"
+	"github.com/hootrhino/rhilex/component/datacenter"
 	"github.com/hootrhino/rhilex/component/interdb"
 	"gorm.io/gorm"
 )
@@ -51,7 +52,7 @@ func ResetSchema(schemaUuid string) error {
 			Update("published", new(bool)).Error; err != nil {
 			return err
 		}
-		return interdb.DataCenterDb().Exec(fmt.Sprintf("DROP TABLE IF EXISTS data_center_%s;", schemaUuid)).Error
+		return datacenter.DataCenterDb().Exec(fmt.Sprintf("DROP TABLE IF EXISTS data_center_%s;", schemaUuid)).Error
 	})
 }
 
@@ -87,7 +88,7 @@ func DeleteDataSchemaAndProperty(schemaUuid string) error {
 			return err1
 		}
 		// 清空数据中心的表
-		err1Exec := interdb.DataCenterDb().Exec(fmt.Sprintf("DROP TABLE IF EXISTS data_center_%s;", schemaUuid)).Error
+		err1Exec := datacenter.DataCenterDb().Exec(fmt.Sprintf("DROP TABLE IF EXISTS data_center_%s;", schemaUuid)).Error
 		if err1Exec != nil {
 			return err1Exec
 		}

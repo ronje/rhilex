@@ -33,6 +33,7 @@ import (
 	"github.com/hootrhino/rhilex/component/intermetric"
 	"github.com/hootrhino/rhilex/component/internotify"
 	"github.com/hootrhino/rhilex/component/interqueue"
+	"github.com/hootrhino/rhilex/component/lostcache"
 	"github.com/hootrhino/rhilex/component/luaexecutor"
 	"github.com/hootrhino/rhilex/component/orderedmap"
 	"github.com/hootrhino/rhilex/component/rhilexmanager"
@@ -83,6 +84,9 @@ func InitRuleEngine(config typex.RhilexConfig) typex.Rhilex {
 	security.InitSecurityLicense()
 	// Init Internal DB
 	interdb.InitAll(__DefaultRuleEngine)
+	alarmcenter.InitAll(__DefaultRuleEngine)
+	datacenter.InitAll(__DefaultRuleEngine)
+	lostcache.InitAll(__DefaultRuleEngine)
 	// Init Alarm Center
 	alarmcenter.InitAlarmCenter(__DefaultRuleEngine)
 	// Data center: future version maybe support
@@ -200,6 +204,9 @@ func (e *RuleEngine) Stop() {
 	// Stop Internal Database
 	glogger.GLogger.Info("Stop Internal Database")
 	interdb.StopAll()
+	alarmcenter.StopAll()
+	datacenter.StopAll()
+	lostcache.StopAll()
 	glogger.GLogger.Info("Stop Internal Database Successfully")
 	glogger.GLogger.Info("Stop RHILEX successfully")
 	glogger.Close()

@@ -13,14 +13,14 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-package interdb
+package lostcache
 
 import "github.com/hootrhino/rhilex/typex"
 
 func InitAll(e typex.Rhilex) {
-	InitInterDb(e)
+	InitLostCacheDb(e)
 }
 
 func StopAll() {
-	StopInterDb()
+
 }

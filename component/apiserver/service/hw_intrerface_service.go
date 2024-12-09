@@ -117,7 +117,7 @@ func GetLinuxPortsList() ([]string, error) {
 		maps[v] = true
 	}
 	result := []string{}
-	for k, _ := range maps {
+	for k := range maps {
 		result = append(result, k)
 	}
 	return result, nil

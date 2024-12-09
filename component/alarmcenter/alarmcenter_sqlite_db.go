@@ -13,7 +13,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-package interdb
+package alarmcenter
 
 import (
 	"runtime"
@@ -28,26 +28,26 @@ import (
 	"gorm.io/gorm/logger"
 )
 
-const __LOSTCACHE_DB_PATH string = "./rhilex_lostcache.db?cache=shared&mode=rwc"
+const __ALARM_DB_PATH string = "./rhilex_alarmcenter.db?cache=shared&mode=rwc"
 
-var __LostCache *SqliteDAO
+var __AlarmSqlite *SqliteDAO
 
 /*
 *
 * 初始化DAO
 *
  */
-func InitLostCacheDb(engine typex.Rhilex) error {
-	__LostCache = &SqliteDAO{name: "Sqlite3", engine: engine}
+func InitAlarmDb(engine typex.Rhilex) error {
+	__AlarmSqlite = &SqliteDAO{name: "Sqlite3", engine: engine}
 
 	var err error
 	if core.GlobalConfig.DebugMode {
-		__LostCache.db, err = gorm.Open(sqlite.Open(__LOSTCACHE_DB_PATH), &gorm.Config{
+		__AlarmSqlite.db, err = gorm.Open(sqlite.Open(__ALARM_DB_PATH), &gorm.Config{
 			Logger:                 logger.Default.LogMode(logger.Info),
 			SkipDefaultTransaction: false,
 		})
 	} else {
-		__LostCache.db, err = gorm.Open(sqlite.Open(__LOSTCACHE_DB_PATH), &gorm.Config{
+		__AlarmSqlite.db, err = gorm.Open(sqlite.Open(__ALARM_DB_PATH), &gorm.Config{
 			Logger:                 logger.Default.LogMode(logger.Error),
 			SkipDefaultTransaction: false,
 		})
@@ -55,8 +55,8 @@ func InitLostCacheDb(engine typex.Rhilex) error {
 	if err != nil {
 		glogger.GLogger.Fatal(err)
 	}
-
-	__LostCache.db.Exec("VACUUM;")
+	__AlarmSqlite.db.Exec("VACUUM;")
+	InitAlarmDbModel()
 	return err
 }
 
@@ -65,8 +65,8 @@ func InitLostCacheDb(engine typex.Rhilex) error {
 * 停止
 *
  */
-func StopLostCacheDb() {
-	__LostCache.db = nil
+func StopAlarmDb() {
+	__AlarmSqlite.db = nil
 	runtime.GC()
 }
 
@@ -75,8 +75,8 @@ func StopLostCacheDb() {
 * 返回数据库查询句柄
 *
  */
-func LostCacheDb() *gorm.DB {
-	return __LostCache.db
+func AlarmDb() *gorm.DB {
+	return __AlarmSqlite.db
 }
 
 /*
@@ -84,6 +84,40 @@ func LostCacheDb() *gorm.DB {
 * 注册数据模型
 *
  */
-func LostCacheDbRegisterModel(dist ...interface{}) {
-	__LostCache.db.AutoMigrate(dist...)
+func AlarmDbRegisterModel(dist ...interface{}) {
+	__AlarmSqlite.db.AutoMigrate(dist...)
+}
+func InitAlarmDbModel() {
+	AlarmDbRegisterModel(&MAlarmLog{})
+	sql := `
+CREATE TRIGGER IF NOT EXISTS limit_m_alarm_logs_size
+AFTER
+  INSERT ON m_alarm_logs WHEN (
+    SELECT
+      COUNT(*)
+    FROM
+      m_alarm_logs
+  ) > 1000 BEGIN
+DELETE FROM
+  m_alarm_logs
+WHERE
+  id IN (
+    SELECT
+      id
+    FROM
+      m_alarm_logs
+    ORDER BY
+      created_at ASC
+    LIMIT
+      (
+        SELECT
+          COUNT(*)
+        FROM
+          m_alarm_logs
+      ) -1000
+  ); END;
+`
+	if errTrigger := AlarmDb().Exec(sql).Error; errTrigger != nil {
+		glogger.GLogger.Error(errTrigger)
+	}
 }

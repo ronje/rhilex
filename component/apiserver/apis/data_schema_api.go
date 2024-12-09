@@ -314,16 +314,16 @@ func PublishSchema(c *gin.Context, ruleEngine typex.Rhilex) {
 		if err1 != nil {
 			return err1
 		}
-		errTransaction := interdb.DataCenterDb().Transaction(func(datacenterTx *gorm.DB) error {
-			if err2 := interdb.DataCenterDb().Exec(sql).Error; err2 != nil {
+		errTransaction := datacenter.DataCenterDb().Transaction(func(datacenterTx *gorm.DB) error {
+			if err2 := datacenter.DataCenterDb().Exec(sql).Error; err2 != nil {
 				return err2
 			}
 			idxSql1 := `CREATE INDEX IF NOT EXISTS idx_id ON %s (id DESC);`
-			if errIdx1 := interdb.DataCenterDb().Exec(fmt.Sprintf(idxSql1, tableName)).Error; errIdx1 != nil {
+			if errIdx1 := datacenter.DataCenterDb().Exec(fmt.Sprintf(idxSql1, tableName)).Error; errIdx1 != nil {
 				return errIdx1
 			}
 			idxSql2 := `CREATE INDEX IF NOT EXISTS idx_create_at ON %s (create_at DESC);`
-			if errIdx2 := interdb.DataCenterDb().Exec(fmt.Sprintf(idxSql2, tableName)).Error; errIdx2 != nil {
+			if errIdx2 := datacenter.DataCenterDb().Exec(fmt.Sprintf(idxSql2, tableName)).Error; errIdx2 != nil {
 				return errIdx2
 			}
 			// 防止数据爆炸撑死数据库，10000条数据大概吃10Mb硬盘.
@@ -341,7 +341,7 @@ func PublishSchema(c *gin.Context, ruleEngine typex.Rhilex) {
 				);
 			END;
 			`
-			if errTrigger := interdb.DataCenterDb().Exec(fmt.Sprintf(trigger, tableName, tableName,
+			if errTrigger := datacenter.DataCenterDb().Exec(fmt.Sprintf(trigger, tableName, tableName,
 				tableName, tableName, tableName, tableName)).Error; errTrigger != nil {
 				return errTrigger
 			}

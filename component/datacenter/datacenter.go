@@ -33,12 +33,14 @@ type DataCenter struct {
 }
 
 func InitDataCenter(rhilex typex.Rhilex) {
+
 	__DefaultDataCenter = new(DataCenter)
 	__DefaultDataCenter.rhilex = rhilex
 	secrets := map[string]bool{}
 	for _, v := range core.GlobalConfig.DataSchemaSecret {
 		secrets[v] = true
 	}
+	InitDataCenterDb(rhilex)
 	loadSecrets(secrets)
 	go StartClearDataCenterCron()
 }

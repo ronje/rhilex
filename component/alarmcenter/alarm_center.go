@@ -23,7 +23,6 @@ import (
 	"github.com/expr-lang/expr"
 	"github.com/expr-lang/expr/vm"
 	"github.com/google/uuid"
-	"github.com/hootrhino/rhilex/component/interdb"
 	"github.com/hootrhino/rhilex/component/orderedmap"
 	"github.com/hootrhino/rhilex/glogger"
 	"github.com/hootrhino/rhilex/typex"
@@ -52,7 +51,7 @@ func InitAlarmCenter(e typex.Rhilex) {
 			}
 			batchSize := len(__DefaultAlarmCenter.caches)
 			if batchSize >= 10 {
-				tx := interdb.AlarmDb().CreateInBatches(__DefaultAlarmCenter.caches, batchSize)
+				tx := AlarmDb().CreateInBatches(__DefaultAlarmCenter.caches, batchSize)
 				if tx.Error != nil {
 					glogger.GLogger.Error(tx.Error)
 				}
@@ -61,6 +60,7 @@ func InitAlarmCenter(e typex.Rhilex) {
 			time.Sleep(1 * time.Second)
 		}
 	}()
+	InitAlarmDb(e)
 }
 
 // Stop

@@ -19,7 +19,6 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/hootrhino/rhilex/component/interdb"
 	core "github.com/hootrhino/rhilex/config"
 	"github.com/hootrhino/rhilex/glogger"
 	"github.com/hootrhino/rhilex/typex"
@@ -51,7 +50,7 @@ func StartClearDataCenterCron() {
 func execDataCenterCron(period string) {
 	sql := `SELECT name FROM sqlite_master WHERE type = 'table' AND name LIKE 'data_center_%';`
 	tables := []string{}
-	err := interdb.DataCenterDb().Raw(sql).Scan(&tables).Error
+	err := DataCenterDb().Raw(sql).Scan(&tables).Error
 	if err != nil {
 		glogger.GLogger.Error(err)
 		return
@@ -64,7 +63,7 @@ func execDataCenterCron(period string) {
 	//
 	for _, table := range tables {
 		deleteSql := fmt.Sprintf("DELETE FROM %s WHERE create_at < date('now', '%s');", table, period)
-		ExecError := interdb.DataCenterDb().Exec(deleteSql).Error
+		ExecError := DataCenterDb().Exec(deleteSql).Error
 		if ExecError != nil {
 			glogger.GLogger.Error(ExecError)
 		}

@@ -13,7 +13,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-package interdb
+package lostcache
 
 import (
 	"runtime"
@@ -28,26 +28,26 @@ import (
 	"gorm.io/gorm/logger"
 )
 
-const __ALARM_DB_PATH string = "./rhilex_alarmcenter.db?cache=shared&mode=rwc"
+const __LOSTCACHE_DB_PATH string = "./rhilex_lostcache.db?cache=shared&mode=rwc"
 
-var __AlarmSqlite *SqliteDAO
+var __LostCache *SqliteDAO
 
 /*
 *
 * 初始化DAO
 *
  */
-func InitAlarmDb(engine typex.Rhilex) error {
-	__AlarmSqlite = &SqliteDAO{name: "Sqlite3", engine: engine}
+func InitLostCacheDb(engine typex.Rhilex) error {
+	__LostCache = &SqliteDAO{name: "Sqlite3", engine: engine}
 
 	var err error
 	if core.GlobalConfig.DebugMode {
-		__AlarmSqlite.db, err = gorm.Open(sqlite.Open(__ALARM_DB_PATH), &gorm.Config{
+		__LostCache.db, err = gorm.Open(sqlite.Open(__LOSTCACHE_DB_PATH), &gorm.Config{
 			Logger:                 logger.Default.LogMode(logger.Info),
 			SkipDefaultTransaction: false,
 		})
 	} else {
-		__AlarmSqlite.db, err = gorm.Open(sqlite.Open(__ALARM_DB_PATH), &gorm.Config{
+		__LostCache.db, err = gorm.Open(sqlite.Open(__LOSTCACHE_DB_PATH), &gorm.Config{
 			Logger:                 logger.Default.LogMode(logger.Error),
 			SkipDefaultTransaction: false,
 		})
@@ -55,7 +55,8 @@ func InitAlarmDb(engine typex.Rhilex) error {
 	if err != nil {
 		glogger.GLogger.Fatal(err)
 	}
-	__AlarmSqlite.db.Exec("VACUUM;")
+
+	__LostCache.db.Exec("VACUUM;")
 	return err
 }
 
@@ -64,8 +65,8 @@ func InitAlarmDb(engine typex.Rhilex) error {
 * 停止
 *
  */
-func StopAlarmDb() {
-	__AlarmSqlite.db = nil
+func StopLostCacheDb() {
+	__LostCache.db = nil
 	runtime.GC()
 }
 
@@ -74,8 +75,8 @@ func StopAlarmDb() {
 * 返回数据库查询句柄
 *
  */
-func AlarmDb() *gorm.DB {
-	return __AlarmSqlite.db
+func LostCacheDb() *gorm.DB {
+	return __LostCache.db
 }
 
 /*
@@ -83,6 +84,6 @@ func AlarmDb() *gorm.DB {
 * 注册数据模型
 *
  */
-func AlarmDbRegisterModel(dist ...interface{}) {
-	__AlarmSqlite.db.AutoMigrate(dist...)
+func LostCacheDbRegisterModel(dist ...interface{}) {
+	__LostCache.db.AutoMigrate(dist...)
 }

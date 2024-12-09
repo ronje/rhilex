@@ -100,9 +100,7 @@ func (hs *ApiServerPlugin) Init(config *ini.Section) error {
 		return err
 	}
 	server.StartRhilexApiServer(hs.ruleEngine, hs.mainConfig.Port)
-	interdb.AlarmDb().Exec("VACUUM;")
 	interdb.InterDb().Exec("VACUUM;")
-	interdb.AlarmDbRegisterModel(&model.MAlarmLog{})
 	interdb.InterDbRegisterModel(
 		&model.MInEnd{},
 		&model.MOutEnd{},
