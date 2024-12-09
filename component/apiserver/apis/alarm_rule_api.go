@@ -1,7 +1,7 @@
 package apis
 
 import (
-	"time"
+	"encoding/json"
 
 	"github.com/gin-gonic/gin"
 	"github.com/hootrhino/rhilex/component/alarmcenter"
@@ -24,16 +24,21 @@ func LoadAlarmRuleRoute() {
 	api.POST(("/verifySyntax"), server.AddRoute(VerifySyntax))
 }
 
+// 输出规则
+type ExprDefineVo struct {
+	Expr      string `json:"expr"`
+	EventType string `json:"eventType"`
+}
+
 // 告警规则
 type AlarmRuleVo struct {
-	UUID        string `json:"uuid"`
-	Name        string `json:"name"`
-	Expr        string `json:"expr"`
-	EventType   string `json:"eventType"`
-	Interval    uint64 `json:"interval"`
-	Threshold   uint64 `json:"threshold"`
-	HandleId    string `json:"handleId"` // 事件处理器，目前是北向ID
-	Description string `json:"description"`
+	UUID        string         `json:"uuid"`
+	Name        string         `json:"name"`
+	ExprDefine  []ExprDefineVo `json:"exprDefine"`
+	Interval    uint64         `json:"interval"`
+	Threshold   uint64         `json:"threshold"`
+	HandleId    string         `json:"handleId"` // 事件处理器，目前是北向ID
+	Description string         `json:"description"`
 }
 
 /*
@@ -50,11 +55,18 @@ func AlarmRuleList(c *gin.Context, ruleEngine typex.Rhilex) {
 	count, AlarmRules := service.PageAlarmRule(pager.Current, pager.Size)
 	AlarmRuleVos := []AlarmRuleVo{}
 	for _, AlarmRule := range AlarmRules {
+		MOutput := AlarmRule.GetExprDefine()
+		exprDef := []ExprDefineVo{}
+		for _, output := range MOutput {
+			exprDef = append(exprDef, ExprDefineVo{
+				Expr:      output.Expr,
+				EventType: output.EventType,
+			})
+		}
 		AlarmRuleVos = append(AlarmRuleVos, AlarmRuleVo{
 			UUID:        AlarmRule.UUID,
 			Name:        AlarmRule.Name,
-			Expr:        AlarmRule.Expr,
-			EventType:   AlarmRule.EventType,
+			ExprDefine:  exprDef,
 			Interval:    AlarmRule.Interval,
 			Threshold:   AlarmRule.Threshold,
 			HandleId:    AlarmRule.HandleId,
@@ -73,11 +85,18 @@ func AlarmRuleDetail(c *gin.Context, ruleEngine typex.Rhilex) {
 		c.JSON(common.HTTP_OK, common.Error400EmptyObj(err1))
 		return
 	}
+	MOutput := AlarmRule.GetExprDefine()
+	exprDef := []ExprDefineVo{}
+	for _, output := range MOutput {
+		exprDef = append(exprDef, ExprDefineVo{
+			Expr:      output.Expr,
+			EventType: output.EventType,
+		})
+	}
 	web_data := AlarmRuleVo{
 		UUID:        AlarmRule.UUID,
 		Name:        AlarmRule.Name,
-		Expr:        AlarmRule.Expr,
-		EventType:   AlarmRule.EventType,
+		ExprDefine:  exprDef,
 		Interval:    AlarmRule.Interval,
 		Threshold:   AlarmRule.Threshold,
 		HandleId:    AlarmRule.HandleId,
@@ -114,20 +133,23 @@ func CreateAlarmRule(c *gin.Context, ruleEngine typex.Rhilex) {
 		c.JSON(common.HTTP_OK, common.Error400(err))
 		return
 	}
-	ok, errVerifyExpr := alarmcenter.VerifyExpr(AlarmRule.Expr)
-	if errVerifyExpr != nil {
-		c.JSON(common.HTTP_OK, common.Error400(errVerifyExpr))
-		return
+	for _, Output := range AlarmRule.ExprDefine {
+		ok, errVerifyExpr := alarmcenter.VerifyExpr(Output.Expr)
+		if errVerifyExpr != nil {
+			c.JSON(common.HTTP_OK, common.Error400(errVerifyExpr))
+			return
+		}
+		if !ok {
+			c.JSON(common.HTTP_OK, common.Error("invalid expr result:"+Output.Expr))
+			return
+		}
 	}
-	if !ok {
-		c.JSON(common.HTTP_OK, common.Error("invalid expr result:"+AlarmRule.Expr))
-		return
-	}
+
+	OutputsBytes, _ := json.Marshal(AlarmRule.ExprDefine)
 	Model := model.MAlarmRule{
 		UUID:        utils.AlarmRuleUuid(),
 		Name:        AlarmRule.Name,
-		Expr:        AlarmRule.Expr,
-		EventType:   AlarmRule.EventType,
+		ExprDefine:  string(OutputsBytes),
 		Interval:    AlarmRule.Interval,
 		Threshold:   AlarmRule.Threshold,
 		HandleId:    AlarmRule.HandleId,
@@ -137,8 +159,7 @@ func CreateAlarmRule(c *gin.Context, ruleEngine typex.Rhilex) {
 		c.JSON(common.HTTP_OK, common.Error400(err))
 		return
 	}
-	_, errLoadExpr := alarmcenter.LoadExpr(Model.UUID, Model.Expr, Model.Threshold,
-		time.Duration(Model.Interval)*time.Second, "WARNING")
+	errLoadExpr := alarmcenter.LoadAlarmRule(Model.UUID, alarmcenter.AlarmRule{})
 	if errLoadExpr != nil {
 		c.JSON(common.HTTP_OK, common.Error400(errLoadExpr))
 		return
@@ -157,11 +178,24 @@ func UpdateAlarmRule(c *gin.Context, ruleEngine typex.Rhilex) {
 		c.JSON(common.HTTP_OK, common.Error400(err))
 		return
 	}
+	for _, Output := range AlarmRule.ExprDefine {
+		ok, errVerifyExpr := alarmcenter.VerifyExpr(Output.Expr)
+		if errVerifyExpr != nil {
+			c.JSON(common.HTTP_OK, common.Error400(errVerifyExpr))
+			return
+		}
+		if !ok {
+			c.JSON(common.HTTP_OK, common.Error("invalid expr result:"+Output.Expr))
+			return
+		}
+	}
+
+	OutputsBytes, _ := json.Marshal(AlarmRule.ExprDefine)
+
 	Model := model.MAlarmRule{
 		UUID:        AlarmRule.UUID,
 		Name:        AlarmRule.Name,
-		Expr:        AlarmRule.Expr,
-		EventType:   AlarmRule.EventType,
+		ExprDefine:  string(OutputsBytes),
 		Interval:    AlarmRule.Interval,
 		Threshold:   AlarmRule.Threshold,
 		HandleId:    AlarmRule.HandleId,

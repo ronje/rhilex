@@ -16,7 +16,6 @@ package test
 
 import (
 	"testing"
-	"time"
 
 	"github.com/hootrhino/rhilex/component/alarmcenter"
 )
@@ -26,9 +25,7 @@ func Test_alarm_Center_Normal(t *testing.T) {
 	engine := RunTestEngine()
 	engine.Start()
 	alarmcenter.InitAlarmCenter(engine)
-	Threshold := uint64(10)
-	Interval := 10 * time.Second
-	alarmcenter.LoadExpr("test", "temp > 10 && humi == 10 && oxy > 0", Threshold, Interval)
+	alarmcenter.LoadAlarmRule("test", alarmcenter.AlarmRule{})
 	{
 		for i := 0; i < 20; i++ {
 			R, err := alarmcenter.RunExpr("test", "test", map[string]any{
@@ -60,9 +57,7 @@ func Test_alarm_Center_Normal(t *testing.T) {
 
 func Test_alarm_Center_Not_Effect(t *testing.T) {
 	alarmcenter.InitAlarmCenter(nil)
-	Threshold := uint64(100)
-	Interval := 3 * time.Second
-	alarmcenter.LoadExpr("test", "temp > 10 && humi == 10 && oxy > 0", Threshold, Interval)
+	alarmcenter.LoadAlarmRule("test", alarmcenter.AlarmRule{})
 	{
 		for i := 0; i < 2000; i++ {
 			R, err := alarmcenter.RunExpr("test", "test", map[string]any{

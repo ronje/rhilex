@@ -21,7 +21,6 @@ import (
 	"time"
 
 	"github.com/expr-lang/expr"
-	"github.com/expr-lang/expr/vm"
 	"github.com/hootrhino/rhilex/component/orderedmap"
 	"github.com/hootrhino/rhilex/glogger"
 	"github.com/hootrhino/rhilex/typex"
@@ -72,45 +71,51 @@ func StopAlarmCenter() {
 }
 
 // Load Expr
-func LoadExpr(uuid, exprs string, Threshold uint64, Interval time.Duration, Type string) (*vm.Program, error) {
-	Program, err := expr.Compile(exprs, expr.AsBool())
-	if err != nil {
-		return nil, err
+func LoadAlarmRule(uuid string, alarmRule AlarmRule) error {
+	for _, ExprDefine := range alarmRule.ExprDefines {
+		_, err := expr.Compile(ExprDefine.Expr, expr.AsBool())
+		if err != nil {
+			return err
+		}
 	}
-	__DefaultAlarmCenter.registry.Set(uuid, NewAlarmRule(Threshold, Interval, Type, Program))
-	return Program, nil
+	__DefaultAlarmCenter.registry.Set(uuid,
+		NewAlarmRule(alarmRule.Threshold, alarmRule.Interval, alarmRule.ExprDefines))
+	return nil
 }
 
 // Run Expr
 func RunExpr(ruleId, Source string, in map[string]any) (bool, error) {
-
 	AlarmRule, ok := __DefaultAlarmCenter.registry.Get(ruleId)
 	if ok {
-		output, err := expr.Run(AlarmRule.program, in)
-		switch T := output.(type) {
-		case bool:
-			if T {
-				if AlarmRule.AddLog() {
-					__DefaultAlarmCenter.caches = append(__DefaultAlarmCenter.caches, MAlarmLog{
-						UUID:      utils.AlarmLogUuid(),
-						Ts:        uint64(time.Now().UnixMilli()),
-						RuleId:    ruleId,
-						Source:    Source,
-						EventType: AlarmRule.EventType,
-						Summary:   "WARNING",
-						Info:      AlarmRule.program.Source().String(),
-					})
-					Target := __DefaultAlarmCenter.e.GetOutEnd(AlarmRule.HandleId)
-					if Target != nil {
-						if Target.Target != nil {
-							// 直接把这个EventType输出到对面
-							Target.Target.To(AlarmRule.EventType)
+		for _, ExprDefine := range AlarmRule.ExprDefines {
+			output, err := expr.Run(ExprDefine.program, in)
+			if err != nil {
+				return false, err
+			}
+			switch T := output.(type) {
+			case bool:
+				if T {
+					if AlarmRule.AddLog() {
+						__DefaultAlarmCenter.caches = append(__DefaultAlarmCenter.caches, MAlarmLog{
+							UUID:      utils.AlarmLogUuid(),
+							Ts:        uint64(time.Now().UnixMilli()),
+							RuleId:    ruleId,
+							Source:    Source,
+							EventType: ExprDefine.EventType,
+							Summary:   "WARNING",
+							Info:      ExprDefine.program.Source().String(),
+						})
+						Target := __DefaultAlarmCenter.e.GetOutEnd(AlarmRule.HandleId)
+						if Target != nil {
+							if Target.Target != nil {
+								// 直接把这个EventType输出到对面
+								Target.Target.To(ExprDefine.EventType)
+							}
 						}
 					}
 				}
 			}
 		}
-		return false, err
 	}
 	return false, errors.New("AlarmRule not exists in registry:" + ruleId)
 }

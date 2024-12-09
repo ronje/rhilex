@@ -53,12 +53,10 @@ func NewHttpApiServer(ruleEngine typex.Rhilex) *ApiServerPlugin {
 func initRhilex(engine typex.Rhilex) {
 	go GetCpuUsage()
 	for _, mAlarmRule := range service.AllAlarmRules() {
-		alarmcenter.LoadExpr(
-			mAlarmRule.UUID,
-			mAlarmRule.Expr,
-			mAlarmRule.Threshold,
-			time.Duration(mAlarmRule.Interval),
-			"WARNING",
+		alarmcenter.LoadAlarmRule(
+			mAlarmRule.UUID, alarmcenter.AlarmRule{
+				
+			},
 		)
 	}
 	for _, mCecolla := range service.AllCecollas() {
