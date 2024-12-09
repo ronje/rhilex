@@ -25,5 +25,6 @@ type MAlarmRule struct {
 	Expr        string `gorm:"not null"`    // 表达式
 	Interval    uint64 `gorm:"not null"`    // 执行周期
 	Threshold   uint64 `gorm:"not null"`    // 单次触发的日志数量阈值
+	HandleId    string // 事件处理器，目前是北向ID
 	Description string // 描述
 }

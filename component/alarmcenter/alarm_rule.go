@@ -24,6 +24,7 @@ import (
 type AlarmRule struct {
 	Threshold    uint64        // 单次触发的日志数量阈值
 	Interval     time.Duration // 最小触发时间间隔
+	HandleId     string        // 事件处理器，目前是北向ID
 	lastAlarm    time.Time     // 上次告警触发的时间
 	pendingCount uint64        // 当前累计的告警数量
 	program      *vm.Program

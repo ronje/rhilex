@@ -31,6 +31,7 @@ type AlarmRuleVo struct {
 	Expr        string `json:"expr"`
 	Interval    uint64 `json:"interval"`
 	Threshold   uint64 `json:"threshold"`
+	HandleId    string `json:"handleId"` // 事件处理器，目前是北向ID
 	Description string `json:"description"`
 }
 
@@ -54,6 +55,7 @@ func AlarmRuleList(c *gin.Context, ruleEngine typex.Rhilex) {
 			Expr:        AlarmRule.Expr,
 			Interval:    AlarmRule.Interval,
 			Threshold:   AlarmRule.Threshold,
+			HandleId:    AlarmRule.HandleId,
 			Description: AlarmRule.Description,
 		})
 	}
@@ -75,6 +77,7 @@ func AlarmRuleDetail(c *gin.Context, ruleEngine typex.Rhilex) {
 		Expr:        AlarmRule.Expr,
 		Interval:    AlarmRule.Interval,
 		Threshold:   AlarmRule.Threshold,
+		HandleId:    AlarmRule.HandleId,
 		Description: AlarmRule.Description,
 	}
 	c.JSON(common.HTTP_OK, common.OkWithData(web_data))
@@ -123,6 +126,7 @@ func CreateAlarmRule(c *gin.Context, ruleEngine typex.Rhilex) {
 		Expr:        AlarmRule.Expr,
 		Interval:    AlarmRule.Interval,
 		Threshold:   AlarmRule.Threshold,
+		HandleId:    AlarmRule.HandleId,
 		Description: AlarmRule.Description,
 	}
 	if err := service.InsertAlarmRule(&Model); err != nil {
@@ -155,6 +159,7 @@ func UpdateAlarmRule(c *gin.Context, ruleEngine typex.Rhilex) {
 		Expr:        AlarmRule.Expr,
 		Interval:    AlarmRule.Interval,
 		Threshold:   AlarmRule.Threshold,
+		HandleId:    AlarmRule.HandleId,
 		Description: AlarmRule.Description,
 	}
 	if err := service.UpdateAlarmRule(&Model); err != nil {

@@ -42,7 +42,7 @@ func AlarmLogList(c *gin.Context, ruleEngine typex.Rhilex) {
 		return
 	}
 	count := int64(0)
-	AlarmLogs := []model.MAlarmLog{}
+	var AlarmLogs = []model.MAlarmLog{}
 	ruleId, _ := c.GetQuery("ruleId")
 	if ruleId != "" {
 		ruleId, _ := c.GetQuery("ruleId")
