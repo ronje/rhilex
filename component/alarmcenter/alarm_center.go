@@ -50,7 +50,7 @@ func InitAlarmCenter(e typex.Rhilex) {
 			default:
 			}
 			batchSize := len(__DefaultAlarmCenter.caches)
-			if batchSize >= 10 {
+			if batchSize >= 0 {
 				tx := AlarmDb().CreateInBatches(__DefaultAlarmCenter.caches, batchSize)
 				if tx.Error != nil {
 					glogger.GLogger.Error(tx.Error)
@@ -103,8 +103,8 @@ func RunExpr(ruleId, Source string, in map[string]any) (bool, error) {
 					Target := __DefaultAlarmCenter.e.GetOutEnd(AlarmRule.HandleId)
 					if Target != nil {
 						if Target.Target != nil {
-
-							Target.Target.To(T)
+							// 直接把这个EventType输出到对面
+							Target.Target.To(AlarmRule.EventType)
 						}
 					}
 				}
