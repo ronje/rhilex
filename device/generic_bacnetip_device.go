@@ -279,7 +279,7 @@ func (dev *GenericBacnetIpDevice) Start(cctx typex.CCTX) error {
 			if *dev.mainConfig.AlarmConfig.Enable {
 				Input := map[string]any{}
 				Input["data"] = ReadBacnetValues
-				_, err := alarmcenter.Input(dev.mainConfig.AlarmConfig.AlarmRuleId, Input)
+				_, err := alarmcenter.Input(dev.mainConfig.AlarmConfig.AlarmRuleId, dev.PointId, Input)
 				if err != nil {
 					glogger.GLogger.Error(err)
 				}

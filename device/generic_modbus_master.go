@@ -431,7 +431,7 @@ func (mdev *GenericModbusMaster) Start(cctx typex.CCTX) error {
 				if *mdev.mainConfig.AlarmConfig.Enable {
 					Input := map[string]any{}
 					Input["data"] = ReadRegisterValues
-					_, err := alarmcenter.Input(mdev.mainConfig.AlarmConfig.AlarmRuleId, Input)
+					_, err := alarmcenter.Input(mdev.mainConfig.AlarmConfig.AlarmRuleId, mdev.PointId, Input)
 					if err != nil {
 						glogger.GLogger.Error(err)
 					}

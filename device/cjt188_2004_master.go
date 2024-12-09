@@ -314,7 +314,7 @@ func (gw *CJT188_2004_MasterGateway) work(handler *cjt1882004.CJT188ClientHandle
 			if *gw.mainConfig.AlarmConfig.Enable {
 				Input := map[string]any{}
 				Input["data"] = cjt1882004ReadDataList
-				_, err := alarmcenter.Input(gw.mainConfig.AlarmConfig.AlarmRuleId, Input)
+				_, err := alarmcenter.Input(gw.mainConfig.AlarmConfig.AlarmRuleId, gw.PointId, Input)
 				if err != nil {
 					glogger.GLogger.Error(err)
 				}

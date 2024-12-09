@@ -232,7 +232,7 @@ func (sd *genericSnmpDevice) Start(cctx typex.CCTX) error {
 			if *sd.mainConfig.AlarmConfig.Enable {
 				Input := map[string]any{}
 				Input["data"] = snmpOids
-				_, err := alarmcenter.Input(sd.mainConfig.AlarmConfig.AlarmRuleId, Input)
+				_, err := alarmcenter.Input(sd.mainConfig.AlarmConfig.AlarmRuleId, sd.PointId, Input)
 				if err != nil {
 					glogger.GLogger.Error(err)
 				}

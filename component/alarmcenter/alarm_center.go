@@ -16,13 +16,16 @@
 package alarmcenter
 
 import (
+	"context"
 	"errors"
-	"fmt"
 	"time"
 
 	"github.com/expr-lang/expr"
 	"github.com/expr-lang/expr/vm"
+	"github.com/google/uuid"
+	"github.com/hootrhino/rhilex/component/interdb"
 	"github.com/hootrhino/rhilex/component/orderedmap"
+	"github.com/hootrhino/rhilex/glogger"
 	"github.com/hootrhino/rhilex/typex"
 )
 
@@ -31,14 +34,33 @@ var __DefaultAlarmCenter *AlarmCenter
 type AlarmCenter struct {
 	e        typex.Rhilex
 	registry *orderedmap.OrderedMap[string, *AlarmRule]
+	caches   []MAlarmLog
 }
 
 func InitAlarmCenter(e typex.Rhilex) {
 	__DefaultAlarmCenter = &AlarmCenter{
 		e:        e,
 		registry: orderedmap.NewOrderedMap[string, *AlarmRule](),
+		caches:   []MAlarmLog{},
 	}
-
+	go func() {
+		for {
+			select {
+			case <-context.Background().Done():
+				return
+			default:
+			}
+			batchSize := len(__DefaultAlarmCenter.caches)
+			if batchSize >= 10 {
+				tx := interdb.AlarmDb().CreateInBatches(__DefaultAlarmCenter.caches, batchSize)
+				if tx.Error != nil {
+					glogger.GLogger.Error(tx.Error)
+				}
+				__DefaultAlarmCenter.caches = []MAlarmLog{}
+			}
+			time.Sleep(1 * time.Second)
+		}
+	}()
 }
 
 // Stop
@@ -46,6 +68,7 @@ func StopAlarmCenter() {
 	for _, v := range __DefaultAlarmCenter.registry.Keys() {
 		__DefaultAlarmCenter.registry.Delete(v)
 	}
+
 }
 
 // Load Expr
@@ -59,16 +82,32 @@ func LoadExpr(uuid, exprs string, Threshold uint64, Interval time.Duration) (*vm
 }
 
 // Run Expr
-func RunExpr(uuid string, in map[string]any) (bool, error) {
-	AlarmRule, ok := __DefaultAlarmCenter.registry.Get(uuid)
+func RunExpr(ruleId, Source string, in map[string]any) (bool, error) {
+
+	AlarmRule, ok := __DefaultAlarmCenter.registry.Get(ruleId)
 	if ok {
 		output, err := expr.Run(AlarmRule.program, in)
 		switch T := output.(type) {
 		case bool:
 			if T {
-				// TODO 触发规则
 				if AlarmRule.AddLog() {
-					fmt.Println("====== AlarmRule.AddLog() ========== ", in)
+					__DefaultAlarmCenter.caches = append(__DefaultAlarmCenter.caches, MAlarmLog{
+						UUID:    uuid.NewString(),
+						Ts:      uint64(time.Now().UnixMilli()),
+						RuleId:  ruleId,
+						Source:  Source,
+						Type:    "WARNING",
+						Summary: "WARNING",
+						Info:    AlarmRule.program.Source().String(),
+					})
+					if AlarmRule.HandleId != "" {
+						Target := __DefaultAlarmCenter.e.GetOutEnd(AlarmRule.HandleId)
+						if Target != nil {
+							if Target.Target != nil {
+								Target.Target.To(T)
+							}
+						}
+					}
 				}
 			}
 		}
@@ -83,8 +122,8 @@ func RemoveExpr(uuid string) {
 }
 
 // 输入数据检查规则
-func Input(uuid string, in map[string]any) (bool, error) {
-	return RunExpr(uuid, in)
+func Input(ruleId, Source string, in map[string]any) (bool, error) {
+	return RunExpr(ruleId, Source, in)
 }
 
 // 测试

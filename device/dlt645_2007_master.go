@@ -311,7 +311,7 @@ func (gw *DLT645_2007_MasterGateway) work(handler *dlt6452007.DLT645ClientHandle
 			if *gw.mainConfig.AlarmConfig.Enable {
 				Input := map[string]any{}
 				Input["data"] = DLT6452007ReadDataList
-				_, err := alarmcenter.Input(gw.mainConfig.AlarmConfig.AlarmRuleId, Input)
+				_, err := alarmcenter.Input(gw.mainConfig.AlarmConfig.AlarmRuleId, gw.PointId, Input)
 				if err != nil {
 					glogger.GLogger.Error(err)
 				}
@@ -332,7 +332,7 @@ func (gw *DLT645_2007_MasterGateway) work(handler *dlt6452007.DLT645ClientHandle
 		if *gw.mainConfig.AlarmConfig.Enable {
 			Input := map[string]any{}
 			Input["data"] = DLT6452007ReadDataList
-			_, err := alarmcenter.Input(gw.mainConfig.AlarmConfig.AlarmRuleId, Input)
+			_, err := alarmcenter.Input(gw.mainConfig.AlarmConfig.AlarmRuleId, gw.PointId, Input)
 			if err != nil {
 				glogger.GLogger.Error(err)
 			}
