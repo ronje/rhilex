@@ -120,8 +120,8 @@ func LoadAlarmRule(uuid string, alarmRule AlarmRule) error {
 			program:   program,
 		})
 	}
-	__DefaultAlarmCenter.registry.Set(uuid,
-		NewAlarmRule(alarmRule.Threshold, alarmRule.Interval, ExprDefines))
+	NewAlarm := NewAlarmRule(alarmRule.Threshold, alarmRule.Interval, ExprDefines)
+	__DefaultAlarmCenter.registry.Set(uuid, NewAlarm)
 	return nil
 }
 
@@ -149,6 +149,7 @@ func RunExpr(ruleId, Source string, in map[string]any) (bool, error) {
 			}()
 		}
 		group.Wait()
+		return true, nil
 	}
 	return false, errors.New("AlarmRule not exists in registry:" + ruleId)
 }

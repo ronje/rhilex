@@ -2,6 +2,7 @@ package apis
 
 import (
 	"encoding/json"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/hootrhino/rhilex/component/alarmcenter"
@@ -157,7 +158,19 @@ func CreateAlarmRule(c *gin.Context, ruleEngine typex.Rhilex) {
 		c.JSON(common.HTTP_OK, common.Error400(err))
 		return
 	}
-	errLoadExpr := alarmcenter.LoadAlarmRule(Model.UUID, alarmcenter.AlarmRule{})
+	ExprDefines := []alarmcenter.ExprDefine{}
+	for _, ExprDefine := range AlarmRule.ExprDefine {
+		ExprDefines = append(ExprDefines, alarmcenter.ExprDefine{
+			Expr:      ExprDefine.Expr,
+			EventType: ExprDefine.EventType,
+		})
+	}
+	errLoadExpr := alarmcenter.LoadAlarmRule(Model.UUID, alarmcenter.AlarmRule{
+		Interval:    time.Duration(AlarmRule.Interval) * time.Second,
+		Threshold:   AlarmRule.Threshold,
+		HandleId:    AlarmRule.HandleId,
+		ExprDefines: ExprDefines,
+	})
 	if errLoadExpr != nil {
 		c.JSON(common.HTTP_OK, common.Error400(errLoadExpr))
 		return
