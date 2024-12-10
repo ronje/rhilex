@@ -214,7 +214,7 @@ func (e *RuleEngine) Stop() {
 
 // 核心功能: Work, 主要就是推流进队列
 func (e *RuleEngine) WorkInEnd(in *typex.InEnd, data string) (bool, error) {
-	if err := interqueue.DefaultXQueue.PushInQueue(in, data); err != nil {
+	if err := interqueue.PushInQueue(in, data); err != nil {
 		return false, err
 	}
 	return true, nil
@@ -222,7 +222,7 @@ func (e *RuleEngine) WorkInEnd(in *typex.InEnd, data string) (bool, error) {
 
 // 核心功能: Work, 主要就是推流进队列
 func (e *RuleEngine) WorkDevice(Device *typex.Device, data string) (bool, error) {
-	if err := interqueue.DefaultXQueue.PushDeviceQueue(Device, data); err != nil {
+	if err := interqueue.PushDeviceQueue(Device, data); err != nil {
 		return false, err
 	}
 	return true, nil
