@@ -18,6 +18,7 @@ package alarmcenter
 import (
 	"context"
 	"errors"
+	"fmt"
 	"sync"
 	"time"
 
@@ -179,5 +180,12 @@ func TestRunExpr(exprs string, in map[string]any) (bool, error) {
 		return false, err
 	}
 	output, err := expr.Run(Program, in)
-	return output.(bool), err
+	if err != nil {
+		return false, err
+	}
+	T, ok := output.(bool)
+	if !ok {
+		return false, fmt.Errorf("%s", "invalid expr result")
+	}
+	return T, err
 }
