@@ -16,6 +16,7 @@ package main
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"os"
@@ -37,7 +38,7 @@ func init() {
 	go func() {
 		for {
 			select {
-			case <-typex.GCTX.Done():
+			case <-context.Background().Done():
 				return
 			default:
 				time.Sleep(30 * time.Second)

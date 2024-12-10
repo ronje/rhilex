@@ -87,7 +87,7 @@ func Subscribe(topic string, subscribe *Subscriber) {
 		T.Topic = topic
 		T.Subscribers[subscribe.id] = subscribe
 		__DefaultEventBus.Topics[topic] = T
-		ctx, cancel := context.WithCancel(typex.GCTX)
+		ctx, cancel := typex.NewCCTX()
 		T.ctx = ctx
 		T.cancel = cancel
 		go func(T *Topic) {

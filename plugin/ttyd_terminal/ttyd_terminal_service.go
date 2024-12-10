@@ -49,11 +49,11 @@ func (tty *WebTTYPlugin) Service(arg typex.ServiceArg) typex.ServiceResult {
 	}
 	if arg.Name == "start" {
 		tty.busying = true
-		ctx, cancel := context.WithCancel(typex.GCTX)
+		ctx, cancel := typex.NewCCTX()
 		tty.ctx = ctx
 		tty.cancel = cancel
 
-		tty.ttydCmd = exec.CommandContext(typex.GCTX,
+		tty.ttydCmd = exec.CommandContext(context.Background(),
 			"ttyd", "-W",
 			"-p", fmt.Sprintf("%d", tty.mainConfig.ListenPort),
 			"-c", "rhino:hoot", // username"password

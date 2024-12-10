@@ -1,6 +1,7 @@
 package icmpsender
 
 import (
+	"context"
 	"fmt"
 	"time"
 
@@ -64,7 +65,7 @@ func (dm *ICMPSender) Service(arg typex.ServiceArg) typex.ServiceResult {
 				cs.pinging = false
 			}()
 			select {
-			case <-typex.GCTX.Done():
+			case <-context.Background().Done():
 				{
 					return
 				}

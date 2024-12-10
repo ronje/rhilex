@@ -76,7 +76,6 @@ func RunRhilex(iniPath string) {
 	loadOtherPlugin()
 	s := <-c
 	glogger.GLogger.Warn("RHILEX Receive Stop Signal: ", s)
-	typex.GCancel()
 	engine.Stop()
 }
 

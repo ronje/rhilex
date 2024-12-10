@@ -1,13 +1,13 @@
 package glogger
 
 import (
+	"context"
 	"net/http"
 	"sync"
 	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
-	"github.com/hootrhino/rhilex/typex"
 	"github.com/sirupsen/logrus"
 )
 
@@ -159,7 +159,7 @@ func WsLogger(c *gin.Context) {
 		}()
 		for {
 			select {
-			case <-typex.GCTX.Done():
+			case <-context.Background().Done():
 				{
 					return
 				}

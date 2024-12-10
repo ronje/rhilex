@@ -16,12 +16,12 @@
 package datacenter
 
 import (
+	"context"
 	"fmt"
 	"time"
 
 	core "github.com/hootrhino/rhilex/config"
 	"github.com/hootrhino/rhilex/glogger"
-	"github.com/hootrhino/rhilex/typex"
 )
 
 // period
@@ -34,7 +34,7 @@ import (
 func StartClearDataCenterCron() {
 	for {
 		select {
-		case <-typex.GCTX.Done():
+		case <-context.Background().Done():
 			return
 		default:
 		}

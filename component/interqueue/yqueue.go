@@ -58,7 +58,7 @@ func (q *YQueue) GetDeviceQueue() *list.List {
 }
 
 func StartYQueue() {
-	ctx := typex.GCTX
+	ctx := context.Background()
 	go func(ctx context.Context, queue *YQueue) {
 		for {
 			select {

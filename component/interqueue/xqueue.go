@@ -97,7 +97,7 @@ func StartXQueue() {
 				}
 			}
 		}
-	}(typex.GCTX, DefaultXQueue)
+	}(context.Background(), DefaultXQueue)
 	// DeviceQueue
 	go func(ctx context.Context, DefaultXQueue *XQueue) {
 		glogger.GLogger.Info("Start XQueue: DeviceQueue")
@@ -119,7 +119,7 @@ func StartXQueue() {
 				}
 			}
 		}
-	}(typex.GCTX, DefaultXQueue)
+	}(context.Background(), DefaultXQueue)
 	// OutQueue
 	go func(ctx context.Context, DefaultXQueue *XQueue) {
 		glogger.GLogger.Info("Start XQueue: OutQueue")
@@ -135,7 +135,7 @@ func StartXQueue() {
 				}
 			}
 		}
-	}(typex.GCTX, DefaultXQueue)
+	}(context.Background(), DefaultXQueue)
 }
 
 /*

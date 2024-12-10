@@ -16,11 +16,11 @@
 package server
 
 import (
+	"context"
 	"sync"
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"github.com/hootrhino/rhilex/typex"
 )
 
 type user struct {
@@ -31,7 +31,7 @@ type user struct {
 func clearInBackground(data *sync.Map, rate int64) {
 	for {
 		select {
-		case <-typex.GCTX.Done():
+		case <-context.Background().Done():
 			{
 				return
 			}

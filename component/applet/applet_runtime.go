@@ -16,7 +16,6 @@
 package applet
 
 import (
-	"context"
 	"fmt"
 	"sync"
 	"time"
@@ -90,7 +89,7 @@ func StartAppWithArgs(uuid string, args ...lua.LValue) error {
 	if app.AppState == 1 {
 		return fmt.Errorf("Application already started:%s", uuid)
 	}
-	ctx, cancel := context.WithCancel(typex.GCTX)
+	ctx, cancel := typex.NewCCTX()
 	app.SetCnC(ctx, cancel)
 	go func(app *Application) {
 		defer func() {

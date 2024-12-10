@@ -1,6 +1,7 @@
 package httpserver
 
 import (
+	"context"
 	"fmt"
 	"strconv"
 	"time"
@@ -54,9 +55,7 @@ func initRhilex(engine typex.Rhilex) {
 	go GetCpuUsage()
 	for _, mAlarmRule := range service.AllAlarmRules() {
 		alarmcenter.LoadAlarmRule(
-			mAlarmRule.UUID, alarmcenter.AlarmRule{
-
-			},
+			mAlarmRule.UUID, alarmcenter.AlarmRule{},
 		)
 	}
 	for _, mCecolla := range service.AllCecollas() {
@@ -259,7 +258,7 @@ func (*ApiServerPlugin) Service(arg typex.ServiceArg) typex.ServiceResult {
 func GetCpuUsage() {
 	for {
 		select {
-		case <-typex.GCTX.Done():
+		case <-context.Background().Done():
 			{
 				return
 			}

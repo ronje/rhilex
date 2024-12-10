@@ -16,7 +16,9 @@
 package alarmcenter
 
 import (
+	"context"
 	"errors"
+	"sync"
 	"time"
 
 	"github.com/expr-lang/expr"
@@ -53,7 +55,7 @@ func InitAlarmCenter(e typex.Rhilex) {
 	go func() {
 		for {
 			select {
-			case <-typex.GCTX.Done():
+			case <-context.Background().Done():
 				return
 			default:
 			}
@@ -71,7 +73,7 @@ func InitAlarmCenter(e typex.Rhilex) {
 	go func() {
 		for {
 			select {
-			case <-typex.GCTX.Done():
+			case <-context.Background().Done():
 				return
 			case qData := <-__DefaultAlarmCenter.QueueData:
 				__DefaultAlarmCenter.caches = append(__DefaultAlarmCenter.caches, MAlarmLog{
@@ -126,20 +128,26 @@ func LoadAlarmRule(uuid string, alarmRule AlarmRule) error {
 func RunExpr(ruleId, Source string, in map[string]any) (bool, error) {
 	AlarmRule, ok := __DefaultAlarmCenter.registry.Get(ruleId)
 	if ok {
+		group := sync.WaitGroup{}
+		group.Add(len(AlarmRule.ExprDefines))
 		for _, ExprDefine := range AlarmRule.ExprDefines {
-			output, err := expr.Run(ExprDefine.program, in)
-			if err != nil {
-				return false, err
-			}
-			switch T := output.(type) {
-			case bool:
-				if T {
-					if AlarmRule.AddLog() {
-						__DefaultAlarmCenter.QueueData <- QueueData{RuleId: ruleId, Source: Source, In: in}
+			go func() {
+				defer group.Done()
+				output, err := expr.Run(ExprDefine.program, in)
+				if err != nil {
+					return
+				}
+				switch T := output.(type) {
+				case bool:
+					if T {
+						if AlarmRule.AddLog() {
+							__DefaultAlarmCenter.QueueData <- QueueData{RuleId: ruleId, Source: Source, In: in}
+						}
 					}
 				}
-			}
+			}()
 		}
+		group.Wait()
 	}
 	return false, errors.New("AlarmRule not exists in registry:" + ruleId)
 }

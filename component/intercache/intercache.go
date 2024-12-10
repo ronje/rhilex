@@ -16,6 +16,7 @@
 package intercache
 
 import (
+	"context"
 	"fmt"
 	"sync"
 	"time"
@@ -214,7 +215,7 @@ func (M *GlobalValueRegistry) startTimeoutChecker() {
 		defer ticker.Stop()
 		for {
 			select {
-			case <-typex.GCTX.Done():
+			case <-context.Background().Done():
 				return
 			case <-ticker.C:
 				M.cleanupExpiredItems()

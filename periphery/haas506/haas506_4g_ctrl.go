@@ -26,7 +26,6 @@ import (
 	"time"
 
 	"github.com/hootrhino/rhilex/ossupport"
-	"github.com/hootrhino/rhilex/typex"
 )
 
 const _ML307R_4G_PATH = "/dev/ttyUSB2"
@@ -133,7 +132,7 @@ const (
 func ML307RTurnOn4G() error {
 	__ML307R_AT(_ML307R_4G_PATH, __DAIL_CMD, __AT_TIMEOUT)
 	{
-		ctx, Cancel := context.WithDeadline(typex.GCTX, time.Now().Add(3000*time.Millisecond))
+		ctx, Cancel := context.WithDeadline(context.Background(), time.Now().Add(3000*time.Millisecond))
 		defer Cancel()
 		output, err := exec.CommandContext(ctx, "sh", "-c", `ifconfig eth0 up`).CombinedOutput()
 		log.Println("[ML307RTurnOn4G] ifconfig eth0 up:", ", Output=", string(output))
@@ -142,7 +141,7 @@ func ML307RTurnOn4G() error {
 		}
 	}
 	{
-		ctx, Cancel := context.WithDeadline(typex.GCTX, time.Now().Add(3000*time.Millisecond))
+		ctx, Cancel := context.WithDeadline(context.Background(), time.Now().Add(3000*time.Millisecond))
 		defer Cancel()
 		output, err := exec.CommandContext(ctx, "sh", "-c", `udhcpc -i eth0`).CombinedOutput()
 		log.Println("[ML307RTurnOn4G] udhcpc -i eth0:", ", Output=", string(output))
@@ -158,7 +157,7 @@ func ML307RTurnOn4G() error {
  *
  */
 func ML307RTurnOff4G() error {
-	ctx, Cancel := context.WithDeadline(typex.GCTX, time.Now().Add(3000*time.Millisecond))
+	ctx, Cancel := context.WithDeadline(context.Background(), time.Now().Add(3000*time.Millisecond))
 	defer Cancel()
 	output, err := exec.CommandContext(ctx, "sh", "-c", `ifconfig eth0 down`).CombinedOutput()
 	log.Println("[ML307RTurnOff4G] ifconfig eth0 down:", ", Output=", string(output))

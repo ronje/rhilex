@@ -16,7 +16,6 @@
 package cecollalet
 
 import (
-	"context"
 	"fmt"
 	"sync"
 	"time"
@@ -86,7 +85,7 @@ func StartCecollalet(uuid string, Env *lua.LTable) error {
 	if cecollalet.CecollaletState == 1 {
 		return fmt.Errorf("Cecollalet already started:%s", uuid)
 	}
-	ctx, cancel := context.WithCancel(typex.GCTX)
+	ctx, cancel := typex.NewCCTX()
 	cecollalet.SetCnC(ctx, cancel)
 	go func(cecollalet *Cecollalet) {
 		defer func() {

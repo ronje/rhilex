@@ -16,6 +16,7 @@
 package genericwatchdog
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"syscall"
@@ -90,7 +91,7 @@ func (dog *genericWatchDog) Start(typex.Rhilex) error {
 		defer stopWatchdog()
 		for {
 			select {
-			case <-typex.GCTX.Done():
+			case <-context.Background().Done():
 				return
 			default:
 				feedWatchdog()

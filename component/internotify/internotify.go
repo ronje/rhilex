@@ -178,5 +178,5 @@ func StartInternalEventQueue(IB1 *InternalEventBus) {
 				})
 			}
 		}
-	}(typex.GCTX, IB1)
+	}(context.Background(), IB1)
 }

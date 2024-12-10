@@ -100,7 +100,7 @@ func (usbm *usbMonitor) Start(_ typex.Rhilex) error {
 			}
 		}
 
-	}(typex.GCTX)
+	}(context.Background())
 	return nil
 }
 func parseType(data []byte, len int) string {

@@ -129,7 +129,7 @@ func StartRhilexApiServer(ruleEngine typex.Rhilex, port int) {
 		if err := server.ginEngine.RunListener(listener); err != nil {
 			glogger.GLogger.Fatalf("Http Api Server listen error: %s", err)
 		}
-	}(typex.GCTX, server.config.Port)
+	}(context.Background(), server.config.Port)
 	glogger.GLogger.Infof("Http Api Server listen on: %s", fmt.Sprintf("0.0.0.0:%d", port))
 	DefaultApiServer = &server
 }

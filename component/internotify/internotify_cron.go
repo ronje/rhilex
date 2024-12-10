@@ -16,13 +16,13 @@
 package internotify
 
 import (
+	"context"
 	"fmt"
 	"time"
 
 	"github.com/hootrhino/rhilex/component/interdb"
 	core "github.com/hootrhino/rhilex/config"
 	"github.com/hootrhino/rhilex/glogger"
-	"github.com/hootrhino/rhilex/typex"
 )
 
 /**
@@ -32,7 +32,7 @@ import (
 func StartClearInterNotifyCron() {
 	for {
 		select {
-		case <-typex.GCTX.Done():
+		case <-context.Background().Done():
 			return
 		default:
 		}

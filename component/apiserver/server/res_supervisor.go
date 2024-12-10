@@ -26,7 +26,7 @@ func StartInSupervisor(InCtx context.Context, in *typex.InEnd, ruleEngine typex.
 	defer supervisor.UnRegisterSuperVisor(SuperVisor.SlaverId)
 	for {
 		select {
-		case <-typex.GCTX.Done():
+		case <-context.Background().Done():
 			{
 				glogger.GLogger.Debugf("Global Context cancel:%v, supervisor exit", UUID)
 				return
@@ -94,7 +94,7 @@ func StartOutSupervisor(OutCtx context.Context, out *typex.OutEnd, ruleEngine ty
 
 	for {
 		select {
-		case <-typex.GCTX.Done():
+		case <-context.Background().Done():
 			glogger.GLogger.Debugf("Global Context cancel:%v, supervisor exit", UUID)
 			return
 		case <-SuperVisor.Ctx.Done():
@@ -157,7 +157,7 @@ func StartDeviceSupervisor(DeviceCtx context.Context, device *typex.Device, rule
 
 	for {
 		select {
-		case <-typex.GCTX.Done():
+		case <-context.Background().Done():
 			{
 				glogger.GLogger.Debugf("Global Context cancel:%v, supervisor exit", UUID)
 				return
@@ -224,7 +224,7 @@ func StartCecollaSupervisor(CecollaCtx context.Context, cecolla *typex.Cecolla, 
 
 	for {
 		select {
-		case <-typex.GCTX.Done():
+		case <-context.Background().Done():
 			{
 				glogger.GLogger.Debugf("Global Context cancel:%v, supervisor exit", UUID)
 				return
