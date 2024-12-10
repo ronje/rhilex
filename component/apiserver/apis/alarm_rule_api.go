@@ -6,7 +6,6 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/hootrhino/rhilex/component/alarmcenter"
 	common "github.com/hootrhino/rhilex/component/apiserver/common"
-	"github.com/hootrhino/rhilex/component/apiserver/model"
 	"github.com/hootrhino/rhilex/component/apiserver/server"
 	"github.com/hootrhino/rhilex/component/apiserver/service"
 	"github.com/hootrhino/rhilex/typex"
@@ -146,7 +145,7 @@ func CreateAlarmRule(c *gin.Context, ruleEngine typex.Rhilex) {
 	}
 
 	OutputsBytes, _ := json.Marshal(AlarmRule.ExprDefine)
-	Model := model.MAlarmRule{
+	Model := alarmcenter.MAlarmRule{
 		UUID:        utils.AlarmRuleUuid(),
 		Name:        AlarmRule.Name,
 		ExprDefine:  string(OutputsBytes),
@@ -192,7 +191,7 @@ func UpdateAlarmRule(c *gin.Context, ruleEngine typex.Rhilex) {
 
 	OutputsBytes, _ := json.Marshal(AlarmRule.ExprDefine)
 
-	Model := model.MAlarmRule{
+	Model := alarmcenter.MAlarmRule{
 		UUID:        AlarmRule.UUID,
 		Name:        AlarmRule.Name,
 		ExprDefine:  string(OutputsBytes),

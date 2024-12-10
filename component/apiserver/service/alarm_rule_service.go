@@ -16,47 +16,47 @@
 package service
 
 import (
-	"github.com/hootrhino/rhilex/component/apiserver/model"
+	"github.com/hootrhino/rhilex/component/alarmcenter"
 	"github.com/hootrhino/rhilex/component/interdb"
 )
 
 // -------------------------------------------------------------------------------------
 // AlarmRule Dao
 // -------------------------------------------------------------------------------------
-func AllAlarmRules() []model.MAlarmRule {
-	AlarmRules := []model.MAlarmRule{}
+func AllAlarmRules() []alarmcenter.MAlarmRule {
+	AlarmRules := []alarmcenter.MAlarmRule{}
 	interdb.InterDb().Find(&AlarmRules)
 	return AlarmRules
 }
 
-func GetMAlarmRuleWithUUID(uuid string) (*model.MAlarmRule, error) {
-	m := model.MAlarmRule{}
+func GetMAlarmRuleWithUUID(uuid string) (*alarmcenter.MAlarmRule, error) {
+	m := alarmcenter.MAlarmRule{}
 	return &m, interdb.InterDb().Where("uuid=?", uuid).First(&m).Error
 }
 
 // 删除AlarmRule
 func DeleteAlarmRule(uuid string) error {
-	return interdb.InterDb().Where("uuid=?", uuid).Delete(&model.MAlarmRule{}).Error
+	return interdb.InterDb().Where("uuid=?", uuid).Delete(&alarmcenter.MAlarmRule{}).Error
 }
 
 // 创建AlarmRule
-func InsertAlarmRule(AlarmRule *model.MAlarmRule) error {
+func InsertAlarmRule(AlarmRule *alarmcenter.MAlarmRule) error {
 	return interdb.InterDb().Create(AlarmRule).Error
 }
 
 // 更新AlarmRule
-func UpdateAlarmRule(AlarmRule *model.MAlarmRule) error {
-	return interdb.InterDb().Model(&model.MAlarmRule{}).
+func UpdateAlarmRule(AlarmRule *alarmcenter.MAlarmRule) error {
+	return interdb.InterDb().Model(&alarmcenter.MAlarmRule{}).
 		Where("uuid=?", AlarmRule.UUID).Updates(*AlarmRule).Error
 }
 
 // 分页
-func PageAlarmRule(current, size int) (int64, []model.MAlarmRule) {
+func PageAlarmRule(current, size int) (int64, []alarmcenter.MAlarmRule) {
 	sql := `SELECT * FROM m_alarm_rules ORDER BY created_at DESC limit ? offset ?;`
-	MAlarmRules := []model.MAlarmRule{}
+	MAlarmRules := []alarmcenter.MAlarmRule{}
 	offset := (current - 1) * size
 	interdb.InterDb().Raw(sql, size, offset).Find(&MAlarmRules)
 	var count int64
-	interdb.InterDb().Model(&model.MAlarmRule{}).Count(&count)
+	interdb.InterDb().Model(&alarmcenter.MAlarmRule{}).Count(&count)
 	return count, MAlarmRules
 }

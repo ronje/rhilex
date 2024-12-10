@@ -17,54 +17,53 @@ package service
 
 import (
 	"github.com/hootrhino/rhilex/component/alarmcenter"
-	"github.com/hootrhino/rhilex/component/apiserver/model"
 )
 
 // -------------------------------------------------------------------------------------
 // AlarmLog Dao
 // -------------------------------------------------------------------------------------
 
-func GetMAlarmLogWithUUID(uuid string) (*model.MAlarmLog, error) {
-	m := model.MAlarmLog{}
+func GetMAlarmLogWithUUID(uuid string) (*alarmcenter.MAlarmLog, error) {
+	m := alarmcenter.MAlarmLog{}
 	return &m, alarmcenter.AlarmDb().Where("uuid=?", uuid).First(&m).Error
 }
 
 // 删除AlarmLog
 func DeleteAlarmLog(uuid string) error {
-	return alarmcenter.AlarmDb().Where("uuid=?", uuid).Delete(&model.MAlarmLog{}).Error
+	return alarmcenter.AlarmDb().Where("uuid=?", uuid).Delete(&alarmcenter.MAlarmLog{}).Error
 }
 
 // 创建AlarmLog
-func InsertAlarmLog(AlarmLog *model.MAlarmLog) error {
+func InsertAlarmLog(AlarmLog *alarmcenter.MAlarmLog) error {
 	return alarmcenter.AlarmDb().Create(AlarmLog).Error
 }
 
 // 更新AlarmLog
-func UpdateAlarmLog(AlarmLog *model.MAlarmLog) error {
-	return alarmcenter.AlarmDb().Model(&model.MAlarmLog{}).
+func UpdateAlarmLog(AlarmLog *alarmcenter.MAlarmLog) error {
+	return alarmcenter.AlarmDb().Model(&alarmcenter.MAlarmLog{}).
 		Where("uuid=?", AlarmLog.UUID).Updates(*AlarmLog).Error
 }
 
 // 分页
-func PageAlarmLog(current, size int) (int64, []model.MAlarmLog) {
+func PageAlarmLog(current, size int) (int64, []alarmcenter.MAlarmLog) {
 	sql := `SELECT * FROM m_alarm_logs ORDER BY created_at DESC limit ? offset ?;`
-	MAlarmLogs := []model.MAlarmLog{}
+	MAlarmLogs := []alarmcenter.MAlarmLog{}
 	tx := alarmcenter.AlarmDb()
 	offset := (current - 1) * size
 	tx.Raw(sql, size, offset).Find(&MAlarmLogs)
 	var count int64
-	tx.Model(&model.MAlarmLog{}).Count(&count)
+	tx.Model(&alarmcenter.MAlarmLog{}).Count(&count)
 	return count, MAlarmLogs
 }
 
 // 分页
-func PageAlarmLogByRuleId(ruleId string, current, size int) (int64, []model.MAlarmLog) {
+func PageAlarmLogByRuleId(ruleId string, current, size int) (int64, []alarmcenter.MAlarmLog) {
 	sql := `SELECT * FROM m_alarm_logs where rule_id=? ORDER BY created_at DESC limit ? offset ?;`
-	MAlarmLogs := []model.MAlarmLog{}
+	MAlarmLogs := []alarmcenter.MAlarmLog{}
 	tx := alarmcenter.AlarmDb()
 	offset := (current - 1) * size
 	tx.Raw(sql, ruleId, size, offset).Find(&MAlarmLogs)
 	var count int64
-	tx.Model(&model.MAlarmLog{}).Count(&count)
+	tx.Model(&alarmcenter.MAlarmLog{}).Count(&count)
 	return count, MAlarmLogs
 }

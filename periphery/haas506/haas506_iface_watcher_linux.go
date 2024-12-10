@@ -16,12 +16,12 @@
 package haas506
 
 import (
-	"context"
 	"fmt"
 	"log"
 	"time"
 
 	"github.com/hootrhino/rhilex/ossupport"
+	"github.com/hootrhino/rhilex/typex"
 	"github.com/sirupsen/logrus"
 	"github.com/vishvananda/netlink"
 )
@@ -86,7 +86,7 @@ func (w *NetworkIfaceWatcher) StartWatch() error {
 	}
 	for {
 		select {
-		case <-context.Background().Done():
+		case <-typex.GCTX.Done():
 			return nil
 		case <-w.done:
 			return nil

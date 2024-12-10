@@ -16,7 +16,6 @@
 package alarmcenter
 
 import (
-	"context"
 	"errors"
 	"time"
 
@@ -29,23 +28,32 @@ import (
 
 var __DefaultAlarmCenter *AlarmCenter
 
+type QueueData struct {
+	RuleId    string
+	Source    string
+	EventType string
+	HandleId  string
+	In        map[string]any
+}
 type AlarmCenter struct {
-	e        typex.Rhilex
-	registry *orderedmap.OrderedMap[string, *AlarmRule]
-	caches   []MAlarmLog
+	e         typex.Rhilex
+	registry  *orderedmap.OrderedMap[string, *AlarmRule]
+	caches    []MAlarmLog
+	QueueData chan QueueData
 }
 
 func InitAlarmCenter(e typex.Rhilex) {
 	__DefaultAlarmCenter = &AlarmCenter{
-		e:        e,
-		registry: orderedmap.NewOrderedMap[string, *AlarmRule](),
-		caches:   []MAlarmLog{},
+		e:         e,
+		registry:  orderedmap.NewOrderedMap[string, *AlarmRule](),
+		caches:    []MAlarmLog{},
+		QueueData: make(chan QueueData, 1024),
 	}
 	InitAlarmDb(e)
 	go func() {
 		for {
 			select {
-			case <-context.Background().Done():
+			case <-typex.GCTX.Done():
 				return
 			default:
 			}
@@ -60,6 +68,31 @@ func InitAlarmCenter(e typex.Rhilex) {
 			time.Sleep(1 * time.Second)
 		}
 	}()
+	go func() {
+		for {
+			select {
+			case <-typex.GCTX.Done():
+				return
+			case qData := <-__DefaultAlarmCenter.QueueData:
+				__DefaultAlarmCenter.caches = append(__DefaultAlarmCenter.caches, MAlarmLog{
+					UUID:      utils.AlarmLogUuid(),
+					Ts:        uint64(time.Now().UnixMilli()),
+					RuleId:    qData.RuleId,
+					Source:    qData.Source,
+					EventType: qData.EventType,
+					Summary:   "WARNING",
+					Info:      "",
+				})
+				Target := __DefaultAlarmCenter.e.GetOutEnd(qData.HandleId)
+				if Target != nil {
+					if Target.Target != nil {
+						// 直接把这个EventType输出到对面
+						Target.Target.To(qData.EventType)
+					}
+				}
+			}
+		}
+	}()
 }
 
 // Stop
@@ -72,14 +105,20 @@ func StopAlarmCenter() {
 
 // Load Expr
 func LoadAlarmRule(uuid string, alarmRule AlarmRule) error {
-	for _, ExprDefine := range alarmRule.ExprDefines {
-		_, err := expr.Compile(ExprDefine.Expr, expr.AsBool())
+	ExprDefines := []ExprDefine{}
+	for _, exprDefine := range alarmRule.ExprDefines {
+		program, err := expr.Compile(exprDefine.Expr, expr.AsBool())
 		if err != nil {
 			return err
 		}
+		ExprDefines = append(ExprDefines, ExprDefine{
+			Expr:      exprDefine.Expr,
+			EventType: exprDefine.EventType,
+			program:   program,
+		})
 	}
 	__DefaultAlarmCenter.registry.Set(uuid,
-		NewAlarmRule(alarmRule.Threshold, alarmRule.Interval, alarmRule.ExprDefines))
+		NewAlarmRule(alarmRule.Threshold, alarmRule.Interval, ExprDefines))
 	return nil
 }
 
@@ -96,22 +135,7 @@ func RunExpr(ruleId, Source string, in map[string]any) (bool, error) {
 			case bool:
 				if T {
 					if AlarmRule.AddLog() {
-						__DefaultAlarmCenter.caches = append(__DefaultAlarmCenter.caches, MAlarmLog{
-							UUID:      utils.AlarmLogUuid(),
-							Ts:        uint64(time.Now().UnixMilli()),
-							RuleId:    ruleId,
-							Source:    Source,
-							EventType: ExprDefine.EventType,
-							Summary:   "WARNING",
-							Info:      ExprDefine.program.Source().String(),
-						})
-						Target := __DefaultAlarmCenter.e.GetOutEnd(AlarmRule.HandleId)
-						if Target != nil {
-							if Target.Target != nil {
-								// 直接把这个EventType输出到对面
-								Target.Target.To(ExprDefine.EventType)
-							}
-						}
+						__DefaultAlarmCenter.QueueData <- QueueData{RuleId: ruleId, Source: Source, In: in}
 					}
 				}
 			}
@@ -127,6 +151,7 @@ func RemoveExpr(uuid string) {
 
 // 输入数据检查规则
 func Input(ruleId, Source string, in map[string]any) (bool, error) {
+	glogger.GLogger.Debug("DefaultAlarmCenter.Input=", ruleId, Source, in)
 	return RunExpr(ruleId, Source, in)
 }
 

@@ -2,8 +2,8 @@ package apis
 
 import (
 	"github.com/gin-gonic/gin"
+	"github.com/hootrhino/rhilex/component/alarmcenter"
 	common "github.com/hootrhino/rhilex/component/apiserver/common"
-	"github.com/hootrhino/rhilex/component/apiserver/model"
 	"github.com/hootrhino/rhilex/component/apiserver/server"
 	"github.com/hootrhino/rhilex/component/apiserver/service"
 	"github.com/hootrhino/rhilex/typex"
@@ -41,7 +41,7 @@ func AlarmLogList(c *gin.Context, ruleEngine typex.Rhilex) {
 		return
 	}
 	count := int64(0)
-	var AlarmLogs = []model.MAlarmLog{}
+	var AlarmLogs = []alarmcenter.MAlarmLog{}
 	ruleId, _ := c.GetQuery("ruleId")
 	if ruleId != "" {
 		ruleId, _ := c.GetQuery("ruleId")
@@ -113,7 +113,7 @@ func CreateAlarmLog(c *gin.Context, ruleEngine typex.Rhilex) {
 		c.JSON(common.HTTP_OK, common.Error400(err))
 		return
 	}
-	Model := model.MAlarmLog{
+	Model := alarmcenter.MAlarmLog{
 		UUID:      utils.AlarmLogUuid(),
 		RuleId:    AlarmLog.RuleId,
 		Source:    AlarmLog.Source,
@@ -140,7 +140,7 @@ func UpdateAlarmLog(c *gin.Context, ruleEngine typex.Rhilex) {
 		c.JSON(common.HTTP_OK, common.Error400(err))
 		return
 	}
-	Model := model.MAlarmLog{
+	Model := alarmcenter.MAlarmLog{
 		UUID:      AlarmLog.UUID,
 		RuleId:    AlarmLog.RuleId,
 		Source:    AlarmLog.Source,

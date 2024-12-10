@@ -55,7 +55,7 @@ func initRhilex(engine typex.Rhilex) {
 	for _, mAlarmRule := range service.AllAlarmRules() {
 		alarmcenter.LoadAlarmRule(
 			mAlarmRule.UUID, alarmcenter.AlarmRule{
-				
+
 			},
 		)
 	}
@@ -117,7 +117,7 @@ func (hs *ApiServerPlugin) Init(config *ini.Section) error {
 		&model.MDevice{},
 		&model.MCecolla{},
 		&model.MApplet{},
-		&model.MAlarmRule{},
+		&alarmcenter.MAlarmRule{},
 		&model.MGenericGroup{},
 		&model.MGenericGroupRelation{},
 		&model.MNetworkConfig{},

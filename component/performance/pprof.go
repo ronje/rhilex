@@ -16,7 +16,6 @@
 package performance
 
 import (
-	"context"
 	"fmt"
 	"log"
 	"net/http"
@@ -24,6 +23,7 @@ import (
 	"time"
 
 	"github.com/hootrhino/rhilex/glogger"
+	"github.com/hootrhino/rhilex/typex"
 )
 
 /*
@@ -61,7 +61,7 @@ func SetDebugMode(EnablePProf bool) {
 			readyDebug := false
 			for {
 				select {
-				case <-context.Background().Done():
+				case <-typex.GCTX.Done():
 					{
 						glogger.GLogger.Info("PProf exited")
 						return
