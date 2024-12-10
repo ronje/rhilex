@@ -47,12 +47,6 @@ func init() {
 		}
 	}()
 	env := os.Getenv("ARCHSUPPORT")
-	fmt.Println("** Current Product:", func() string {
-		if env == "" {
-			return "COMMON"
-		}
-		return env
-	}())
 	typex.DefaultVersionInfo.Product = periphery.CheckVendor(env)
 	dist, err := utils.GetOSDistribution()
 	if err != nil {
@@ -68,7 +62,7 @@ func init() {
 //go:generate bash ./gen_info.sh
 func main() {
 	app := &cli.App{
-		Name:  "RHILEX STREAM SYSTEM",
+		Name:  "rhilex",
 		Usage: "For more, please refer to: https://www.hootrhino.com",
 		Commands: []*cli.Command{
 			{
