@@ -44,11 +44,13 @@ type AlarmRule struct {
 }
 
 // NewAlarmRule 创建一个告警规则
-func NewAlarmRule(threshold uint64, interval time.Duration, ExprDefines []ExprDefine) *AlarmRule {
+func NewAlarmRule(threshold uint64, interval time.Duration,
+	HandleId string, ExprDefines []ExprDefine) *AlarmRule {
 	return &AlarmRule{
 		Threshold:    threshold,
 		Interval:     interval,
 		ExprDefines:  ExprDefines,
+		HandleId:     HandleId,
 		lastAlarm:    time.Time{},
 		pendingCount: 0,
 	}

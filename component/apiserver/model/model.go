@@ -8,8 +8,8 @@ import (
 )
 
 type RhilexModel struct {
-	ID        uint      `gorm:"primaryKey" json:"id"`
-	CreatedAt time.Time `json:"created_at"`
+	ID        int64     `gorm:"primaryKey;autoIncrement"`
+	CreatedAt time.Time `gorm:"index"`
 }
 type StringList []string
 

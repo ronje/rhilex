@@ -17,8 +17,10 @@ package alarmcenter
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
+
 	"sync"
 	"time"
 
@@ -34,8 +36,10 @@ var __DefaultAlarmCenter *AlarmCenter
 type QueueData struct {
 	RuleId    string
 	Source    string
+	Expr      string
 	EventType string
 	HandleId  string
+	Data      string
 	In        map[string]any
 }
 type AlarmCenter struct {
@@ -83,8 +87,8 @@ func InitAlarmCenter(e typex.Rhilex) {
 					RuleId:    qData.RuleId,
 					Source:    qData.Source,
 					EventType: qData.EventType,
-					Summary:   "WARNING",
-					Info:      "",
+					Summary:   fmt.Sprintf("EventType:[ %s ] | Source:[ %s ]", qData.EventType, qData.Source),
+					Info:      qData.Data,
 				})
 				Target := __DefaultAlarmCenter.e.GetOutEnd(qData.HandleId)
 				if Target != nil {
@@ -120,9 +124,13 @@ func LoadAlarmRule(uuid string, alarmRule AlarmRule) error {
 			program:   program,
 		})
 	}
-	NewAlarm := NewAlarmRule(alarmRule.Threshold, alarmRule.Interval, ExprDefines)
+	NewAlarm := NewAlarmRule(alarmRule.Threshold, alarmRule.Interval, alarmRule.HandleId, ExprDefines)
 	__DefaultAlarmCenter.registry.Set(uuid, NewAlarm)
 	return nil
+}
+func ReLoadAlarmRule(uuid string, alarmRule AlarmRule) error {
+	RemoveExpr(uuid)
+	return LoadAlarmRule(uuid, alarmRule)
 }
 
 // Run Expr
@@ -142,7 +150,15 @@ func RunExpr(ruleId, Source string, in map[string]any) (bool, error) {
 				case bool:
 					if T {
 						if AlarmRule.AddLog() {
-							__DefaultAlarmCenter.QueueData <- QueueData{RuleId: ruleId, Source: Source, In: in}
+							__DefaultAlarmCenter.QueueData <- QueueData{
+								In:        in,
+								RuleId:    ruleId,
+								Source:    Source,
+								Expr:      ExprDefine.Expr,
+								EventType: ExprDefine.EventType,
+								HandleId:  AlarmRule.HandleId,
+								Data:      BeautifulMapPrint(in),
+							}
 						}
 					}
 				}
@@ -161,8 +177,14 @@ func RemoveExpr(uuid string) {
 
 // 输入数据检查规则
 func Input(ruleId, Source string, in map[string]any) (bool, error) {
-	glogger.GLogger.Debug("DefaultAlarmCenter.Input=", ruleId, Source, in)
+	glogger.GLogger.Debug("AlarmCenter.Input=", ruleId, Source, BeautifulMapPrint(in))
 	return RunExpr(ruleId, Source, in)
+}
+
+// BeautifulMapPrint 打印一个map，具有漂亮的格式，并返回格式化的字符串。
+func BeautifulMapPrint(m map[string]interface{}) string {
+	b, _ := json.Marshal(m)
+	return string(b)
 }
 
 // 测试

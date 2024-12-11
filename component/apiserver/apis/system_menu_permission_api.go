@@ -47,14 +47,15 @@ func GetSysMenus(c *gin.Context, ruleEngine typex.Rhilex) {
 		{Group: "root", Children: []SysMenuChild{}, Id: 0, Key: "dashboard", Access: true},
 		{Group: "root", Children: []SysMenuChild{}, Id: 1, Key: "device", Access: true},
 		{Group: "root", Children: []SysMenuChild{}, Id: 2, Key: "schema", Access: true},
-		{Group: "root", Children: []SysMenuChild{}, Id: 3, Key: "repository", Access: true},
-		{Group: "root", Children: []SysMenuChild{}, Id: 4, Key: "inend", Access: true},
-		{Group: "root", Children: []SysMenuChild{}, Id: 5, Key: "outend", Access: true},
-		{Group: "root", Children: []SysMenuChild{}, Id: 6, Key: "cecollas", Access: true},
-		{Group: "root", Children: []SysMenuChild{}, Id: 7, Key: "app", Access: true},
-		{Group: "root", Children: []SysMenuChild{}, Id: 8, Key: "plugin", Access: true},
-		{Group: "root", Children: []SysMenuChild{}, Id: 9, Key: "module", Access: true},
-		{Group: "root", Children: []SysMenuChild{}, Id: 10, Key: "system", Access: true},
+		{Group: "root", Children: []SysMenuChild{}, Id: 3, Key: "alarm", Access: true},
+		{Group: "root", Children: []SysMenuChild{}, Id: 4, Key: "repository", Access: true},
+		{Group: "root", Children: []SysMenuChild{}, Id: 5, Key: "inend", Access: true},
+		{Group: "root", Children: []SysMenuChild{}, Id: 6, Key: "outend", Access: true},
+		{Group: "root", Children: []SysMenuChild{}, Id: 7, Key: "cecollas", Access: true},
+		{Group: "root", Children: []SysMenuChild{}, Id: 8, Key: "app", Access: true},
+		{Group: "root", Children: []SysMenuChild{}, Id: 9, Key: "plugin", Access: true},
+		{Group: "root", Children: []SysMenuChild{}, Id: 10, Key: "module", Access: true},
+		{Group: "root", Children: []SysMenuChild{}, Id: 11, Key: "system", Access: true},
 	}
 	c.JSON(common.HTTP_OK, common.OkWithData(allMenu))
 }

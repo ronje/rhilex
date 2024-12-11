@@ -22,20 +22,20 @@ import (
 )
 
 type RhilexModel struct {
-	ID        uint      `gorm:"primaryKey" json:"id"`
-	CreatedAt time.Time `json:"created_at"`
+	ID        int64     `gorm:"primaryKey;autoIncrement"`
+	CreatedAt time.Time `gorm:"index"`
 }
 
 // 告警日志
 type MAlarmLog struct {
 	RhilexModel
-	UUID      string `gorm:"not null"` // UUID
-	RuleId    string `gorm:"not null"` // 规则ID
-	Source    string `gorm:"not null"` // 告警源，某个设备
-	EventType string `gorm:"not null"` // 告警标识符
-	Ts        uint64 `gorm:"not null"` // 时间戳
-	Summary   string `gorm:"not null"` // 概览
-	Info      string `gorm:"not null"` // 内容
+	UUID      string `gorm:"not null"`                   // UUID
+	RuleId    string `gorm:"not null;index:idx_rule_id"` // 添加索引
+	Source    string `gorm:"not null"`                   // 告警源，某个设备
+	EventType string `gorm:"not null"`                   // 告警标识符
+	Ts        uint64 `gorm:"not null"`                   // 时间戳
+	Summary   string `gorm:"not null"`                   // 概览
+	Info      string `gorm:"not null"`                   // 内容
 }
 
 // 告警规则：
