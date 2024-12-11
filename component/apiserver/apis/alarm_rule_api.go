@@ -132,6 +132,10 @@ func CreateAlarmRule(c *gin.Context, ruleEngine typex.Rhilex) {
 		c.JSON(common.HTTP_OK, common.Error400(err))
 		return
 	}
+	if len(AlarmRule.ExprDefine) > 10 {
+		c.JSON(common.HTTP_OK, common.Error("expr define too many, max 10"))
+		return
+	}
 	for _, exprDefine := range AlarmRule.ExprDefine {
 		ok, errVerifyExpr := alarmcenter.VerifyExpr(exprDefine.Expr)
 		if errVerifyExpr != nil {
@@ -187,6 +191,10 @@ func UpdateAlarmRule(c *gin.Context, ruleEngine typex.Rhilex) {
 	AlarmRule := AlarmRuleVo{}
 	if err := c.ShouldBindJSON(&AlarmRule); err != nil {
 		c.JSON(common.HTTP_OK, common.Error400(err))
+		return
+	}
+	if len(AlarmRule.ExprDefine) > 10 {
+		c.JSON(common.HTTP_OK, common.Error("expr define too many, max 10"))
 		return
 	}
 	for _, exprDefine := range AlarmRule.ExprDefine {
