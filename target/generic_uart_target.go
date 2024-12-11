@@ -18,6 +18,7 @@ package target
 import (
 	"encoding/hex"
 	"fmt"
+	"strings"
 	"sync"
 	"time"
 
@@ -46,7 +47,7 @@ type GenericUartCommonConfig struct {
 
 type GenericUartMainConfig struct {
 	GenericUartCommonConfig GenericUartCommonConfig `json:"commonConfig" validate:"required"`
-	UartConfig              resconfig.UartConfig       `json:"uartConfig"`
+	UartConfig              resconfig.UartConfig    `json:"uartConfig"`
 }
 type GenericUart struct {
 	typex.XStatus
@@ -87,7 +88,7 @@ func NewGenericUart(e typex.Rhilex) typex.XTarget {
 
 func (mdev *GenericUart) Init(outEndId string, configMap map[string]interface{}) error {
 	mdev.PointId = outEndId
-	if err := utils.BindSourceConfig(configMap, &mdev.mainConfig.GenericUartCommonConfig); err != nil {
+	if err := utils.BindSourceConfig(configMap, &mdev.mainConfig); err != nil {
 		return err
 	}
 	return nil
@@ -166,30 +167,22 @@ func (mdev *GenericUart) Status() typex.SourceState {
  */
 func (mdev *GenericUart) To(data interface{}) (interface{}, error) {
 	if mdev.serialPort == nil {
-		switch T := data.(type) {
-		case string:
-			_, err := mdev.serialPort.Write([]byte(T))
-			if *mdev.mainConfig.GenericUartCommonConfig.CacheOfflineData {
-				lostcache.SaveLostCacheData(mdev.PointId, lostcache.CacheDataDto{
-					TargetId: mdev.PointId,
-					Data:     T,
-				})
-			}
-			return nil, err
-		}
 		return 0, fmt.Errorf("serial Port invalid")
 	}
 	if mdev.mainConfig.GenericUartCommonConfig.DataMode == "RAW_STRING" {
 		switch T := data.(type) {
 		case string:
-			_, err := mdev.serialPort.Write([]byte(T))
-			if *mdev.mainConfig.GenericUartCommonConfig.CacheOfflineData {
-				lostcache.SaveLostCacheData(mdev.PointId, lostcache.CacheDataDto{
-					TargetId: mdev.PointId,
-					Data:     T,
-				})
+			_, err2 := mdev.serialPort.Write([]byte(T))
+			if err2 != nil {
+				if *mdev.mainConfig.GenericUartCommonConfig.CacheOfflineData {
+					lostcache.SaveLostCacheData(mdev.PointId, lostcache.CacheDataDto{
+						TargetId: mdev.PointId,
+						Data:     T,
+					})
+				}
+				return nil, err2
 			}
-			return nil, err
+			return nil, nil
 		}
 	}
 	if mdev.mainConfig.GenericUartCommonConfig.DataMode == "HEX_STRING" {
@@ -222,4 +215,16 @@ func (mdev *GenericUart) Stop() {
 }
 func (mdev *GenericUart) Details() *typex.OutEnd {
 	return mdev.RuleEngine.GetOutEnd(mdev.PointId)
+}
+func insertHexBytes(input string) (string, error) {
+	parts := strings.Split(input, `\xFF`)
+	var bytes []byte
+
+	for _, part := range parts {
+		bytes = append(bytes, []byte(part)...)
+		if part != parts[len(parts)-1] {
+			bytes = append(bytes, 0xFF)
+		}
+	}
+	return string(bytes), nil
 }

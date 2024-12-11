@@ -23,8 +23,8 @@ import (
 
 type UartConfig struct {
 	// 固定写法，表示串口最小一个包耗时，一般50毫秒足够
-	Timeout  int    `json:"timeout"`
 	Uart     string `json:"uart"`
+	Timeout  int    `json:"timeout"`
 	BaudRate int    `json:"baudRate"`
 	DataBits int    `json:"dataBits"`
 	Parity   string `json:"parity"`
