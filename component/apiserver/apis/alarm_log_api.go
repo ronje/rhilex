@@ -8,6 +8,7 @@ import (
 	"github.com/hootrhino/rhilex/component/apiserver/service"
 	"github.com/hootrhino/rhilex/typex"
 	"github.com/hootrhino/rhilex/utils"
+	"gorm.io/gorm"
 )
 
 func LoadAlarmLogRoute() {
@@ -15,6 +16,7 @@ func LoadAlarmLogRoute() {
 	api.GET(("/list"), server.AddRoute(AlarmLogList))
 	api.PUT(("/update"), server.AddRoute(UpdateAlarmLog))
 	api.DELETE(("/del"), server.AddRoute(DeleteAlarmLog))
+	api.DELETE(("/clear"), server.AddRoute(ClearAlarmLog))
 	api.GET(("/detail"), server.AddRoute(AlarmLogDetail))
 }
 
@@ -134,6 +136,7 @@ func CreateAlarmLog(c *gin.Context, ruleEngine typex.Rhilex) {
 * 更新
 *
  */
+
 func UpdateAlarmLog(c *gin.Context, ruleEngine typex.Rhilex) {
 	AlarmLog := AlarmLogVo{}
 	if err := c.ShouldBindJSON(&AlarmLog); err != nil {
@@ -150,6 +153,24 @@ func UpdateAlarmLog(c *gin.Context, ruleEngine typex.Rhilex) {
 		Info:      AlarmLog.Info,
 	}
 	if err := service.UpdateAlarmLog(&Model); err != nil {
+		c.JSON(common.HTTP_OK, common.Error400(err))
+		return
+	}
+	c.JSON(common.HTTP_OK, common.Ok())
+}
+func ClearAlarmLog(c *gin.Context, ruleEngine typex.Rhilex) {
+	err := alarmcenter.AlarmDb().Transaction(func(tx *gorm.DB) error {
+		tx.Exec("drop table m_alarm_logs if exists;")
+		if tx.Error != nil {
+			return tx.Error
+		}
+		alarmcenter.InitAlarmDbModel(tx)
+		if tx.Error != nil {
+			return tx.Error
+		}
+		return nil
+	})
+	if err != nil {
 		c.JSON(common.HTTP_OK, common.Error400(err))
 		return
 	}

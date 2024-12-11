@@ -56,7 +56,7 @@ func InitAlarmDb(engine typex.Rhilex) error {
 		glogger.GLogger.Fatal(err)
 	}
 	__AlarmSqlite.db.Exec("VACUUM;")
-	InitAlarmDbModel()
+	InitAlarmDbModel(__AlarmSqlite.db)
 	return err
 }
 
@@ -87,8 +87,8 @@ func AlarmDb() *gorm.DB {
 func AlarmDbRegisterModel(dist ...interface{}) {
 	__AlarmSqlite.db.AutoMigrate(dist...)
 }
-func InitAlarmDbModel() {
-	AlarmDbRegisterModel(&MAlarmLog{})
+func InitAlarmDbModel(db *gorm.DB) {
+	db.AutoMigrate(&MAlarmLog{})
 	sql := `
 CREATE TRIGGER IF NOT EXISTS limit_m_alarm_logs_size
 AFTER
