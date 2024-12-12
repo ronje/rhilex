@@ -365,7 +365,7 @@ VALUES
 (CURRENT_TIMESTAMP, '%s', '%s', '土壤温度', 'temperature', 'FLOAT', 'R', '℃',
     '{"defaultValue":"0","max":1000,"min":0,"round":2}', '土壤温度'),
 (CURRENT_TIMESTAMP, '%s', '%s', '电导率', 'ec', 'FLOAT', 'R', 'mS/cm',
-    '{"defaultValue":"0","max":1000,"min":0,"round":2}', '土壤电导率'),
+    '{"defaultValue":"0","max":1000,"min":0,"round":2}', '土壤电导率');
 `
 	uuid1 := utils.MakeUUID("PROP")
 	uuid2 := utils.MakeUUID("PROP")
