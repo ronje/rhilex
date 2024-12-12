@@ -13,7 +13,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-package alarmcenter
+package internotify
 
 import (
 	"runtime"
@@ -28,26 +28,26 @@ import (
 	"gorm.io/gorm/logger"
 )
 
-const __ALARM_DB_PATH string = "./rhilex_alarmcenter.db?cache=shared&mode=rwc"
+const __NOTIFY_DB_PATH string = "./rhilex_internotify.db?cache=shared&mode=rwc"
 
-var __AlarmSqlite *SqliteDAO
+var __InterNotifySqlite *SqliteDAO
 
 /*
 *
 * 初始化DAO
 *
  */
-func InitAlarmDb(engine typex.Rhilex) error {
-	__AlarmSqlite = &SqliteDAO{name: "Sqlite3", engine: engine}
+func InitInterNotifyDb(engine typex.Rhilex) error {
+	__InterNotifySqlite = &SqliteDAO{name: "Sqlite3", engine: engine}
 
 	var err error
 	if core.GlobalConfig.DebugMode {
-		__AlarmSqlite.db, err = gorm.Open(sqlite.Open(__ALARM_DB_PATH), &gorm.Config{
+		__InterNotifySqlite.db, err = gorm.Open(sqlite.Open(__NOTIFY_DB_PATH), &gorm.Config{
 			Logger:                 logger.Default.LogMode(logger.Info),
 			SkipDefaultTransaction: false,
 		})
 	} else {
-		__AlarmSqlite.db, err = gorm.Open(sqlite.Open(__ALARM_DB_PATH), &gorm.Config{
+		__InterNotifySqlite.db, err = gorm.Open(sqlite.Open(__NOTIFY_DB_PATH), &gorm.Config{
 			Logger:                 logger.Default.LogMode(logger.Error),
 			SkipDefaultTransaction: false,
 		})
@@ -55,8 +55,8 @@ func InitAlarmDb(engine typex.Rhilex) error {
 	if err != nil {
 		glogger.GLogger.Fatal(err)
 	}
-	__AlarmSqlite.db.Exec("VACUUM;")
-	InitAlarmDbModel(__AlarmSqlite.db)
+	__InterNotifySqlite.db.Exec("VACUUM;")
+	InitInterNotifyModel(__InterNotifySqlite.db)
 	return err
 }
 
@@ -65,8 +65,8 @@ func InitAlarmDb(engine typex.Rhilex) error {
 * 停止
 *
  */
-func StopAlarmDb() {
-	__AlarmSqlite.db = nil
+func StopInterNotify() {
+	__InterNotifySqlite.db = nil
 	runtime.GC()
 }
 
@@ -75,8 +75,8 @@ func StopAlarmDb() {
 * 返回数据库查询句柄
 *
  */
-func AlarmDb() *gorm.DB {
-	return __AlarmSqlite.db
+func InterNotifyDb() *gorm.DB {
+	return __InterNotifySqlite.db
 }
 
 /*
@@ -84,25 +84,25 @@ func AlarmDb() *gorm.DB {
 * 注册数据模型
 *
  */
-func AlarmDbRegisterModel(dist ...interface{}) {
-	__AlarmSqlite.db.AutoMigrate(dist...)
+func InterNotifyRegisterModel(dist ...interface{}) {
+	__InterNotifySqlite.db.AutoMigrate(dist...)
 }
-func InitAlarmDbModel(db *gorm.DB) {
-	db.AutoMigrate(&MAlarmLog{})
+func InitInterNotifyModel(db *gorm.DB) {
+	db.AutoMigrate(&MInternalNotify{})
 	sql := `
 CREATE TRIGGER IF NOT EXISTS limit_m_internal_notifies
-AFTER INSERT ON m_alarm_logs
-WHEN (SELECT COUNT(*) FROM m_alarm_logs) > %d
+AFTER INSERT ON m_internal_notifies
+WHEN (SELECT COUNT(*) FROM m_internal_notifies) > %d
 BEGIN
-	DELETE FROM m_alarm_logs
+	DELETE FROM m_internal_notifies
 	WHERE id IN (
-		SELECT id FROM m_alarm_logs
+		SELECT id FROM m_internal_notifies
 		ORDER BY id ASC
-		LIMIT (SELECT COUNT(*) - %d FROM m_alarm_logs)
+		LIMIT (SELECT COUNT(*) - %d FROM m_internal_notifies)
 	);
 END;
 `
-	if errTrigger := AlarmDb().Exec(sql).Error; errTrigger != nil {
+	if errTrigger := InterNotifyDb().Exec(sql).Error; errTrigger != nil {
 		glogger.GLogger.Error(errTrigger)
 	}
 }

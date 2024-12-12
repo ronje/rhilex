@@ -1,7 +1,7 @@
 # USB、串口通信模块信号接受处理器
 当通信模块向内部总线`transceiver.up.data.$ComName`发送事件时，在此可以收到，从而做业务逻辑处理。
 ```go
-internotify.Push(internotify.BaseEvent{
+internotify.Insert(internotify.BaseEvent{
 	Type:    "transceiver.up.data",
 	Event:   "transceiver.up.data.MX01-BLE-Module",
 	Ts:      uint64(time.Now().UnixMilli()),

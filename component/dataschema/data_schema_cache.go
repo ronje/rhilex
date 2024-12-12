@@ -17,7 +17,6 @@ package dataschema
 
 import (
 	"encoding/json"
-	"fmt"
 	"time"
 
 	"github.com/hootrhino/rhilex/component/apiserver/model"
@@ -33,19 +32,6 @@ import (
 *
  */
 func InitDataSchemaCache(e typex.Rhilex) {
-	interdb.InterDb().Exec(fmt.Sprintf(`
-	CREATE TRIGGER IF NOT EXISTS limit_m_internal_notifies
-	AFTER INSERT ON m_internal_notifies
-	WHEN (SELECT COUNT(*) FROM m_internal_notifies) > %d
-	BEGIN
-		DELETE FROM m_internal_notifies
-		WHERE id IN (
-			SELECT id FROM m_internal_notifies
-			ORDER BY id ASC
-			LIMIT (SELECT COUNT(*) - %d FROM m_internal_notifies)
-		);
-	END;
-	`, 300, 300))
 	intercache.RegisterSlot("__DataSchema")
 	MIotSchemas := []model.MIotSchema{}
 	interdb.InterDb().Model(model.MIotSchema{}).Find(&MIotSchemas)

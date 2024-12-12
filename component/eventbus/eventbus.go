@@ -26,7 +26,12 @@ import (
 var __DefaultEventBus *EventBus
 
 type EventMessage struct {
-	Payload string
+	Topic   string
+	From    string
+	Type    string
+	Event   string
+	Ts      uint64
+	Payload interface{}
 }
 
 func (E EventMessage) String() string {
@@ -42,25 +47,24 @@ type Topic struct {
 }
 
 type Subscriber struct {
-	id       string
-	Callback func(Topic string, Msg EventMessage)
+	id       string                               // 随机生成的ID
+	Callback func(Topic string, Msg EventMessage) // 回调函数
 }
 
 type EventBus struct {
-	// Topic, chan EventMessage
-	// 给每个订阅者分配一个 Channel，实现消息订阅
-	// Topic 一样的会挂在同一个树上
+	rhilex typex.Rhilex
 	Topics sync.Map // 订阅树: MAP<Topic>[]Subscribers
 }
 
-func InitEventBus() *EventBus {
-	__DefaultEventBus = &EventBus{}
+func InitEventBus(r typex.Rhilex) *EventBus {
+	__DefaultEventBus = &EventBus{Topics: sync.Map{}}
+	__DefaultEventBus.rhilex = r
 	return __DefaultEventBus
 }
 
 func (eb *EventBus) createTopic(topic string) *Topic {
 	t := &Topic{
-		channel:     make(chan EventMessage, 100),
+		channel:     make(chan EventMessage, 1000),
 		Subscribers: make(map[string]*Subscriber),
 		Topic:       topic,
 	}
@@ -123,32 +127,27 @@ func (eb *EventBus) removeSubscriber(topic string, sub *Subscriber) {
 func Subscribe(topic string, sub *Subscriber) {
 	NewUUID := utils.MakeUUID("SUB")
 	sub.id = NewUUID
-	eb := InitEventBus()
-	t := eb.ensureTopic(topic)
+	t := __DefaultEventBus.ensureTopic(topic)
 	t.Subscribers[sub.id] = sub
 }
 
 // UnSubscribe 取消订阅
 func UnSubscribe(topic string, sub *Subscriber) {
-	eb := InitEventBus()
-	eb.removeSubscriber(topic, sub)
+	__DefaultEventBus.removeSubscriber(topic, sub)
 }
 
 // Publish 发布
 func Publish(topic string, msg EventMessage) {
-	eb := InitEventBus()
-	if t := eb.getTopic(topic); t != nil {
+	if t := __DefaultEventBus.getTopic(topic); t != nil {
 		t.channel <- msg
 	}
 }
 
 // Flush 释放所有
 func Flush() {
-	eb := InitEventBus()
-	eb.Topics.Range(func(key, value interface{}) bool {
+	__DefaultEventBus.Topics.Range(func(key, value interface{}) bool {
 		t := value.(*Topic)
 		t.cancel()
 		return true
 	})
-	eb.Topics = sync.Map{}
 }

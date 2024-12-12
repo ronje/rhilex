@@ -89,7 +89,7 @@ func (usbm *usbMonitor) Start(_ typex.Rhilex) error {
 				Msg := parseType(data, n)
 				if len(Msg) > 0 {
 					glogger.GLogger.Info(Msg)
-					internotify.Push(internotify.BaseEvent{
+					internotify.Insert(internotify.BaseEvent{
 						Type:    `WARNING`,
 						Event:   `system.usb.event`,
 						Ts:      uint64(time.Now().UnixMilli()),

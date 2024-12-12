@@ -27,6 +27,7 @@ import (
 	"github.com/hootrhino/rhilex/component/cecollalet"
 	"github.com/hootrhino/rhilex/component/crontask"
 	datacenter "github.com/hootrhino/rhilex/component/datacenter"
+	"github.com/hootrhino/rhilex/component/eventbus"
 	intercache "github.com/hootrhino/rhilex/component/intercache"
 	"github.com/hootrhino/rhilex/component/interdb"
 	"github.com/hootrhino/rhilex/component/interkv"
@@ -82,9 +83,12 @@ func InitRuleEngine(config typex.RhilexConfig) typex.Rhilex {
 	}
 	// Init Security License
 	security.InitSecurityLicense()
+	// Init EventBus
+	eventbus.InitEventBus(__DefaultRuleEngine)
 	// Init Internal DB
 	interdb.InitAll(__DefaultRuleEngine)
 	alarmcenter.InitAll(__DefaultRuleEngine)
+	internotify.InitAll(__DefaultRuleEngine)
 	datacenter.InitAll(__DefaultRuleEngine)
 	lostcache.InitAll(__DefaultRuleEngine)
 	// Init Alarm Center
@@ -97,8 +101,6 @@ func InitRuleEngine(config typex.RhilexConfig) typex.Rhilex {
 	supervisor.InitResourceSuperVisorAdmin(__DefaultRuleEngine)
 	// Init Global Value Registry
 	intercache.InitGlobalValueRegistry(__DefaultRuleEngine)
-	// Internal Bus
-	internotify.InitInternalEventBus(__DefaultRuleEngine, core.GlobalConfig.MaxQueueSize)
 	// Internal Metric
 	intermetric.InitInternalMetric(__DefaultRuleEngine)
 	// lua applet manager
@@ -207,6 +209,9 @@ func (e *RuleEngine) Stop() {
 	alarmcenter.StopAll()
 	datacenter.StopAll()
 	lostcache.StopAll()
+	internotify.StopAll()
+	// Stop EventBus
+	eventbus.Flush()
 	glogger.GLogger.Info("Stop Internal Database Successfully")
 	glogger.GLogger.Info("Stop RHILEX successfully")
 	glogger.Close()

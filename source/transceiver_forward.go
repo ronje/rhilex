@@ -16,13 +16,9 @@
 package source
 
 import (
-	"context"
-	"encoding/hex"
 	"encoding/json"
-	"fmt"
-	"strings"
 
-	"github.com/hootrhino/rhilex/component/internotify"
+	"github.com/hootrhino/rhilex/component/eventbus"
 	"github.com/hootrhino/rhilex/glogger"
 	"github.com/hootrhino/rhilex/typex"
 	"github.com/hootrhino/rhilex/utils"
@@ -56,7 +52,10 @@ func (u *TransceiverForwarder) Init(inEndId string, configMap map[string]interfa
 func (u *TransceiverForwarder) Start(cctx typex.CCTX) error {
 	u.Ctx = cctx.Ctx
 	u.CancelCTX = cctx.CancelCTX
-	u.startInternalEventQueue(u.Ctx)
+	eventbus.Subscribe(u.mainConfig.ComName,
+		&eventbus.Subscriber{Callback: func(Topic string, Msg eventbus.EventMessage) {
+
+		}})
 	return nil
 
 }
@@ -78,7 +77,7 @@ func (u *TransceiverForwarder) Details() *typex.InEnd {
 /*
 *
 * 从内部总线拿数据
-* internotify.Push(...)
+* internotify.Insert(...)
  */
 type RuleData struct {
 	ComName string `json:"comName"`
@@ -91,56 +90,4 @@ func (O RuleData) String() string {
 	} else {
 		return string(bytes)
 	}
-}
-func (u *TransceiverForwarder) startInternalEventQueue(ctxU context.Context) {
-	go func(ctx context.Context) {
-		Queue := make(chan internotify.BaseEvent, 64) // 64是个魔法数字，未来需要优化为动态配置
-		ID := fmt.Sprintf("TransceiverForwarder:%s", u.PointId)
-		Subscriber := internotify.Subscriber{
-			Id:      ID,
-			Channel: &Queue,
-		}
-		internotify.AddSubscriber(Subscriber)
-		glogger.GLogger.Debugf("Start Transceiver Forwarder:%s", u.PointId)
-		defer internotify.RemoveSubscriber(ID)
-		for {
-			select {
-			case <-ctxU.Done():
-				return
-			case Event := <-*Subscriber.Channel:
-				// 过滤不感兴趣的事件
-				// "transceiver.up.data.$ComName"
-				if !strings.Contains(Event.Event, u.mainConfig.ComName) {
-					continue
-				}
-				// glogger.GLogger.Debug(ID, " Received Data:", Event.String())
-				switch T := Event.Info.(type) {
-				case []byte:
-					comData := RuleData{
-						ComName: u.mainConfig.ComName,
-						Data:    hex.EncodeToString(T),
-					}
-					work, err := u.RuleEngine.WorkInEnd(u.RuleEngine.GetInEnd(u.PointId),
-						comData.String())
-					if !work {
-						glogger.GLogger.Error(err)
-						continue
-					}
-				case string:
-					comData := RuleData{
-						ComName: u.mainConfig.ComName,
-						Data:    (T),
-					}
-					work, err := u.RuleEngine.WorkInEnd(u.RuleEngine.GetInEnd(u.PointId),
-						comData.String())
-					if !work {
-						glogger.GLogger.Error(err)
-						continue
-					}
-				default:
-					glogger.GLogger.Error(fmt.Errorf("unsupported data type:%v", T))
-				}
-			}
-		}
-	}(u.Ctx)
 }

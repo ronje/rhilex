@@ -135,7 +135,6 @@ func (hs *ApiServerPlugin) Init(config *ini.Section) error {
 		&model.MIotProperty{},
 		&model.MIpRoute{},
 		&model.MUart{},
-		&model.MInternalNotify{},
 		&model.MUserLuaTemplate{},
 		&model.MModbusDataPoint{},
 		&model.MSiemensDataPoint{},
@@ -281,7 +280,7 @@ func GetCpuUsage() {
 		V := calculateCpuPercent(cpuPercent)
 		// TODO 这个比例需要通过参数适配
 		if V > 90 {
-			internotify.Push(internotify.BaseEvent{
+			internotify.Insert(internotify.BaseEvent{
 				Type:    `WARNING`,
 				Event:   `system.cpu.load`,
 				Ts:      uint64(time.Now().UnixMilli()),

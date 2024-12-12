@@ -160,11 +160,7 @@ func UpdateAlarmLog(c *gin.Context, ruleEngine typex.Rhilex) {
 }
 func ClearAlarmLog(c *gin.Context, ruleEngine typex.Rhilex) {
 	err := alarmcenter.AlarmDb().Transaction(func(tx *gorm.DB) error {
-		tx.Exec("drop table m_alarm_logs if exists;")
-		if tx.Error != nil {
-			return tx.Error
-		}
-		alarmcenter.InitAlarmDbModel(tx)
+		tx.Exec("DELETE FROM m_alarm_logs;VACUUM;")
 		if tx.Error != nil {
 			return tx.Error
 		}

@@ -18,10 +18,9 @@ package apis
 import (
 	"github.com/gin-gonic/gin"
 	common "github.com/hootrhino/rhilex/component/apiserver/common"
-	"github.com/hootrhino/rhilex/component/apiserver/model"
 	"github.com/hootrhino/rhilex/component/apiserver/server"
 	"github.com/hootrhino/rhilex/component/apiserver/service"
-	"github.com/hootrhino/rhilex/component/interdb"
+	"github.com/hootrhino/rhilex/component/internotify"
 	"github.com/hootrhino/rhilex/typex"
 )
 
@@ -88,15 +87,15 @@ func PageInternalNotifies(c *gin.Context, ruleEngine typex.Rhilex) {
 		c.JSON(common.HTTP_OK, common.Error("Query size too large, Must less than 100"))
 		return
 	}
-	DbTx := interdb.InterDb().Scopes(service.Paginate(*pager))
+	DbTx := internotify.InterNotifyDb().Scopes(service.Paginate(*pager))
 	records := []InternalNotifyVo{}
-	result := DbTx.Model(model.MInternalNotify{}).Order("id DESC").Scan(&records)
+	result := DbTx.Model(internotify.MInternalNotify{}).Order("id DESC").Scan(&records)
 	if result.Error != nil {
 		c.JSON(common.HTTP_OK, common.Error400(result.Error))
 		return
 	}
 	var count int64
-	err1 := interdb.InterDb().Model(&model.MInternalNotify{}).Count(&count).Error
+	err1 := internotify.InterNotifyDb().Model(&internotify.MInternalNotify{}).Count(&count).Error
 	if err1 != nil {
 		c.JSON(common.HTTP_OK, common.Error400(err1))
 		return

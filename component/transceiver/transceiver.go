@@ -95,7 +95,7 @@ func (tc *DefalutTransceiver) Start(Config TransceiverConfig) error {
 		}
 		glogger.GLogger.Debug("Transceiver.ProtocolSlaver.Receive:", AppLayerFrame.String())
 		buffer, _ := AppLayerFrame.Encode()
-		internotify.Push(internotify.BaseEvent{
+		internotify.Insert(internotify.BaseEvent{
 			Type:    tc.Event,
 			Event:   tc.EventType,
 			Ts:      uint64(time.Now().UnixMilli()),

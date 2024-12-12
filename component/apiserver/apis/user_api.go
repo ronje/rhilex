@@ -180,7 +180,7 @@ func Login(c *gin.Context, ruleEngine typex.Rhilex) {
 	_, errLogin := service.Login(u.Username, md5Hash(string(decryptedBytes)))
 	if errLogin != nil {
 		glogger.GLogger.Warn("User Login Failed:", clientIP)
-		internotify.Push(internotify.BaseEvent{
+		internotify.Insert(internotify.BaseEvent{
 			Type:    `WARNING`,
 			Event:   `event.system.user.login.failed`,
 			Ts:      Ts,
@@ -194,7 +194,7 @@ func Login(c *gin.Context, ruleEngine typex.Rhilex) {
 	token, err1 := generateToken(u.Username)
 	if err1 != nil {
 		glogger.GLogger.Warn("User Login Failed:", clientIP)
-		internotify.Push(internotify.BaseEvent{
+		internotify.Insert(internotify.BaseEvent{
 			Type:    `WARNING`, // INFO | ERROR | WARNING
 			Event:   `event.system.user.login.failed`,
 			Ts:      Ts,
@@ -206,7 +206,7 @@ func Login(c *gin.Context, ruleEngine typex.Rhilex) {
 		return
 	}
 	glogger.GLogger.Info("User Login Success:", clientIP)
-	internotify.Push(internotify.BaseEvent{
+	internotify.Insert(internotify.BaseEvent{
 		Type:    `INFO`, // INFO | ERROR | WARNING
 		Event:   `event.system.user.login.success`,
 		Ts:      Ts,

@@ -16,8 +16,7 @@
 package service
 
 import (
-	"github.com/hootrhino/rhilex/component/apiserver/model"
-	"github.com/hootrhino/rhilex/component/interdb"
+	"github.com/hootrhino/rhilex/component/internotify"
 )
 
 /*
@@ -25,8 +24,8 @@ import (
 * InsertInternalNotifies
 *
  */
-func InsertInternalNotify(m model.MInternalNotify) error {
-	return interdb.InterDb().Model(&m).Save(&m).Error
+func InsertInternalNotify(m internotify.MInternalNotify) error {
+	return internotify.InterNotifyDb().Model(&m).Save(&m).Error
 }
 
 /*
@@ -34,9 +33,9 @@ func InsertInternalNotify(m model.MInternalNotify) error {
 * 右上角
 *
  */
-func AllInternalNotifiesHeader() []model.MInternalNotify {
-	m := []model.MInternalNotify{}
-	interdb.InterDb().Table("m_internal_notifies").Where("status=1").Limit(6).Find(&m)
+func AllInternalNotifiesHeader() []internotify.MInternalNotify {
+	m := []internotify.MInternalNotify{}
+	internotify.InterNotifyDb().Table("m_internal_notifies").Where("status=1").Limit(6).Find(&m)
 	return m
 }
 
@@ -45,9 +44,9 @@ func AllInternalNotifiesHeader() []model.MInternalNotify {
 * 所有列表
 *
  */
-func AllInternalNotifies() []model.MInternalNotify {
-	m := []model.MInternalNotify{}
-	interdb.InterDb().Table("m_internal_notifies").Where("status=1").Limit(100).Find(&m)
+func AllInternalNotifies() []internotify.MInternalNotify {
+	m := []internotify.MInternalNotify{}
+	internotify.InterNotifyDb().Table("m_internal_notifies").Where("status=1").Limit(100).Find(&m)
 	return m
 }
 
@@ -57,7 +56,7 @@ func AllInternalNotifies() []model.MInternalNotify {
 *
  */
 func ClearInternalNotifies() error {
-	return interdb.InterDb().Exec("DELETE FROM m_internal_notifies;VACUUM;").Error
+	return internotify.InterNotifyDb().Exec("DELETE FROM m_internal_notifies;VACUUM;").Error
 }
 
 /*
@@ -66,6 +65,6 @@ func ClearInternalNotifies() error {
 *
  */
 func ReadInternalNotifies(uuid string) error {
-	return interdb.InterDb().Table("m_internal_notifies").
-		Where("uuid=?", uuid).Delete(&model.MInternalNotify{}).Error
+	return internotify.InterNotifyDb().Table("m_internal_notifies").
+		Where("uuid=?", uuid).Delete(&internotify.MInternalNotify{}).Error
 }
