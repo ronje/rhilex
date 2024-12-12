@@ -21,6 +21,15 @@ import (
 	"sync"
 )
 
+// ---------------------------------------------------------
+// Type
+// ---------------------------------------------------------
+// - SOURCE: 南向事件
+// - DEVICE: 设备事件
+// - TARGET: 北向事件
+// - SYSTEM: 系统内部事件
+// - HARDWARE: 硬件事件
+
 type EventMessage struct {
 	Topic   string
 	From    string
