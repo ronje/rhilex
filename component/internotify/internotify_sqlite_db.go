@@ -16,6 +16,7 @@
 package internotify
 
 import (
+	"fmt"
 	"runtime"
 
 	core "github.com/hootrhino/rhilex/config"
@@ -102,7 +103,7 @@ BEGIN
 	);
 END;
 `
-	if errTrigger := InterNotifyDb().Exec(sql).Error; errTrigger != nil {
+	if errTrigger := InterNotifyDb().Exec(fmt.Sprintf(sql, 1000, 1000)).Error; errTrigger != nil {
 		glogger.GLogger.Error(errTrigger)
 	}
 }

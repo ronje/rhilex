@@ -177,7 +177,7 @@ func RemoveExpr(uuid string) {
 
 // 输入数据检查规则
 func Input(ruleId, Source string, in map[string]any) (bool, error) {
-	glogger.GLogger.Debug("AlarmCenter.Input=", ruleId, Source, BeautifulMapPrint(in))
+	glogger.GLogger.Debugf("AlarmCenter Input RuleId:%s Source:%s Data:%s", ruleId, Source, BeautifulMapPrint(in))
 	return RunExpr(ruleId, Source, in)
 }
 

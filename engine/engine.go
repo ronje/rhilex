@@ -211,7 +211,7 @@ func (e *RuleEngine) Stop() {
 	lostcache.StopAll()
 	internotify.StopAll()
 	// Stop EventBus
-	eventbus.Flush()
+	eventbus.Stop()
 	glogger.GLogger.Info("Stop Internal Database Successfully")
 	glogger.GLogger.Info("Stop RHILEX successfully")
 	glogger.Close()

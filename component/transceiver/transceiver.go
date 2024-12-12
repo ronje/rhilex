@@ -22,7 +22,7 @@ import (
 	"time"
 
 	serial "github.com/hootrhino/goserial"
-	"github.com/hootrhino/rhilex/component/internotify"
+	"github.com/hootrhino/rhilex/component/eventbus"
 
 	"github.com/hootrhino/rhilex/glogger"
 	"github.com/hootrhino/rhilex/protocol"
@@ -95,12 +95,14 @@ func (tc *DefalutTransceiver) Start(Config TransceiverConfig) error {
 		}
 		glogger.GLogger.Debug("Transceiver.ProtocolSlaver.Receive:", AppLayerFrame.String())
 		buffer, _ := AppLayerFrame.Encode()
-		internotify.Insert(internotify.BaseEvent{
-			Type:    tc.Event,
-			Event:   tc.EventType,
+		lineS := "event.transceiver.data." + tc.mainConfig.Address
+		eventbus.Publish(lineS, eventbus.EventMessage{
+			Topic:   lineS,
+			From:    "transceiver",
+			Type:    "HARDWARE",
+			Event:   lineS,
 			Ts:      uint64(time.Now().UnixMilli()),
-			Summary: tc.Event,
-			Info:    buffer,
+			Payload: buffer,
 		})
 	})
 	glogger.GLogger.Info("Transceiver Started:", tc.mainConfig.Name)

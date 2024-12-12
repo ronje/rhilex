@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/hootrhino/rhilex/component/eventbus"
 	"github.com/hootrhino/rhilex/component/intercache"
-	"github.com/hootrhino/rhilex/component/internotify"
 	"github.com/hootrhino/rhilex/component/supervisor"
 	"github.com/hootrhino/rhilex/glogger"
 	"github.com/hootrhino/rhilex/typex"
@@ -65,11 +65,14 @@ func StartInSupervisor(InCtx context.Context, in *typex.InEnd, ruleEngine typex.
 			info := fmt.Sprintf("Source:(%s,%s) DOWN, supervisor try to Restart, error message: %s",
 				UUID, currentIn.Name, ErrMsg)
 			glogger.GLogger.Debugf(info)
-			internotify.Insert(internotify.BaseEvent{
-				Type:  `WARNING`,
-				Event: "event.inend.down." + UUID,
-				Ts:    uint64(time.Now().UnixMilli()),
-				Info:  info,
+			lineS := "event.outend.down." + UUID
+			eventbus.Publish(lineS, eventbus.EventMessage{
+				Topic:   lineS,
+				From:    "res-supervisor",
+				Type:    "SOURCE",
+				Event:   lineS,
+				Ts:      uint64(time.Now().UnixMilli()),
+				Payload: ErrMsg,
 			})
 			time.Sleep(4 * time.Second)
 			go LoadNewestInEnd(UUID, ruleEngine)
@@ -128,11 +131,14 @@ func StartOutSupervisor(OutCtx context.Context, out *typex.OutEnd, ruleEngine ty
 			info := fmt.Sprintf("OutEnd:(%s,%s) DOWN, supervisor try to Restart, error message: %s",
 				UUID, currentOut.Name, ErrMsg)
 			glogger.GLogger.Debugf(info)
-			internotify.Insert(internotify.BaseEvent{
-				Type:  `WARNING`,
-				Event: "event.outend.down." + UUID,
-				Ts:    uint64(time.Now().UnixMilli()),
-				Info:  info,
+			lineS := "event.outend.down." + UUID
+			eventbus.Publish(lineS, eventbus.EventMessage{
+				Topic:   lineS,
+				From:    "res-supervisor",
+				Type:    "TARGET",
+				Event:   lineS,
+				Ts:      uint64(time.Now().UnixMilli()),
+				Payload: ErrMsg,
 			})
 			time.Sleep(4 * time.Second)
 			go LoadNewestOutEnd(UUID, ruleEngine)
@@ -195,11 +201,14 @@ func StartDeviceSupervisor(DeviceCtx context.Context, device *typex.Device, rule
 			info := fmt.Sprintf("Device:(%s,%s) DOWN, supervisor try to Restart, error message: %s",
 				UUID, currentDevice.Name, ErrMsg)
 			glogger.GLogger.Debugf(info)
-			internotify.Insert(internotify.BaseEvent{
-				Type:  `WARNING`,
-				Event: "event.device.down." + UUID,
-				Ts:    uint64(time.Now().UnixMilli()),
-				Info:  info,
+			lineS := "event.device.down." + UUID
+			eventbus.Publish(lineS, eventbus.EventMessage{
+				Topic:   lineS,
+				From:    "res-supervisor",
+				Type:    "DEVICE",
+				Event:   lineS,
+				Ts:      uint64(time.Now().UnixMilli()),
+				Payload: ErrMsg,
 			})
 			time.Sleep(4 * time.Second)
 			go LoadNewestDevice(UUID, ruleEngine)
@@ -262,11 +271,14 @@ func StartCecollaSupervisor(CecollaCtx context.Context, cecolla *typex.Cecolla, 
 			info := fmt.Sprintf("Cecolla:(%s,%s) DOWN, supervisor try to Restart, error message: %s",
 				UUID, currentCecolla.Name, ErrMsg)
 			glogger.GLogger.Debugf(info)
-			internotify.Insert(internotify.BaseEvent{
-				Type:  `WARNING`,
-				Event: "event.cecolla.down." + UUID,
-				Ts:    uint64(time.Now().UnixMilli()),
-				Info:  info,
+			lineS := "event.cecolla.down." + UUID
+			eventbus.Publish(lineS, eventbus.EventMessage{
+				Topic:   lineS,
+				From:    "res-supervisor",
+				Type:    "CECOLLA",
+				Event:   lineS,
+				Ts:      uint64(time.Now().UnixMilli()),
+				Payload: ErrMsg,
 			})
 			time.Sleep(4 * time.Second)
 			go LoadNewestCecolla(UUID, ruleEngine)

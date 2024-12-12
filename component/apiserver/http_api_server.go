@@ -9,7 +9,7 @@ import (
 	"github.com/hootrhino/rhilex/component/alarmcenter"
 	"github.com/hootrhino/rhilex/component/crontask"
 	dataschema "github.com/hootrhino/rhilex/component/dataschema"
-	"github.com/hootrhino/rhilex/component/internotify"
+	"github.com/hootrhino/rhilex/component/eventbus"
 	"github.com/shirou/gopsutil/cpu"
 
 	"github.com/hootrhino/rhilex/component/apiserver/apis"
@@ -280,12 +280,13 @@ func GetCpuUsage() {
 		V := calculateCpuPercent(cpuPercent)
 		// TODO 这个比例需要通过参数适配
 		if V > 90 {
-			internotify.Insert(internotify.BaseEvent{
-				Type:    `WARNING`,
+			eventbus.Publish("system.cpu.load", eventbus.EventMessage{
+				Topic:   "system.cpu.load.HTTP-API-SERVER",
+				From:    "HTTP-API-SERVER",
+				Type:    "SYSTEM",
 				Event:   `system.cpu.load`,
 				Ts:      uint64(time.Now().UnixMilli()),
-				Summary: "High CPU Usage",
-				Info:    fmt.Sprintf("High CPU Usage: %.2f%%, please maintain the device", V),
+				Payload: fmt.Sprintf("High CPU Usage: %.2f%%, please maintain the device", V),
 			})
 		}
 	}

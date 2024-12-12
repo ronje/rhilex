@@ -16,7 +16,9 @@
 package source
 
 import (
+	"encoding/hex"
 	"encoding/json"
+	"fmt"
 
 	"github.com/hootrhino/rhilex/component/eventbus"
 	"github.com/hootrhino/rhilex/glogger"
@@ -31,13 +33,47 @@ type TransceiverForwarderConfig struct {
 type TransceiverForwarder struct {
 	typex.XStatus
 	mainConfig TransceiverForwarderConfig
+	subscriber eventbus.Subscriber
 }
 
 func NewTransceiverForwarder(r typex.Rhilex) typex.XSource {
-	s := TransceiverForwarder{}
-	s.mainConfig = TransceiverForwarderConfig{}
-	s.RuleEngine = r
-	return &s
+	u := TransceiverForwarder{}
+	u.mainConfig = TransceiverForwarderConfig{}
+	u.subscriber = eventbus.Subscriber{
+		Callback: func(Topic string, Event eventbus.EventMessage) {
+			if u.mainConfig.ComName != "" {
+				// glogger.GLogger.Debug(ID, " Received Data:", Event.String())
+				switch T := Event.Payload.(type) {
+				case []byte:
+					comData := RuleData{
+						ComName: u.mainConfig.ComName,
+						Data:    hex.EncodeToString(T),
+					}
+					work, err := u.RuleEngine.WorkInEnd(u.RuleEngine.GetInEnd(u.PointId),
+						comData.String())
+					if !work {
+						glogger.GLogger.Error(err)
+						return
+					}
+				case string:
+					comData := RuleData{
+						ComName: u.mainConfig.ComName,
+						Data:    T,
+					}
+					work, err := u.RuleEngine.WorkInEnd(u.RuleEngine.GetInEnd(u.PointId),
+						comData.String())
+					if !work {
+						glogger.GLogger.Error(err)
+						return
+					}
+				default:
+					glogger.GLogger.Error(fmt.Errorf("unsupported data type:%v", T))
+				}
+			}
+		},
+	}
+	u.RuleEngine = r
+	return &u
 }
 
 func (u *TransceiverForwarder) Init(inEndId string, configMap map[string]interface{}) error {
@@ -52,10 +88,8 @@ func (u *TransceiverForwarder) Init(inEndId string, configMap map[string]interfa
 func (u *TransceiverForwarder) Start(cctx typex.CCTX) error {
 	u.Ctx = cctx.Ctx
 	u.CancelCTX = cctx.CancelCTX
-	eventbus.Subscribe(u.mainConfig.ComName,
-		&eventbus.Subscriber{Callback: func(Topic string, Msg eventbus.EventMessage) {
-
-		}})
+	//lineS := "event.transceiver.data." + tc.mainConfig.Name
+	eventbus.Subscribe("event.transceiver.data."+u.mainConfig.ComName, &u.subscriber)
 	return nil
 
 }
@@ -65,6 +99,7 @@ func (u *TransceiverForwarder) Status() typex.SourceState {
 }
 
 func (u *TransceiverForwarder) Stop() {
+	eventbus.UnSubscribe(u.mainConfig.ComName, &u.subscriber)
 	if u.CancelCTX != nil {
 		u.CancelCTX()
 	}
@@ -85,9 +120,6 @@ type RuleData struct {
 }
 
 func (O RuleData) String() string {
-	if bytes, err := json.Marshal(O); err != nil {
-		return "{}"
-	} else {
-		return string(bytes)
-	}
+	bytes, _ := json.Marshal(O)
+	return string(bytes)
 }

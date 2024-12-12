@@ -41,5 +41,5 @@ func TestEventBus(t *testing.T) {
 	duration := time.Since(start)
 	t.Log("time.Since(start):", duration)
 	time.Sleep(3 * time.Second)
-	eventbus.Flush()
+	eventbus.Stop()
 }
