@@ -17,6 +17,7 @@ package supervisor
 
 import (
 	"context"
+	"fmt"
 	"sync"
 
 	"github.com/hootrhino/rhilex/typex"
@@ -24,16 +25,80 @@ import (
 
 var __DefaultSuperVisorAdmin *SuperVisorAdmin
 
-type SuperVisor struct {
-	SlaverId string
-	Ctx      context.Context
-	Cancel   context.CancelFunc
-}
+// SuperVisorAdmin 管理所有的 Supervisor 实例
 type SuperVisorAdmin struct {
 	Ctx         context.Context
 	Locker      sync.Locker
 	SuperVisors map[string]*SuperVisor
 	rhilex      typex.Rhilex
+}
+
+// SuperVisor 表示一个 Supervisor 实例
+type SuperVisor struct {
+	SlaverId string
+	Ctx      context.Context
+	Cancel   context.CancelFunc
+}
+
+// NewSuperVisorAdmin 创建一个新的 SuperVisorAdmin 实例
+func NewSuperVisorAdmin(ctx context.Context, rhilex typex.Rhilex) *SuperVisorAdmin {
+	return &SuperVisorAdmin{
+		Ctx:         ctx,
+		Locker:      &sync.Mutex{},
+		SuperVisors: make(map[string]*SuperVisor),
+		rhilex:      rhilex,
+	}
+}
+
+// RegisterSuperVisor 注册一个新的 Supervisor 实例
+func (s *SuperVisorAdmin) RegisterSuperVisor(slaverId string) (*SuperVisor, error) {
+	s.Locker.Lock()
+	defer s.Locker.Unlock()
+
+	if old, ok := s.SuperVisors[slaverId]; ok {
+		old.Cancel()
+		delete(s.SuperVisors, slaverId)
+	}
+
+	ctx, cancel := context.WithCancel(s.Ctx)
+	supervisor := &SuperVisor{SlaverId: slaverId, Ctx: ctx, Cancel: cancel}
+	s.SuperVisors[slaverId] = supervisor
+
+	return supervisor, nil
+}
+
+// UnRegisterSuperVisor 注销一个 Supervisor 实例
+func (s *SuperVisorAdmin) UnRegisterSuperVisor(UUID string) error {
+	s.Locker.Lock()
+	defer s.Locker.Unlock()
+
+	if sv, ok := s.SuperVisors[UUID]; ok {
+		sv.Cancel()
+		delete(s.SuperVisors, UUID)
+		return nil
+	}
+
+	return fmt.Errorf("supervisor with UUID %s not found", UUID)
+}
+
+// StopSuperVisor 停止一个 Supervisor 实例
+func (s *SuperVisorAdmin) StopSuperVisor(UUID string) error {
+	s.Locker.Lock()
+	defer s.Locker.Unlock()
+
+	if sv, ok := s.SuperVisors[UUID]; ok {
+		sv.Cancel()
+		return nil
+	}
+
+	return fmt.Errorf("supervisor with UUID %s not found", UUID)
+}
+func (s *SuperVisorAdmin) StopSupervisorAdmin() {
+	s.Locker.Lock()
+	defer s.Locker.Unlock()
+	for _, sv := range s.SuperVisors {
+		sv.Cancel()
+	}
 }
 
 /*
@@ -56,21 +121,11 @@ func InitResourceSuperVisorAdmin(rhilex typex.Rhilex) {
 *
  */
 func RegisterSuperVisor(SlaverId string) *SuperVisor {
-	__DefaultSuperVisorAdmin.Locker.Lock()
-	defer __DefaultSuperVisorAdmin.Locker.Unlock()
-	if Old, Ok := __DefaultSuperVisorAdmin.SuperVisors[SlaverId]; !Ok {
-		Ctx, Cancel := context.WithCancel(context.Background())
-		SuperVisor := &SuperVisor{SlaverId, Ctx, Cancel}
-		__DefaultSuperVisorAdmin.SuperVisors[SlaverId] = SuperVisor
-		return SuperVisor
-	} else {
-		Old.Cancel()
-		delete(__DefaultSuperVisorAdmin.SuperVisors, SlaverId)
-		Ctx, Cancel := context.WithCancel(context.Background())
-		SuperVisor := &SuperVisor{SlaverId, Ctx, Cancel}
-		__DefaultSuperVisorAdmin.SuperVisors[SlaverId] = SuperVisor
-		return SuperVisor
+	SuperVisor, err := __DefaultSuperVisorAdmin.RegisterSuperVisor(SlaverId)
+	if err != nil {
+		return nil
 	}
+	return SuperVisor
 }
 
 /*
@@ -79,13 +134,7 @@ func RegisterSuperVisor(SlaverId string) *SuperVisor {
 *
  */
 func UnRegisterSuperVisor(UUID string) {
-	__DefaultSuperVisorAdmin.Locker.Lock()
-	defer __DefaultSuperVisorAdmin.Locker.Unlock()
-	if Sv, Ok := __DefaultSuperVisorAdmin.SuperVisors[UUID]; Ok {
-		Sv.Cancel()
-		delete(__DefaultSuperVisorAdmin.SuperVisors, UUID)
-		Sv = nil
-	}
+	__DefaultSuperVisorAdmin.UnRegisterSuperVisor(UUID)
 }
 
 /*
@@ -94,9 +143,9 @@ func UnRegisterSuperVisor(UUID string) {
 *
  */
 func StopSuperVisor(UUID string) {
-	__DefaultSuperVisorAdmin.Locker.Lock()
-	defer __DefaultSuperVisorAdmin.Locker.Unlock()
-	if Sv, Ok := __DefaultSuperVisorAdmin.SuperVisors[UUID]; Ok {
-		Sv.Cancel()
-	}
+	__DefaultSuperVisorAdmin.StopSuperVisor(UUID)
+
+}
+func StopSupervisorAdmin() {
+	__DefaultSuperVisorAdmin.StopSupervisorAdmin()
 }

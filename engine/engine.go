@@ -175,6 +175,8 @@ func (e *RuleEngine) Stop() {
 		device.Device.Stop()
 		glogger.GLogger.Infof("Stop Device:(%s) Successfully", device.Name)
 	}
+	// Stop Supervisor Admin
+	supervisor.StopSupervisorAdmin()
 	// Stop Applet
 	glogger.GLogger.Info("Stop Applet Runtime")
 	applet.Stop()
