@@ -541,16 +541,6 @@ func main() {
 					return nil
 				},
 			},
-			// upgrade
-			{
-				Name:        "upgrade",
-				Usage:       "rhilex upgrade",
-				Description: "Upgrade Rhilex to New Version",
-				Action: func(*cli.Context) error {
-					// 向后台发送请求，获取Version信息，和当前的做比较，如果版本是最新的则升级
-					return nil
-				},
-			},
 		},
 	}
 	if err := app.Run(os.Args); err != nil {
