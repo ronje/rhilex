@@ -62,7 +62,6 @@ func init() {
 //go:generate bash ./gen_info.sh
 func main() {
 	defer utils.WritePanicStack()
-	panic("Test")
 	app := &cli.App{
 		Name:  "rhilex",
 		Usage: "For more, please refer to: https://www.hootrhino.com",
