@@ -16,42 +16,33 @@
 package protocol
 
 import (
-	"io"
-	"time"
+	"testing"
 
 	"github.com/sirupsen/logrus"
 )
 
-// 定义包头和包尾结构体
-type PacketEdger struct {
-	Head [2]byte
-	Tail [2]byte
-}
-type DataChecker interface {
-	CheckData(data []byte) error
-}
-type ExchangeConfig struct {
-	Port         GenericPort
-	ReadTimeout  time.Duration
-	WriteTimeout time.Duration
-	PacketEdger  PacketEdger
-	Logger       *logrus.Logger
-}
-
-func NewExchangeConfig() ExchangeConfig {
-	return ExchangeConfig{
-		ReadTimeout:  5 * time.Second,
-		WriteTimeout: 5 * time.Second,
+// go test -timeout 30s  -run ^TestGenericProtocolMaster$ github.com/hootrhino/rhilex/protocol -v -count=1
+func TestGenericProtocolMaster(t *testing.T) {
+	Logger := logrus.StandardLogger()
+	Logger.SetLevel(logrus.DebugLevel)
+	config := ExchangeConfig{
+		Port:         NewGenericReadWriteCloser(),
+		ReadTimeout:  5000,
+		WriteTimeout: 5000,
 		PacketEdger: PacketEdger{
-			Head: [2]byte{0xAA, 0x55},
-			Tail: [2]byte{0x0D, 0x0A},
+			Head: [2]byte{0xAB, 0xAB},
+			Tail: [2]byte{0xBA, 0xBA},
 		},
-		Logger: logrus.New(),
+		Logger: Logger,
 	}
-}
-
-type GenericPort interface {
-	io.ReadWriteCloser
-	SetReadDeadline(t time.Time) error
-	SetWriteDeadline(t time.Time) error
+	TransportMaster := NewGenericProtocolMaster(config)
+	AppLayerFrame, err := TransportMaster.Request(AppLayerFrame{
+		Length:  4,
+		Payload: []byte{0xFF, 0xFF, 0xFF, 0xFF},
+	})
+	if err != nil {
+		t.Fatal(err)
+	} else {
+		t.Log(AppLayerFrame.ToString())
+	}
 }

@@ -96,7 +96,7 @@ func (hh *CustomProtocol) Start(cctx typex.CCTX) error {
 				continue
 			}
 			glogger.GLogger.Info("Accepting connection:", conn.RemoteAddr())
-			config := protocol.TransporterConfig{
+			config := protocol.ExchangeConfig{
 				Port:         conn,
 				ReadTimeout:  100,
 				WriteTimeout: 0,

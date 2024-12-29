@@ -18,15 +18,15 @@ package protocol
 type GenericAppLayer struct {
 	errTxCount int32 // 错误包计数器
 	errRxCount int32 // 错误包计数器
-	transport  *TransportLayer
+	transport  *Transport
 }
 
-func NewGenericAppLayerAppLayer(config TransporterConfig) *GenericAppLayer {
-	return &GenericAppLayer{errTxCount: 0, errRxCount: 0, transport: NewTransportLayer(config)}
+func NewGenericAppLayerAppLayer(config ExchangeConfig) *GenericAppLayer {
+	return &GenericAppLayer{errTxCount: 0, errRxCount: 0, transport: NewTransport(config)}
 }
 
-func (app *GenericAppLayer) Request(appframe AppLayerFrame) (AppLayerFrame, error) {
-	errWrite := app.Write(appframe)
+func (app *GenericAppLayer) Request(appFrame AppLayerFrame) (AppLayerFrame, error) {
+	errWrite := app.Write(appFrame)
 	if errWrite != nil {
 		app.errTxCount++
 		return AppLayerFrame{}, errWrite
@@ -39,8 +39,8 @@ func (app *GenericAppLayer) Request(appframe AppLayerFrame) (AppLayerFrame, erro
 	return responseFrame, nil
 }
 
-func (app *GenericAppLayer) Write(appframe AppLayerFrame) error {
-	appBytes, errEncode := appframe.Encode()
+func (app *GenericAppLayer) Write(appFrame AppLayerFrame) error {
+	appBytes, errEncode := appFrame.Encode()
 	if errEncode != nil {
 		app.errTxCount++
 		return errEncode

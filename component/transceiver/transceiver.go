@@ -80,7 +80,7 @@ func (tc *DefalutTransceiver) Start(Config TransceiverConfig) error {
 
 		return errOpen
 	}
-	TransporterConfig := protocol.TransporterConfig{
+	TransporterConfig := protocol.ExchangeConfig{
 		Port:         serialPort,
 		ReadTimeout:  time.Duration(tc.mainConfig.IOTimeout * int64(time.Millisecond)),
 		WriteTimeout: time.Duration(tc.mainConfig.IOTimeout * int64(time.Millisecond)),
@@ -93,7 +93,7 @@ func (tc *DefalutTransceiver) Start(Config TransceiverConfig) error {
 			glogger.GLogger.Error(errRead)
 			return
 		}
-		glogger.GLogger.Debug("Transceiver.ProtocolSlaver.Receive:", AppLayerFrame.String())
+		glogger.GLogger.Debug("Transceiver.ProtocolSlaver.Receive:", AppLayerFrame.ToString())
 		buffer, _ := AppLayerFrame.Encode()
 		lineS := "event.transceiver.data." + tc.mainConfig.Address
 		eventbus.Publish(lineS, eventbus.EventMessage{

@@ -19,14 +19,14 @@ type GenericProtocolHandler struct {
 	appLayer *GenericAppLayer
 }
 
-func NewGenericProtocolHandler(config TransporterConfig) *GenericProtocolHandler {
+func NewGenericProtocolHandler(config ExchangeConfig) *GenericProtocolHandler {
 	return &GenericProtocolHandler{appLayer: NewGenericAppLayerAppLayer(config)}
 }
-func (handler *GenericProtocolHandler) Request(appframe AppLayerFrame) (AppLayerFrame, error) {
-	return handler.appLayer.Request(appframe)
+func (handler *GenericProtocolHandler) Request(appFrame AppLayerFrame) (AppLayerFrame, error) {
+	return handler.appLayer.Request(appFrame)
 }
-func (handler *GenericProtocolHandler) Write(appframe AppLayerFrame) error {
-	return handler.appLayer.Write(appframe)
+func (handler *GenericProtocolHandler) Write(appFrame AppLayerFrame) error {
+	return handler.appLayer.Write(appFrame)
 }
 func (handler *GenericProtocolHandler) Read() (AppLayerFrame, error) {
 	return handler.appLayer.Read()

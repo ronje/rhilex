@@ -27,7 +27,7 @@ type GenericProtocolSlaver struct {
 }
 
 func NewGenericProtocolSlaver(ctx context.Context,
-	cancel context.CancelFunc, config TransporterConfig) *GenericProtocolSlaver {
+	cancel context.CancelFunc, config ExchangeConfig) *GenericProtocolSlaver {
 	return &GenericProtocolSlaver{
 		ctx:     ctx,
 		cancel:  cancel,

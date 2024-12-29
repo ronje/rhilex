@@ -15,22 +15,26 @@
 
 package protocol
 
-type GenericProtocolMaster struct {
-	handler *GenericProtocolHandler
-}
+import "errors"
 
-func NewGenericProtocolMaster(config ExchangeConfig) *GenericProtocolMaster {
-	return &GenericProtocolMaster{
-		handler: NewGenericProtocolHandler(config),
+// 一个简单的实现 DataChecker 接口的示例（可以根据实际需要替换）
+type SimpleChecker struct{}
+
+func (c *SimpleChecker) CheckData(data []byte) error {
+
+	if len(data) == 0 {
+		return errors.New("data is empty")
 	}
+	return nil
 }
 
-func (master *GenericProtocolMaster) Request(appFrame AppLayerFrame) (AppLayerFrame, error) {
-	return master.handler.Request(appFrame)
+// 实现CRC16 checker
+type Crc16Checker struct {
 }
 
-func (master *GenericProtocolMaster) Stop() {
-	if master.handler != nil {
-		master.handler.Close()
+func (c *Crc16Checker) CheckData(data []byte) error {
+	if len(data) == 0 {
+		return errors.New("data is empty")
 	}
+	return nil
 }
