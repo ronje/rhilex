@@ -39,9 +39,6 @@ func GetWlanConfig(Interface string) (model.MNetworkConfig, error) {
 	result := interdb.InterDb().
 		Where("interface=? and type=\"WIFI\"", Interface).
 		Find(&MWifiConfig)
-	if result.RowsAffected == 0 {
-		return MWifiConfig, gorm.ErrRecordNotFound
-	}
 	return MWifiConfig, result.Error
 }
 

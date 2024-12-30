@@ -13,9 +13,6 @@ func GetEthConfig(Interface string) (model.MNetworkConfig, error) {
 	result := interdb.InterDb().
 		Where("interface=? AND type =\"ETHNET\"", Interface).
 		Find(&MNetworkConfig)
-	if result.RowsAffected == 0 {
-		return model.MNetworkConfig{}, gorm.ErrRecordNotFound
-	}
 	return MNetworkConfig, result.Error
 }
 
