@@ -22,13 +22,13 @@ type GenericProtocolHandler struct {
 func NewGenericProtocolHandler(config ExchangeConfig) *GenericProtocolHandler {
 	return &GenericProtocolHandler{appLayer: NewGenericAppLayerAppLayer(config)}
 }
-func (handler *GenericProtocolHandler) Request(appFrame AppLayerFrame) (AppLayerFrame, error) {
+func (handler *GenericProtocolHandler) Request(appFrame *ApplicationFrame) (*ApplicationFrame, error) {
 	return handler.appLayer.Request(appFrame)
 }
-func (handler *GenericProtocolHandler) Write(appFrame AppLayerFrame) error {
+func (handler *GenericProtocolHandler) Write(appFrame *ApplicationFrame) error {
 	return handler.appLayer.Write(appFrame)
 }
-func (handler *GenericProtocolHandler) Read() (AppLayerFrame, error) {
+func (handler *GenericProtocolHandler) Read() (*ApplicationFrame, error) {
 	return handler.appLayer.Read()
 }
 func (handler *GenericProtocolHandler) Status() error {

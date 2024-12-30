@@ -25,7 +25,7 @@ func NewGenericProtocolMaster(config ExchangeConfig) *GenericProtocolMaster {
 	}
 }
 
-func (master *GenericProtocolMaster) Request(appFrame AppLayerFrame) (AppLayerFrame, error) {
+func (master *GenericProtocolMaster) Request(appFrame *ApplicationFrame) (*ApplicationFrame, error) {
 	return master.handler.Request(appFrame)
 }
 

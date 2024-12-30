@@ -88,7 +88,7 @@ func (tc *DefalutTransceiver) Start(Config TransceiverConfig) error {
 	}
 	ctx, cancel := context.WithCancel(context.Background())
 	tc.ProtocolSlaver = protocol.NewGenericProtocolSlaver(ctx, cancel, TransporterConfig)
-	go tc.ProtocolSlaver.StartLoop(func(AppLayerFrame protocol.AppLayerFrame, errRead error) {
+	go tc.ProtocolSlaver.StartLoop(func(AppLayerFrame *protocol.ApplicationFrame, errRead error) {
 		if errRead != nil {
 			glogger.GLogger.Error(errRead)
 			return

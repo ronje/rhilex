@@ -17,7 +17,6 @@ package protocol
 
 import (
 	"bytes"
-	"fmt"
 	"time"
 )
 
@@ -32,20 +31,18 @@ func NewGenericReadWriteCloser() *GenericReadWriteCloser {
 	}
 }
 func (s *GenericReadWriteCloser) Read(p []byte) (n int, err error) {
-	header := []byte{0xAB, 0xAB}
-	testData := []byte{
-		0x00, 0x05, // Length (5 bytes)
-		0x68, 0x65, 0x6C, 0x6C, 0x6F, // Payload ("hello")
-		0x1C, 0x2F, // CRC16 (0x1C2F)
-	}
-	tail := []byte{0xBA, 0xBA}
-	packet := bytes.Join([][]byte{header, testData, tail}, []byte{})
-	p = append(p, packet...)
-	fmt.Println("GenericReadWriteCloser.Read:", p)
-	return len(packet), nil
+	GenericByteParser := NewGenericByteParser(&SimpleChecker{}, PacketEdger{
+		Head: [2]byte{0xAB, 0xAB},
+		Tail: [2]byte{0xBA, 0xBA},
+	})
+	ApplicationFrame := NewApplicationFrame([]byte{0xAA, 0xBB, 0xCC, 0xDD})
+	Response, _ := GenericByteParser.PackBytes(ApplicationFrame)
+	p = append(p, Response...)
+	// fmt.Println("[= TEST OUTPUT =] .Read:", p)
+	return len(p), nil
 }
 func (s *GenericReadWriteCloser) Write(p []byte) (n int, err error) {
-	fmt.Println("GenericReadWriteCloser.Write:", p)
+	// fmt.Println("[= TEST OUTPUT =] .Write:", p)
 	return s.buffer.Write(p)
 }
 func (s *GenericReadWriteCloser) Close() error {

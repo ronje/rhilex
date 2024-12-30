@@ -36,13 +36,12 @@ func TestGenericProtocolMaster(t *testing.T) {
 		Logger: Logger,
 	}
 	TransportMaster := NewGenericProtocolMaster(config)
-	AppLayerFrame, err := TransportMaster.Request(AppLayerFrame{
-		Length:  4,
-		Payload: []byte{0xFF, 0xFF, 0xFF, 0xFF},
-	})
+	Request := NewApplicationFrame([]byte{0xFF, 0xFF, 0xFF, 0xFF})
+	t.Log("Request:", Request.ToString())
+	Response, err := TransportMaster.Request(Request)
 	if err != nil {
 		t.Fatal(err)
 	} else {
-		t.Log(AppLayerFrame.ToString())
+		t.Log("Response:", Response.ToString())
 	}
 }

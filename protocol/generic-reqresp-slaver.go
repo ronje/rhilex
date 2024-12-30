@@ -36,7 +36,7 @@ func NewGenericProtocolSlaver(ctx context.Context,
 }
 
 // Start
-func (slaver *GenericProtocolSlaver) StartLoop(callback func(AppLayerFrame, error)) {
+func (slaver *GenericProtocolSlaver) StartLoop(callback func(*ApplicationFrame, error)) {
 	for {
 		select {
 		case <-slaver.ctx.Done():

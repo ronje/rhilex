@@ -33,6 +33,19 @@ func NewGenericByteParser(checker DataChecker, edger PacketEdger) *GenericBytePa
 		checker: checker,
 	}
 }
+func (parser *GenericByteParser) PackBytes(frame *ApplicationFrame) ([]byte, error) {
+	b, err := frame.Encode()
+	if err != nil {
+		return nil, err
+	}
+	bodyLength := len(b)
+	packetLength := 2 + bodyLength + 2
+	packet := make([]byte, packetLength)
+	copy(packet[:2], parser.edger.Head[:])
+	copy(packet[2:], b)
+	copy(packet[packetLength-2:], parser.edger.Tail[:])
+	return packet, nil
+}
 
 // 解析字节流，提取有效数据包
 func (parser *GenericByteParser) ParseBytes(b []byte) ([]byte, error) {

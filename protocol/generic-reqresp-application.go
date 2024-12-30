@@ -25,21 +25,21 @@ func NewGenericAppLayerAppLayer(config ExchangeConfig) *GenericAppLayer {
 	return &GenericAppLayer{errTxCount: 0, errRxCount: 0, transport: NewTransport(config)}
 }
 
-func (app *GenericAppLayer) Request(appFrame AppLayerFrame) (AppLayerFrame, error) {
+func (app *GenericAppLayer) Request(appFrame *ApplicationFrame) (*ApplicationFrame, error) {
 	errWrite := app.Write(appFrame)
 	if errWrite != nil {
 		app.errTxCount++
-		return AppLayerFrame{}, errWrite
+		return nil, errWrite
 	}
 	responseFrame, errRead := app.Read()
 	if errRead != nil {
 		app.errRxCount++
-		return AppLayerFrame{}, errRead
+		return nil, errRead
 	}
 	return responseFrame, nil
 }
 
-func (app *GenericAppLayer) Write(appFrame AppLayerFrame) error {
+func (app *GenericAppLayer) Write(appFrame *ApplicationFrame) error {
 	appBytes, errEncode := appFrame.Encode()
 	if errEncode != nil {
 		app.errTxCount++
@@ -48,16 +48,16 @@ func (app *GenericAppLayer) Write(appFrame AppLayerFrame) error {
 	return app.transport.Write(appBytes)
 }
 
-func (app *GenericAppLayer) Read() (AppLayerFrame, error) {
+func (app *GenericAppLayer) Read() (*ApplicationFrame, error) {
 	bytes, errHd := app.transport.Read()
 	if errHd != nil {
 		app.errRxCount++
-		return AppLayerFrame{}, errHd
+		return nil, errHd
 	}
-	Frame, errDecode := DecodeAppLayerFrame(bytes)
+	Frame, errDecode := DecodeApplicationFrame(bytes)
 	if errDecode != nil {
 		app.errRxCount++
-		return AppLayerFrame{}, errDecode
+		return nil, errDecode
 	}
 	return Frame, nil
 }

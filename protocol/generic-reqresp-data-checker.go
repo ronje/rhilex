@@ -27,14 +27,3 @@ func (c *SimpleChecker) CheckData(data []byte) error {
 	}
 	return nil
 }
-
-// 实现CRC16 checker
-type Crc16Checker struct {
-}
-
-func (c *Crc16Checker) CheckData(data []byte) error {
-	if len(data) == 0 {
-		return errors.New("data is empty")
-	}
-	return nil
-}
