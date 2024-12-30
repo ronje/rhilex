@@ -16,7 +16,6 @@
 package internotify
 
 import (
-	"fmt"
 	"runtime"
 
 	core "github.com/hootrhino/rhilex/config"
@@ -93,17 +92,18 @@ func InitInterNotifyModel(db *gorm.DB) {
 	sql := `
 CREATE TRIGGER IF NOT EXISTS limit_m_internal_notifies
 AFTER INSERT ON m_internal_notifies
-WHEN (SELECT COUNT(*) FROM m_internal_notifies) > %d
+WHEN ((SELECT COUNT(*) FROM m_internal_notifies) / 100) * 100 = (SELECT COUNT(*) FROM m_internal_notifies)
+AND (SELECT COUNT(*) FROM m_internal_notifies) > 1000
 BEGIN
-	DELETE FROM m_internal_notifies
-	WHERE id IN (
-		SELECT id FROM m_internal_notifies
-		ORDER BY id ASC
-		LIMIT (SELECT COUNT(*) - %d FROM m_internal_notifies)
-	);
+    DELETE FROM m_internal_notifies
+    WHERE id IN (
+        SELECT id FROM m_internal_notifies
+        ORDER BY id ASC
+        LIMIT 100
+    );
 END;
 `
-	if errTrigger := InterNotifyDb().Exec(fmt.Sprintf(sql, 1000, 1000)).Error; errTrigger != nil {
+	if errTrigger := InterNotifyDb().Exec(sql).Error; errTrigger != nil {
 		glogger.GLogger.Error(errTrigger)
 	}
 }

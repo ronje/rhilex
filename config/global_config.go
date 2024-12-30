@@ -45,12 +45,11 @@ func InitGlobalConfig(path string) typex.RhilexConfig {
 		EnableConsole:         false,
 		DebugMode:             false,
 		LogLevel:              "info",
-		LogMaxSize:            5,     // MB
-		LogMaxBackups:         5,     // Per
-		LogMaxAge:             7,     // days
-		LogCompress:           true,  // Compress
-		MaxKvStoreSize:        1024,  // 20MB
-		MaxLostCacheSize:      10000, // 10000 lines
+		LogMaxSize:            5,    // MB
+		LogMaxBackups:         5,    // Per
+		LogMaxAge:             7,    // days
+		LogCompress:           true, // Compress
+		MaxKvStoreSize:        1024, // 20MB
 		ExtLibs:               []string{},
 		DataSchemaSecret:      []string{"rhilex-secret"},
 	}

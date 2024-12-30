@@ -329,18 +329,19 @@ func PublishSchema(c *gin.Context, ruleEngine typex.Rhilex) {
 			// 防止数据爆炸撑死数据库，10000条数据大概吃10Mb硬盘.
 			// 通常来说这些数据完全足够代表最新数据了，历史数据反而是垃圾
 			trigger := `
-			CREATE TRIGGER IF NOT EXISTS "%s"
-			AFTER INSERT ON "%s"
-			WHEN (SELECT COUNT(*) FROM "%s") > 10000
-			BEGIN
-				DELETE FROM "%s"
-				WHERE id IN (
-					SELECT id FROM "%s"
-					ORDER BY id ASC
-					LIMIT (SELECT COUNT(*) - 10000 FROM "%s")
-				);
-			END;
-			`
+CREATE TRIGGER IF NOT EXISTS "%s"
+AFTER INSERT ON "%s"
+WHEN ((SELECT COUNT(*) FROM "%s") / 100) * 100 = (SELECT COUNT(*) FROM "%s")
+AND (SELECT COUNT(*) FROM "%s") > 10000
+BEGIN
+    DELETE FROM "%s"
+    WHERE id IN (
+        SELECT id FROM "%s"
+        ORDER BY id ASC
+        LIMIT 100
+    );
+END;
+`
 			if errTrigger := datacenter.DataCenterDb().Exec(fmt.Sprintf(trigger, tableName, tableName,
 				tableName, tableName, tableName, tableName)).Error; errTrigger != nil {
 				return errTrigger

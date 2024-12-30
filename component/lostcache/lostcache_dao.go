@@ -18,7 +18,6 @@ package lostcache
 import (
 	"fmt"
 
-	core "github.com/hootrhino/rhilex/config"
 	"gorm.io/gorm"
 )
 
@@ -35,20 +34,22 @@ func CreateLostDataTable(deviceId string) {
 		tx.Exec(fmt.Sprintf(sql1, deviceId))
 
 		sql2 := `
-		CREATE TRIGGER IF NOT EXISTS limit_lost_data_%s
-		AFTER INSERT ON "lost_data_%s"
-		WHEN (SELECT COUNT(*) FROM "lost_data_%s") > %d
-		BEGIN
-			DELETE FROM "lost_data_%s"
-			WHERE id IN (
-				SELECT id FROM "lost_data_%s"
-				ORDER BY id ASC
-				LIMIT (SELECT COUNT(*) - %d FROM "lost_data_%s")
-			);
-		END;`
+CREATE TRIGGER IF NOT EXISTS limit_lost_data_%s
+AFTER INSERT ON "lost_data_%s"
+WHEN ((SELECT COUNT(*) FROM "lost_data_%s") / 100) * 100 = (SELECT COUNT(*) FROM "lost_data_%s")
+AND (SELECT COUNT(*) FROM "lost_data_%s") > 1000
+BEGIN
+    DELETE FROM "lost_data_%s"
+    WHERE id IN (
+        SELECT id FROM "lost_data_%s"
+        ORDER BY id ASC
+        LIMIT 100
+    );
+END;
+
+`
 		tx.Exec(fmt.Sprintf(sql2, deviceId, deviceId, deviceId,
-			core.GlobalConfig.MaxLostCacheSize, deviceId,
-			deviceId, core.GlobalConfig.MaxLostCacheSize, deviceId))
+			deviceId, deviceId, deviceId, deviceId))
 		return tx.Error
 	})
 

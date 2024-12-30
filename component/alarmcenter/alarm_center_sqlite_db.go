@@ -16,7 +16,6 @@
 package alarmcenter
 
 import (
-	"fmt"
 	"runtime"
 
 	core "github.com/hootrhino/rhilex/config"
@@ -93,17 +92,18 @@ func InitAlarmDbModel(db *gorm.DB) {
 	sql := `
 CREATE TRIGGER IF NOT EXISTS limit_m_internal_notifies
 AFTER INSERT ON m_alarm_logs
-WHEN (SELECT COUNT(*) FROM m_alarm_logs) > %d
+WHEN ((SELECT COUNT(*) FROM m_alarm_logs) / 100) * 100 = (SELECT COUNT(*) FROM m_alarm_logs)
+AND (SELECT COUNT(*) FROM m_alarm_logs) > 1000
 BEGIN
-	DELETE FROM m_alarm_logs
-	WHERE id IN (
-		SELECT id FROM m_alarm_logs
-		ORDER BY id ASC
-		LIMIT (SELECT COUNT(*) - %d FROM m_alarm_logs)
-	);
+    DELETE FROM m_alarm_logs
+    WHERE id IN (
+        SELECT id FROM m_alarm_logs
+        ORDER BY id ASC
+        LIMIT 100
+    );
 END;
 `
-	if errTrigger := AlarmDb().Exec(fmt.Sprintf(sql, 1000, 1000)).Error; errTrigger != nil {
+	if errTrigger := AlarmDb().Exec(sql).Error; errTrigger != nil {
 		glogger.GLogger.Error(errTrigger)
 	}
 }
