@@ -75,11 +75,19 @@ func GetWifi(c *gin.Context, ruleEngine typex.Rhilex) {
 		c.JSON(common.HTTP_OK, common.Error400(err))
 		return
 	}
-	vo := WifiConfigVo{
-		Interface: MWifiConfig.Interface,
-		SSID:      MWifiConfig.SSID,
-		Password:  MWifiConfig.Password,
-		Security:  MWifiConfig.Security,
+	vo := WifiConfigVo{}
+	if MWifiConfig.Interface == "" ||
+		MWifiConfig.SSID == "" ||
+		MWifiConfig.Password == "" {
+		vo.Interface = "eth0"
+		vo.SSID = "default"
+		vo.Password = "default"
+		vo.Security = "wpa2-psk"
+	} else {
+		vo.Interface = MWifiConfig.Interface
+		vo.SSID = MWifiConfig.SSID
+		vo.Password = MWifiConfig.Password
+		vo.Security = MWifiConfig.Security
 	}
 	c.JSON(common.HTTP_OK, common.OkWithData(vo))
 

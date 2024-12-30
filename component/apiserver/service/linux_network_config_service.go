@@ -10,10 +10,13 @@ import (
 
 func GetEthConfig(Interface string) (model.MNetworkConfig, error) {
 	MNetworkConfig := model.MNetworkConfig{}
-	err := interdb.InterDb().
+	result := interdb.InterDb().
 		Where("interface=? AND type =\"ETHNET\"", Interface).
-		Find(&MNetworkConfig).Error
-	return MNetworkConfig, err
+		Find(&MNetworkConfig)
+	if result.RowsAffected == 0 {
+		return model.MNetworkConfig{}, gorm.ErrRecordNotFound
+	}
+	return MNetworkConfig, result.Error
 }
 
 func UpdateEthConfig(MNetworkConfig model.MNetworkConfig) error {

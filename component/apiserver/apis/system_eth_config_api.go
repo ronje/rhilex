@@ -52,14 +52,29 @@ func GetEthNetwork(c *gin.Context, ruleEngine typex.Rhilex) {
 		c.JSON(common.HTTP_OK, common.Error400(err))
 		return
 	}
-	c.JSON(common.HTTP_OK, common.OkWithData(NetworkConfigVo{
-		Interface:   MNetworkConfig.Interface,
-		Address:     MNetworkConfig.Address,
-		Netmask:     MNetworkConfig.Netmask,
-		Gateway:     MNetworkConfig.Gateway,
-		DNS:         []string{"8.8.8.8", "114.114.114.114"},
-		DHCPEnabled: MNetworkConfig.DHCPEnabled,
-	}))
+	vo := NetworkConfigVo{}
+	if MNetworkConfig.Interface == "" ||
+		MNetworkConfig.Address == "" ||
+		MNetworkConfig.Netmask == "" ||
+		MNetworkConfig.Gateway == "" {
+		vo.Interface = "eth0"
+		vo.Address = "192.168.114.115"
+		vo.Netmask = "255.255.255.0"
+		vo.Gateway = "192.168.114.1"
+		vo.DNS = []string{"8.8.8.8", "114.114.114.114"}
+		vo.DHCPEnabled = func() *bool {
+			b := true
+			return &b
+		}()
+	} else {
+		vo.Interface = MNetworkConfig.Interface
+		vo.Address = MNetworkConfig.Address
+		vo.Netmask = MNetworkConfig.Netmask
+		vo.Gateway = MNetworkConfig.Gateway
+		vo.DNS = []string{"8.8.8.8", "114.114.114.114"}
+		vo.DHCPEnabled = MNetworkConfig.DHCPEnabled
+	}
+	c.JSON(common.HTTP_OK, common.OkWithData(vo))
 }
 
 /**

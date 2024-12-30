@@ -36,9 +36,13 @@ func UpdateWlanConfig(MNetworkConfig model.MNetworkConfig) error {
  */
 func GetWlanConfig(Interface string) (model.MNetworkConfig, error) {
 	MWifiConfig := model.MNetworkConfig{}
-	return MWifiConfig, interdb.InterDb().
+	result := interdb.InterDb().
 		Where("interface=? and type=\"WIFI\"", Interface).
-		Find(&MWifiConfig).Error
+		Find(&MWifiConfig)
+	if result.RowsAffected == 0 {
+		return MWifiConfig, gorm.ErrRecordNotFound
+	}
+	return MWifiConfig, result.Error
 }
 
 func AllWlanConfig() ([]model.MNetworkConfig, error) {
