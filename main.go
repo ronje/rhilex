@@ -63,26 +63,27 @@ func init() {
 func main() {
 	defer utils.WritePanicStack()
 	app := &cli.App{
-		Name:  "rhilex",
-		Usage: "For more, please refer to: https://www.hootrhino.com",
+		Name:        "rhilex",
+		Usage:       "rhilex",
+		Description: "RHILEX is a system dedicated to edge gateways.\nMore information visit https://www.hootrhino.com.",
 		Commands: []*cli.Command{
 			{
 				Name:  "run",
-				Usage: "rhilex run -config=./rhilex.ini",
+				Usage: "start rhilex system",
 				Flags: []cli.Flag{
 					&cli.StringFlag{
 						Name:  "db",
-						Usage: "rhilex database",
+						Usage: "specific rhilex database",
 						Value: "rhilex.db",
 					},
 					&cli.StringFlag{
 						Name:  "config",
-						Usage: "rhilex config",
+						Usage: "specific rhilex config database",
 						Value: "rhilex.ini",
 					},
 				},
 				Action: func(c *cli.Context) error {
-					utils.CLog(typex.Banner)
+					utils.CLog("%s", typex.Banner)
 					utils.ShowGGpuAndCpuInfo()
 					utils.ShowIpAddress()
 					pid := os.Getpid()
@@ -134,7 +135,7 @@ func main() {
 					flag := os.O_APPEND | os.O_CREATE | os.O_WRONLY
 					file, err := os.OpenFile(ossupport.UpgradeLogPath, flag, 0755)
 					if err != nil {
-						utils.CLog(err.Error())
+						utils.CLog("%s", err.Error())
 						return nil
 					}
 					defer file.Close()
@@ -280,7 +281,7 @@ func main() {
 				Action: func(c *cli.Context) error {
 					file, err := os.Create(ossupport.RecoverLogPath)
 					if err != nil {
-						utils.CLog(err.Error())
+						utils.CLog("%s", err.Error())
 						return nil
 					}
 					defer file.Close()
@@ -346,33 +347,37 @@ func main() {
 			},
 			{
 				Name:        "active",
-				Usage:       "rhilex active -H ${HOST} --SN ${SN} -U ${Username} -P ${Password} -IF ${Iface name} -MAC ${MAC Address}",
-				Description: "Activation Rhilex",
+				Usage:       "activate rhilex license",
+				Description: "Activate Rhilex license",
 				Hidden:      true,
 				Flags: []cli.Flag{
 					&cli.StringFlag{
 						Name:  "H",
-						Usage: "server ip",
+						Usage: "specific server address",
+						Value: "activation.hootrhino.com",
 					},
 					&cli.StringFlag{
 						Name:  "SN",
-						Usage: "serial number",
+						Usage: "specific serial number",
+						Value: "00000000001",
 					},
 					&cli.StringFlag{
 						Name:  "U",
-						Usage: "admin username",
+						Usage: "specific admin username",
+						Value: "rhilex",
 					},
 					&cli.StringFlag{
 						Name:  "P",
-						Usage: "admin password",
+						Usage: "specific admin password",
+						Value: "12345678",
 					},
 					&cli.StringFlag{
 						Name:  "IF",
-						Usage: "interface name",
+						Usage: "specific interface name",
 					},
 					&cli.StringFlag{
 						Name:  "MAC",
-						Usage: "mac address",
+						Usage: "specific mac address",
 					},
 				},
 
@@ -401,7 +406,7 @@ func main() {
 					if P == "" {
 						return fmt.Errorf("[LICENCE ACTIVE]: missing admin 'P' parameter")
 					}
-
+					// 激活服务器默认使用60004端口，约定俗成
 					Certificate, Privatekey, License, errGetLicense := activation.GetLicense(host, sn, iface, mac, U, P)
 					if errGetLicense != nil {
 						utils.CLog("[LICENCE ACTIVE]: Get License failed:%s", errGetLicense)
@@ -444,17 +449,17 @@ func main() {
 				Flags: []cli.Flag{
 					&cli.StringFlag{
 						Name:  "key",
-						Usage: "license key path",
+						Usage: "specific license key path",
 						Value: "./license.key",
 					},
 					&cli.StringFlag{
 						Name:  "lic",
-						Usage: "license path",
+						Usage: "specific license path",
 						Value: "./license.lic",
 					},
 					&cli.StringFlag{
 						Name:  "cert",
-						Usage: "certificate path",
+						Usage: "specific certificate path",
 						Value: "./license.cert",
 					},
 				},
@@ -499,25 +504,24 @@ func main() {
 			// version
 			{
 				Name:        "version",
-				Usage:       "rhilex version",
+				Usage:       "print rhilex version",
 				Description: "Show rhilex Current Version",
 				Flags: []cli.Flag{
 					&cli.StringFlag{
-						Name:  "version",
-						Usage: "rhilex version",
+						Name: "version",
 					},
 				},
 				Action: func(*cli.Context) error {
 					version := fmt.Sprintf("[%v-%v-%v]",
 						runtime.GOOS, runtime.GOARCH, typex.MainVersion)
-					utils.CLog("[*] Version: " + version)
+					utils.CLog("[*] Version: %s", version)
 					return nil
 				},
 			},
-			// bench
+			// hwinfo
 			{
 				Name:        "hwinfo",
-				Usage:       "rhilex hwinfo",
+				Usage:       "print rhilex interface info",
 				Description: "Show Local Hardware Info",
 				Action: func(*cli.Context) error {
 					macs, err1 := ossupport.ShowMacAddress()
@@ -535,7 +539,7 @@ func main() {
 			// bench
 			{
 				Name:        "pbench",
-				Usage:       "rhilex pbench",
+				Usage:       "print hardware performance test result",
 				Description: "Performance Bench Test",
 				Action: func(*cli.Context) error {
 					performance.TestPerformance()

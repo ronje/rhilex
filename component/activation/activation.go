@@ -29,7 +29,7 @@ import (
  *
  */
 func GetLicense(Host, Sn, Iface, Mac, U, P string) (string, string, string, error) {
-	conn, err := grpc.NewClient(Host, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	conn, err := grpc.NewClient(fmt.Sprintf("%s:60004", Host), grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		return "", "", "", fmt.Errorf("Dail to Server %s Error", Host)
 	}
