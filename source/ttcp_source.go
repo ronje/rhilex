@@ -5,7 +5,6 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
-	"hash/crc32"
 	"net"
 	"sync"
 	"time"
@@ -111,19 +110,6 @@ func (tcps *TcpSource) Start(cctx typex.CCTX) error {
 
 }
 
-// calculateCRC 计算给定数据的 CRC32 校验值并返回 4 字节的结果
-// 00 01 A9 C7 E8 B8 01
-var __crcIEEETable = crc32.MakeTable(crc32.Koopman)
-
-func calculateCRC(data []byte) uint32 {
-	crcValue := crc32.Checksum(data, __crcIEEETable)
-	return ByteToUint32([]byte{
-		byte(crcValue >> 24),
-		byte(crcValue >> 16),
-		byte(crcValue >> 8),
-		byte(crcValue),
-	})
-}
 
 /*
 *

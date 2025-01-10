@@ -7,7 +7,6 @@ import (
 	"net"
 	"net/http"
 	"os"
-	"runtime/debug"
 	"time"
 
 	"github.com/gin-contrib/static"
@@ -19,6 +18,7 @@ import (
 	core "github.com/hootrhino/rhilex/config"
 	"github.com/hootrhino/rhilex/glogger"
 	"github.com/hootrhino/rhilex/typex"
+	"github.com/hootrhino/rhilex/utils"
 )
 
 /*
@@ -102,9 +102,8 @@ func StartRhilexApiServer(ruleEngine typex.Rhilex, port int) {
 	server.ginEngine.GET("/ws", glogger.WsLogger)
 	server.ginEngine.Use(gin.CustomRecovery(func(c *gin.Context, err any) {
 		if core.GlobalConfig.DebugMode {
-			debug.PrintStack()
+			utils.WritePanicStack()
 			os.Exit(1)
-			panic(err)
 		}
 		c.JSON(500, response.Error500(errors.New("http server crash, try to recovery")))
 	}))
@@ -129,7 +128,7 @@ func StartRhilexApiServer(ruleEngine typex.Rhilex, port int) {
 		if err := server.ginEngine.RunListener(listener); err != nil {
 			glogger.GLogger.Fatalf("Http Api Server listen error: %s", err)
 		}
-	}(typex.GCTX, server.config.Port)
+	}(context.Background(), server.config.Port)
 	glogger.GLogger.Infof("Http Api Server listen on: %s", fmt.Sprintf("0.0.0.0:%d", port))
 	DefaultApiServer = &server
 }

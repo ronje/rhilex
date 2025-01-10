@@ -15,6 +15,40 @@ import (
 	"github.com/hootrhino/rhilex/glogger"
 )
 
+// WritePanicStack writes the panic stack trace to a file
+func WritePanicStack() {
+	if r := recover(); r != nil {
+		// Print panic message
+		fmt.Printf("Panic: %v\n", r)
+
+		// Create a buffer to hold the stack trace
+		stackBuf := make([]byte, 4096)
+		length := runtime.Stack(stackBuf, true) // false: current goroutine only
+		stackTrace := string(stackBuf[:length])
+
+		// Log the stack trace to a file
+		fileName := fmt.Sprintf("rhilex_panic_stack_%s.txt", time.Now().Format("2006-01-02-15-04-05"))
+		file, err := os.Create(fileName)
+		if err != nil {
+			fmt.Printf("Failed to create log file: %v\n", err)
+			return
+		}
+		defer file.Close()
+
+		// Write stack trace to file
+		fmt.Fprintf(file, "Panic at: %s\n", time.Now().Format(time.RFC3339))
+		fmt.Fprintf(file, "Error: %v\n", r)
+		fmt.Fprintln(file, "Call Stack:")
+		fmt.Fprintln(file, stackTrace)
+
+		// Print stack trace to stdout (optional)
+		fmt.Println("Call Stack:")
+		fmt.Println(stackTrace)
+
+		fmt.Printf("Panic information saved to file: %s\n", fileName)
+	}
+}
+
 // CreateZip 压缩指定的文件列表到一个ZIP文件中。
 func Zip(zipFilename string, filenames []string) error {
 	// 创建ZIP文件

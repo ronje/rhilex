@@ -35,7 +35,7 @@ type TableColumnInfo struct {
 func GetTableSchema(tableName string) ([]TableColumnInfo, error) {
 	columns := []TableColumnInfo{}
 	// 注意：从datacenter取数据
-	rows, err := datacenter.DB().Raw(fmt.Sprintf("PRAGMA table_info(\"data_center_%s\");", tableName)).Rows()
+	rows, err := datacenter.DataCenterDb().Raw(fmt.Sprintf("PRAGMA table_info(\"data_center_%s\");", tableName)).Rows()
 	if err != nil {
 		return nil, err
 	}

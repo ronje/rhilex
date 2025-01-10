@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/gosnmp/gosnmp"
+	"github.com/hootrhino/rhilex/component/alarmcenter"
 	"github.com/hootrhino/rhilex/component/intercache"
 	"github.com/hootrhino/rhilex/component/interdb"
 	"github.com/hootrhino/rhilex/resconfig"
@@ -33,10 +34,11 @@ type _SNMPCommonConfig struct {
 }
 
 type _GSNMPConfig struct {
-	SchemaId      string                   `json:"schemaId"`
-	CommonConfig  _SNMPCommonConfig        `json:"commonConfig" validate:"required"`
+	SchemaId      string                      `json:"schemaId"`
+	CommonConfig  _SNMPCommonConfig           `json:"commonConfig" validate:"required"`
 	SNMPConfig    resconfig.GenericSnmpConfig `json:"snmpConfig" validate:"required"`
 	CecollaConfig resconfig.CecollaConfig     `json:"cecollaConfig"`
+	AlarmConfig   resconfig.AlarmConfig       `json:"alarmConfig"`
 }
 
 type genericSnmpDevice struct {
@@ -82,6 +84,22 @@ func NewGenericSnmpDevice(e typex.Rhilex) typex.XDevice {
 				return &b
 			}(),
 		},
+		CecollaConfig: resconfig.CecollaConfig{
+			Enable: func() *bool {
+				b := false
+				return &b
+			}(),
+			EnableCreateSchema: func() *bool {
+				b := true
+				return &b
+			}(),
+		},
+		AlarmConfig: resconfig.AlarmConfig{
+			Enable: func() *bool {
+				b := false
+				return &b
+			}(),
+		},
 	}
 	sd.snmpOids = map[string]snmpOid{}
 	return sd
@@ -105,7 +123,7 @@ func (sd *genericSnmpDevice) Init(devId string, configMap map[string]interface{}
 		return err
 	}
 	snmpOids := []snmpOid{}
-	snmpOidLoadErr := interdb.DB().Table("m_snmp_oids").
+	snmpOidLoadErr := interdb.InterDb().Table("m_snmp_oids").
 		Where("device_uuid=?", devId).Find(&snmpOids).Error
 	if snmpOidLoadErr != nil {
 		return snmpOidLoadErr
@@ -129,7 +147,7 @@ func (sd *genericSnmpDevice) Init(devId string, configMap map[string]interface{}
 	}
 	if sd.mainConfig.SchemaId != "" {
 		var SchemaProperties []SnmpSchemaProperty
-		dataSchemaLoadError := interdb.DB().Table("m_iot_properties").
+		dataSchemaLoadError := interdb.InterDb().Table("m_iot_properties").
 			Where("schema_id=?", sd.mainConfig.SchemaId).Find(&SchemaProperties).Error
 		if dataSchemaLoadError != nil {
 			return dataSchemaLoadError
@@ -207,6 +225,17 @@ func (sd *genericSnmpDevice) Start(cctx typex.CCTX) error {
 					} else {
 						glogger.GLogger.Debug(string(bytes))
 						sd.RuleEngine.WorkDevice(sd.Details(), string(bytes))
+					}
+				}
+			}
+			// 是否预警
+			if *sd.mainConfig.AlarmConfig.Enable {
+				if len(snmpOids) > 0 {
+					Input := map[string]any{}
+					Input["data"] = snmpOids
+					_, err := alarmcenter.Input(sd.mainConfig.AlarmConfig.AlarmRuleId, sd.PointId, Input)
+					if err != nil {
+						glogger.GLogger.Error(err)
 					}
 				}
 			}

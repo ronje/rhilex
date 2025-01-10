@@ -22,7 +22,7 @@ import (
 	"time"
 
 	serial "github.com/hootrhino/goserial"
-	"github.com/hootrhino/rhilex/component/internotify"
+	"github.com/hootrhino/rhilex/component/eventbus"
 
 	"github.com/hootrhino/rhilex/glogger"
 	"github.com/hootrhino/rhilex/protocol"
@@ -80,7 +80,7 @@ func (tc *DefalutTransceiver) Start(Config TransceiverConfig) error {
 
 		return errOpen
 	}
-	TransporterConfig := protocol.TransporterConfig{
+	TransporterConfig := protocol.ExchangeConfig{
 		Port:         serialPort,
 		ReadTimeout:  time.Duration(tc.mainConfig.IOTimeout * int64(time.Millisecond)),
 		WriteTimeout: time.Duration(tc.mainConfig.IOTimeout * int64(time.Millisecond)),
@@ -88,19 +88,21 @@ func (tc *DefalutTransceiver) Start(Config TransceiverConfig) error {
 	}
 	ctx, cancel := context.WithCancel(context.Background())
 	tc.ProtocolSlaver = protocol.NewGenericProtocolSlaver(ctx, cancel, TransporterConfig)
-	go tc.ProtocolSlaver.StartLoop(func(AppLayerFrame protocol.AppLayerFrame, errRead error) {
+	go tc.ProtocolSlaver.StartLoop(func(AppLayerFrame *protocol.ApplicationFrame, errRead error) {
 		if errRead != nil {
 			glogger.GLogger.Error(errRead)
 			return
 		}
-		glogger.GLogger.Debug("Transceiver.ProtocolSlaver.Receive:", AppLayerFrame.String())
+		glogger.GLogger.Debug("Transceiver.ProtocolSlaver.Receive:", AppLayerFrame.ToString())
 		buffer, _ := AppLayerFrame.Encode()
-		internotify.Push(internotify.BaseEvent{
-			Type:    tc.Event,
-			Event:   tc.EventType,
+		lineS := "event.transceiver.data." + tc.mainConfig.Address
+		eventbus.Publish(lineS, eventbus.EventMessage{
+			Topic:   lineS,
+			From:    "transceiver",
+			Type:    "HARDWARE",
+			Event:   lineS,
 			Ts:      uint64(time.Now().UnixMilli()),
-			Summary: tc.Event,
-			Info:    buffer,
+			Payload: buffer,
 		})
 	})
 	glogger.GLogger.Info("Transceiver Started:", tc.mainConfig.Name)

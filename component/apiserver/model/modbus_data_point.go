@@ -29,5 +29,5 @@ type MModbusDataPoint struct {
 	DataType   string   `gorm:"not null"` // 数据类型
 	DataOrder  string   `gorm:"not null"` // 字节序
 	Frequency  *uint64  `gorm:"default:50"`
-	Weight     *float64 `gorm:"default:1"`
+	Weight     *Decimal `gorm:"column:weight;default:1"`
 }

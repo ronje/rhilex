@@ -272,14 +272,14 @@ NEXT:
 		}
 	}
 	// 事务
-	txErr := interdb.DB().Transaction(func(tx *gorm.DB) error {
+	txErr := interdb.InterDb().Transaction(func(tx *gorm.DB) error {
 		Group := service.GetResourceGroup(uuid)
 		err3 := service.DeleteDevice(uuid)
 		if err3 != nil {
 			return err3
 		}
 		// 解除关联
-		err2 := interdb.DB().Where("gid=? and rid =?", Group.UUID, uuid).
+		err2 := interdb.InterDb().Where("gid=? and rid =?", Group.UUID, uuid).
 			Delete(&model.MGenericGroupRelation{}).Error
 		if err2 != nil {
 			return err2

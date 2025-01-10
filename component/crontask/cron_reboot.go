@@ -53,7 +53,7 @@ func InitCronRebootExecutor(rhilex typex.Rhilex) {
 	m.CreatedAt = time.Now()
 	m.Enable = false
 	m.CronExpr = "0 0 0 0 0"
-	err := interdb.DB().Model(m).FirstOrCreate(m).Error
+	err := interdb.InterDb().Model(m).FirstOrCreate(m).Error
 	if err != nil {
 		glogger.GLogger.Error(err)
 		return

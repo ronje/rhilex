@@ -597,7 +597,7 @@ func TestRulesCallback(c *gin.Context, ruleEngine typex.Rhilex) {
 			c.JSON(common.HTTP_OK, common.Error(fmt.Sprintf("'Device' not exists: %v", form.UUID)))
 			return
 		}
-		err1 := interqueue.DefaultXQueue.PushDeviceQueue(device, "::::TEST_RULE::::"+form.TestData)
+		err1 := interqueue.PushDeviceQueue(device, "::::TEST_RULE::::"+form.TestData)
 		if err1 != nil {
 			c.JSON(common.HTTP_OK, common.Error400(err1))
 			return
@@ -611,7 +611,7 @@ func TestRulesCallback(c *gin.Context, ruleEngine typex.Rhilex) {
 			c.JSON(common.HTTP_OK, common.Error(fmt.Sprintf("'InEnd' not exists: %v", form.UUID)))
 			return
 		}
-		err1 := interqueue.DefaultXQueue.PushInQueue(inend, "::::TEST_RULE::::"+form.TestData)
+		err1 := interqueue.PushInQueue(inend, "::::TEST_RULE::::"+form.TestData)
 		if err1 != nil {
 			c.JSON(common.HTTP_OK, common.Error400(err1))
 			return

@@ -1,13 +1,15 @@
 package httpserver
 
 import (
+	"context"
 	"fmt"
 	"strconv"
 	"time"
 
+	"github.com/hootrhino/rhilex/component/alarmcenter"
 	"github.com/hootrhino/rhilex/component/crontask"
 	dataschema "github.com/hootrhino/rhilex/component/dataschema"
-	"github.com/hootrhino/rhilex/component/internotify"
+	"github.com/hootrhino/rhilex/component/eventbus"
 	"github.com/shirou/gopsutil/cpu"
 
 	"github.com/hootrhino/rhilex/component/apiserver/apis"
@@ -51,6 +53,22 @@ func NewHttpApiServer(ruleEngine typex.Rhilex) *ApiServerPlugin {
  */
 func initRhilex(engine typex.Rhilex) {
 	go GetCpuUsage()
+	for _, mAlarmRule := range service.AllAlarmRules() {
+		ExprDefines := []alarmcenter.ExprDefine{}
+		for _, exprDefine := range mAlarmRule.GetExprDefine() {
+			ExprDefines = append(ExprDefines, alarmcenter.ExprDefine{
+				Expr:      exprDefine.Expr,
+				EventType: exprDefine.EventType,
+			})
+		}
+		alarmcenter.LoadAlarmRule(mAlarmRule.UUID, alarmcenter.AlarmRule{
+			Interval:    time.Duration(mAlarmRule.Interval) * time.Second,
+			Threshold:   mAlarmRule.Threshold,
+			HandleId:    mAlarmRule.HandleId,
+			ExprDefines: ExprDefines,
+		},
+		)
+	}
 	for _, mCecolla := range service.AllCecollas() {
 		if err := server.LoadNewestCecolla(mCecolla.UUID, engine); err != nil {
 			glogger.GLogger.Error("Cecolla load failed:", err)
@@ -100,8 +118,8 @@ func (hs *ApiServerPlugin) Init(config *ini.Section) error {
 		return err
 	}
 	server.StartRhilexApiServer(hs.ruleEngine, hs.mainConfig.Port)
-	interdb.DB().Exec("VACUUM;")
-	interdb.RegisterModel(
+	interdb.InterDb().Exec("VACUUM;")
+	interdb.InterDbRegisterModel(
 		&model.MInEnd{},
 		&model.MOutEnd{},
 		&model.MRule{},
@@ -109,6 +127,7 @@ func (hs *ApiServerPlugin) Init(config *ini.Section) error {
 		&model.MDevice{},
 		&model.MCecolla{},
 		&model.MApplet{},
+		&alarmcenter.MAlarmRule{},
 		&model.MGenericGroup{},
 		&model.MGenericGroupRelation{},
 		&model.MNetworkConfig{},
@@ -116,7 +135,6 @@ func (hs *ApiServerPlugin) Init(config *ini.Section) error {
 		&model.MIotProperty{},
 		&model.MIpRoute{},
 		&model.MUart{},
-		&model.MInternalNotify{},
 		&model.MUserLuaTemplate{},
 		&model.MModbusDataPoint{},
 		&model.MSiemensDataPoint{},
@@ -211,6 +229,10 @@ func (hs *ApiServerPlugin) LoadRoute() {
 	apis.InitMqttSourceServerRoute()
 	// Cron Reboot
 	apis.InitCronRebootRoute()
+	// 告警规则
+	apis.LoadAlarmRuleRoute()
+	// 告警日志
+	apis.LoadAlarmLogRoute()
 }
 
 // ApiServerPlugin Start
@@ -246,7 +268,7 @@ func (*ApiServerPlugin) Service(arg typex.ServiceArg) typex.ServiceResult {
 func GetCpuUsage() {
 	for {
 		select {
-		case <-typex.GCTX.Done():
+		case <-context.Background().Done():
 			{
 				return
 			}
@@ -258,12 +280,13 @@ func GetCpuUsage() {
 		V := calculateCpuPercent(cpuPercent)
 		// TODO 这个比例需要通过参数适配
 		if V > 90 {
-			internotify.Push(internotify.BaseEvent{
-				Type:    `WARNING`,
+			eventbus.Publish("system.cpu.load", eventbus.EventMessage{
+				Topic:   "system.cpu.load.HTTP-API-SERVER",
+				From:    "HTTP-API-SERVER",
+				Type:    "SYSTEM",
 				Event:   `system.cpu.load`,
 				Ts:      uint64(time.Now().UnixMilli()),
-				Summary: "High CPU Usage",
-				Info:    fmt.Sprintf("High CPU Usage: %.2f%%, please maintain the device", V),
+				Payload: fmt.Sprintf("High CPU Usage: %.2f%%, please maintain the device", V),
 			})
 		}
 	}

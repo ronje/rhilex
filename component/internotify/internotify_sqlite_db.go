@@ -13,7 +13,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-package lostcache
+package internotify
 
 import (
 	"runtime"
@@ -28,32 +28,26 @@ import (
 	"gorm.io/gorm/logger"
 )
 
-const __DEFAULT_DB_PATH string = "./rhilex_lostcache.db?cache=shared&mode=rwc"
+const __NOTIFY_DB_PATH string = "./rhilex_internotify.db?cache=shared&mode=rwc"
 
-var __Sqlite *SqliteDAO
-
-type SqliteDAO struct {
-	engine typex.Rhilex
-	name   string
-	db     *gorm.DB
-}
+var __InterNotifySqlite *SqliteDAO
 
 /*
 *
 * 初始化DAO
 *
  */
-func InitLostCacheDb(engine typex.Rhilex) error {
-	__Sqlite = &SqliteDAO{name: "Sqlite3", engine: engine}
+func InitInterNotifyDb(engine typex.Rhilex) error {
+	__InterNotifySqlite = &SqliteDAO{name: "Sqlite3", engine: engine}
 
 	var err error
 	if core.GlobalConfig.DebugMode {
-		__Sqlite.db, err = gorm.Open(sqlite.Open(__DEFAULT_DB_PATH), &gorm.Config{
+		__InterNotifySqlite.db, err = gorm.Open(sqlite.Open(__NOTIFY_DB_PATH), &gorm.Config{
 			Logger:                 logger.Default.LogMode(logger.Info),
 			SkipDefaultTransaction: false,
 		})
 	} else {
-		__Sqlite.db, err = gorm.Open(sqlite.Open(__DEFAULT_DB_PATH), &gorm.Config{
+		__InterNotifySqlite.db, err = gorm.Open(sqlite.Open(__NOTIFY_DB_PATH), &gorm.Config{
 			Logger:                 logger.Default.LogMode(logger.Error),
 			SkipDefaultTransaction: false,
 		})
@@ -61,8 +55,8 @@ func InitLostCacheDb(engine typex.Rhilex) error {
 	if err != nil {
 		glogger.GLogger.Fatal(err)
 	}
-
-	__Sqlite.db.Exec("VACUUM;")
+	__InterNotifySqlite.db.Exec("VACUUM;")
+	InitInterNotifyModel(__InterNotifySqlite.db)
 	return err
 }
 
@@ -71,8 +65,8 @@ func InitLostCacheDb(engine typex.Rhilex) error {
 * 停止
 *
  */
-func Stop() {
-	__Sqlite.db = nil
+func StopInterNotify() {
+	__InterNotifySqlite.db = nil
 	runtime.GC()
 }
 
@@ -81,17 +75,8 @@ func Stop() {
 * 返回数据库查询句柄
 *
  */
-func DB() *gorm.DB {
-	return __Sqlite.db
-}
-
-/*
-*
-* 返回名称
-*
- */
-func Name() string {
-	return __Sqlite.name
+func InterNotifyDb() *gorm.DB {
+	return __InterNotifySqlite.db
 }
 
 /*
@@ -99,6 +84,26 @@ func Name() string {
 * 注册数据模型
 *
  */
-func RegisterModel(dist ...interface{}) {
-	__Sqlite.db.AutoMigrate(dist...)
+func InterNotifyRegisterModel(dist ...interface{}) {
+	__InterNotifySqlite.db.AutoMigrate(dist...)
+}
+func InitInterNotifyModel(db *gorm.DB) {
+	db.AutoMigrate(&MInternalNotify{})
+	sql := `
+CREATE TRIGGER IF NOT EXISTS limit_m_internal_notifies
+AFTER INSERT ON m_internal_notifies
+WHEN ((SELECT COUNT(*) FROM m_internal_notifies) / 100) * 100 = (SELECT COUNT(*) FROM m_internal_notifies)
+AND (SELECT COUNT(*) FROM m_internal_notifies) > 1000
+BEGIN
+    DELETE FROM m_internal_notifies
+    WHERE id IN (
+        SELECT id FROM m_internal_notifies
+        ORDER BY id ASC
+        LIMIT 100
+    );
+END;
+`
+	if errTrigger := InterNotifyDb().Exec(sql).Error; errTrigger != nil {
+		glogger.GLogger.Error(errTrigger)
+	}
 }

@@ -30,35 +30,35 @@ import (
 // InsertMBusPoint 插入modbus点位表
 func InsertMBusPoints(list []model.MMBusDataPoint) error {
 	m := model.MMBusDataPoint{}
-	return interdb.DB().Model(m).Create(list).Error
+	return interdb.InterDb().Model(m).Create(list).Error
 }
 
 func InsertMBusPoint(P model.MMBusDataPoint) error {
 	IgnoreUUID := P.UUID
 	Count := int64(0)
 	P.UUID = ""
-	interdb.DB().Model(P).Where(P).Count(&Count)
+	interdb.InterDb().Model(P).Where(P).Count(&Count)
 	if Count > 0 {
 		return fmt.Errorf("already exists same record:%s", IgnoreUUID)
 	}
 	P.UUID = IgnoreUUID
-	return interdb.DB().Model(P).Create(&P).Error
+	return interdb.InterDb().Model(P).Create(&P).Error
 }
 
 func DeleteMBusPointByDevice(uuids []string, deviceUuid string) error {
-	return interdb.DB().
+	return interdb.InterDb().
 		Where("uuid IN ? AND device_uuid=?", uuids, deviceUuid).
 		Delete(&model.MMBusDataPoint{}).Error
 }
 
 func DeleteAllMBusByDevice(deviceUuid string) error {
-	return interdb.DB().
+	return interdb.InterDb().
 		Where("device_uuid=?", deviceUuid).
 		Delete(&model.MMBusDataPoint{}).Error
 }
 
 func UpdateMBusPoint(MMBusDataPoint model.MMBusDataPoint) error {
-	return interdb.DB().Model(model.MMBusDataPoint{}).
+	return interdb.InterDb().Model(model.MMBusDataPoint{}).
 		Where("device_uuid=? AND uuid=?",
 			MMBusDataPoint.DeviceUuid, MMBusDataPoint.UUID).
 		Updates(MMBusDataPoint).Error

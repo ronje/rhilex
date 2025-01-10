@@ -19,14 +19,14 @@ type GenericProtocolMaster struct {
 	handler *GenericProtocolHandler
 }
 
-func NewGenericProtocolMaster(config TransporterConfig) *GenericProtocolMaster {
+func NewGenericProtocolMaster(config ExchangeConfig) *GenericProtocolMaster {
 	return &GenericProtocolMaster{
 		handler: NewGenericProtocolHandler(config),
 	}
 }
 
-func (master *GenericProtocolMaster) Request(appframe AppLayerFrame) (AppLayerFrame, error) {
-	return master.handler.Request(appframe)
+func (master *GenericProtocolMaster) Request(appFrame *ApplicationFrame) (*ApplicationFrame, error) {
+	return master.handler.Request(appFrame)
 }
 
 func (master *GenericProtocolMaster) Stop() {

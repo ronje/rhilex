@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/hootrhino/rhilex/glogger"
+	"github.com/hootrhino/rhilex/resconfig"
 	"github.com/hootrhino/rhilex/typex"
 	"github.com/hootrhino/rhilex/utils"
 )
@@ -28,8 +29,10 @@ type __HttpCommonConfig struct {
 	Frequency   *int64 `json:"frequency" validate:"required"`
 }
 type __HttpMainConfig struct {
-	CommonConfig __HttpCommonConfig `json:"commonConfig" validate:"required"`
-	HttpConfig   __HttpConfig       `json:"httpConfig" validate:"required"`
+	CommonConfig  __HttpCommonConfig      `json:"commonConfig" validate:"required"`
+	HttpConfig    __HttpConfig            `json:"httpConfig" validate:"required"`
+	CecollaConfig resconfig.CecollaConfig `json:"cecollaConfig"`
+	AlarmConfig   resconfig.AlarmConfig   `json:"alarmConfig"`
 }
 
 type GenericHttpDevice struct {
@@ -58,6 +61,22 @@ func NewGenericHttpDevice(e typex.Rhilex) typex.XDevice {
 			}(),
 			Timeout: func() *int {
 				b := 3000
+				return &b
+			}(),
+		},
+		CecollaConfig: resconfig.CecollaConfig{
+			Enable: func() *bool {
+				b := false
+				return &b
+			}(),
+			EnableCreateSchema: func() *bool {
+				b := true
+				return &b
+			}(),
+		},
+		AlarmConfig: resconfig.AlarmConfig{
+			Enable: func() *bool {
+				b := false
 				return &b
 			}(),
 		},

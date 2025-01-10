@@ -96,7 +96,7 @@ func (hh *CustomProtocol) Start(cctx typex.CCTX) error {
 				continue
 			}
 			glogger.GLogger.Info("Accepting connection:", conn.RemoteAddr())
-			config := protocol.TransporterConfig{
+			config := protocol.ExchangeConfig{
 				Port:         conn,
 				ReadTimeout:  100,
 				WriteTimeout: 0,
@@ -104,12 +104,12 @@ func (hh *CustomProtocol) Start(cctx typex.CCTX) error {
 			}
 			ctx, cancel := context.WithCancel(hh.Ctx)
 			TransportSlaver := protocol.NewGenericProtocolSlaver(ctx, cancel, config)
-			TransportSlaver.StartLoop(func(AppLayerFrame protocol.AppLayerFrame, err error) {
+			TransportSlaver.StartLoop(func(ApplicationFrame *protocol.ApplicationFrame, err error) {
 				if err != nil {
 					glogger.GLogger.Error(err)
 					return
 				}
-				ParsedData, errParse := utils.ParseBinary(hh.mainConfig.ProtocolExpr, AppLayerFrame.Payload)
+				ParsedData, errParse := utils.ParseBinary(hh.mainConfig.ProtocolExpr, ApplicationFrame.Payload)
 				if errParse != nil {
 					glogger.GLogger.Error(errParse)
 					return

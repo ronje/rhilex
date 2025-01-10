@@ -12,7 +12,6 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
-
 package interqueue
 
 import (
@@ -27,19 +26,8 @@ import (
 	"github.com/hootrhino/rhilex/typex"
 )
 
-var DefaultXQueue *XQueue
+var __DefaultXQueue *XQueue
 
-/*
-*
-* NewXQueue
-*
- */
-
-/*
-*
-* XQueue
-*
- */
 type XQueue struct {
 	Queue        []chan QueueData
 	OutQueue     []chan QueueData
@@ -59,7 +47,7 @@ func InitXQueue(rhilex typex.Rhilex, maxQueueSize int) *XQueue {
 		OutQueue[i] = make(chan QueueData, maxQueueSize)
 		DeviceQueue[i] = make(chan QueueData, maxQueueSize)
 	}
-	DefaultXQueue = &XQueue{
+	__DefaultXQueue = &XQueue{
 		InQueue:      InQueue,
 		OutQueue:     OutQueue,
 		DeviceQueue:  DeviceQueue,
@@ -67,168 +55,109 @@ func InitXQueue(rhilex typex.Rhilex, maxQueueSize int) *XQueue {
 		locker:       sync.Mutex{},
 		maxQueueSize: maxQueueSize,
 	}
-	return DefaultXQueue
+	return __DefaultXQueue
 }
-
-/*
-*
-* 内部队列
-*
- */
 func StartXQueue() {
-	// InQueue
-	go func(ctx context.Context, DefaultXQueue *XQueue) {
-		glogger.GLogger.Info("Start XQueue: InQueue")
-		for {
-			for _, Queue := range DefaultXQueue.InQueue {
-				select {
-				case <-ctx.Done():
-					return
-				case Data := <-Queue:
-					if Data.I == nil {
-						continue
-					}
-					if Data.E == nil {
-						continue
-					}
-					luaexecutor.RunSourceCallbacks(Data.I, Data.Data)
-				case <-time.After(4 * time.Millisecond):
-					continue
+	__DefaultXQueue.StartXQueue()
+}
+func (q *XQueue) startInQueue(ctx context.Context) {
+	glogger.GLogger.Info("Start XQueue: InQueue")
+	q.processQueue(ctx, q.InQueue, func(data QueueData) {
+		if data.I == nil || data.E == nil {
+			return
+		}
+		luaexecutor.RunSourceCallbacks(data.I, data.Data)
+	})
+}
+
+func (q *XQueue) startDeviceQueue(ctx context.Context) {
+	glogger.GLogger.Info("Start XQueue: DeviceQueue")
+	q.processQueue(ctx, q.DeviceQueue, func(data QueueData) {
+		if data.D == nil || data.E == nil {
+			return
+		}
+		luaexecutor.RunDeviceCallbacks(data.D, data.Data)
+	})
+}
+
+func (q *XQueue) startOutQueue(ctx context.Context) {
+	glogger.GLogger.Info("Start XQueue: OutQueue")
+	q.processQueue(ctx, q.OutQueue, func(data QueueData) {
+		ProcessOutQueueData(data, data.E)
+	})
+}
+
+func (q *XQueue) processQueue(ctx context.Context, queue []chan QueueData, callback func(QueueData)) {
+	for {
+		for _, qc := range queue {
+			select {
+			case <-ctx.Done():
+				return
+			case data, ok := <-qc:
+				if ok {
+					callback(data)
 				}
+			case <-time.After(4 * time.Millisecond):
+				continue
 			}
 		}
-	}(typex.GCTX, DefaultXQueue)
-	// DeviceQueue
-	go func(ctx context.Context, DefaultXQueue *XQueue) {
-		glogger.GLogger.Info("Start XQueue: DeviceQueue")
-		for {
-			for _, Queue := range DefaultXQueue.DeviceQueue {
-				select {
-				case <-ctx.Done():
-					return
-				case Data := <-Queue:
-					if Data.D == nil {
-						continue
-					}
-					if Data.E == nil {
-						continue
-					}
-					luaexecutor.RunDeviceCallbacks(Data.D, Data.Data)
-				case <-time.After(4 * time.Millisecond):
-					continue
-				}
-			}
-		}
-	}(typex.GCTX, DefaultXQueue)
-	// OutQueue
-	go func(ctx context.Context, DefaultXQueue *XQueue) {
-		glogger.GLogger.Info("Start XQueue: OutQueue")
-		for {
-			for _, Queue := range DefaultXQueue.OutQueue {
-				select {
-				case <-ctx.Done():
-					return
-				case Data := <-Queue:
-					ProcessOutQueueData(Data, Data.E)
-				case <-time.After(4 * time.Millisecond):
-					continue
-				}
-			}
-		}
-	}(typex.GCTX, DefaultXQueue)
-}
-
-/*
-*
-*PushInQueue
-*
- */
-func (q *XQueue) PushInQueue(in *typex.InEnd, data string) error {
-	qd := QueueData{
-		E:    q.rhilex,
-		I:    in,
-		O:    nil,
-		Data: data,
 	}
-	return q.pushIn(qd)
 }
 
-/*
-*
-* PushDeviceQueue
-*
- */
-func (q *XQueue) PushDeviceQueue(Device *typex.Device, data string) error {
-	qd := QueueData{
-		D:    Device,
-		E:    q.rhilex,
-		I:    nil,
-		O:    nil,
-		Data: data,
-	}
-	return q.pushDevice(qd)
+func (q *XQueue) StartXQueue() {
+	ctx := context.Background()
+	go q.startInQueue(ctx)
+	go q.startDeviceQueue(ctx)
+	go q.startOutQueue(ctx)
 }
 
-/*
-*
-* PushOutQueue
-*
- */
-func (q *XQueue) PushOutQueue(out *typex.OutEnd, data string) error {
-	qd := QueueData{
-		E:    q.rhilex,
-		D:    nil,
-		I:    nil,
-		O:    out,
-		Data: data,
-	}
-	return q.pushOut(qd)
-}
-
-/*
-*
-* Push
-*
- */
-func (q *XQueue) pushIn(d QueueData) error {
-	return q.handleQueue(d, q.InQueue)
-}
-
-/*
-*
-* Push
-*
- */
-func (q *XQueue) pushOut(d QueueData) error {
-	return q.handleQueue(d, q.OutQueue)
-}
-
-/*
-*
-* Push
-*
- */
-func (q *XQueue) pushDevice(d QueueData) error {
-	return q.handleQueue(d, q.DeviceQueue)
-}
-
-/*
-*
-* handle
-*
- */
-// handleQueue 尝试将数据发送到一个随机选择且有空间的通道
-func (q *XQueue) handleQueue(qData QueueData, Queue []chan QueueData) error {
+func (q *XQueue) push(data QueueData, queue []chan QueueData) error {
+	q.locker.Lock()
+	defer q.locker.Unlock()
 	var available []int
-	for i := 0; i < len(Queue); i++ {
-		if len(Queue[i])+1 <= q.maxQueueSize {
+	for i := 0; i < len(queue); i++ {
+		if len(queue[i])+1 <= q.maxQueueSize {
 			available = append(available, i)
 		}
 	}
 	if len(available) > 0 {
 		randomIndex := available[rand.Intn(len(available))]
-		Queue[randomIndex] <- qData
+		queue[randomIndex] <- data
 		return nil
 	}
 	return fmt.Errorf("Queue Send Failed: No available channels")
+}
+
+func (q *XQueue) PushInQueue(in *typex.InEnd, data string) error {
+	qd := QueueData{
+		E:    q.rhilex,
+		I:    in,
+		Data: data,
+	}
+	return q.push(qd, q.InQueue)
+}
+func PushInQueue(in *typex.InEnd, data string) error {
+	return __DefaultXQueue.PushInQueue(in, data)
+}
+func (q *XQueue) PushDeviceQueue(device *typex.Device, data string) error {
+	qd := QueueData{
+		E:    q.rhilex,
+		D:    device,
+		Data: data,
+	}
+	return q.push(qd, q.DeviceQueue)
+}
+func PushDeviceQueue(device *typex.Device, data string) error {
+	return __DefaultXQueue.PushDeviceQueue(device, data)
+}
+func (q *XQueue) PushOutQueue(out *typex.OutEnd, data string) error {
+	qd := QueueData{
+		E:    q.rhilex,
+		O:    out,
+		Data: data,
+	}
+	return q.push(qd, q.OutQueue)
+}
+func PushOutQueue(out *typex.OutEnd, data string) error {
+	return __DefaultXQueue.PushOutQueue(out, data)
 }

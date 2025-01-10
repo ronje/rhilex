@@ -8,7 +8,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/hootrhino/rhilex/component/internotify"
+	"github.com/hootrhino/rhilex/component/eventbus"
 	"github.com/hootrhino/rhilex/glogger"
 	"github.com/hootrhino/rhilex/typex"
 
@@ -89,18 +89,20 @@ func (usbm *usbMonitor) Start(_ typex.Rhilex) error {
 				Msg := parseType(data, n)
 				if len(Msg) > 0 {
 					glogger.GLogger.Info(Msg)
-					internotify.Push(internotify.BaseEvent{
-						Type:    `WARNING`,
-						Event:   `system.usb.event`,
+					lineS := "system.usb.event." + usbm.uuid
+					eventbus.Publish(lineS, eventbus.EventMessage{
+						Topic:   lineS,
+						From:    "usb-monitor",
+						Type:    "HARDWARE",
+						Event:   lineS,
 						Ts:      uint64(time.Now().UnixMilli()),
-						Summary: "USB Device Event",
-						Info:    Msg,
+						Payload: Msg,
 					})
 				}
 			}
 		}
 
-	}(typex.GCTX)
+	}(context.Background())
 	return nil
 }
 func parseType(data []byte, len int) string {

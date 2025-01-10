@@ -12,151 +12,179 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
-
 package eventbus
 
 import (
 	"context"
 	"fmt"
+	"strings"
 	"sync"
-
-	"github.com/hootrhino/rhilex/typex"
-	"github.com/hootrhino/rhilex/utils"
 )
 
-var __DefaultEventBus *EventBus
+// ---------------------------------------------------------
+// Type
+// ---------------------------------------------------------
+// - SOURCE: 南向事件
+// - DEVICE: 设备事件
+// - TARGET: 北向事件
+// - SYSTEM: 系统内部事件
+// - HARDWARE: 硬件事件
 
-/*
-*
-* 内部消息总线
-*
- */
 type EventMessage struct {
-	Payload string
+	Topic   string
+	From    string
+	Type    string
+	Event   string
+	Ts      uint64
+	Payload interface{}
 }
 
 func (E EventMessage) String() string {
-	return fmt.Sprintf("Event Message@ Payload: %s", E.Payload)
+	return fmt.Sprintf("Event Message@ Payload: %v", E.Payload)
 }
 
-type Topic struct {
-	Topic       string
-	channel     chan EventMessage
-	ctx         context.Context
-	cancel      context.CancelFunc
-	Subscribers map[string]*Subscriber
-}
 type Subscriber struct {
-	id       string
-	Callback func(Topic string, Msg EventMessage)
+	id       string                               // 随机生成的ID
+	Callback func(topic string, msg EventMessage) // 回调函数
 }
+
+type TrieNode struct {
+	Subscribers map[string]*Subscriber
+	Children    map[string]*TrieNode
+	Wildcard    *TrieNode // 用于处理 "*" 通配符
+}
+
 type EventBus struct {
-	// Topic, chan EventMessage
-	// 给每个订阅者分配一个Channel，实现消息订阅
-	// Topic一样的会挂在同一个树上
-	locker sync.Mutex
-	Topics map[string]*Topic // 订阅树: MAP<Topic>[]Subscribers
+	root    *TrieNode
+	mutex   sync.RWMutex
+	stopped bool
+	cancel  context.CancelFunc
+	ctx     context.Context
 }
 
-func InitEventBus() *EventBus {
-	__DefaultEventBus = &EventBus{
-		Topics: map[string]*Topic{},
-		locker: sync.Mutex{},
+func NewEventBus() *EventBus {
+	ctx, cancel := context.WithCancel(context.Background())
+	return &EventBus{
+		root: &TrieNode{
+			Subscribers: make(map[string]*Subscriber),
+			Children:    make(map[string]*TrieNode),
+		},
+		cancel: cancel,
+		ctx:    ctx,
 	}
-	return __DefaultEventBus
 }
 
-/*
-*
-* 订阅
-*
- */
-func Subscribe(topic string, subscribe *Subscriber) {
-	__DefaultEventBus.locker.Lock()
-	defer __DefaultEventBus.locker.Unlock()
-	NewUUID := utils.MakeUUID("SUB")
-	subscribe.id = NewUUID
-	var T *Topic
-	Ok := false
-	if T, Ok = __DefaultEventBus.Topics[topic]; Ok {
-		T.Subscribers[subscribe.id] = subscribe
-	} else {
-		T = new(Topic)
-		T.channel = make(chan EventMessage, 100)
-		T.Subscribers = map[string]*Subscriber{}
-		T.Topic = topic
-		T.Subscribers[subscribe.id] = subscribe
-		__DefaultEventBus.Topics[topic] = T
-		ctx, cancel := context.WithCancel(typex.GCTX)
-		T.ctx = ctx
-		T.cancel = cancel
-		go func(T *Topic) {
-			for {
-				select {
-				case <-T.ctx.Done():
-					{
-						return
-					}
-				case Msg := <-T.channel:
-					for _, Subscriber := range T.Subscribers {
-						if Subscriber.Callback != nil {
-							Subscriber.Callback(T.Topic, Msg)
-						}
-					}
+// Subscribe 订阅某个主题（支持通配符）
+func (eb *EventBus) Subscribe(topic string, sub *Subscriber) {
+	eb.mutex.Lock()
+	defer eb.mutex.Unlock()
+	if eb.stopped {
+		return
+	}
+
+	nodes := strings.Split(topic, ".")
+	node := eb.root
+	for _, part := range nodes {
+		if part == "*" {
+			if node.Wildcard == nil {
+				node.Wildcard = &TrieNode{
+					Subscribers: make(map[string]*Subscriber),
+					Children:    make(map[string]*TrieNode),
 				}
 			}
-
-		}(T)
-	}
-
-}
-
-/*
-*
-* 取消订阅
-*
- */
-func UnSubscribe(topic string, subscribe Subscriber) {
-	__DefaultEventBus.locker.Lock()
-	defer __DefaultEventBus.locker.Unlock()
-	T, Ok1 := __DefaultEventBus.Topics[topic]
-	if Ok1 {
-		if _, Ok2 := T.Subscribers[subscribe.id]; Ok2 {
-			delete(__DefaultEventBus.Topics[topic].Subscribers, subscribe.id)
+			node = node.Wildcard
+		} else {
+			if _, exists := node.Children[part]; !exists {
+				node.Children[part] = &TrieNode{
+					Subscribers: make(map[string]*Subscriber),
+					Children:    make(map[string]*TrieNode),
+				}
+			}
+			node = node.Children[part]
 		}
 	}
-	// 当没有订阅者的时候直接删除这个Topic
-	if len(T.Subscribers) == 0 {
-		T.cancel()
-		delete(__DefaultEventBus.Topics, topic)
-	}
+
+	node.Subscribers[sub.id] = sub
 }
 
-/*
-*
-* 发布
-*
- */
-func Publish(topic string, Msg EventMessage) {
-	T, Ok1 := __DefaultEventBus.Topics[topic]
-	if Ok1 {
-		T.channel <- Msg
+// UnSubscribe 取消订阅
+func (eb *EventBus) UnSubscribe(topic string, sub *Subscriber) {
+	eb.mutex.Lock()
+	defer eb.mutex.Unlock()
+	if eb.stopped {
+		return
 	}
+
+	nodes := strings.Split(topic, ".")
+	eb.unsubscribeRecursive(eb.root, nodes, sub, 0)
 }
 
-/*
-*
-* 释放所有
-*
- */
-func Flush() {
-	__DefaultEventBus.locker.Lock()
-	defer __DefaultEventBus.locker.Unlock()
-	for _, T := range __DefaultEventBus.Topics {
-		for _, S := range T.Subscribers {
-			delete(T.Subscribers, S.id)
+func (eb *EventBus) unsubscribeRecursive(node *TrieNode, nodes []string, sub *Subscriber, index int) bool {
+	if index == len(nodes) {
+		delete(node.Subscribers, sub.id)
+		return len(node.Subscribers) == 0 && len(node.Children) == 0 && node.Wildcard == nil
+	}
+
+	part := nodes[index]
+	if part == "*" {
+		if node.Wildcard != nil && eb.unsubscribeRecursive(node.Wildcard, nodes, sub, index+1) {
+			node.Wildcard = nil
 		}
-		T.cancel()
-		delete(__DefaultEventBus.Topics, T.Topic)
+	} else {
+		if child, exists := node.Children[part]; exists {
+			if eb.unsubscribeRecursive(child, nodes, sub, index+1) {
+				delete(node.Children, part)
+			}
+		}
+	}
+
+	return len(node.Subscribers) == 0 && len(node.Children) == 0 && node.Wildcard == nil
+}
+
+// Publish 发布消息
+func (eb *EventBus) Publish(topic string, msg EventMessage) {
+	eb.mutex.RLock()
+	defer eb.mutex.RUnlock()
+	if eb.stopped {
+		return
+	}
+
+	nodes := strings.Split(topic, ".")
+	eb.publishRecursive(eb.root, nodes, msg, 0)
+}
+
+func (eb *EventBus) publishRecursive(node *TrieNode, nodes []string, msg EventMessage, index int) {
+	// 调用所有订阅者
+	for _, sub := range node.Subscribers {
+		go sub.Callback(msg.Topic, msg)
+	}
+
+	if index == len(nodes) {
+		return
+	}
+
+	part := nodes[index]
+	if child, exists := node.Children[part]; exists {
+		eb.publishRecursive(child, nodes, msg, index+1)
+	}
+
+	if node.Wildcard != nil {
+		eb.publishRecursive(node.Wildcard, nodes, msg, index+1)
+	}
+}
+
+// Stop 停止 EventBus，并释放所有资源
+func (eb *EventBus) Stop() {
+	eb.mutex.Lock()
+	defer eb.mutex.Unlock()
+	if eb.stopped {
+		return
+	}
+
+	eb.stopped = true
+	eb.cancel()          // 取消上下文
+	eb.root = &TrieNode{ // 清空订阅树
+		Subscribers: make(map[string]*Subscriber),
+		Children:    make(map[string]*TrieNode),
 	}
 }

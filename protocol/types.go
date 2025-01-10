@@ -22,19 +22,32 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-type TransportMode int32
-
-const (
-	FIX_HEADER TransportMode = 1 // 固定头，默认模式
-	RAW        TransportMode = 2 // 透传
-)
-
-type TransporterConfig struct {
-	// Mode         TransportMode
+// 定义包头和包尾结构体
+type PacketEdger struct {
+	Head [2]byte
+	Tail [2]byte
+}
+type DataChecker interface {
+	CheckData(data []byte) error
+}
+type ExchangeConfig struct {
 	Port         GenericPort
 	ReadTimeout  time.Duration
 	WriteTimeout time.Duration
+	PacketEdger  PacketEdger
 	Logger       *logrus.Logger
+}
+
+func NewExchangeConfig() ExchangeConfig {
+	return ExchangeConfig{
+		ReadTimeout:  5 * time.Second,
+		WriteTimeout: 5 * time.Second,
+		PacketEdger: PacketEdger{
+			Head: [2]byte{0xAA, 0x55},
+			Tail: [2]byte{0x0D, 0x0A},
+		},
+		Logger: logrus.New(),
+	}
 }
 
 type GenericPort interface {

@@ -125,6 +125,16 @@ func ValidateAppletSyntax(bytes []byte) error {
 *
   - 分组加入函数
 */
+func AddRuleLibToGlobal(LState *lua.LState, funcs map[string]func(*lua.LState) int) {
+	for funcName, f := range funcs {
+		LState.SetGlobal(funcName, LState.NewClosure(f))
+	}
+}
+
+/*
+*
+  - 分组加入函数
+*/
 func AddRuleLibToGroup(rx typex.Rhilex, LState *lua.LState,
 	ModuleName string, funcs map[string]func(*lua.LState) int) {
 	var table *lua.LTable
@@ -237,13 +247,7 @@ func LoadRuleLibGroup(e typex.Rhilex, scope, uuid string, LState *lua.LState) {
 		}
 		AddRuleLibToGroup(e, LState, "device", Funcs)
 	}
-	{
-		Funcs := map[string]func(l *lua.LState) int{
-			"T2Str":   rhilexlib.T2Str(e, uuid),
-			"Bin2Str": rhilexlib.Bin2Str(e, uuid),
-		}
-		AddRuleLibToGroup(e, LState, "string", Funcs)
-	}
+
 	{
 		Funcs := map[string]func(l *lua.LState) int{
 			"WritePoint": rhilexlib.WriteToModbusSheetRegisterWithTag(e),
@@ -274,8 +278,24 @@ func LoadRuleLibGroup(e typex.Rhilex, scope, uuid string, LState *lua.LState) {
 	}
 	{
 		Funcs := map[string]func(l *lua.LState) int{
-			"TFloat":    rhilexlib.TruncateFloat(e, uuid),
-			"RandomInt": rhilexlib.RandomInt(e, uuid),
+			"random": rhilexlib.MathRandomInt,
+			"abs":    rhilexlib.MathAbs,
+			"acos":   rhilexlib.MathAcos,
+			"asin":   rhilexlib.MathAsin,
+			"atan":   rhilexlib.MathAtan,
+			"atan2":  rhilexlib.MathAtan2,
+			"ceil":   rhilexlib.MathCeil,
+			"cos":    rhilexlib.MathCos,
+			"exp":    rhilexlib.MathExp,
+			"floor":  rhilexlib.MathFloor,
+			"log":    rhilexlib.MathLog,
+			"max":    rhilexlib.MathMax,
+			"min":    rhilexlib.MathMin,
+			"pow":    rhilexlib.MathPow,
+			"sin":    rhilexlib.MathSin,
+			"sqrt":   rhilexlib.MathSqrt,
+			"tan":    rhilexlib.MathTan,
+			"round":  rhilexlib.MathRound,
 		}
 		AddRuleLibToGroup(e, LState, "math", Funcs)
 	}
@@ -395,6 +415,23 @@ func LoadRuleLibGroup(e typex.Rhilex, scope, uuid string, LState *lua.LState) {
 			"WriteToHmi": rhilexlib.TJCWriteToHmi(e),
 		}
 		AddRuleLibToGroup(e, LState, "tjchmi", Funcs)
+	}
+	{
+		Funcs := map[string]func(l *lua.LState) int{
+			"ToUpper":   rhilexlib.StringToUpper,
+			"ToLower":   rhilexlib.StringToLower,
+			"Trim":      rhilexlib.StringTrim,
+			"TrimLeft":  rhilexlib.StringTrimLeft,
+			"TrimRight": rhilexlib.StringTrimRight,
+			"Replace":   rhilexlib.StringReplace,
+			"Repeat":    rhilexlib.StringRepeat,
+			"Contains":  rhilexlib.StringContains,
+			"HasPrefix": rhilexlib.StringHasPrefix,
+			"HasSuffix": rhilexlib.StringHasSuffix,
+			"T2Str":     rhilexlib.T2Str,
+			"Bin2Str":   rhilexlib.Bin2Str,
+		}
+		AddRuleLibToGroup(e, LState, "string", Funcs)
 	}
 }
 

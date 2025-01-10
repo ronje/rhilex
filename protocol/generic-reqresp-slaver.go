@@ -27,7 +27,7 @@ type GenericProtocolSlaver struct {
 }
 
 func NewGenericProtocolSlaver(ctx context.Context,
-	cancel context.CancelFunc, config TransporterConfig) *GenericProtocolSlaver {
+	cancel context.CancelFunc, config ExchangeConfig) *GenericProtocolSlaver {
 	return &GenericProtocolSlaver{
 		ctx:     ctx,
 		cancel:  cancel,
@@ -36,7 +36,7 @@ func NewGenericProtocolSlaver(ctx context.Context,
 }
 
 // Start
-func (slaver *GenericProtocolSlaver) StartLoop(callback func(AppLayerFrame, error)) {
+func (slaver *GenericProtocolSlaver) StartLoop(callback func(*ApplicationFrame, error)) {
 	for {
 		select {
 		case <-slaver.ctx.Done():

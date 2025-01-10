@@ -29,7 +29,7 @@ import (
 func CleanGoodsUpload() error {
 	sql1 := `SELECT local_path FROM m_goods;`
 	m_goods_local_paths := []string{}
-	err1 := interdb.DB().Raw(sql1).Find(&m_goods_local_paths).Error
+	err1 := interdb.InterDb().Raw(sql1).Find(&m_goods_local_paths).Error
 	if err1 != nil {
 		return err1
 	}

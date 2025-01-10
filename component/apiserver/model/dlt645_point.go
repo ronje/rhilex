@@ -23,5 +23,5 @@ type MDlt6452007DataPoint struct {
 	Tag        string
 	Alias      string
 	Frequency  *uint64  `gorm:"default:50"`
-	Weight     *float64 `gorm:"default:1"`
+	Weight     *Decimal `gorm:"column:weight;default:1"`
 }

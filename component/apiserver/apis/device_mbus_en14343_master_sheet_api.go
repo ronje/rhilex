@@ -79,7 +79,7 @@ func MBusMasterPointsExport(c *gin.Context, ruleEngine typex.Rhilex) {
 	deviceUuid, _ := c.GetQuery("device_uuid")
 
 	var records []model.MMBusDataPoint
-	result := interdb.DB().Table("m_mbus_data_points").
+	result := interdb.InterDb().Table("m_mbus_data_points").
 		Where("device_uuid=?", deviceUuid).Find(&records)
 	if result.Error != nil {
 		c.JSON(common.HTTP_OK, common.Error400(result.Error))
@@ -127,10 +127,10 @@ func MBusMasterSheetPageList(c *gin.Context, ruleEngine typex.Rhilex) {
 		return
 	}
 	deviceUuid, _ := c.GetQuery("device_uuid")
-	db := interdb.DB()
+	db := interdb.InterDb()
 	tx := db.Scopes(service.Paginate(*pager))
 	var count int64
-	err1 := interdb.DB().Model(&model.MMBusDataPoint{}).
+	err1 := interdb.InterDb().Model(&model.MMBusDataPoint{}).
 		Where("device_uuid=?", deviceUuid).Count(&count).Error
 	if err1 != nil {
 		c.JSON(common.HTTP_OK, common.Error400(err1))
@@ -158,7 +158,7 @@ func MBusMasterSheetPageList(c *gin.Context, ruleEngine typex.Rhilex) {
 			Alias:         record.Alias,
 			Frequency:     record.Frequency,
 			DataLength:    record.DataLength,
-			Weight:        record.Weight,
+			Weight:        record.Weight.ToFloat64(),
 			LastFetchTime: value.LastFetchTime,
 			Value:         value.Value,
 			ErrMsg:        value.ErrMsg,
@@ -306,7 +306,7 @@ func MBusMasterSheetUpdate(c *gin.Context, ruleEngine typex.Rhilex) {
 				Alias:        MBusMasterDataPoint.Alias,
 				Frequency:    MBusMasterDataPoint.Frequency,
 				DataLength:   MBusMasterDataPoint.DataLength,
-				Weight:       MBusMasterDataPoint.Weight,
+				Weight:       model.NewDecimal(*MBusMasterDataPoint.Weight),
 			}
 			err0 := service.InsertMBusPoint(NewRow)
 			if err0 != nil {
@@ -324,7 +324,7 @@ func MBusMasterSheetUpdate(c *gin.Context, ruleEngine typex.Rhilex) {
 				Alias:        MBusMasterDataPoint.Alias,
 				Frequency:    MBusMasterDataPoint.Frequency,
 				DataLength:   MBusMasterDataPoint.DataLength,
-				Weight:       MBusMasterDataPoint.Weight,
+				Weight:       model.NewDecimal(*MBusMasterDataPoint.Weight),
 			}
 			err0 := service.UpdateMBusPoint(OldRow)
 			if err0 != nil {
@@ -373,7 +373,7 @@ func MBusMasterSheetImport(c *gin.Context, ruleEngine typex.Rhilex) {
 	deviceUuid := c.Request.Form.Get("device_uuid")
 
 	Device := dto.RhilexDeviceDto{}
-	errDb := interdb.DB().Table("m_devices").
+	errDb := interdb.InterDb().Table("m_devices").
 		Where("uuid=?", deviceUuid).Find(&Device).Error
 	if errDb != nil {
 		c.JSON(common.HTTP_OK, common.Error400(errDb))
@@ -487,7 +487,7 @@ func parseMBusMasterPointExcel(r io.Reader, sheetName string,
 			Alias:        Alias,
 			Frequency:    &Frequency,
 			DataLength:   &DataLength,
-			Weight:       &Weight,
+			Weight:       model.NewDecimal(Weight),
 		}
 		list = append(list, model)
 	}

@@ -16,31 +16,21 @@
 package intercache
 
 import (
+	"context"
+	"fmt"
 	"sync"
+	"time"
 
 	"github.com/hootrhino/rhilex/typex"
 )
 
 type CacheValue struct {
-	UUID          string
-	Status        int // 1 正常；0 错误，填充 ErrMsg
-	ErrMsg        string
-	LastFetchTime uint64
-	Value         interface{}
-}
-
-/*
-*
-* 内部缓存器
-*
- */
-type InterCache interface {
-	RegisterSlot(Slot string)      // 存储槽位, 释放资源的时候调用
-	UnRegisterSlot(Slot string)    // 注销存储槽位, 释放资源的时候调用
-	Size() uint64                  // 存储器当前长度
-	Flush()                        // 释放存储器空间
-	ClearSlot()                    // 清空槽位
-	List() []map[string]CacheValue // 列表
+	UUID           string
+	Status         int // 1 正常；0 错误，填充 ErrMsg
+	ErrMsg         string
+	LastFetchTime  uint64
+	ExpirationTime time.Time // 缓存过期时间
+	Value          interface{}
 }
 
 var __DefaultValueCache *GlobalValueRegistry
@@ -78,13 +68,14 @@ type GlobalValueRegistry struct {
 	locker     sync.RWMutex
 }
 
-func InitGlobalValueRegistry(ruleEngine typex.Rhilex) InterCache {
+func InitGlobalValueRegistry(ruleEngine typex.Rhilex) *GlobalValueRegistry {
 	__DefaultValueCache = &GlobalValueRegistry{
 		ruleEngine: ruleEngine,
 		Slots:      map[string]map[string]CacheValue{},
 		locker:     sync.RWMutex{},
 		slotKeys:   []string{},
 	}
+	__DefaultValueCache.startTimeoutChecker()
 	return __DefaultValueCache
 }
 func (M *GlobalValueRegistry) RegisterSlot(Slot string) {
@@ -188,5 +179,66 @@ func (M *GlobalValueRegistry) Flush() {
 			delete(slot, k)
 		}
 		delete(M.Slots, slotName)
+	}
+}
+
+// 设置带超时的缓存值
+// 设置带超时的缓存值
+func (M *GlobalValueRegistry) SetWithTimeout(Slot, K string, V CacheValue, timeoutMs int) error {
+	M.locker.Lock()
+	defer M.locker.Unlock()
+
+	if timeoutMs > 0 {
+		// 计算过期时间
+		expirationTime := time.Now().Add(time.Duration(timeoutMs) * time.Millisecond)
+		V.ExpirationTime = expirationTime
+	} else {
+		// 如果超时时间为0，不设置过期时间
+		V.ExpirationTime = time.Time{} // 零值，表示没有过期时间
+	}
+
+	// 存储值
+	if S, ok := M.Slots[Slot]; ok {
+		S[K] = V
+		M.Slots[Slot] = S
+	} else {
+		return fmt.Errorf("slot not found: %s", Slot)
+	}
+
+	return nil
+}
+
+// 启动全局超时检查器
+func (M *GlobalValueRegistry) startTimeoutChecker() {
+	go func() {
+		ticker := time.NewTicker(5 * time.Second)
+		defer ticker.Stop()
+		for {
+			select {
+			case <-context.Background().Done():
+				return
+			case <-ticker.C:
+				M.cleanupExpiredItems()
+			}
+		}
+	}()
+}
+
+// 清理过期的条目
+func (M *GlobalValueRegistry) cleanupExpiredItems() {
+	M.locker.Lock()
+	defer M.locker.Unlock()
+
+	// 遍历所有槽位，检查每个键值对的过期时间
+	for slot, items := range M.Slots {
+		for key, value := range items {
+			// 只有设置了过期时间，并且过期时间已到，才执行删除操作
+			if !value.ExpirationTime.IsZero() {
+				// 如果当前时间已经超过了过期时间，则删除该条目
+				if time.Now().After(value.ExpirationTime) {
+					delete(M.Slots[slot], key)
+				}
+			}
+		}
 	}
 }

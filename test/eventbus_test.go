@@ -26,7 +26,7 @@ import (
 // @ go test -timeout 30s -run ^TestEventBus github.com/hootrhino/rhilex/test -v -count=1
 func TestEventBus(t *testing.T) {
 
-	eventbus.InitEventBus()
+	eventbus.InitEventBus(nil)
 	eventbus.Subscribe("hello", &eventbus.Subscriber{
 		Callback: func(Topic string, Msg eventbus.EventMessage) {
 			t.Log("hello:", Msg)
@@ -41,5 +41,5 @@ func TestEventBus(t *testing.T) {
 	duration := time.Since(start)
 	t.Log("time.Since(start):", duration)
 	time.Sleep(3 * time.Second)
-	eventbus.Flush()
+	eventbus.Stop()
 }

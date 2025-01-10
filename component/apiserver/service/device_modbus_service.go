@@ -18,8 +18,8 @@ package service
 import (
 	"fmt"
 
-	"github.com/hootrhino/rhilex/component/interdb"
 	"github.com/hootrhino/rhilex/component/apiserver/model"
+	"github.com/hootrhino/rhilex/component/interdb"
 )
 
 /*
@@ -30,7 +30,7 @@ import (
 // InsertModbusPointPosition 插入modbus点位表
 func InsertModbusPointPositions(list []model.MModbusDataPoint) error {
 	m := model.MModbusDataPoint{}
-	return interdb.DB().Model(m).Create(list).Error
+	return interdb.InterDb().Model(m).Create(list).Error
 }
 
 // InsertModbusPointPosition 插入modbus点位表
@@ -38,31 +38,31 @@ func InsertModbusPointPosition(P model.MModbusDataPoint) error {
 	IgnoreUUID := P.UUID
 	Count := int64(0)
 	P.UUID = ""
-	interdb.DB().Model(P).Where(P).Count(&Count)
+	interdb.InterDb().Model(P).Where(P).Count(&Count)
 	if Count > 0 {
 		return fmt.Errorf("already exists same record:%s", IgnoreUUID)
 	}
 	P.UUID = IgnoreUUID
-	return interdb.DB().Model(P).Create(&P).Error
+	return interdb.InterDb().Model(P).Create(&P).Error
 }
 
 // DeleteModbusPointByDevice 删除modbus点位与设备
 func DeleteModbusPointByDevice(uuids []string, deviceUuid string) error {
-	return interdb.DB().
+	return interdb.InterDb().
 		Where("uuid IN ? AND device_uuid=?", uuids, deviceUuid).
 		Delete(&model.MModbusDataPoint{}).Error
 }
 
 // DeleteAllModbusPointByDevice 删除modbus点位与设备
 func DeleteAllModbusPointByDevice(deviceUuid string) error {
-	return interdb.DB().
+	return interdb.InterDb().
 		Where("device_uuid=?", deviceUuid).
 		Delete(&model.MModbusDataPoint{}).Error
 }
 
 // 更新DataSchema
 func UpdateModbusPoint(MModbusDataPoint model.MModbusDataPoint) error {
-	return interdb.DB().Model(model.MModbusDataPoint{}).
+	return interdb.InterDb().Model(model.MModbusDataPoint{}).
 		Where("device_uuid=? AND uuid=?",
 			MModbusDataPoint.DeviceUuid, MModbusDataPoint.UUID).
 		Updates(MModbusDataPoint).Error

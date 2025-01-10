@@ -79,7 +79,7 @@ func SiemensPointsExport(c *gin.Context, ruleEngine typex.Rhilex) {
 	deviceUuid, _ := c.GetQuery("device_uuid")
 
 	var records []model.MSiemensDataPoint
-	result := interdb.DB().Table("m_siemens_data_points").
+	result := interdb.InterDb().Table("m_siemens_data_points").
 		Where("device_uuid=?", deviceUuid).Find(&records)
 	if result.Error != nil {
 		c.JSON(common.HTTP_OK, common.Error400(result.Error))
@@ -131,10 +131,10 @@ func SiemensSheetPageList(c *gin.Context, ruleEngine typex.Rhilex) {
 		return
 	}
 	deviceUuid, _ := c.GetQuery("device_uuid")
-	db := interdb.DB()
+	db := interdb.InterDb()
 	tx := db.Scopes(service.Paginate(*pager))
 	var count int64
-	err1 := interdb.DB().Model(&model.MSiemensDataPoint{}).
+	err1 := interdb.InterDb().Model(&model.MSiemensDataPoint{}).
 		Where("device_uuid=?", deviceUuid).Count(&count).Error
 	if err1 != nil {
 		c.JSON(common.HTTP_OK, common.Error400(err1))
@@ -160,7 +160,7 @@ func SiemensSheetPageList(c *gin.Context, ruleEngine typex.Rhilex) {
 			Frequency:      record.Frequency,
 			DataType:       record.DataBlockType,
 			DataOrder:      record.DataBlockOrder,
-			Weight:         record.Weight,
+			Weight:         record.Weight.ToFloat64(),
 			LastFetchTime:  value.LastFetchTime, // 运行时
 			Value:          value.Value,         // 运行时
 			ErrMsg:         value.ErrMsg,
@@ -336,7 +336,7 @@ func SiemensSheetUpdate(c *gin.Context, ruleEngine typex.Rhilex) {
 			NewRow.UUID = utils.SiemensPointUUID()
 			NewRow.DataBlockType = SiemensDataPoint.DataType
 			NewRow.DataBlockOrder = SiemensDataPoint.DataOrder
-			NewRow.Weight = SiemensDataPoint.Weight
+			NewRow.Weight = model.NewDecimal(*SiemensDataPoint.Weight)
 			err0 := service.InsertSiemensPointPosition(NewRow)
 			if err0 != nil {
 				c.JSON(common.HTTP_OK, common.Error400(err0))
@@ -349,7 +349,7 @@ func SiemensSheetUpdate(c *gin.Context, ruleEngine typex.Rhilex) {
 			OldRow.UUID = SiemensDataPoint.UUID
 			OldRow.DataBlockType = SiemensDataPoint.DataType
 			OldRow.DataBlockOrder = SiemensDataPoint.DataOrder
-			OldRow.Weight = utils.HandleZeroValue(SiemensDataPoint.Weight)
+			OldRow.Weight = model.NewDecimal(*utils.HandleZeroValue(SiemensDataPoint.Weight))
 
 			err0 := service.UpdateSiemensPoint(OldRow)
 			if err0 != nil {
@@ -386,7 +386,7 @@ func SiemensSheetImport(c *gin.Context, ruleEngine typex.Rhilex) {
 		Type string
 	}
 	Device := DeviceDto{}
-	errDb := interdb.DB().Table("m_devices").
+	errDb := interdb.InterDb().Table("m_devices").
 		Where("uuid=?", deviceUuid).Find(&Device).Error
 	if errDb != nil {
 		c.JSON(common.HTTP_OK, common.Error400(errDb))
@@ -489,7 +489,7 @@ func parseSiemensPointExcel(
 			DataBlockType:  Type,
 			DataBlockOrder: utils.GetDefaultDataOrder(Type, Order),
 			Frequency:      &Frequency,
-			Weight:         &limitedWeight,
+			Weight:         model.NewDecimal(limitedWeight),
 		}
 		list = append(list, model)
 	}

@@ -25,7 +25,6 @@ func Init_HAAS506LD1() error {
 		_HAAS506_DO_Init()
 		_HAAS506_LED_Init()
 		InitML307R4G(_ML307R_4G_PATH)
-		InitNetworkIfaceWatcher()
 	}
 	return nil
 }

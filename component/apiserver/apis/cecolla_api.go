@@ -185,14 +185,14 @@ func DeleteCecolla(c *gin.Context, ruleEngine typex.Rhilex) {
 		c.JSON(common.HTTP_OK, common.Error400(fmt.Errorf("Cecolla already bind to device:%s", bindingedCecolla.Value)))
 		return
 	}
-	txErr := interdb.DB().Transaction(func(tx *gorm.DB) error {
+	txErr := interdb.InterDb().Transaction(func(tx *gorm.DB) error {
 		Group := service.GetResourceGroup(uuid)
 		err3 := service.DeleteCecolla(uuid)
 		if err3 != nil {
 			return err3
 		}
 		// 解除关联
-		err2 := interdb.DB().Where("gid=? and rid =?", Group.UUID, uuid).
+		err2 := interdb.InterDb().Where("gid=? and rid =?", Group.UUID, uuid).
 			Delete(&model.MGenericGroupRelation{}).Error
 		if err2 != nil {
 			return err2

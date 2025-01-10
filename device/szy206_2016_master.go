@@ -52,6 +52,7 @@ type SZY206_2016_MasterGatewayMainConfig struct {
 	HostConfig    resconfig.HostConfig                  `json:"hostConfig"`
 	UartConfig    resconfig.UartConfig                  `json:"uartConfig"`
 	CecollaConfig resconfig.CecollaConfig               `json:"cecollaConfig"`
+	AlarmConfig   resconfig.AlarmConfig                 `json:"alarmConfig"`
 }
 
 /**
@@ -115,7 +116,7 @@ func (gw *SZY206_2016_MasterGateway) Init(devId string, configMap map[string]int
 		return nil
 	}
 	var DLT645_ModbusPointList []SZY206_2016_DataPoint
-	PointLoadErr := interdb.DB().Table("m_szy2062016_data_points").
+	PointLoadErr := interdb.InterDb().Table("m_szy2062016_data_points").
 		Where("device_uuid=?", devId).Find(&DLT645_ModbusPointList).Error
 	if PointLoadErr != nil {
 		return PointLoadErr

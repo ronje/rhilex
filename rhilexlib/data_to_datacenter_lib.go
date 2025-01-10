@@ -182,7 +182,7 @@ func saveToDataCenter(schema_uuid string, RowList []kvp) error {
 	if err0 != nil {
 		return err0
 	}
-	err1 := datacenter.DB().Exec(Sql).Error
+	err1 := datacenter.DataCenterDb().Exec(Sql).Error
 	if err1 != nil {
 		return err1
 	}
@@ -276,7 +276,7 @@ func UpdateDataCenterLast(rx typex.Rhilex, uuid string) func(*lua.LState) int {
 		})
 		// SELECT id FROM data_center_%s ORDER BY id DESC LIMIT 1;
 		id := -1
-		if err := datacenter.DB().
+		if err := datacenter.DataCenterDb().
 			Raw(fmt.Sprintf("SELECT id FROM data_center_%s ORDER BY id DESC LIMIT 1;",
 				schema_uuid)).Scan(&id).Error; err != nil {
 			l.Push(lua.LString(err.Error()))
@@ -330,7 +330,7 @@ func updateLast(schema_uuid string, RowList []kvp) error {
 	if err0 != nil {
 		return err0
 	}
-	err1 := datacenter.DB().Exec(Sql).Error
+	err1 := datacenter.DataCenterDb().Exec(Sql).Error
 	if err1 != nil {
 		return err1
 	}

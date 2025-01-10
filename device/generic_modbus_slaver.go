@@ -44,6 +44,7 @@ type ModbusSlaverConfig struct {
 	HostConfig    resconfig.HostConfig     `json:"hostConfig"`
 	UartConfig    resconfig.UartConfig     `json:"uartConfig"`
 	CecollaConfig resconfig.CecollaConfig  `json:"cecollaConfig"`
+	AlarmConfig   resconfig.AlarmConfig    `json:"alarmConfig"`
 }
 
 type ModbusSlaver struct {
@@ -75,6 +76,22 @@ func NewGenericModbusSlaver(e typex.Rhilex) typex.XDevice {
 			DataBits: 8,
 			Parity:   "N",
 			StopBits: 1,
+		},
+		CecollaConfig: resconfig.CecollaConfig{
+			Enable: func() *bool {
+				b := false
+				return &b
+			}(),
+			EnableCreateSchema: func() *bool {
+				b := true
+				return &b
+			}(),
+		},
+		AlarmConfig: resconfig.AlarmConfig{
+			Enable: func() *bool {
+				b := false
+				return &b
+			}(),
 		},
 	}
 

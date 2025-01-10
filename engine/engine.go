@@ -22,10 +22,12 @@ import (
 
 	lua "github.com/hootrhino/gopher-lua"
 	"github.com/hootrhino/rhilex/component/aibase"
+	"github.com/hootrhino/rhilex/component/alarmcenter"
 	"github.com/hootrhino/rhilex/component/applet"
 	"github.com/hootrhino/rhilex/component/cecollalet"
 	"github.com/hootrhino/rhilex/component/crontask"
 	datacenter "github.com/hootrhino/rhilex/component/datacenter"
+	"github.com/hootrhino/rhilex/component/eventbus"
 	intercache "github.com/hootrhino/rhilex/component/intercache"
 	"github.com/hootrhino/rhilex/component/interdb"
 	"github.com/hootrhino/rhilex/component/interkv"
@@ -81,20 +83,24 @@ func InitRuleEngine(config typex.RhilexConfig) typex.Rhilex {
 	}
 	// Init Security License
 	security.InitSecurityLicense()
-	// Internal DB
-	interdb.InitInterDb(__DefaultRuleEngine)
+	// Init EventBus
+	eventbus.InitEventBus(__DefaultRuleEngine)
+	// Init Internal DB
+	interdb.InitAll(__DefaultRuleEngine)
+	alarmcenter.InitAll(__DefaultRuleEngine)
+	internotify.InitAll(__DefaultRuleEngine)
+	datacenter.InitAll(__DefaultRuleEngine)
+	lostcache.InitAll(__DefaultRuleEngine)
+	// Init Alarm Center
+	alarmcenter.InitAlarmCenter(__DefaultRuleEngine)
 	// Data center: future version maybe support
 	datacenter.InitDataCenter(__DefaultRuleEngine)
-	// Lost Data Cache
-	lostcache.InitLostCacheDb(__DefaultRuleEngine)
 	// Internal kv Store
 	interkv.InitInterKVStore(core.GlobalConfig.MaxKvStoreSize)
 	// SuperVisor Admin
 	supervisor.InitResourceSuperVisorAdmin(__DefaultRuleEngine)
 	// Init Global Value Registry
 	intercache.InitGlobalValueRegistry(__DefaultRuleEngine)
-	// Internal Bus
-	internotify.InitInternalEventBus(__DefaultRuleEngine, core.GlobalConfig.MaxQueueSize)
 	// Internal Metric
 	intermetric.InitInternalMetric(__DefaultRuleEngine)
 	// lua applet manager
@@ -126,9 +132,10 @@ func InitRuleEngine(config typex.RhilexConfig) typex.Rhilex {
 *
  */
 func (e *RuleEngine) Start() *typex.RhilexConfig {
-	// RuleEngine Cache Slot
+	// RuleEngine __DefaultRuleEngine
 	intercache.RegisterSlot("__DefaultRuleEngine")
-	intercache.RegisterSlot("__CecollaBinding")
+	// RegisterSlot __DeviceConfigMap
+	intercache.RegisterSlot("__DeviceConfigMap")
 	// Internal BUS
 	interqueue.StartXQueue()
 	return e.Config
@@ -145,7 +152,7 @@ func (e *RuleEngine) GetConfig() *typex.RhilexConfig {
 func (e *RuleEngine) Stop() {
 	glogger.GLogger.Info("Ready to stop RHILEX")
 	crontask.StopCronRebootExecutor()
-	// 资源
+	// 资源 TODO: 后期重构设备资源等，独立资源管理器。
 	for _, inEnd := range e.InEnds.Values() {
 		if inEnd.Source != nil {
 			glogger.GLogger.Infof("Stop InEnd:(%s,%s)", inEnd.Name, inEnd.UUID)
@@ -168,6 +175,8 @@ func (e *RuleEngine) Stop() {
 		device.Device.Stop()
 		glogger.GLogger.Infof("Stop Device:(%s) Successfully", device.Name)
 	}
+	// Stop Supervisor Admin
+	supervisor.StopSupervisorAdmin()
 	// Stop Applet
 	glogger.GLogger.Info("Stop Applet Runtime")
 	applet.Stop()
@@ -183,24 +192,36 @@ func (e *RuleEngine) Stop() {
 	// Stop transceiver
 	glogger.GLogger.Info("Stop transceiver")
 	transceiver.Stop()
-	// UnRegister __DefaultRuleEngine
-	intercache.UnRegisterSlot("__DefaultRuleEngine")
-	// UnRegister __DeviceConfigMap
-	intercache.UnRegisterSlot("__DeviceConfigMap")
-	// Cecolla bindinged Config
-	intercache.UnRegisterSlot("__CecollaBinding")
+	// Stop Alarm Center
+	glogger.GLogger.Info("Stop Alarm Center")
+	alarmcenter.StopAlarmCenter()
+	glogger.GLogger.Info("Stop Alarm Center Successfully")
 	// Stop PluginType Manager
 	glogger.GLogger.Info("Stop PluginType Manager")
 	rhilexmanager.DefaultPluginTypeManager.Stop()
 	glogger.GLogger.Info("Stop PluginType Successfully")
 	// END
+	// UnRegister __DefaultRuleEngine
+	intercache.UnRegisterSlot("__DefaultRuleEngine")
+	// UnRegister __DeviceConfigMap
+	intercache.UnRegisterSlot("__DeviceConfigMap")
+	// Stop Internal Database
+	glogger.GLogger.Info("Stop Internal Database")
+	interdb.StopAll()
+	alarmcenter.StopAll()
+	datacenter.StopAll()
+	lostcache.StopAll()
+	internotify.StopAll()
+	// Stop EventBus
+	eventbus.Stop()
+	glogger.GLogger.Info("Stop Internal Database Successfully")
 	glogger.GLogger.Info("Stop RHILEX successfully")
 	glogger.Close()
 }
 
 // 核心功能: Work, 主要就是推流进队列
 func (e *RuleEngine) WorkInEnd(in *typex.InEnd, data string) (bool, error) {
-	if err := interqueue.DefaultXQueue.PushInQueue(in, data); err != nil {
+	if err := interqueue.PushInQueue(in, data); err != nil {
 		return false, err
 	}
 	return true, nil
@@ -208,7 +229,7 @@ func (e *RuleEngine) WorkInEnd(in *typex.InEnd, data string) (bool, error) {
 
 // 核心功能: Work, 主要就是推流进队列
 func (e *RuleEngine) WorkDevice(Device *typex.Device, data string) (bool, error) {
-	if err := interqueue.DefaultXQueue.PushDeviceQueue(Device, data); err != nil {
+	if err := interqueue.PushDeviceQueue(Device, data); err != nil {
 		return false, err
 	}
 	return true, nil

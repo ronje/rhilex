@@ -16,11 +16,9 @@
 package source
 
 import (
-	"context"
 	"encoding/json"
-	"fmt"
 
-	"github.com/hootrhino/rhilex/component/internotify"
+	"github.com/hootrhino/rhilex/component/eventbus"
 	"github.com/hootrhino/rhilex/typex"
 	"github.com/hootrhino/rhilex/utils"
 )
@@ -42,15 +40,27 @@ type __InternalEventSourceConfig struct {
 type InternalEventSource struct {
 	typex.XStatus
 	mainConfig __InternalEventSourceConfig
+	subscriber eventbus.Subscriber
 }
 
 func NewInternalEventSource(r typex.Rhilex) typex.XSource {
-	s := InternalEventSource{}
-	s.mainConfig = __InternalEventSourceConfig{
+	u := InternalEventSource{}
+	u.mainConfig = __InternalEventSourceConfig{
 		Type: "ALL",
 	}
-	s.RuleEngine = r
-	return &s
+	u.subscriber = eventbus.Subscriber{
+		Callback: func(Topic string, Event eventbus.EventMessage) {
+			bytes, _ := json.Marshal(event{
+				Type:  Event.Type,
+				Event: Event.Event,
+				Ts:    Event.Ts,
+				Info:  Event.Payload,
+			})
+			u.RuleEngine.WorkInEnd(u.RuleEngine.GetInEnd(u.PointId), string(bytes))
+		},
+	}
+	u.RuleEngine = r
+	return &u
 }
 
 func (u *InternalEventSource) Init(inEndId string, configMap map[string]interface{}) error {
@@ -64,7 +74,7 @@ func (u *InternalEventSource) Init(inEndId string, configMap map[string]interfac
 func (u *InternalEventSource) Start(cctx typex.CCTX) error {
 	u.Ctx = cctx.Ctx
 	u.CancelCTX = cctx.CancelCTX
-	u.startInternalEventQueue()
+	eventbus.Subscribe("*", &u.subscriber)
 	return nil
 
 }
@@ -74,6 +84,7 @@ func (u *InternalEventSource) Status() typex.SourceState {
 }
 
 func (u *InternalEventSource) Stop() {
+	eventbus.UnSubscribe(u.PointId, &u.subscriber)
 	if u.CancelCTX != nil {
 		u.CancelCTX()
 	}
@@ -82,7 +93,6 @@ func (u *InternalEventSource) Stop() {
 func (u *InternalEventSource) Details() *typex.InEnd {
 	return u.RuleEngine.GetInEnd(u.PointId)
 }
-
 
 // 来自外面的数据
 func (*InternalEventSource) DownStream([]byte) (int, error) {
@@ -105,48 +115,4 @@ type event struct {
 	Event string      `json:"event"`
 	Ts    uint64      `json:"ts"`
 	Info  interface{} `json:"info"`
-}
-
-/*
-*
-* 从内部总线拿数据
-*
- */
-func (u *InternalEventSource) startInternalEventQueue() {
-	go func(ctx context.Context) {
-		Queue := make(chan internotify.BaseEvent, 64)
-		ID := fmt.Sprintf("InternalEventSource:%s", u.PointId)
-		internotify.AddSubscriber(internotify.Subscriber{
-			Id:      ID,
-			Channel: &Queue,
-		})
-		defer internotify.RemoveSubscriber(ID)
-		for {
-			select {
-			case <-ctx.Done():
-				return
-			case Event := <-Queue:
-				if u.mainConfig.Type == "ALL" {
-					bytes, _ := json.Marshal(event{
-						Type:  Event.Type,
-						Event: Event.Event,
-						Ts:    Event.Ts,
-						Info:  Event.Info,
-					})
-					u.RuleEngine.WorkInEnd(u.RuleEngine.GetInEnd(u.PointId), string(bytes))
-					continue
-				}
-				if u.mainConfig.Type == Event.Type {
-					bytes, _ := json.Marshal(event{
-						Type:  Event.Type,
-						Event: Event.Event,
-						Ts:    Event.Ts,
-						Info:  Event.Info,
-					})
-					u.RuleEngine.WorkInEnd(u.RuleEngine.GetInEnd(u.PointId), string(bytes))
-					continue
-				}
-			}
-		}
-	}(u.Ctx)
 }

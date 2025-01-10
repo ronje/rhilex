@@ -37,7 +37,6 @@ type RhilexConfig struct {
 	LogMaxAge             int      `ini:"log_max_age" json:"logMaxAge"`
 	LogCompress           bool     `ini:"log_compress" json:"logCompress"`
 	MaxKvStoreSize        int      `ini:"max_kv_store_size" json:"maxKvStoreSize"`
-	MaxLostCacheSize      int      `ini:"max_lost_cache_size" json:"maxLostCacheSize"`
 	ExtLibs               []string `ini:"ext_libs,,allowshadow" json:"extLibs"`
 	DataSchemaSecret      []string `ini:"dataschema_secrets,,allowshadow" json:"dataSchemaSecret"`
 }

@@ -15,7 +15,7 @@ import (
  */
 func UpdateWlanConfig(MNetworkConfig model.MNetworkConfig) error {
 	// 使用事务来确保数据的一致性
-	return interdb.DB().Transaction(func(tx *gorm.DB) error {
+	return interdb.InterDb().Transaction(func(tx *gorm.DB) error {
 		// 检查记录是否存在
 		var existingConfig model.MNetworkConfig
 		if err := tx.Where("interface = ? AND type = ?", MNetworkConfig.Interface, "WIFI").
@@ -36,14 +36,15 @@ func UpdateWlanConfig(MNetworkConfig model.MNetworkConfig) error {
  */
 func GetWlanConfig(Interface string) (model.MNetworkConfig, error) {
 	MWifiConfig := model.MNetworkConfig{}
-	return MWifiConfig, interdb.DB().
+	result := interdb.InterDb().
 		Where("interface=? and type=\"WIFI\"", Interface).
-		Find(&MWifiConfig).Error
+		Find(&MWifiConfig)
+	return MWifiConfig, result.Error
 }
 
 func AllWlanConfig() ([]model.MNetworkConfig, error) {
 	MNetworkConfig := []model.MNetworkConfig{}
-	err := interdb.DB().
+	err := interdb.InterDb().
 		Where("type =\"WIFI\"").
 		Find(&MNetworkConfig).Error
 	return MNetworkConfig, err

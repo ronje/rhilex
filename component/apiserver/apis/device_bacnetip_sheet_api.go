@@ -79,7 +79,7 @@ func BacnetIpSheetImport(c *gin.Context, ruleEngine typex.Rhilex) {
 		Type string
 	}
 	Device := DeviceDto{}
-	errDb := interdb.DB().Table("m_devices").
+	errDb := interdb.InterDb().Table("m_devices").
 		Where("uuid=?", deviceUuid).Find(&Device).Error
 	if errDb != nil {
 		c.JSON(common.HTTP_OK, common.Error400(errDb))
@@ -126,7 +126,7 @@ func BacnetIpSheetExport(c *gin.Context, ruleEngine typex.Rhilex) {
 	c.Header("Content-Disposition", fmt.Sprintf("attachment;filename=%v.xlsx",
 		time.Now().UnixMilli()))
 	var records []model.MBacnetDataPoint
-	result := interdb.DB().Model(&model.MBacnetDataPoint{}).
+	result := interdb.InterDb().Model(&model.MBacnetDataPoint{}).
 		Where("device_uuid=?", deviceUuid).Find(&records)
 	if result.Error != nil {
 		c.JSON(common.HTTP_OK, common.Error400(result.Error))
@@ -167,10 +167,10 @@ func BacnetIpSheetPageList(c *gin.Context, ruleEngine typex.Rhilex) {
 		return
 	}
 	deviceUuid, _ := c.GetQuery("device_uuid")
-	db := interdb.DB()
+	db := interdb.InterDb()
 	tx := db.Scopes(service.Paginate(*pager))
 	var count int64
-	err = interdb.DB().Model(&model.MBacnetDataPoint{}).
+	err = interdb.InterDb().Model(&model.MBacnetDataPoint{}).
 		Where("device_uuid=?", deviceUuid).Count(&count).Error
 	if err != nil {
 		c.JSON(common.HTTP_OK, common.Error400(err))

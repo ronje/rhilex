@@ -25,12 +25,12 @@ import (
 // 获取GenericGroup列表
 func AllGenericGroup() []model.MGenericGroup {
 	m := []model.MGenericGroup{}
-	interdb.DB().Find(&m)
+	interdb.InterDb().Find(&m)
 	return m
 }
 func ListByGroupType(t string) []model.MGenericGroup {
 	m := []model.MGenericGroup{}
-	interdb.DB().Where("type=?", t).Find(&m)
+	interdb.InterDb().Where("type=?", t).Find(&m)
 	return m
 }
 
@@ -50,14 +50,14 @@ WHERE uuid IN (
 	  WHERE type = 'USER_LUA_TEMPLATE' AND gid = ?
 ) ORDER BY created_at DESC;`
 	m := []model.MUserLuaTemplate{}
-	interdb.DB().Raw(`SELECT * FROM m_user_lua_templates `+sql, uuid).Find(&m)
+	interdb.InterDb().Raw(`SELECT * FROM m_user_lua_templates `+sql, uuid).Find(&m)
 	return m
 
 }
 
 func GetGenericGroupWithUUID(uuid string) (*model.MGenericGroup, error) {
 	m := model.MGenericGroup{}
-	if err := interdb.DB().
+	if err := interdb.InterDb().
 		Where("uuid=?", uuid).
 		First(&m).Error; err != nil {
 		return nil, err
@@ -68,19 +68,19 @@ func GetGenericGroupWithUUID(uuid string) (*model.MGenericGroup, error) {
 
 // 删除GenericGroup
 func DeleteGenericGroup(uuid string) error {
-	return interdb.DB().
+	return interdb.InterDb().
 		Where("uuid=?", uuid).
 		Delete(&model.MGenericGroup{}).Error
 }
 
 // 创建GenericGroup
 func InsertGenericGroup(GenericGroup *model.MGenericGroup) error {
-	return interdb.DB().Create(GenericGroup).Error
+	return interdb.InterDb().Create(GenericGroup).Error
 }
 
 // 创建GenericGroup
 func InitGenericGroup(GenericGroup *model.MGenericGroup) error {
-	return interdb.DB().Model(GenericGroup).
+	return interdb.InterDb().Model(GenericGroup).
 		Where("type=?", GenericGroup.Type).
 		FirstOrCreate(GenericGroup).Error
 }
@@ -88,12 +88,12 @@ func InitGenericGroup(GenericGroup *model.MGenericGroup) error {
 // 更新GenericGroup
 func UpdateGenericGroup(GenericGroup *model.MGenericGroup) error {
 	m := model.MGenericGroup{}
-	if err := interdb.DB().
+	if err := interdb.InterDb().
 		Where("uuid=?", GenericGroup.UUID).
 		First(&m).Error; err != nil {
 		return err
 	} else {
-		interdb.DB().Model(m).Updates(*GenericGroup)
+		interdb.InterDb().Model(m).Updates(*GenericGroup)
 		return nil
 	}
 }
@@ -105,7 +105,7 @@ func UpdateGenericGroup(GenericGroup *model.MGenericGroup) error {
  */
 func BindResource(gid, rid string) error {
 	m := model.MGenericGroup{}
-	if err := interdb.DB().Where("uuid=?", gid).First(&m).Error; err != nil {
+	if err := interdb.InterDb().Where("uuid=?", gid).First(&m).Error; err != nil {
 		return err
 	}
 	Relation := model.MGenericGroupRelation{
@@ -113,7 +113,7 @@ func BindResource(gid, rid string) error {
 		Gid:  m.UUID,
 		Rid:  rid,
 	}
-	if err := interdb.DB().Save(&Relation).Error; err != nil {
+	if err := interdb.InterDb().Save(&Relation).Error; err != nil {
 		return err
 	}
 	return nil
@@ -125,7 +125,7 @@ func BindResource(gid, rid string) error {
 *
  */
 func UnBindResource(gid, rid string) error {
-	return interdb.DB().
+	return interdb.InterDb().
 		Where("gid=? and rid =?", gid, rid).
 		Delete(&model.MGenericGroupRelation{}).Error
 }
@@ -138,7 +138,7 @@ func UnBindResource(gid, rid string) error {
 func CheckBindResource(gid string) (uint, error) {
 	sql := `SELECT count(*) FROM m_generic_group_relations WHERE gid = ?;`
 	count := 0
-	err := interdb.DB().Raw(sql, gid).Find(&count).Error
+	err := interdb.InterDb().Raw(sql, gid).Find(&count).Error
 	if err != nil {
 		return 0, err
 	}
@@ -153,7 +153,7 @@ func CheckBindResource(gid string) (uint, error) {
 func CheckAlreadyBinding(gid, rid string) (uint, error) {
 	sql := `SELECT count(*) FROM m_generic_group_relations WHERE gid = ? and rid = ?;`
 	count := 0
-	err := interdb.DB().Raw(sql, gid, rid).Find(&count).Error
+	err := interdb.InterDb().Raw(sql, gid, rid).Find(&count).Error
 	if err != nil {
 		return 0, err
 	}
@@ -166,7 +166,7 @@ func CheckAlreadyBinding(gid, rid string) (uint, error) {
 *
  */
 func ReBindResource(action func(tx *gorm.DB) error, Rid, Gid string) error {
-	return interdb.DB().Transaction(func(tx *gorm.DB) error {
+	return interdb.InterDb().Transaction(func(tx *gorm.DB) error {
 		// 1 执行的操作
 		if err0 := action(tx); err0 != nil {
 			return err0
@@ -222,6 +222,6 @@ SELECT m_generic_groups.*
  WHERE m_generic_group_relations.rid = ?;
 `
 	m := model.MGenericGroup{}
-	interdb.DB().Raw(sql, rid).Find(&m)
+	interdb.InterDb().Raw(sql, rid).Find(&m)
 	return m
 }

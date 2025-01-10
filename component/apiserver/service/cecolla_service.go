@@ -22,7 +22,7 @@ import (
 
 func AllCecollas() []model.MCecolla {
 	Cecollas := []model.MCecolla{}
-	interdb.DB().Find(&Cecollas)
+	interdb.InterDb().Find(&Cecollas)
 	return Cecollas
 }
 
@@ -31,40 +31,40 @@ func AllCecollas() []model.MCecolla {
 // 获取设备列表
 func GetMCecollaWithUUID(uuid string) (*model.MCecolla, error) {
 	m := new(model.MCecolla)
-	return m, interdb.DB().Where("uuid=?", uuid).First(m).Error
+	return m, interdb.InterDb().Where("uuid=?", uuid).First(m).Error
 }
 
 // 检查名称是否重复
 func CheckCecollaCount(T string) int64 {
 	Count := int64(0)
-	interdb.DB().Model(model.MCecolla{}).Where("type=?", T).Count(&Count)
+	interdb.InterDb().Model(model.MCecolla{}).Where("type=?", T).Count(&Count)
 	return Count
 }
 
 // 检查名称是否重复
 func CheckCecollaNameDuplicate(name string) bool {
 	Count := int64(0)
-	interdb.DB().Model(model.MCecolla{}).Where("name=?", name).Count(&Count)
+	interdb.InterDb().Model(model.MCecolla{}).Where("name=?", name).Count(&Count)
 	return Count > 0
 }
 
 // 删除设备
 func DeleteCecolla(uuid string) error {
-	return interdb.DB().Where("uuid=?", uuid).Delete(&model.MCecolla{}).Error
+	return interdb.InterDb().Where("uuid=?", uuid).Delete(&model.MCecolla{}).Error
 }
 
 // 创建设备
 func InsertCecolla(o *model.MCecolla) error {
-	return interdb.DB().Table("m_Cecollas").Create(o).Error
+	return interdb.InterDb().Table("m_Cecollas").Create(o).Error
 }
 
 // 更新设备信息
 func UpdateCecolla(uuid string, o *model.MCecolla) error {
 	m := model.MCecolla{}
-	if err := interdb.DB().Where("uuid=?", uuid).First(&m).Error; err != nil {
+	if err := interdb.InterDb().Where("uuid=?", uuid).First(&m).Error; err != nil {
 		return err
 	} else {
-		interdb.DB().Model(m).Updates(*o)
+		interdb.InterDb().Model(m).Updates(*o)
 		return nil
 	}
 }
@@ -85,7 +85,7 @@ WHERE uuid IN (
 ) ORDER BY created_at DESC;`
 
 	m := []model.MCecolla{}
-	interdb.DB().Raw(`SELECT * FROM m_cecollas `+sql, gid).Find(&m)
+	interdb.InterDb().Raw(`SELECT * FROM m_cecollas `+sql, gid).Find(&m)
 	return m
 
 }
@@ -93,9 +93,9 @@ func PageCecolla(current, size int) (int64, []model.MCecolla) {
 	sql := `SELECT * FROM m_cecollas ORDER BY created_at DESC limit ? offset ?;`
 	MCecollas := []model.MCecolla{}
 	offset := (current - 1) * size
-	interdb.DB().Raw(sql, size, offset).Find(&MCecollas)
+	interdb.InterDb().Raw(sql, size, offset).Find(&MCecollas)
 	var count int64
-	interdb.DB().Model(&model.MCecolla{}).Count(&count)
+	interdb.InterDb().Model(&model.MCecolla{}).Count(&count)
 	return count, MCecollas
 }
 
@@ -115,7 +115,7 @@ SELECT * FROM m_cecollas WHERE uuid IN (
 ) ORDER BY created_at DESC limit ? offset ?;`
 	MCecollas := []model.MCecolla{}
 	offset := (current - 1) * size
-	interdb.DB().Raw(sql, gid, size, offset).Find(&MCecollas)
+	interdb.InterDb().Raw(sql, gid, size, offset).Find(&MCecollas)
 	var count int64
 	countSql := `SELECT count(id)
 FROM m_cecollas
@@ -129,6 +129,6 @@ WHERE type = 'CECOLLA' AND
 gid = ?
 );
 `
-	interdb.DB().Raw(countSql, gid).Scan(&count)
+	interdb.InterDb().Raw(countSql, gid).Scan(&count)
 	return count, MCecollas
 }

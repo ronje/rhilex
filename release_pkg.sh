@@ -124,10 +124,10 @@ gen_changelog() {
     echo -e $log
 }
 
-uoload_to_file_server(){
+upload_to_file_server(){
     BASIC_AUTH="rhilex-file-server-admin:rhilex-file-server-admin_secret"
     VERSION="$(git describe --tags $(git rev-list --tags --max-count=1))"
-    cd _release
+    cd _build/_release/
     UPLOAD_URL="http://112.5.155.64:10120/release/${VERSION}/"
     ZIP_FILES=$(find . -maxdepth 1 -type f -name "rhilex*.zip")
     if [ -z "$ZIP_FILES" ]; then
@@ -170,16 +170,44 @@ check_cmd() {
     done
 
 }
-main(){
+build_project() {
     check_cmd
     init_env
     cp -r $(ls | egrep -v '^_build$') ./_build/
     cd ./_build/
     cross_compile
-    uoload_to_file_server
     gen_changelog
 }
-#
-#-----------------------------------
-#
-main
+
+display_help() {
+    cat << EOF
+Usage: $0 <command>
+
+Commands:
+  upload   Uploads the build to the file server.
+  build    Builds the project.
+  help     Displays this help message.
+
+EOF
+}
+
+main() {
+    case "$1" in
+        upload)
+            upload_to_file_server
+        ;;
+        build)
+            build_project
+        ;;
+        help)
+            display_help
+        ;;
+        *)
+            echo "Error: Unknown command '$1'"
+            display_help
+            exit 1
+        ;;
+    esac
+}
+
+main "$@"

@@ -1,157 +1,138 @@
-# 通用协议指南
+### 协议指南文档
 
-## 1. 概述
-本协议设计用于简化设备间的数据通信，确保数据传输的稳定性和可靠性。协议使用固定格式的帧进行数据封装，并包括了包头、有效负载和校验机制。通过此协议，设备可以在串口通信中有效地进行数据交换，确保数据的完整性和正确性。
+#### 1. 概述
+![1735542530017](image/readme/1735542530017.png)
 
-### 主要特点：
-- **包头**：固定格式，便于数据帧的解析。
-- **数据长度**：每个数据包的长度是固定的，并包含了有效负载数据长度信息。
-- **校验和**：通过 CRC 校验来保证数据的完整性。
-- **错误处理**：在解析过程中，对于恶意数据包或数据长度不一致的情况，会采取丢弃或恢复的机制，避免对正常数据包的干扰。
 
-## 2. 数据帧结构
+本协议用于串口通信的数据包传输，数据包格式包括包头、数据体、包尾以及校验机制。协议遵循以下结构：
 
-### 2.1 包头结构 (`Header`)
+```
+| Header (2 bytes) | Length (1 byte) | Data (variable) | Checksum (1 byte) | Tail (2 bytes) |
+```
 
-包头结构包含以下字段：
+- **Header (2 bytes)**: 固定的包头标识符，默认是 `0xAF 0x00`。
+- **Length (1 byte)**: 数据体的长度，指定数据部分的字节数。
+- **Data (variable)**: 数据内容，长度由 `Length` 字段指定。
+- **Checksum (1 byte)**: 校验和字段，用于验证数据的完整性。
+- **Tail (2 bytes)**: 固定的包尾标识符，默认是 `0xFA 0x00`。
 
-- **Id**：2字节，标识帧的唯一ID。
-- **Type**：2字节，表示数据帧的类型。
-- **Length**：2字节，表示数据帧的有效负载（Payload）的长度。
+#### 2. 数据包格式
 
-```go
-type Header struct {
-    Id     [2]byte  // 包ID
-    Type   [2]byte  // 包类型
-    Length [2]byte  // 有效负载长度
+- **包头 (Header)**：数据包的起始标志，使用固定的 2 字节表示。
+- **长度 (Length)**：1 字节，指定随后的数据体部分的长度（即 Data 部分的字节数）。
+- **数据体 (Data)**：长度为 `Length` 字段指定的可变长度部分。
+- **校验和 (Checksum)**：1 字节，用于简单的校验计算，校验和是数据体部分所有字节的异或值。
+- **包尾 (Tail)**：数据包的结束标志，使用固定的 2 字节表示。
+
+#### 3. 校验和计算
+
+校验和计算方式是：对数据体部分（不包括头部和尾部）进行按位异或操作，得到的结果就是校验和。
+
+例如：
+
+- **数据体**：`0x01 0x02 0x03`
+- **校验和**：`0x01 ^ 0x02 ^ 0x03 = 0x00`
+
+#### 4. 示例
+
+假设我们有如下的数据包：
+```
+| Header    | Length | Data           | Checksum | Tail      |
+| --------- | ------ | -------------- | -------- | --------- |
+| 0xAF 0x00 | 0x03   | 0x01 0x02 0x03 | 0x00     | 0xFA 0x00 |
+```
+
+- **Header**: `0xAF 0x00`
+- **Length**: `0x03` (表示数据体长度为 3 字节)
+- **Data**: `0x01 0x02 0x03`
+- **Checksum**: `0x00` (计算方式是 `0x01 ^ 0x02 ^ 0x03`)
+- **Tail**: `0xFA 0x00`
+
+#### 5. 错误处理
+
+- **包头错误**：如果包头不匹配（即不是 `0xAF 0x00`），则丢弃该包。
+- **包尾错误**：如果包尾不匹配（即不是 `0xFA 0x00`），则丢弃该包。
+- **长度错误**：如果数据体的实际长度与 `Length` 字段不符，则丢弃该包。
+- **校验错误**：如果计算出的校验和与包中的校验和不匹配，则丢弃该包。
+
+### Arduino 示例
+
+假设我们希望使用 Arduino 发送符合上述协议的数据包。下面是一个示例代码，它使用 Arduino 的串口来发送数据包。
+
+```cpp
+#define HEADER1 0xAF
+#define HEADER2 0x00
+#define TAIL1   0xFA
+#define TAIL2   0x00
+
+void setup() {
+  Serial.begin(9600);  // 设置串口通信波特率为9600
+}
+
+void loop() {
+  // 示例数据体
+  byte data[] = {0x01, 0x02, 0x03};
+
+  // 计算校验和
+  byte checksum = 0;
+  for (int i = 0; i < sizeof(data); i++) {
+    checksum ^= data[i];
+  }
+
+  // 构造数据包
+  byte packet[5 + sizeof(data)] = {
+    HEADER1, HEADER2,  // 包头
+    sizeof(data),      // 数据长度
+  };
+
+  // 将数据体复制到包中
+  for (int i = 0; i < sizeof(data); i++) {
+    packet[3 + i] = data[i];
+  }
+
+  // 校验和
+  packet[3 + sizeof(data)] = checksum;
+
+  // 包尾
+  packet[4 + sizeof(data)] = TAIL1;
+  packet[5 + sizeof(data)] = TAIL2;
+
+  // 发送数据包
+  Serial.write(packet, sizeof(packet));
+
+  // 暂停一段时间，模拟数据包发送的间隔
+  delay(1000);
 }
 ```
 
-### 2.2 数据帧结构 (`AppLayerFrame`)
+#### 代码说明：
 
-数据帧包括以下几个部分：
+1. **串口初始化**：使用 `Serial.begin(9600)` 初始化串口通信，设置波特率为 9600。
+2. **数据包构造**：
+   - 头部（`0xAF 0x00`）和尾部（`0xFA 0x00`）是固定的。
+   - 使用 `sizeof(data)` 来表示数据体的长度。
+   - 计算数据体部分的校验和。
+   - 构造完整的数据包，并使用 `Serial.write()` 发送出去。
+3. **数据发送**：每发送一次数据包后，延迟 1 秒，再发送下一个包。
 
-- **Delimiter**：2字节的帧起始标识符，用于同步帧的开始。
-- **Header**：包头，包含 `Id`、`Type`、`Length`。
-- **Payload**：数据负载，实际传输的数据。
-- **CrcSum**：4字节的 CRC 校验和，用于确保数据在传输过程中的完整性。
-- **ReverseDelimiter**：2字节的帧结束标识符。
+### 如何对接？
 
-```go
-type AppLayerFrame struct {
-    Delimiter        [2]byte  // 起始标识符
-    Header           Header   // 包头
-    Payload          []byte   // 有效负载
-    CrcSum           [4]byte  // CRC 校验和
-    ReverseDelimiter [2]byte  // 结束标识符
-}
-```
+1. **串口设置**：确保 Arduino 和接收设备（例如，`Transport` 类实例）使用相同的串口参数（波特率、数据位、停止位等）。
+2. **协议一致性**：确保发送的数据包格式遵循本协议（包括包头、包尾、数据长度和校验和等）。
+3. **数据处理**：接收设备（例如，使用 `GenericByteParser`）应当正确解析收到的字节流。如果接收到符合协议的数据包，则进行进一步的处理；如果数据包不符合协议，则丢弃该包或报告错误。
 
-### 2.3 帧的组成
-每个数据帧的组成如下：
-```
-[Delimiter] [Header] [Payload] [CrcSum] [ReverseDelimiter]
-```
-- **Delimiter**：帧开始标识符，固定为 `0xAA 0xBB`。
-- **Header**：包头，包含包的 ID、类型和有效负载长度。
-- **Payload**：实际传输的数据。
-- **CrcSum**：对整个数据帧（包括包头、有效负载）计算的 CRC 校验值，确保数据在传输过程中未被篡改。
-- **ReverseDelimiter**：帧结束标识符，固定为 `0xBB 0xAA`。
+### 使用流程
 
-### 2.4 帧示例
-假设包头是 `0x01 0x02`，数据长度为 `0x05`，有效负载是 `0x11 0x22 0x33 0x44 0x55`，CRC 校验和为 `0xDEADBEEF`。完整的帧数据如下：
+1. **Arduino 端**：
+   - 编写并上传 Arduino 程序到设备。
+   - 程序会通过串口持续发送符合协议的数据包。
+2. **接收端（如 Raspberry Pi 或 PC）**：
+   - 启动接收程序，使用串口读取数据。
+   - 使用 `GenericByteParser` 解析接收到的数据包，校验包头、包尾、数据长度及校验和。
+   - 对有效数据进行处理（如存储、显示等）。
 
-```
-[0xAA 0xBB] [0x01 0x02 0x05] [0x11 0x22 0x33 0x44 0x55] [0xDE 0xAD 0xBE 0xEF] [0xBB 0xAA]
-```
+---
 
-## 3. 编解码规则
+### 总结
 
-### 3.1 编码规则
-
-**AppLayerFrame 编码 (`Encode`)**：
-1. 首先构造帧头 (`Header`)。
-2. 将帧头的各个字段（`Id`、`Type`、`Length`）编码成字节序列。
-3. 将有效负载（`Payload`）按照实际数据直接附加。
-4. 计算整个帧数据（包括包头和负载）的 CRC 校验和。
-5. 将 CRC 校验和附加到数据帧末尾。
-6. 将帧开始标识符（`Delimiter`）和帧结束标识符（`ReverseDelimiter`）加入数据帧。
-
-**编码示例**：
-
-```go
-func (frame *AppLayerFrame) Encode() ([]byte, error) {
-    // 编码包头
-    headerBytes, err := frame.Header.Encode()
-    if err != nil {
-        return nil, err
-    }
-
-    // 计算CRC
-    crc := crc32.ChecksumIEEE(append(headerBytes, frame.Payload...))
-
-    // 创建完整数据帧
-    data := append(frame.Delimiter[:], headerBytes...)
-    data = append(data, frame.Payload...)
-    data = append(data, crc...)
-    data = append(data, frame.ReverseDelimiter[:]...)
-
-    return data, nil
-}
-```
-
-### 3.2 解码规则
-
-**AppLayerFrame 解码 (`Decode`)**：
-1. 先检查帧的起始标识符（`Delimiter`）是否正确，确认数据帧的起始位置。
-2. 解码包头并解析 `Id`、`Type` 和 `Length`。
-3. 根据 `Length` 字段从数据中读取有效负载（`Payload`）。
-4. 提取并验证 CRC 校验和，确保数据没有被篡改。
-5. 检查帧的结束标识符（`ReverseDelimiter`）是否正确，确保数据帧结束。
-
-**解码示例**：
-
-```go
-func DecodeAppLayerFrame(data []byte) (AppLayerFrame, error) {
-    // 验证起始标识符
-    if data[0] != 0xAA || data[1] != 0xBB {
-        return AppLayerFrame{}, fmt.Errorf("invalid delimiter")
-    }
-
-    // 解码包头
-    header, err := DecodeHeader(data[2:])
-    if err != nil {
-        return AppLayerFrame{}, err
-    }
-
-    // 获取有效负载
-    payload := data[6 : 6+header.Length[0]]
-
-    // 验证 CRC 校验和
-    crc := crc32.ChecksumIEEE(data[:len(data)-4])
-    if !bytes.Equal(crc, data[len(data)-4:]) {
-        return AppLayerFrame{}, fmt.Errorf("CRC check failed")
-    }
-
-    // 验证结束标识符
-    if data[len(data)-2] != 0xBB || data[len(data)-1] != 0xAA {
-        return AppLayerFrame{}, fmt.Errorf("invalid reverse delimiter")
-    }
-
-    return AppLayerFrame{Header: header, Payload: payload}, nil
-}
-```
-
-## 4. 错误处理与恢复机制
-
-在数据解析过程中，可能会遇到以下情况：
-1. **无效包头**：当包头的起始标识符不正确时，丢弃当前数据并重新同步。
-2. **数据长度异常**：当 `Length` 字段的值与实际数据长度不符时，丢弃当前帧，恢复到下一个有效包。
-3. **CRC 校验失败**：如果校验和失败，认为数据已损坏，丢弃该帧并恢复。
-
-### 4.1 错误恢复机制
-为了提高协议的鲁棒性，当遇到恶意数据包或帧解析失败时，协议会将错误的数据暂时存储到错误缓冲区（`errorBuffer`）。在下次数据接收时，协议会尝试恢复缓冲区中的错误数据并继续解析。此机制确保了恶意数据不会阻止正常数据包的接收。
-
-## 5. 总结
-
-本协议提供了一种简单而强大的数据帧格式，能够确保数据传输的完整性和可靠性。通过固定的包头结构、数据长度字段、CRC 校验以及错误恢复机制，设备可以高效地进行数据通信并避免因恶意数据包导致的通信中断。
+以上协议设计提供了一种简单、可靠的串口通信协议，旨在确保数据传输的边界清晰并提供错误检测机制。通过确保包头和包尾标志、数据长度和校验和的验证，可以保证数据传输的完整性和正确性。Arduino 示例提供了一个简单的实现方式，便于与接收端进行对接。

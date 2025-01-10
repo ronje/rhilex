@@ -30,7 +30,7 @@ func GetCronRebootConfig() (*model.MCronRebootConfig, error) {
 	m.ID = 1
 	m.Enable = new(bool)
 	m.CronExpr = "0 0 0 0 0"
-	return m, interdb.DB().Model(m).First(m).Error
+	return m, interdb.InterDb().Model(m).First(m).Error
 }
 
 /**
@@ -38,5 +38,5 @@ func GetCronRebootConfig() (*model.MCronRebootConfig, error) {
  *
  */
 func UpdateMCronRebootConfig(o *model.MCronRebootConfig) error {
-	return interdb.DB().Model(o).Where("id=?", 1).Updates(o).Error
+	return interdb.InterDb().Model(o).Where("id=?", 1).Updates(o).Error
 }

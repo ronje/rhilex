@@ -54,6 +54,7 @@ type MBusEn13433MasterGatewayMainConfig struct {
 	MBusConfig    MBusConfig                           `json:"MBusConfig"`
 	UartConfig    resconfig.UartConfig                 `json:"uartConfig"`
 	CecollaConfig resconfig.CecollaConfig              `json:"cecollaConfig"`
+	AlarmConfig   resconfig.AlarmConfig                `json:"alarmConfig"`
 }
 
 /**
@@ -97,6 +98,22 @@ func NewMBusEn13433MasterGateway(e typex.Rhilex) typex.XDevice {
 			Parity:   "N",
 			StopBits: 1,
 		},
+		CecollaConfig: resconfig.CecollaConfig{
+			Enable: func() *bool {
+				b := false
+				return &b
+			}(),
+			EnableCreateSchema: func() *bool {
+				b := true
+				return &b
+			}(),
+		},
+		AlarmConfig: resconfig.AlarmConfig{
+			Enable: func() *bool {
+				b := false
+				return &b
+			}(),
+		},
 	}
 	gw.MBusDataPoints = map[string]MBusDataPoint{}
 	return gw
@@ -114,7 +131,7 @@ func (gw *MBusEn13433MasterGateway) Init(devId string, configMap map[string]inte
 		return errors.New("unsupported mode, only can be one of 'TCP' or 'UART'")
 	}
 	var ModbusPointList []MBusDataPoint
-	PointLoadErr := interdb.DB().Table("m_mbus_data_points").
+	PointLoadErr := interdb.InterDb().Table("m_mbus_data_points").
 		Where("device_uuid=?", devId).Find(&ModbusPointList).Error
 	if PointLoadErr != nil {
 		return PointLoadErr

@@ -120,7 +120,7 @@ func (dm *NgrokClient) startClient() error {
 		return err
 	}
 	if dm.mainConfig.LocalSchema == "tcp" {
-		ctx, cancel := context.WithCancel(typex.GCTX)
+		ctx, cancel := typex.NewCCTX()
 		dm.ctx = ctx
 		dm.cancel = cancel
 		go func() {
@@ -153,7 +153,7 @@ func (dm *NgrokClient) startClient() error {
 	}
 	// workable-logically-tarpon.ngrok-free.app
 	if dm.mainConfig.LocalSchema == "http" {
-		ctx, cancel := context.WithCancel(typex.GCTX)
+		ctx, cancel := typex.NewCCTX()
 		dm.ctx = ctx
 		dm.cancel = cancel
 		go func() {
@@ -186,7 +186,7 @@ func (dm *NgrokClient) startClient() error {
 
 	}
 	if dm.mainConfig.LocalSchema == "https" {
-		ctx, cancel := context.WithCancel(typex.GCTX)
+		ctx, cancel := typex.NewCCTX()
 		dm.ctx = ctx
 		dm.cancel = cancel
 		go func() {

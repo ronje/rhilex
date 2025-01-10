@@ -26,6 +26,7 @@ import (
 
 	"time"
 
+	"github.com/hootrhino/rhilex/component/alarmcenter"
 	intercache "github.com/hootrhino/rhilex/component/intercache"
 	"github.com/hootrhino/rhilex/component/interdb"
 	"github.com/hootrhino/rhilex/device/dmodbus"
@@ -74,11 +75,14 @@ type ModbusMasterCommonConfig struct {
 	EnableOptimize *bool  `json:"enableOptimize" validate:"required"`
 	MaxRegNum      uint16 `json:"maxRegNum" validate:"required"`
 }
+
+// Modbus配置参数
 type ModbusMasterConfig struct {
 	CommonConfig  ModbusMasterCommonConfig `json:"commonConfig" validate:"required"`
 	HostConfig    resconfig.HostConfig     `json:"hostConfig"`
 	UartConfig    resconfig.UartConfig     `json:"uartConfig"`
 	CecollaConfig resconfig.CecollaConfig  `json:"cecollaConfig"`
+	AlarmConfig   resconfig.AlarmConfig    `json:"alarmConfig"`
 }
 
 type ModbusMasterGroupedTag struct {
@@ -163,6 +167,12 @@ func NewGenericModbusMaster(e typex.Rhilex) typex.XDevice {
 				return &b
 			}(),
 		},
+		AlarmConfig: resconfig.AlarmConfig{
+			Enable: func() *bool {
+				b := false
+				return &b
+			}(),
+		},
 	}
 	mdev.Registers = map[string]*dmodbus.ModbusRegister{}
 	mdev.RegisterWithTags = map[string]*dmodbus.ModbusRegister{}
@@ -186,7 +196,7 @@ func (mdev *GenericModbusMaster) Init(devId string, configMap map[string]interfa
 
 	// 合并数据库里面的点位表
 	var ModbusPointList []ModbusPoint
-	modbusPointLoadErr := interdb.DB().Table("m_modbus_data_points").
+	modbusPointLoadErr := interdb.InterDb().Table("m_modbus_data_points").
 		Where("device_uuid=?", devId).Find(&ModbusPointList).Error
 	if modbusPointLoadErr != nil {
 		return modbusPointLoadErr
@@ -414,6 +424,17 @@ func (mdev *GenericModbusMaster) Start(cctx typex.CCTX) error {
 							glogger.GLogger.Error(errMarshal)
 						} else {
 							mdev.RuleEngine.WorkDevice(mdev.Details(), string(bytes))
+						}
+					}
+				}
+				// 是否预警
+				if *mdev.mainConfig.AlarmConfig.Enable {
+					if len(ReadRegisterValues) > 0 {
+						Input := map[string]any{}
+						Input["data"] = ReadRegisterValues
+						_, err := alarmcenter.Input(mdev.mainConfig.AlarmConfig.AlarmRuleId, mdev.PointId, Input)
+						if err != nil {
+							glogger.GLogger.Error(err)
 						}
 					}
 				}
@@ -731,7 +752,6 @@ func (mdev *GenericModbusMaster) modbusSingleRead() []ReadRegisterValue {
 					mdev.RuleEngine.WorkDevice(mdev.Details(), string(bytes))
 				}
 			}
-
 		}
 		// 2 字节
 		if r.Function == dmodbus.READ_DISCRETE_INPUT {

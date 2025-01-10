@@ -13,25 +13,13 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-package datacenter
+package alarmcenter
 
-// 更新表结构
-// PRAGMA table_info ('table')
-func ListAllColumn() {
+import "github.com/hootrhino/rhilex/typex"
 
+func InitAll(e typex.Rhilex) {
+	InitAlarmCenter(e)
 }
 
-// ALTER TABLE new_table_name ADD COLUMN new_column_name type;
-func AddColumn() {
-
-}
-
-// ALTER TABLE new_table_name RENAME TO old_table_name;
-func UpdateTable() {
-
-}
-
-// ALTER TABLE example_table DROP COLUMN example_column;
-func DropColumn() {
-
+func StopAll() {
 }
