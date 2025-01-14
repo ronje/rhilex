@@ -701,11 +701,11 @@ func (mdev *GenericModbusMaster) modbusSingleRead() []ReadRegisterValue {
 					LastFetchTime: lastTimes,
 					ErrMsg:        err.Error(),
 				})
+				time.Sleep(time.Duration(r.Frequency) * time.Millisecond)
 				continue
 			}
 			// ValidData := [4]byte{0, 0, 0, 0}
 			copy(__modbusReadResult[:], results[:])
-
 			AnyValue := utils.ParseRegisterValue(len(results), r.DataType, r.DataOrder, float32(r.Weight), __modbusReadResult)
 			Value := utils.CovertAnyType(AnyValue)
 			Reg := ReadRegisterValue{
@@ -768,6 +768,7 @@ func (mdev *GenericModbusMaster) modbusSingleRead() []ReadRegisterValue {
 					LastFetchTime: lastTimes,
 					ErrMsg:        err.Error(),
 				})
+				time.Sleep(time.Duration(r.Frequency) * time.Millisecond)
 				continue
 			}
 			// ValidData := [4]byte{0, 0, 0, 0}
@@ -835,6 +836,7 @@ func (mdev *GenericModbusMaster) modbusSingleRead() []ReadRegisterValue {
 					LastFetchTime: lastTimes,
 					ErrMsg:        err.Error(),
 				})
+				time.Sleep(time.Duration(r.Frequency) * time.Millisecond)
 				continue
 			}
 			// ValidData := [4]byte{0, 0, 0, 0}
@@ -901,6 +903,7 @@ func (mdev *GenericModbusMaster) modbusSingleRead() []ReadRegisterValue {
 					LastFetchTime: lastTimes,
 					ErrMsg:        err.Error(),
 				})
+				time.Sleep(time.Duration(r.Frequency) * time.Millisecond)
 				continue
 			}
 			// ValidData := [4]byte{0, 0, 0, 0}
