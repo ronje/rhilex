@@ -343,7 +343,7 @@ BEGIN
 END;
 `
 			if errTrigger := datacenter.DataCenterDb().Exec(fmt.Sprintf(trigger, tableName, tableName,
-				tableName, tableName, tableName, tableName)).Error; errTrigger != nil {
+				tableName, tableName, tableName, tableName, tableName)).Error; errTrigger != nil {
 				return errTrigger
 			}
 			return nil

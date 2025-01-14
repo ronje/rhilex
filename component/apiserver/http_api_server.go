@@ -127,6 +127,7 @@ func (hs *ApiServerPlugin) Init(config *ini.Section) error {
 		&model.MDevice{},
 		&model.MCecolla{},
 		&model.MApplet{},
+		&model.MCamera{},
 		&alarmcenter.MAlarmRule{},
 		&model.MGenericGroup{},
 		&model.MGenericGroupRelation{},
@@ -233,6 +234,8 @@ func (hs *ApiServerPlugin) LoadRoute() {
 	apis.LoadAlarmRuleRoute()
 	// 告警日志
 	apis.LoadAlarmLogRoute()
+	// 多媒体
+	apis.InitMultiMediaRoute()
 }
 
 // ApiServerPlugin Start
