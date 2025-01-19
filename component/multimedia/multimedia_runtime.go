@@ -31,7 +31,7 @@ var __DefaultMultimediaRuntime *MultimediaRuntime
 *
  */
 type MultimediaRuntime struct {
-	locker            sync.Mutex
+	locker            sync.RWMutex
 	RuleEngine        typex.Rhilex
 	MultimediaStreams map[string]*MultimediaStream
 }
@@ -39,7 +39,7 @@ type MultimediaRuntime struct {
 func InitMultimediaRuntime(re typex.Rhilex) *MultimediaRuntime {
 	__DefaultMultimediaRuntime = &MultimediaRuntime{
 		RuleEngine:        re,
-		locker:            sync.Mutex{},
+		locker:            sync.RWMutex{},
 		MultimediaStreams: make(map[string]*MultimediaStream),
 	}
 	// Cecolla Config
