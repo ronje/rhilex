@@ -127,7 +127,7 @@ func (hs *ApiServerPlugin) Init(config *ini.Section) error {
 		&model.MDevice{},
 		&model.MCecolla{},
 		&model.MApplet{},
-		&model.MCamera{},
+		&model.MMultiMedia{},
 		&alarmcenter.MAlarmRule{},
 		&model.MGenericGroup{},
 		&model.MGenericGroupRelation{},

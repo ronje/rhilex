@@ -14,15 +14,23 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 package model
 
+import "encoding/json"
+
 // RTSP推拉流设置参数
-type MCamera struct {
+type MMultiMedia struct {
 	RhilexModel
-	UUID       string `gorm:"uniqueIndex"` // UUID
-	Name       string `gorm:"not null"`    // 名称
-	Type       string `gorm:"not null"`    // 设备类型
-	StreamUrl  string `gorm:"not null"`    // 拉流地址
-	EnablePush *bool  `gorm:"not null"`    // 是否开启推流
-	PushUrl    string `gorm:"not null"`    // 推流地址
-	EnableAi   *bool  `gorm:"not null"`    // 开启AI？
-	AiModel    string `gorm:"not null"`    // AI模型: YOLOV8 | FACENET| .....
+	UUID        string `gorm:"uniqueIndex"` // UUID
+	Name        string `gorm:"not null"`    // 名称
+	Type        string `gorm:"not null"`    // 设备类型
+	Config      string `gorm:"not null"`
+	Description string
+}
+
+func (md MMultiMedia) GetConfig() map[string]interface{} {
+	result := make(map[string]interface{})
+	err := json.Unmarshal([]byte(md.Config), &result)
+	if err != nil {
+		return map[string]interface{}{}
+	}
+	return result
 }

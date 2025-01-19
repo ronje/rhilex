@@ -16,6 +16,7 @@
 package apis
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/url"
 
@@ -31,75 +32,88 @@ import (
 func InitMultiMediaRoute() {
 	Apis := server.RouteGroup(server.ContextUrl("/multimedia"))
 	{
-		Apis.POST(("/camera/create"), server.AddRoute(CreateCamera))
-		Apis.PUT(("/camera/update"), server.AddRoute(UpdateCamera))
-		Apis.GET(("/camera/detail"), server.AddRoute(CameraDetail))
-		Apis.GET("/camera/list", server.AddRoute(ListCamera))
-		Apis.DELETE(("/camera/del"), server.AddRoute(DeleteCamera))
+		Apis.POST(("/create"), server.AddRoute(CreateMultiMedia))
+		Apis.PUT(("/update"), server.AddRoute(UpdateMultiMedia))
+		Apis.GET(("/detail"), server.AddRoute(MultiMediaDetail))
+		Apis.GET("/list", server.AddRoute(ListMultiMedia))
+		Apis.DELETE(("/del"), server.AddRoute(DeleteMultiMedia))
 	}
+}
+
+type MultimediaConfig struct {
+	StreamUrl  string `json:"streamUrl" validate:"required"`
+	EnablePush *bool  `json:"enablePush"`
+	PushUrl    string `json:"pushUrl"`
+	EnableAi   *bool  `json:"enableAi"`
+	AiModel    string `json:"aiModel"`
+}
+
+func (cfg MultimediaConfig) Validate() error {
+	if cfg.StreamUrl == "" {
+		return fmt.Errorf("StreamUrl is required")
+	}
+	if cfg.PushUrl == "" {
+		return fmt.Errorf("PushUrl is required")
+	}
+	return nil
+}
+func (ms MultimediaConfig) FromString(s string) {
+	json.Unmarshal([]byte(s), &ms)
+}
+
+func (ms MultimediaConfig) JsonString() string {
+	jsonStr, _ := json.Marshal(ms)
+	return string(jsonStr)
 }
 
 // RTSP推拉流设置参数
-type CameraVo struct {
-	UUID string `json:"uuid" validate:"required"`
-	// 名称
-	Name string `json:"name" validate:"required"`
-	// 设备类型
-	Type string `json:"type" validate:"required"`
-	// 拉流地址
-	StreamUrl string `json:"streamUrl" validate:"required"`
-	// 是否开启推流
-	EnablePush *bool `json:"enablePush"`
-	// 推流地址
-	PushUrl string `json:"pushUrl"`
-	// 是否开启AI模型处理
-	EnableAi *bool `json:"enableAi"`
-	// AI模型选择
-	AiModel string `json:"aiModel"`
+type MultiMediaVo struct {
+	UUID        string           `json:"uuid"` // 如果空串就是新建, 非空就是更新
+	Type        string           `json:"type" binding:"required"`
+	Name        string           `json:"name" binding:"required"`
+	Description string           `json:"description"`
+	Config      MultimediaConfig `json:"config" binding:"required"`
 }
 
-func CreateCamera(c *gin.Context, ruleEngine typex.Rhilex) {
-	EnablePush := false
-	EnableAi := false
-	cameraVo := CameraVo{
-		EnablePush: &EnablePush,
-		EnableAi:   &EnableAi,
-	}
-	if err := c.ShouldBindJSON(&cameraVo); err != nil {
+func CreateMultiMedia(c *gin.Context, ruleEngine typex.Rhilex) {
+	MultiMediaVo := MultiMediaVo{}
+	if err := c.ShouldBindJSON(&MultiMediaVo); err != nil {
 		c.JSON(common.HTTP_OK, common.Error400(err))
 		return
 	}
 	// 验证参数
-	if !utils.SContains([]string{"RTSP", "RTMP"}, cameraVo.Type) {
-		c.JSON(common.HTTP_OK, common.Error400(fmt.Errorf("Invalid camera type [%s]", cameraVo.Type)))
+	if !utils.SContains([]string{"RTSP", "RTMP"}, MultiMediaVo.Type) {
+		c.JSON(common.HTTP_OK, common.Error400(fmt.Errorf("Invalid MultiMedia type [%s]", MultiMediaVo.Type)))
 		return
 	}
 	// 验证其他参数
-	if _, err := url.ParseRequestURI(cameraVo.StreamUrl); err != nil {
+	if _, err := url.ParseRequestURI(MultiMediaVo.Config.StreamUrl); err != nil {
 		c.JSON(common.HTTP_OK, common.Error400(err))
 		return
 	}
-	if *cameraVo.EnablePush {
-		if _, err := url.ParseRequestURI(cameraVo.PushUrl); err != nil {
+	if *MultiMediaVo.Config.EnablePush {
+		if _, err := url.ParseRequestURI(MultiMediaVo.Config.PushUrl); err != nil {
 			c.JSON(common.HTTP_OK, common.Error400(err))
 			return
 		}
 	}
-	if *cameraVo.EnableAi {
-		if !utils.SContains([]string{"YOLOV8", "FACENET"}, cameraVo.AiModel) {
+	if *MultiMediaVo.Config.EnablePush {
+		if !utils.SContains([]string{"YOLOV8", "FACENET"}, MultiMediaVo.Config.AiModel) {
 			c.JSON(common.HTTP_OK, common.Error("Only Support one of YOLOV8 or FACENET"))
 			return
 		}
 	}
-	if errSave := service.InsertCamera(&model.MCamera{
-		UUID:       utils.CameraUuid(),
-		Name:       cameraVo.Name,
-		Type:       cameraVo.Type,
-		StreamUrl:  cameraVo.StreamUrl,
-		EnablePush: cameraVo.EnablePush,
-		PushUrl:    cameraVo.PushUrl,
-		EnableAi:   cameraVo.EnableAi,
-		AiModel:    cameraVo.AiModel,
+	configJson, err := json.Marshal(MultiMediaVo.Config)
+	if err != nil {
+		c.JSON(common.HTTP_OK, common.Error400(err))
+		return
+	}
+	if errSave := service.InsertMultiMedia(&model.MMultiMedia{
+		UUID:        utils.MultimediaUuid(),
+		Name:        MultiMediaVo.Name,
+		Type:        MultiMediaVo.Type,
+		Config:      string(configJson),
+		Description: MultiMediaVo.Description,
 	}); errSave != nil {
 		c.JSON(common.HTTP_OK, common.Error400(errSave))
 		return
@@ -107,109 +121,105 @@ func CreateCamera(c *gin.Context, ruleEngine typex.Rhilex) {
 	c.JSON(common.HTTP_OK, common.Ok())
 }
 
-func UpdateCamera(c *gin.Context, ruleEngine typex.Rhilex) {
-	cameraVo := CameraVo{}
-	if err := c.ShouldBindJSON(&cameraVo); err != nil {
+func UpdateMultiMedia(c *gin.Context, ruleEngine typex.Rhilex) {
+	MultiMediaVo := MultiMediaVo{}
+	if err := c.ShouldBindJSON(&MultiMediaVo); err != nil {
 		c.JSON(common.HTTP_OK, common.Error400(err))
 		return
 	}
 	// 验证参数
-	if !utils.SContains([]string{"RTSP", "RTMP"}, cameraVo.Type) {
-		c.JSON(common.HTTP_OK, common.Error400(fmt.Errorf("Invalid camera type [%s]", cameraVo.Type)))
+	if !utils.SContains([]string{"RTSP", "RTMP"}, MultiMediaVo.Type) {
+		c.JSON(common.HTTP_OK, common.Error400(fmt.Errorf("Invalid MultiMedia type [%s]", MultiMediaVo.Type)))
 		return
 	}
 	// 验证其他参数
-	if _, err := url.ParseRequestURI(cameraVo.StreamUrl); err != nil {
+	if _, err := url.ParseRequestURI(MultiMediaVo.Config.StreamUrl); err != nil {
 		c.JSON(common.HTTP_OK, common.Error400(err))
 		return
 	}
-	if *cameraVo.EnablePush {
-		if _, err := url.ParseRequestURI(cameraVo.PushUrl); err != nil {
+	if *MultiMediaVo.Config.EnablePush {
+		if _, err := url.ParseRequestURI(MultiMediaVo.Config.PushUrl); err != nil {
 			c.JSON(common.HTTP_OK, common.Error400(err))
 			return
 		}
 	}
-	if *cameraVo.EnableAi {
-		if !utils.SContains([]string{"YOLOV8", "FACENET"}, cameraVo.AiModel) {
+	if *MultiMediaVo.Config.EnablePush {
+		if !utils.SContains([]string{"YOLOV8", "FACENET"}, MultiMediaVo.Config.AiModel) {
 			c.JSON(common.HTTP_OK, common.Error("Only Support one of YOLOV8 or FACENET"))
 			return
 		}
 	}
 	// 保存到数据库
-	if errSave := service.UpdateCamera(&model.MCamera{
-		UUID:       cameraVo.UUID,
-		Name:       cameraVo.Name,
-		Type:       cameraVo.Type,
-		StreamUrl:  cameraVo.StreamUrl,
-		EnablePush: cameraVo.EnablePush,
-		PushUrl:    cameraVo.PushUrl,
-		EnableAi:   cameraVo.EnableAi,
-		AiModel:    cameraVo.AiModel,
+	if errSave := service.UpdateMultiMedia(&model.MMultiMedia{
+		UUID:        MultiMediaVo.UUID,
+		Name:        MultiMediaVo.Name,
+		Type:        MultiMediaVo.Type,
+		Config:      MultiMediaVo.Config.JsonString(),
+		Description: MultiMediaVo.Description,
 	}); errSave != nil {
 		c.JSON(common.HTTP_OK, common.Error400(errSave))
 		return
 	}
 	c.JSON(common.HTTP_OK, common.Ok())
 }
-func CameraDetail(c *gin.Context, ruleEngine typex.Rhilex) {
+func MultiMediaDetail(c *gin.Context, ruleEngine typex.Rhilex) {
 	uuid, ok := c.GetQuery("uuid")
 	if !ok {
 		c.JSON(common.HTTP_OK, common.Error400(fmt.Errorf("missing uuid")))
 		return
 	}
-	Model, err := service.GetCameraWithUUID(uuid)
+	Model, err := service.GetMultiMediaWithUUID(uuid)
 	if err != nil {
 		c.JSON(common.HTTP_OK, common.Error400(err))
 		return
 	}
 	// 返回结果
-	c.JSON(common.HTTP_OK, common.OkWithData(CameraVo{
-		UUID:       Model.UUID,
-		Name:       Model.Name,
-		Type:       Model.Type,
-		StreamUrl:  Model.StreamUrl,
-		EnablePush: Model.EnablePush,
-		PushUrl:    Model.PushUrl,
-		EnableAi:   Model.EnableAi,
-		AiModel:    Model.AiModel,
+	Config := MultimediaConfig{}
+	Config.FromString(Model.Config)
+	c.JSON(common.HTTP_OK, common.OkWithData(MultiMediaVo{
+		UUID:        Model.UUID,
+		Name:        Model.Name,
+		Type:        Model.Type,
+		Config:      Config,
+		Description: Model.Description,
 	}))
 }
-func ListCamera(c *gin.Context, ruleEngine typex.Rhilex) {
+func ListMultiMedia(c *gin.Context, ruleEngine typex.Rhilex) {
 	pager, err := service.ReadPageRequest(c)
 	if err != nil {
 		c.JSON(common.HTTP_OK, common.Error400(err))
 		return
 	}
-	count, MCameras, err := service.PageCamera(pager.Current, pager.Size)
+	count, MMultiMedias, err := service.PageMultiMedia(pager.Current, pager.Size)
 	if err != nil {
 		c.JSON(common.HTTP_OK, common.Error400(err))
 		return
 	}
-	cameras := []CameraVo{}
-	for _, MCamera := range MCameras {
-		cameras = append(cameras, CameraVo{
-			UUID:       MCamera.UUID,
-			Name:       MCamera.Name,
-			Type:       MCamera.Type,
-			StreamUrl:  MCamera.StreamUrl,
-			EnablePush: MCamera.EnablePush,
-			PushUrl:    MCamera.PushUrl,
-			EnableAi:   MCamera.EnableAi,
-			AiModel:    MCamera.AiModel,
+	MultiMedias := []MultiMediaVo{}
+	for _, MMultiMedia := range MMultiMedias {
+		// 返回结果
+		Config := MultimediaConfig{}
+		Config.FromString(MMultiMedia.Config)
+		MultiMedias = append(MultiMedias, MultiMediaVo{
+			UUID:        MMultiMedia.UUID,
+			Name:        MMultiMedia.Name,
+			Type:        MMultiMedia.Type,
+			Config:      Config,
+			Description: MMultiMedia.Description,
 		})
 	}
-	Result := service.WrapPageResult(*pager, cameras, count)
+	Result := service.WrapPageResult(*pager, MultiMedias, count)
 	c.JSON(common.HTTP_OK, common.OkWithData(Result))
 }
 
-// 删除Camera
-func DeleteCamera(c *gin.Context, ruleEngine typex.Rhilex) {
+// 删除MultiMedia
+func DeleteMultiMedia(c *gin.Context, ruleEngine typex.Rhilex) {
 	uuid, ok := c.GetQuery("uuid")
 	if !ok {
 		c.JSON(common.HTTP_OK, common.Error400(fmt.Errorf("missing uuid")))
 		return
 	}
-	if err := service.DeleteCamera(uuid); err != nil {
+	if err := service.DeleteMultiMedia(uuid); err != nil {
 		c.JSON(common.HTTP_OK, common.Error400(fmt.Errorf("delete failed: %v", err)))
 		return
 	}

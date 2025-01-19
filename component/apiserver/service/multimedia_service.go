@@ -37,15 +37,15 @@ import (
 	"github.com/hootrhino/rhilex/component/interdb"
 )
 
-// 获取Camera列表
-func AllCamera() []model.MCamera {
-	m := []model.MCamera{}
+// 获取MultiMedia列表
+func AllMultiMedia() []model.MMultiMedia {
+	m := []model.MMultiMedia{}
 	interdb.InterDb().Find(&m)
 	return m
 
 }
-func GetCameraWithUUID(uuid string) (*model.MCamera, error) {
-	m := model.MCamera{}
+func GetMultiMediaWithUUID(uuid string) (*model.MMultiMedia, error) {
+	m := model.MMultiMedia{}
 	if err := interdb.InterDb().Where("uuid=?", uuid).First(&m).Error; err != nil {
 		return nil, err
 	} else {
@@ -53,41 +53,41 @@ func GetCameraWithUUID(uuid string) (*model.MCamera, error) {
 	}
 }
 
-// 删除Camera
-func DeleteCamera(uuid string) error {
-	result := interdb.InterDb().Where("uuid = ?", uuid).Delete(&model.MCamera{})
+// 删除MultiMedia
+func DeleteMultiMedia(uuid string) error {
+	result := interdb.InterDb().Where("uuid = ?", uuid).Delete(&model.MMultiMedia{})
 	if result.Error != nil {
-		return fmt.Errorf("failed to delete camera with uuid %s: %v", uuid, result.Error)
+		return fmt.Errorf("failed to delete MultiMedia with uuid %s: %v", uuid, result.Error)
 	}
 	return nil
 }
 
-// 创建Camera
-func InsertCamera(Camera *model.MCamera) error {
-	result := interdb.InterDb().Create(Camera)
+// 创建MultiMedia
+func InsertMultiMedia(MultiMedia *model.MMultiMedia) error {
+	result := interdb.InterDb().Create(MultiMedia)
 	if result.Error != nil {
-		return fmt.Errorf("failed to insert camera: %v", result.Error)
+		return fmt.Errorf("failed to insert MultiMedia: %v", result.Error)
 	}
 	return nil
 }
 
-// 更新Camera
-func UpdateCamera(Camera *model.MCamera) error {
-	result := interdb.InterDb().Model(model.MCamera{}).Where("uuid = ?", Camera.UUID).Updates(*Camera)
+// 更新MultiMedia
+func UpdateMultiMedia(MultiMedia *model.MMultiMedia) error {
+	result := interdb.InterDb().Model(model.MMultiMedia{}).Where("uuid = ?", MultiMedia.UUID).Updates(*MultiMedia)
 	if result.Error != nil {
-		return fmt.Errorf("failed to update camera with uuid %s: %v", Camera.UUID, result.Error)
+		return fmt.Errorf("failed to update MultiMedia with uuid %s: %v", MultiMedia.UUID, result.Error)
 	}
 	return nil
 }
 
-// 获取Camera列表
-func PageCamera(current, size int) (int64, []model.MCamera, error) {
+// 获取MultiMedia列表
+func PageMultiMedia(current, size int) (int64, []model.MMultiMedia, error) {
 	var count int64
-	var MCameras []model.MCamera
+	var MMultiMedias []model.MMultiMedia
 
 	// 查询总数
-	if err := interdb.InterDb().Model(&model.MCamera{}).Count(&count).Error; err != nil {
-		return 0, nil, fmt.Errorf("failed to count cameras: %v", err)
+	if err := interdb.InterDb().Model(&model.MMultiMedia{}).Count(&count).Error; err != nil {
+		return 0, nil, fmt.Errorf("failed to count MultiMedias: %v", err)
 	}
 
 	// 查询分页数据
@@ -96,9 +96,9 @@ func PageCamera(current, size int) (int64, []model.MCamera, error) {
 		Order("created_at DESC").
 		Limit(size).
 		Offset(offset).
-		Find(&MCameras).Error; err != nil {
-		return 0, nil, fmt.Errorf("failed to get cameras: %v", err)
+		Find(&MMultiMedias).Error; err != nil {
+		return 0, nil, fmt.Errorf("failed to get MultiMedias: %v", err)
 	}
 
-	return count, MCameras, nil
+	return count, MMultiMedias, nil
 }

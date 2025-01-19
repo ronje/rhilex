@@ -64,7 +64,7 @@ func StartInSupervisor(InCtx context.Context, in *typex.InEnd, ruleEngine typex.
 			}
 			info := fmt.Sprintf("Source:(%s,%s) DOWN, supervisor try to Restart, error message: %s",
 				UUID, currentIn.Name, ErrMsg)
-			glogger.GLogger.Debugf(info)
+			glogger.GLogger.Debug(info)
 			lineS := "event.outend.down." + UUID
 			eventbus.Publish(lineS, eventbus.EventMessage{
 				Topic:   lineS,
@@ -130,7 +130,7 @@ func StartOutSupervisor(OutCtx context.Context, out *typex.OutEnd, ruleEngine ty
 			}
 			info := fmt.Sprintf("OutEnd:(%s,%s) DOWN, supervisor try to Restart, error message: %s",
 				UUID, currentOut.Name, ErrMsg)
-			glogger.GLogger.Debugf(info)
+			glogger.GLogger.Debug(info)
 			lineS := "event.outend.down." + UUID
 			eventbus.Publish(lineS, eventbus.EventMessage{
 				Topic:   lineS,
@@ -200,7 +200,7 @@ func StartDeviceSupervisor(DeviceCtx context.Context, device *typex.Device, rule
 			}
 			info := fmt.Sprintf("Device:(%s,%s) DOWN, supervisor try to Restart, error message: %s",
 				UUID, currentDevice.Name, ErrMsg)
-			glogger.GLogger.Debugf(info)
+			glogger.GLogger.Debug(info)
 			lineS := "event.device.down." + UUID
 			eventbus.Publish(lineS, eventbus.EventMessage{
 				Topic:   lineS,
@@ -270,7 +270,7 @@ func StartCecollaSupervisor(CecollaCtx context.Context, cecolla *typex.Cecolla, 
 			}
 			info := fmt.Sprintf("Cecolla:(%s,%s) DOWN, supervisor try to Restart, error message: %s",
 				UUID, currentCecolla.Name, ErrMsg)
-			glogger.GLogger.Debugf(info)
+			glogger.GLogger.Debug(info)
 			lineS := "event.cecolla.down." + UUID
 			eventbus.Publish(lineS, eventbus.EventMessage{
 				Topic:   lineS,
