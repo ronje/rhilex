@@ -16,7 +16,7 @@
 package rhilexmanager
 
 import (
-	cecolla "github.com/hootrhino/rhilex/cecolla"
+	cecolla "github.com/hootrhino/rhilex/component/cecolla"
 	"github.com/hootrhino/rhilex/component/orderedmap"
 	"github.com/hootrhino/rhilex/typex"
 )

@@ -61,7 +61,7 @@ func (rm *PluginTypeManager) LoadPlugin(sectionK string, p typex.XPlugin) error 
 	}
 	_, ok := rm.registry.Get(p.PluginMetaInfo().UUID)
 	if ok {
-		return fmt.Errorf("plugin already installed:" + p.PluginMetaInfo().Name)
+		return fmt.Errorf("plugin already installed:%s", p.PluginMetaInfo().Name)
 	}
 	if err := p.Start(rm.e); err != nil {
 		return err

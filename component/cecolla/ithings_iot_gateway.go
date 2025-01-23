@@ -25,7 +25,7 @@ import (
 	mqtt "github.com/eclipse/paho.mqtt.golang"
 	"github.com/google/uuid"
 	lua "github.com/hootrhino/gopher-lua"
-	"github.com/hootrhino/rhilex/cecolla/ithings"
+	"github.com/hootrhino/rhilex/component/cecolla/ithings"
 	"github.com/hootrhino/rhilex/component/cecollalet"
 	"github.com/hootrhino/rhilex/component/intercache"
 	"github.com/hootrhino/rhilex/glogger"
