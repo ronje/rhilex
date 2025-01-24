@@ -1,44 +1,35 @@
-// Copyright (C) 2023 wwhai
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License as
-// published by the Free Software Foundation, either version 3 of the
-// License, or (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program.  If not, see <http://www.gnu.org/licenses/>.
-
 package interkv
 
 import (
+	"fmt"
 	"strings"
 	"time"
 
 	"github.com/hootrhino/rhilex/glogger"
-	"github.com/hootrhino/rhilex/typex"
 	cache "github.com/wwhai/tinycache"
 )
 
-var GlobalStore typex.XStore
+// 自定义错误类型
+var __errMaxStoreSizeReached = fmt.Errorf("max store size reached")
+
+var GlobalStore *RhilexStore
 
 func InitInterKVStore(maxSize int) {
 	GlobalStore = NewRhilexStore(maxSize)
 }
 
 type RhilexStore struct {
-	cache *cache.Cache
+	cache   *cache.Cache
+	maxSize int
+	index   map[string][]string
 }
 
-func NewRhilexStore(maxSize int) typex.XStore {
+func NewRhilexStore(maxSize int) *RhilexStore {
 	return &RhilexStore{
-		cache: cache.New(0, 0),
+		cache:   cache.New(time.Duration(maxSize), 0),
+		maxSize: maxSize,
+		index:   make(map[string][]string),
 	}
-
 }
 
 /*
@@ -46,19 +37,25 @@ func NewRhilexStore(maxSize int) typex.XStore {
 * 设置过期时间
 *
  */
-func (rs *RhilexStore) SetWithDuration(k string, v string, d time.Duration) {
-	if (rs.cache.ItemCount() + 1) > 10000 {
+func (rs *RhilexStore) SetWithDuration(k string, v string, d time.Duration) error {
+	if rs.cache.ItemCount()+1 > rs.maxSize {
 		glogger.GLogger.Error("Max store size reached:", rs.cache.ItemCount())
+		return __errMaxStoreSizeReached
 	}
 	rs.cache.Set(k, v, d)
+	rs.updateIndex(k)
+	return nil
 }
 
 // 设置值
-func (rs *RhilexStore) Set(k string, v string) {
-	if (rs.cache.ItemCount() + 1) > 10000 {
+func (rs *RhilexStore) Set(k string, v string) error {
+	if rs.cache.ItemCount()+1 > rs.maxSize {
 		glogger.GLogger.Error("Max store size reached:", rs.cache.ItemCount())
+		return __errMaxStoreSizeReached
 	}
 	rs.cache.Set(k, v, -1)
+	rs.updateIndex(k)
+	return nil
 }
 
 // 获取值
@@ -70,8 +67,11 @@ func (rs *RhilexStore) Get(k string) string {
 		return ""
 	}
 }
+
+// 删除键值对
 func (rs *RhilexStore) Delete(k string) error {
 	rs.cache.Delete(k)
+	rs.removeFromIndex(k)
 	return nil
 }
 
@@ -83,17 +83,49 @@ func (rs *RhilexStore) Count() int {
 // 模糊查询匹配
 // 支持: *AAA AAA* A*B
 func (rs *RhilexStore) FuzzyGet(Key string) any {
-	for k, v := range rs.cache.Items() {
-		if fuzzyMatch(k, Key) {
+	keys := rs.getKeysFromIndex(Key)
+	for _, k := range keys {
+		if v, ok := rs.cache.Get(k); ok {
 			return v
 		}
 	}
 	return ""
 }
 
-// 将主字符串和子字符串都转换为小写，以进行不区分大小写的匹配
-func fuzzyMatch(mainStr, subStr string) bool {
-	mainStr = strings.ToLower(mainStr)
-	subStr = strings.ToLower(subStr)
-	return strings.Contains(mainStr, subStr)
+// 更新索引
+func (rs *RhilexStore) updateIndex(k string) {
+	patterns := generateIndexPatterns(k)
+	for _, pattern := range patterns {
+		rs.index[pattern] = append(rs.index[pattern], k)
+	}
+}
+
+// 从索引中移除键
+func (rs *RhilexStore) removeFromIndex(k string) {
+	patterns := generateIndexPatterns(k)
+	for _, pattern := range patterns {
+		keys := rs.index[pattern]
+		for i, key := range keys {
+			if key == k {
+				rs.index[pattern] = append(keys[:i], keys[i+1:]...)
+				break
+			}
+		}
+	}
+}
+
+// 根据查询模式从索引中获取键列表
+func (rs *RhilexStore) getKeysFromIndex(pattern string) []string {
+	return rs.index[pattern]
+}
+
+// 生成索引模式
+func generateIndexPatterns(key string) []string {
+	key = strings.ToLower(key)
+	patterns := []string{key}
+	for i := 1; i <= len(key); i++ {
+		patterns = append(patterns, key[:i]+"*")
+		patterns = append(patterns, "*"+key[i:])
+	}
+	return patterns
 }
