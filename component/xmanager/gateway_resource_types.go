@@ -21,6 +21,26 @@ import "context"
 // GatewayResourceState 资源状态类型
 type GatewayResourceState int
 
+// to string
+func (s GatewayResourceState) String() string {
+	switch s {
+	case MEDIA_DOWN:
+		return "DOWN"
+	case MEDIA_UP:
+		return "UP"
+	case MEDIA_PAUSE:
+		return "PAUSE"
+	case MEDIA_STOP:
+		return "STOP"
+	case MEDIA_PENDING:
+		return "PENDING"
+	case MEDIA_DISABLE:
+		return "DISABLE"
+	default:
+		return "UNKNOWN"
+	}
+}
+
 const (
 	// 故障
 	MEDIA_DOWN GatewayResourceState = 0

@@ -25,6 +25,8 @@ import (
 	"github.com/hootrhino/rhilex/component/apiserver/model"
 	"github.com/hootrhino/rhilex/component/apiserver/server"
 	"github.com/hootrhino/rhilex/component/apiserver/service"
+	"github.com/hootrhino/rhilex/component/multimedia"
+	"github.com/hootrhino/rhilex/component/xmanager"
 	"github.com/hootrhino/rhilex/typex"
 	"github.com/hootrhino/rhilex/utils"
 )
@@ -68,20 +70,30 @@ func (cfg MultimediaConfig) JsonString() string {
 	jsonStr, _ := json.Marshal(cfg)
 	return string(jsonStr)
 }
+func (cfg MultimediaConfig) ToMap() map[string]interface{} {
+	m := make(map[string]interface{})
+	m["streamUrl"] = cfg.StreamUrl
+	m["enablePush"] = cfg.EnablePush
+	m["pushUrl"] = cfg.PushUrl
+	m["enableAi"] = cfg.EnableAi
+	m["aiModel"] = cfg.AiModel
+	return m
+}
 
 // RTSP推拉流设置参数
 type MultiMediaVo struct {
-	UUID        string           `json:"uuid"` // 如果空串就是新建, 非空就是更新
-	Type        string           `json:"type" binding:"required"`
-	Name        string           `json:"name" binding:"required"`
+	UUID        string           `json:"uuid"`                      // 如果空串就是新建, 非空就是更新
+	Type        string           `json:"type" binding:"required"`   // 类型
+	Name        string           `json:"name" binding:"required"`   // 名称
+	Status      int              `json:"status"`                    // 状态
+	Config      MultimediaConfig `json:"config" binding:"required"` // 配置
 	Description string           `json:"description"`
-	Config      MultimediaConfig `json:"config" binding:"required"`
 }
 
 // validateMultiMediaVo 验证MultiMediaVo结构体
 func validateMultiMediaVo(multiMediaVo MultiMediaVo) error {
 	// 验证类型
-	if !utils.SContains([]string{"RTSP", "RTMP"}, multiMediaVo.Type) {
+	if !utils.SContains([]string{"RTSP_STREAM", "RTMP_STREAM"}, multiMediaVo.Type) {
 		return fmt.Errorf("Invalid MultiMedia type [%s]", multiMediaVo.Type)
 	}
 	// 验证StreamUrl
@@ -118,14 +130,20 @@ func CreateMultiMedia(c *gin.Context, ruleEngine typex.Rhilex) {
 		c.JSON(common.HTTP_OK, common.Error400(err))
 		return
 	}
-	if errSave := service.InsertMultiMedia(&model.MMultiMedia{
+	Model := model.MMultiMedia{
 		UUID:        utils.MultimediaUuid(),
 		Name:        multiMediaVo.Name,
 		Type:        multiMediaVo.Type,
 		Config:      string(configJson),
 		Description: multiMediaVo.Description,
-	}); errSave != nil {
+	}
+	if errSave := service.InsertMultiMedia(&Model); errSave != nil {
 		c.JSON(common.HTTP_OK, common.Error400(errSave))
+		return
+	}
+	if errLoad := multimedia.LoadMultimediaResource(Model.UUID, Model.Name, Model.Type,
+		multiMediaVo.Config.ToMap(), Model.Description); errLoad != nil {
+		c.JSON(common.HTTP_OK, common.Error400(errLoad))
 		return
 	}
 	c.JSON(common.HTTP_OK, common.Ok())
@@ -143,15 +161,25 @@ func UpdateMultiMedia(c *gin.Context, ruleEngine typex.Rhilex) {
 		c.JSON(common.HTTP_OK, common.Error400(err))
 		return
 	}
-	// 保存到数据库
-	if errSave := service.UpdateMultiMedia(&model.MMultiMedia{
+	Model := model.MMultiMedia{
 		UUID:        multiMediaVo.UUID,
 		Name:        multiMediaVo.Name,
 		Type:        multiMediaVo.Type,
 		Config:      multiMediaVo.Config.JsonString(),
 		Description: multiMediaVo.Description,
-	}); errSave != nil {
+	}
+	if errSave := service.UpdateMultiMedia(&Model); errSave != nil {
 		c.JSON(common.HTTP_OK, common.Error400(errSave))
+		return
+	}
+	// 重新加载资源
+	if errStop := multimedia.StopMultimediaResource(Model.UUID); errStop != nil {
+		c.JSON(common.HTTP_OK, common.Error400(errStop))
+		return
+	}
+	if errLoad := multimedia.LoadMultimediaResource(Model.UUID, Model.Name, Model.Type,
+		multiMediaVo.Config.ToMap(), Model.Description); errLoad != nil {
+		c.JSON(common.HTTP_OK, common.Error400(errLoad))
 		return
 	}
 	c.JSON(common.HTTP_OK, common.Ok())
@@ -172,13 +200,21 @@ func MultiMediaDetail(c *gin.Context, ruleEngine typex.Rhilex) {
 	// 返回结果
 	Config := MultimediaConfig{}
 	Config.FromString(Model.Config)
-	c.JSON(common.HTTP_OK, common.OkWithData(MultiMediaVo{
+	vo := MultiMediaVo{
 		UUID:        Model.UUID,
 		Name:        Model.Name,
 		Type:        Model.Type,
 		Config:      Config,
 		Description: Model.Description,
-	}))
+	}
+	Worker, _ := multimedia.GetMultimediaResourceDetails(Model.UUID)
+	if Worker == nil {
+		vo.Status = int(xmanager.MEDIA_DOWN)
+	} else {
+		Status := Worker.Worker.Status()
+		vo.Status = int(Status)
+	}
+	c.JSON(common.HTTP_OK, common.OkWithData(vo))
 }
 
 // ListMultiMedia 获取多媒体资源列表
@@ -194,17 +230,25 @@ func ListMultiMedia(c *gin.Context, ruleEngine typex.Rhilex) {
 		return
 	}
 	MultiMedias := []MultiMediaVo{}
-	for _, MMultiMedia := range MMultiMedias {
+	for _, Model := range MMultiMedias {
 		// 返回结果
 		Config := MultimediaConfig{}
-		Config.FromString(MMultiMedia.Config)
-		MultiMedias = append(MultiMedias, MultiMediaVo{
-			UUID:        MMultiMedia.UUID,
-			Name:        MMultiMedia.Name,
-			Type:        MMultiMedia.Type,
+		Config.FromString(Model.Config)
+		vo := MultiMediaVo{
+			UUID:        Model.UUID,
+			Name:        Model.Name,
+			Type:        Model.Type,
 			Config:      Config,
-			Description: MMultiMedia.Description,
-		})
+			Description: Model.Description,
+		}
+		Worker, _ := multimedia.GetMultimediaResourceDetails(Model.UUID)
+		if Worker == nil {
+			vo.Status = int(xmanager.MEDIA_DOWN)
+		} else {
+			Status := Worker.Worker.Status()
+			vo.Status = int(Status)
+		}
+		MultiMedias = append(MultiMedias, vo)
 	}
 	Result := service.WrapPageResult(*pager, MultiMedias, count)
 	c.JSON(common.HTTP_OK, common.OkWithData(Result))
@@ -219,6 +263,10 @@ func DeleteMultiMedia(c *gin.Context, ruleEngine typex.Rhilex) {
 	}
 	if err := service.DeleteMultiMedia(uuid); err != nil {
 		c.JSON(common.HTTP_OK, common.Error400(fmt.Errorf("delete failed: %v", err)))
+		return
+	}
+	if err := multimedia.StopMultimediaResource(uuid); err != nil {
+		c.JSON(common.HTTP_OK, common.Error400(err))
 		return
 	}
 	c.JSON(common.HTTP_OK, common.Ok())

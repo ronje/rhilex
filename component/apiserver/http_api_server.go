@@ -10,6 +10,7 @@ import (
 	"github.com/hootrhino/rhilex/component/crontask"
 	dataschema "github.com/hootrhino/rhilex/component/dataschema"
 	"github.com/hootrhino/rhilex/component/eventbus"
+	"github.com/hootrhino/rhilex/component/multimedia"
 	"github.com/shirou/gopsutil/cpu"
 
 	"github.com/hootrhino/rhilex/component/apiserver/apis"
@@ -68,6 +69,13 @@ func initRhilex(engine typex.Rhilex) {
 			ExprDefines: ExprDefines,
 		},
 		)
+	}
+	// multimedia
+	for _, Multimedia := range service.AllMultiMedia() {
+		if err := multimedia.LoadMultimediaResource(Multimedia.UUID, Multimedia.Name,
+			Multimedia.Type, Multimedia.GetConfig(), Multimedia.Description); err != nil {
+			glogger.GLogger.Error("Multimedia load failed:", err)
+		}
 	}
 	for _, mCecolla := range service.AllCecollas() {
 		if err := server.LoadNewestCecolla(mCecolla.UUID, engine); err != nil {

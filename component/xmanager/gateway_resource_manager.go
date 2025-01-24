@@ -23,40 +23,50 @@ import (
 	"time"
 
 	"github.com/hootrhino/rhilex/component/orderedmap"
+	"github.com/hootrhino/rhilex/glogger"
+	"github.com/hootrhino/rhilex/typex"
 )
 
 // GatewayResourceManager 通用资源管理器
 type GatewayResourceManager struct {
 	resources *orderedmap.OrderedMap[string, *GatewayResourceWorker]
-	types     map[string]func(map[string]interface{}) (GatewayResource, error)
+	types     map[string]func(m *GatewayResourceManager) (GatewayResource, error)
 	mu        sync.RWMutex
+	rhilex    typex.Rhilex
 }
 
 // NewGatewayResourceManager 创建新的资源管理器
-func NewGatewayResourceManager() *GatewayResourceManager {
+func NewGatewayResourceManager(rhilex typex.Rhilex) *GatewayResourceManager {
 	return &GatewayResourceManager{
 		resources: orderedmap.NewOrderedMap[string, *GatewayResourceWorker](),
-		types:     make(map[string]func(map[string]interface{}) (GatewayResource, error)),
+		types:     make(map[string]func(m *GatewayResourceManager) (GatewayResource, error)),
+		rhilex:    rhilex,
 	}
 }
 
 // RegisterType 注册资源类型和其对应的 worker 实现
-func (m *GatewayResourceManager) RegisterType(resourceType string, factory func(map[string]interface{}) (GatewayResource, error)) {
+func (m *GatewayResourceManager) RegisterType(resourceType string,
+	factory func(m *GatewayResourceManager) (GatewayResource, error)) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 	m.types[resourceType] = factory
 }
 
 // LoadResource 加载资源
-func (m *GatewayResourceManager) LoadResource(uuid string, name string, resourceType string, configMap map[string]interface{}, description string) error {
+func (m *GatewayResourceManager) LoadResource(uuid string, name string, resourceType string,
+	configMap map[string]interface{}, description string) error {
 	m.mu.RLock()
 	factory, exists := m.types[resourceType]
 	m.mu.RUnlock()
 	if !exists {
 		return fmt.Errorf("unsupported resource type: %s", resourceType)
 	}
-
-	worker, err := factory(configMap)
+	for _, resource := range m.resources.Values() {
+		if resource.Name == name {
+			return fmt.Errorf("resource name already exists: %s", name)
+		}
+	}
+	worker, err := factory(m)
 	if err != nil {
 		return err
 	}
@@ -65,7 +75,10 @@ func (m *GatewayResourceManager) LoadResource(uuid string, name string, resource
 	if err != nil {
 		return err
 	}
-
+	err = worker.Start(context.Background())
+	if err != nil {
+		return err
+	}
 	grw := &GatewayResourceWorker{
 		Worker:      worker,
 		UUID:        uuid,
@@ -74,13 +87,12 @@ func (m *GatewayResourceManager) LoadResource(uuid string, name string, resource
 		Config:      configMap,
 		Description: description,
 	}
-
 	m.resources.Set(uuid, grw)
 	return nil
 }
 
-// RestartResource 重启资源
-func (m *GatewayResourceManager) RestartResource(uuid string) error {
+// ReloadResource 重启资源
+func (m *GatewayResourceManager) ReloadResource(uuid string) error {
 	m.mu.RLock()
 	defer m.mu.RUnlock()
 	worker, exists := m.resources.Get(uuid)
@@ -88,8 +100,7 @@ func (m *GatewayResourceManager) RestartResource(uuid string) error {
 		return fmt.Errorf("resource not found: %s", uuid)
 	}
 	worker.Worker.Stop()
-	ctx := context.Background()
-	return worker.Worker.Start(ctx)
+	return m.LoadResource(uuid, worker.Name, worker.Type, worker.Config, worker.Description)
 }
 
 // StopResource 停止资源
@@ -113,7 +124,7 @@ func (m *GatewayResourceManager) GetResourceList() []*GatewayResourceWorker {
 }
 
 // GetResourceDetails 获取资源详情
-func (m *GatewayResourceManager) GetResourceDetails(uuid string) (*GatewayResourceWorker, error) {
+func (m *GatewayResourceManager) GetResource(uuid string) (*GatewayResourceWorker, error) {
 	m.mu.RLock()
 	defer m.mu.RUnlock()
 	worker, exists := m.resources.Get(uuid)
@@ -152,14 +163,18 @@ func (m *GatewayResourceManager) StartMonitoring() {
 			m.mu.RUnlock()
 
 			for _, worker := range workers {
+				glogger.GLogger.Debugf("Monitoring resource %s", worker.UUID)
 				status := worker.Worker.Status()
 
 				switch status {
 				case MEDIA_DOWN:
-					m.RestartResource(worker.UUID)
+					glogger.GLogger.Warningf("Resource %s is down, reloading:", worker.UUID)
+					m.ReloadResource(worker.UUID)
 				case MEDIA_STOP, MEDIA_DISABLE:
+					glogger.GLogger.Warningf("Resource %s is stopped, stopping:", worker.UUID)
 					m.StopResource(worker.UUID)
 				case MEDIA_PENDING:
+					glogger.GLogger.Debugf("Resource %s is pending, starting:", worker.UUID)
 					continue
 				}
 			}

@@ -31,17 +31,20 @@ var __DefaultMultimediaResourceManager *MultimediaResourceManager
 *
  */
 type MultimediaResourceManager struct {
-	RuleEngine        typex.Rhilex
-	MultimediaStreams *xmanager.GatewayResourceManager
+	RuleEngine                typex.Rhilex
+	MultimediaResourceManager *xmanager.GatewayResourceManager
 }
 
 // 初始化多媒体运行时
 func InitMultimediaRuntime(Rhilex typex.Rhilex) {
 	__DefaultMultimediaResourceManager = &MultimediaResourceManager{
-		RuleEngine:        Rhilex,
-		MultimediaStreams: xmanager.NewGatewayResourceManager(),
+		RuleEngine:                Rhilex,
+		MultimediaResourceManager: xmanager.NewGatewayResourceManager(Rhilex),
 	}
-	// Cecolla Config
+
+	__DefaultMultimediaResourceManager.MultimediaResourceManager.RegisterType("RTSP_STREAM", NewRTSPResource)
+	__DefaultMultimediaResourceManager.MultimediaResourceManager.StartMonitoring()
+
 	intercache.RegisterSlot("__MultimediaBinding")
 	glogger.GLogger.Infof("MultimediaResourceManager is initialized")
 }
@@ -51,7 +54,7 @@ func StopMultimediaRuntime() {
 	if __DefaultMultimediaResourceManager == nil {
 		return
 	}
-	for _, resource := range __DefaultMultimediaResourceManager.MultimediaStreams.GetResourceList() {
+	for _, resource := range __DefaultMultimediaResourceManager.MultimediaResourceManager.GetResourceList() {
 		if resource.Worker != nil {
 			glogger.GLogger.Infof("Stop resource: %s", resource.UUID)
 			resource.Worker.Stop()
@@ -62,11 +65,13 @@ func StopMultimediaRuntime() {
 }
 
 // 加载多媒体资源
-func LoadMultimediaResource(uuid string, name string, resourceType string, configMap map[string]interface{}, description string) error {
+func LoadMultimediaResource(uuid string, name string, resourceType string,
+	configMap map[string]interface{}, description string) error {
 	if __DefaultMultimediaResourceManager == nil {
 		return fmt.Errorf("MultimediaResourceManager is not initialized")
 	}
-	return __DefaultMultimediaResourceManager.MultimediaStreams.LoadResource(uuid, name, resourceType, configMap, description)
+	return __DefaultMultimediaResourceManager.MultimediaResourceManager.LoadResource(uuid, name,
+		resourceType, configMap, description)
 }
 
 // 重启多媒体资源
@@ -74,7 +79,7 @@ func RestartMultimediaResource(uuid string) error {
 	if __DefaultMultimediaResourceManager == nil {
 		return fmt.Errorf("MultimediaResourceManager is not initialized")
 	}
-	return __DefaultMultimediaResourceManager.MultimediaStreams.RestartResource(uuid)
+	return __DefaultMultimediaResourceManager.MultimediaResourceManager.ReloadResource(uuid)
 }
 
 // 停止指定的多媒体资源
@@ -82,7 +87,7 @@ func StopMultimediaResource(uuid string) error {
 	if __DefaultMultimediaResourceManager == nil {
 		return fmt.Errorf("MultimediaResourceManager is not initialized")
 	}
-	return __DefaultMultimediaResourceManager.MultimediaStreams.StopResource(uuid)
+	return __DefaultMultimediaResourceManager.MultimediaResourceManager.StopResource(uuid)
 }
 
 // 获取多媒体资源列表
@@ -90,7 +95,7 @@ func GetMultimediaResourceList() []*xmanager.GatewayResourceWorker {
 	if __DefaultMultimediaResourceManager == nil {
 		return nil
 	}
-	return __DefaultMultimediaResourceManager.MultimediaStreams.GetResourceList()
+	return __DefaultMultimediaResourceManager.MultimediaResourceManager.GetResourceList()
 }
 
 // 获取多媒体资源详情
@@ -98,7 +103,7 @@ func GetMultimediaResourceDetails(uuid string) (*xmanager.GatewayResourceWorker,
 	if __DefaultMultimediaResourceManager == nil {
 		return nil, fmt.Errorf("MultimediaResourceManager is not initialized")
 	}
-	return __DefaultMultimediaResourceManager.MultimediaStreams.GetResourceDetails(uuid)
+	return __DefaultMultimediaResourceManager.MultimediaResourceManager.GetResource(uuid)
 }
 
 // 获取多媒体资源状态
@@ -106,7 +111,7 @@ func GetMultimediaResourceStatus(uuid string) (xmanager.GatewayResourceState, er
 	if __DefaultMultimediaResourceManager == nil {
 		return xmanager.MEDIA_DOWN, fmt.Errorf("MultimediaResourceManager is not initialized")
 	}
-	return __DefaultMultimediaResourceManager.MultimediaStreams.GetResourceStatus(uuid)
+	return __DefaultMultimediaResourceManager.MultimediaResourceManager.GetResourceStatus(uuid)
 }
 
 // 开始监控多媒体资源
@@ -114,13 +119,14 @@ func StartMultimediaResourceMonitoring() {
 	if __DefaultMultimediaResourceManager == nil {
 		return
 	}
-	__DefaultMultimediaResourceManager.MultimediaStreams.StartMonitoring()
+	__DefaultMultimediaResourceManager.MultimediaResourceManager.StartMonitoring()
 }
 
 // 注册多媒体资源类型
-func RegisterMultimediaResourceType(resourceType string, factory func(map[string]interface{}) (xmanager.GatewayResource, error)) {
+func RegisterMultimediaResourceType(resourceType string,
+	factory func(*xmanager.GatewayResourceManager) (xmanager.GatewayResource, error)) {
 	if __DefaultMultimediaResourceManager == nil {
 		return
 	}
-	__DefaultMultimediaResourceManager.MultimediaStreams.RegisterType(resourceType, factory)
+	__DefaultMultimediaResourceManager.MultimediaResourceManager.RegisterType(resourceType, factory)
 }
