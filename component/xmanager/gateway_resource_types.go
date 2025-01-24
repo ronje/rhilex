@@ -16,7 +16,10 @@
 // gateway_resource_types.go
 package xmanager
 
-import "context"
+import (
+	"context"
+	"fmt"
+)
 
 // GatewayResourceState 资源状态类型
 type GatewayResourceState int
@@ -62,6 +65,11 @@ type ResourceServiceArg struct {
 	Args []any
 }
 
+// To string
+func (s *ResourceServiceArg) String() string {
+	return fmt.Sprintf(" ResourceServiceArg UUID: %s, Args: %v", s.UUID, s.Args)
+}
+
 // 资源服务
 type ResourceServiceRequest struct {
 	Name   string               // 服务名称
@@ -76,6 +84,11 @@ type ResourceServiceResponse struct {
 	Error  error
 }
 
+// to string
+func (s *ResourceServiceResponse) String() string {
+	return fmt.Sprintf("ResourceServiceResponse Type: %s, Result: %v, Error: %v", s.Type, s.Result, s.Error)
+}
+
 // 资源服务
 type ResourceService struct {
 	Name        string                  // 服务名称
@@ -83,6 +96,12 @@ type ResourceService struct {
 	Method      string                  // 服务方法
 	Args        []ResourceServiceArg    // 服务参数
 	Response    ResourceServiceResponse // 服务返回
+}
+
+// to string
+func (s *ResourceService) String() string {
+	return fmt.Sprintf("ResourceService Name: %s, Description: %s, Method: %s, Args: %v, Response: %v",
+		s.Name, s.Description, s.Method, s.Args, s.Response)
 }
 
 // GatewayResource 多媒体资源工作接口
