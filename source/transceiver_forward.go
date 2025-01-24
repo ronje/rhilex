@@ -42,38 +42,39 @@ func NewTransceiverForwarder(r typex.Rhilex) typex.XSource {
 	u.subscriber = eventbus.Subscriber{
 		Callback: func(Topic string, Event eventbus.EventMessage) {
 			if u.mainConfig.ComName != "" {
-				// glogger.GLogger.Debug(ID, " Received Data:", Event.String())
-				switch T := Event.Payload.(type) {
-				case []byte:
-					comData := RuleData{
-						ComName: u.mainConfig.ComName,
-						Data:    hex.EncodeToString(T),
-					}
-					work, err := u.RuleEngine.WorkInEnd(u.RuleEngine.GetInEnd(u.PointId),
-						comData.String())
-					if !work {
-						glogger.GLogger.Error(err)
-						return
-					}
-				case string:
-					comData := RuleData{
-						ComName: u.mainConfig.ComName,
-						Data:    T,
-					}
-					work, err := u.RuleEngine.WorkInEnd(u.RuleEngine.GetInEnd(u.PointId),
-						comData.String())
-					if !work {
-						glogger.GLogger.Error(err)
-						return
-					}
-				default:
-					glogger.GLogger.Error(fmt.Errorf("unsupported data type:%v", T))
-				}
+				handleEvent(&u, Event)
 			}
 		},
 	}
 	u.RuleEngine = r
 	return &u
+}
+
+func handleEvent(u *TransceiverForwarder, Event eventbus.EventMessage) {
+	switch T := Event.Payload.(type) {
+	case []byte:
+		comData := RuleData{
+			ComName: u.mainConfig.ComName,
+			Data:    hex.EncodeToString(T),
+		}
+		processData(u, comData)
+	case string:
+		comData := RuleData{
+			ComName: u.mainConfig.ComName,
+			Data:    T,
+		}
+		processData(u, comData)
+	default:
+		glogger.GLogger.Error(fmt.Errorf("unsupported data type:%v", T))
+	}
+}
+
+func processData(u *TransceiverForwarder, comData RuleData) {
+	work, err := u.RuleEngine.WorkInEnd(u.RuleEngine.GetInEnd(u.PointId),
+		comData.String())
+	if !work {
+		glogger.GLogger.Error(err)
+	}
 }
 
 func (u *TransceiverForwarder) Init(inEndId string, configMap map[string]interface{}) error {
