@@ -36,6 +36,7 @@ import (
 	"github.com/hootrhino/rhilex/component/interqueue"
 	"github.com/hootrhino/rhilex/component/lostcache"
 	"github.com/hootrhino/rhilex/component/luaexecutor"
+	"github.com/hootrhino/rhilex/component/multimedia"
 	"github.com/hootrhino/rhilex/component/orderedmap"
 	"github.com/hootrhino/rhilex/component/rhilexmanager"
 	"github.com/hootrhino/rhilex/component/security"
@@ -123,6 +124,8 @@ func InitRuleEngine(config typex.RhilexConfig) typex.Rhilex {
 	rhilexmanager.InitCecollaTypeManager(__DefaultRuleEngine)
 	// Init Plugin TypeManager
 	rhilexmanager.InitPluginTypeManager(__DefaultRuleEngine)
+	// Init Multimedia
+	multimedia.InitMultimediaRuntime(__DefaultRuleEngine)
 	return __DefaultRuleEngine
 }
 
@@ -200,6 +203,11 @@ func (e *RuleEngine) Stop() {
 	glogger.GLogger.Info("Stop PluginType Manager")
 	rhilexmanager.DefaultPluginTypeManager.Stop()
 	glogger.GLogger.Info("Stop PluginType Successfully")
+	// Stop Multimedia Runtime
+	glogger.GLogger.Info("Stop Multimedia Runtime")
+	multimedia.StopMultimediaRuntime()
+	glogger.GLogger.Info("Stop Multimedia Runtime Successfully")
+
 	// END
 	// UnRegister __DefaultRuleEngine
 	intercache.UnRegisterSlot("__DefaultRuleEngine")

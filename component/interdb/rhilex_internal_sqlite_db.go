@@ -86,3 +86,54 @@ func InterDb() *gorm.DB {
 func InterDbRegisterModel(dist ...interface{}) {
 	__InternalSqlite.db.AutoMigrate(dist...)
 }
+
+// GetDB 获取数据库连接实例
+func GetDB() *gorm.DB {
+	return __InternalSqlite.db
+}
+
+// Create 创建数据
+func Create(value interface{}) error {
+	return __InternalSqlite.db.Create(value).Error
+}
+
+// Read 查询数据
+func Read(dest interface{}, conditions ...interface{}) error {
+	return __InternalSqlite.db.Find(dest, conditions...).Error
+}
+
+// ReadWithPagination 分页查询数据
+func ReadWithPagination(dest interface{}, page, pageSize int, conditions ...interface{}) error {
+	offset := (page - 1) * pageSize
+	return __InternalSqlite.db.Where(conditions).Offset(offset).Limit(pageSize).Find(dest).Error
+}
+
+// Update 更新数据
+func Update(value interface{}, conditions ...interface{}) error {
+	return __InternalSqlite.db.Where(conditions).Updates(value).Error
+}
+
+// Delete 删除数据
+func Delete(value interface{}, conditions ...interface{}) error {
+	return __InternalSqlite.db.Where(conditions).Delete(value).Error
+}
+
+// CreateTable 创建表
+func CreateTable(models ...interface{}) error {
+	return __InternalSqlite.db.AutoMigrate(models...)
+}
+
+// DropTable 删除表
+func DropTable(models ...interface{}) error {
+	return __InternalSqlite.db.Migrator().DropTable(models...)
+}
+
+// CreateDatabase 创建数据库
+func CreateDatabase(dbName string) error {
+	return __InternalSqlite.db.Exec("CREATE DATABASE IF NOT EXISTS " + dbName).Error
+}
+
+// DropDatabase 删除数据库
+func DropDatabase(dbName string) error {
+	return __InternalSqlite.db.Exec("DROP DATABASE IF EXISTS " + dbName).Error
+}

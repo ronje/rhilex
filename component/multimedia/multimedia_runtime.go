@@ -12,47 +12,115 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
-
 package multimedia
 
 import (
-	"sync"
+	"fmt"
 
 	"github.com/hootrhino/rhilex/component/intercache"
+	"github.com/hootrhino/rhilex/component/xmanager"
 	"github.com/hootrhino/rhilex/glogger"
 	"github.com/hootrhino/rhilex/typex"
 )
 
-var __DefaultMultimediaRuntime *MultimediaRuntime
+var __DefaultMultimediaResourceManager *MultimediaResourceManager
 
 /*
 *
 * 管理器
 *
  */
-type MultimediaRuntime struct {
-	locker            sync.RWMutex
+type MultimediaResourceManager struct {
 	RuleEngine        typex.Rhilex
-	MultimediaStreams map[string]*MultimediaStream
+	MultimediaStreams *xmanager.GatewayResourceManager
 }
 
-func InitMultimediaRuntime(re typex.Rhilex) *MultimediaRuntime {
-	__DefaultMultimediaRuntime = &MultimediaRuntime{
-		RuleEngine:        re,
-		locker:            sync.RWMutex{},
-		MultimediaStreams: make(map[string]*MultimediaStream),
+// 初始化多媒体运行时
+func InitMultimediaRuntime(Rhilex typex.Rhilex) {
+	__DefaultMultimediaResourceManager = &MultimediaResourceManager{
+		RuleEngine:        Rhilex,
+		MultimediaStreams: xmanager.NewGatewayResourceManager(),
 	}
 	// Cecolla Config
 	intercache.RegisterSlot("__MultimediaBinding")
-	return __DefaultMultimediaRuntime
+	glogger.GLogger.Infof("MultimediaResourceManager is initialized")
 }
 
-func Stop() {
-	__DefaultMultimediaRuntime.locker.Lock()
-	defer __DefaultMultimediaRuntime.locker.Unlock()
-	for _, v := range __DefaultMultimediaRuntime.MultimediaStreams {
-		StopMultimediaStream(v.UUID)
+// 停止所有资源
+func StopMultimediaRuntime() {
+	if __DefaultMultimediaResourceManager == nil {
+		return
+	}
+	for _, resource := range __DefaultMultimediaResourceManager.MultimediaStreams.GetResourceList() {
+		if resource.Worker != nil {
+			glogger.GLogger.Infof("Stop resource: %s", resource.UUID)
+			resource.Worker.Stop()
+		}
 	}
 	intercache.UnRegisterSlot("__MultimediaBinding")
-	glogger.GLogger.Info("multimedia stopped")
+	glogger.GLogger.Infof("MultimediaResourceManager is stopped")
+}
+
+// 加载多媒体资源
+func LoadMultimediaResource(uuid string, name string, resourceType string, configMap map[string]interface{}, description string) error {
+	if __DefaultMultimediaResourceManager == nil {
+		return fmt.Errorf("MultimediaResourceManager is not initialized")
+	}
+	return __DefaultMultimediaResourceManager.MultimediaStreams.LoadResource(uuid, name, resourceType, configMap, description)
+}
+
+// 重启多媒体资源
+func RestartMultimediaResource(uuid string) error {
+	if __DefaultMultimediaResourceManager == nil {
+		return fmt.Errorf("MultimediaResourceManager is not initialized")
+	}
+	return __DefaultMultimediaResourceManager.MultimediaStreams.RestartResource(uuid)
+}
+
+// 停止指定的多媒体资源
+func StopMultimediaResource(uuid string) error {
+	if __DefaultMultimediaResourceManager == nil {
+		return fmt.Errorf("MultimediaResourceManager is not initialized")
+	}
+	return __DefaultMultimediaResourceManager.MultimediaStreams.StopResource(uuid)
+}
+
+// 获取多媒体资源列表
+func GetMultimediaResourceList() []*xmanager.GatewayResourceWorker {
+	if __DefaultMultimediaResourceManager == nil {
+		return nil
+	}
+	return __DefaultMultimediaResourceManager.MultimediaStreams.GetResourceList()
+}
+
+// 获取多媒体资源详情
+func GetMultimediaResourceDetails(uuid string) (*xmanager.GatewayResourceWorker, error) {
+	if __DefaultMultimediaResourceManager == nil {
+		return nil, fmt.Errorf("MultimediaResourceManager is not initialized")
+	}
+	return __DefaultMultimediaResourceManager.MultimediaStreams.GetResourceDetails(uuid)
+}
+
+// 获取多媒体资源状态
+func GetMultimediaResourceStatus(uuid string) (xmanager.GatewayResourceState, error) {
+	if __DefaultMultimediaResourceManager == nil {
+		return xmanager.MEDIA_DOWN, fmt.Errorf("MultimediaResourceManager is not initialized")
+	}
+	return __DefaultMultimediaResourceManager.MultimediaStreams.GetResourceStatus(uuid)
+}
+
+// 开始监控多媒体资源
+func StartMultimediaResourceMonitoring() {
+	if __DefaultMultimediaResourceManager == nil {
+		return
+	}
+	__DefaultMultimediaResourceManager.MultimediaStreams.StartMonitoring()
+}
+
+// 注册多媒体资源类型
+func RegisterMultimediaResourceType(resourceType string, factory func(map[string]interface{}) (xmanager.GatewayResource, error)) {
+	if __DefaultMultimediaResourceManager == nil {
+		return
+	}
+	__DefaultMultimediaResourceManager.MultimediaStreams.RegisterType(resourceType, factory)
 }

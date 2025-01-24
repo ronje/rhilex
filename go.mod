@@ -30,6 +30,7 @@ require (
 	github.com/jinzhu/copier v0.4.0
 	github.com/lithammer/shortuuid/v4 v4.0.0
 	github.com/mattn/go-sqlite3 v1.14.24
+	github.com/mitchellh/mapstructure v1.5.0
 	github.com/mochi-mqtt/server/v2 v2.6.5
 	github.com/pkg/errors v0.9.1
 	github.com/pkg6/go-sms v0.1.2
