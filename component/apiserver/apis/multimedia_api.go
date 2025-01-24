@@ -57,12 +57,15 @@ func (cfg MultimediaConfig) Validate() error {
 	}
 	return nil
 }
-func (ms MultimediaConfig) FromString(s string) {
-	json.Unmarshal([]byte(s), &ms)
+
+// FromString 从字符串解析配置
+func (cfg *MultimediaConfig) FromString(s string) {
+	json.Unmarshal([]byte(s), cfg)
 }
 
-func (ms MultimediaConfig) JsonString() string {
-	jsonStr, _ := json.Marshal(ms)
+// JsonString 将配置转换为JSON字符串
+func (cfg MultimediaConfig) JsonString() string {
+	jsonStr, _ := json.Marshal(cfg)
 	return string(jsonStr)
 }
 
@@ -75,45 +78,52 @@ type MultiMediaVo struct {
 	Config      MultimediaConfig `json:"config" binding:"required"`
 }
 
+// validateMultiMediaVo 验证MultiMediaVo结构体
+func validateMultiMediaVo(multiMediaVo MultiMediaVo) error {
+	// 验证类型
+	if !utils.SContains([]string{"RTSP", "RTMP"}, multiMediaVo.Type) {
+		return fmt.Errorf("Invalid MultiMedia type [%s]", multiMediaVo.Type)
+	}
+	// 验证StreamUrl
+	if _, err := url.ParseRequestURI(multiMediaVo.Config.StreamUrl); err != nil {
+		return err
+	}
+	// 验证PushUrl
+	if multiMediaVo.Config.EnablePush != nil && *multiMediaVo.Config.EnablePush {
+		if _, err := url.ParseRequestURI(multiMediaVo.Config.PushUrl); err != nil {
+			return err
+		}
+		// 验证AiModel
+		if !utils.SContains([]string{"YOLOV8", "FACENET"}, multiMediaVo.Config.AiModel) {
+			return fmt.Errorf("Only Support one of YOLOV8 or FACENET")
+		}
+	}
+	return nil
+}
+
+// CreateMultiMedia 创建多媒体资源
 func CreateMultiMedia(c *gin.Context, ruleEngine typex.Rhilex) {
-	MultiMediaVo := MultiMediaVo{}
-	if err := c.ShouldBindJSON(&MultiMediaVo); err != nil {
+	var multiMediaVo MultiMediaVo
+	if err := c.ShouldBindJSON(&multiMediaVo); err != nil {
 		c.JSON(common.HTTP_OK, common.Error400(err))
 		return
 	}
 	// 验证参数
-	if !utils.SContains([]string{"RTSP", "RTMP"}, MultiMediaVo.Type) {
-		c.JSON(common.HTTP_OK, common.Error400(fmt.Errorf("Invalid MultiMedia type [%s]", MultiMediaVo.Type)))
-		return
-	}
-	// 验证其他参数
-	if _, err := url.ParseRequestURI(MultiMediaVo.Config.StreamUrl); err != nil {
+	if err := validateMultiMediaVo(multiMediaVo); err != nil {
 		c.JSON(common.HTTP_OK, common.Error400(err))
 		return
 	}
-	if *MultiMediaVo.Config.EnablePush {
-		if _, err := url.ParseRequestURI(MultiMediaVo.Config.PushUrl); err != nil {
-			c.JSON(common.HTTP_OK, common.Error400(err))
-			return
-		}
-	}
-	if *MultiMediaVo.Config.EnablePush {
-		if !utils.SContains([]string{"YOLOV8", "FACENET"}, MultiMediaVo.Config.AiModel) {
-			c.JSON(common.HTTP_OK, common.Error("Only Support one of YOLOV8 or FACENET"))
-			return
-		}
-	}
-	configJson, err := json.Marshal(MultiMediaVo.Config)
+	configJson, err := json.Marshal(multiMediaVo.Config)
 	if err != nil {
 		c.JSON(common.HTTP_OK, common.Error400(err))
 		return
 	}
 	if errSave := service.InsertMultiMedia(&model.MMultiMedia{
 		UUID:        utils.MultimediaUuid(),
-		Name:        MultiMediaVo.Name,
-		Type:        MultiMediaVo.Type,
+		Name:        multiMediaVo.Name,
+		Type:        multiMediaVo.Type,
 		Config:      string(configJson),
-		Description: MultiMediaVo.Description,
+		Description: multiMediaVo.Description,
 	}); errSave != nil {
 		c.JSON(common.HTTP_OK, common.Error400(errSave))
 		return
@@ -121,47 +131,33 @@ func CreateMultiMedia(c *gin.Context, ruleEngine typex.Rhilex) {
 	c.JSON(common.HTTP_OK, common.Ok())
 }
 
+// UpdateMultiMedia 更新多媒体资源
 func UpdateMultiMedia(c *gin.Context, ruleEngine typex.Rhilex) {
-	MultiMediaVo := MultiMediaVo{}
-	if err := c.ShouldBindJSON(&MultiMediaVo); err != nil {
+	var multiMediaVo MultiMediaVo
+	if err := c.ShouldBindJSON(&multiMediaVo); err != nil {
 		c.JSON(common.HTTP_OK, common.Error400(err))
 		return
 	}
 	// 验证参数
-	if !utils.SContains([]string{"RTSP", "RTMP"}, MultiMediaVo.Type) {
-		c.JSON(common.HTTP_OK, common.Error400(fmt.Errorf("Invalid MultiMedia type [%s]", MultiMediaVo.Type)))
-		return
-	}
-	// 验证其他参数
-	if _, err := url.ParseRequestURI(MultiMediaVo.Config.StreamUrl); err != nil {
+	if err := validateMultiMediaVo(multiMediaVo); err != nil {
 		c.JSON(common.HTTP_OK, common.Error400(err))
 		return
 	}
-	if *MultiMediaVo.Config.EnablePush {
-		if _, err := url.ParseRequestURI(MultiMediaVo.Config.PushUrl); err != nil {
-			c.JSON(common.HTTP_OK, common.Error400(err))
-			return
-		}
-	}
-	if *MultiMediaVo.Config.EnablePush {
-		if !utils.SContains([]string{"YOLOV8", "FACENET"}, MultiMediaVo.Config.AiModel) {
-			c.JSON(common.HTTP_OK, common.Error("Only Support one of YOLOV8 or FACENET"))
-			return
-		}
-	}
 	// 保存到数据库
 	if errSave := service.UpdateMultiMedia(&model.MMultiMedia{
-		UUID:        MultiMediaVo.UUID,
-		Name:        MultiMediaVo.Name,
-		Type:        MultiMediaVo.Type,
-		Config:      MultiMediaVo.Config.JsonString(),
-		Description: MultiMediaVo.Description,
+		UUID:        multiMediaVo.UUID,
+		Name:        multiMediaVo.Name,
+		Type:        multiMediaVo.Type,
+		Config:      multiMediaVo.Config.JsonString(),
+		Description: multiMediaVo.Description,
 	}); errSave != nil {
 		c.JSON(common.HTTP_OK, common.Error400(errSave))
 		return
 	}
 	c.JSON(common.HTTP_OK, common.Ok())
 }
+
+// MultiMediaDetail 获取多媒体资源详情
 func MultiMediaDetail(c *gin.Context, ruleEngine typex.Rhilex) {
 	uuid, ok := c.GetQuery("uuid")
 	if !ok {
@@ -184,6 +180,8 @@ func MultiMediaDetail(c *gin.Context, ruleEngine typex.Rhilex) {
 		Description: Model.Description,
 	}))
 }
+
+// ListMultiMedia 获取多媒体资源列表
 func ListMultiMedia(c *gin.Context, ruleEngine typex.Rhilex) {
 	pager, err := service.ReadPageRequest(c)
 	if err != nil {
@@ -212,7 +210,7 @@ func ListMultiMedia(c *gin.Context, ruleEngine typex.Rhilex) {
 	c.JSON(common.HTTP_OK, common.OkWithData(Result))
 }
 
-// 删除MultiMedia
+// DeleteMultiMedia 删除多媒体资源
 func DeleteMultiMedia(c *gin.Context, ruleEngine typex.Rhilex) {
 	uuid, ok := c.GetQuery("uuid")
 	if !ok {
@@ -223,6 +221,5 @@ func DeleteMultiMedia(c *gin.Context, ruleEngine typex.Rhilex) {
 		c.JSON(common.HTTP_OK, common.Error400(fmt.Errorf("delete failed: %v", err)))
 		return
 	}
-
 	c.JSON(common.HTTP_OK, common.Ok())
 }
