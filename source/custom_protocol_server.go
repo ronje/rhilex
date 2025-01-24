@@ -22,8 +22,8 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/hootrhino/rhilex/component/protocol"
 	"github.com/hootrhino/rhilex/glogger"
-	"github.com/hootrhino/rhilex/protocol"
 	"github.com/hootrhino/rhilex/typex"
 	"github.com/hootrhino/rhilex/utils"
 )

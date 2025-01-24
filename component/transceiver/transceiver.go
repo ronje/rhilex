@@ -24,8 +24,8 @@ import (
 	serial "github.com/hootrhino/goserial"
 	"github.com/hootrhino/rhilex/component/eventbus"
 
+	"github.com/hootrhino/rhilex/component/protocol"
 	"github.com/hootrhino/rhilex/glogger"
-	"github.com/hootrhino/rhilex/protocol"
 	"github.com/hootrhino/rhilex/typex"
 )
 

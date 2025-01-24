@@ -18,7 +18,7 @@ package test
 import (
 	"testing"
 
-	"github.com/hootrhino/rhilex/protocol"
+	"github.com/hootrhino/rhilex/component/protocol"
 )
 
 // go test -timeout 30s -run ^TestGenerateGenericFrameCode github.com/hootrhino/rhilex/test -v -count=1
