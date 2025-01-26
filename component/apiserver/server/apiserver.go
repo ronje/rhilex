@@ -98,6 +98,7 @@ func StartRhilexApiServer(ruleEngine typex.Rhilex, port int) {
 	server.ginEngine.Use(static.Serve("/", staticFs))
 	server.ginEngine.Use(Authorize())
 	server.ginEngine.Use(CheckLicense())
+	server.ginEngine.Use(DecryptMiddleware())
 	server.ginEngine.Use(Cros())
 	server.ginEngine.GET("/ws", glogger.WsLogger)
 	server.ginEngine.Use(gin.CustomRecovery(func(c *gin.Context, err any) {
