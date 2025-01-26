@@ -49,9 +49,9 @@ type XPluginMetaInfo struct {
 *
  */
 type XPlugin interface {
-	Init(*ini.Section) error // 参数为外部配置
-	Start(Rhilex) error
+	Init(*ini.Section) error          // 参数为外部配置
+	Start(Rhilex) error               // 启动插件
 	Service(ServiceArg) ServiceResult // 对外提供一些服务
-	Stop() error
-	PluginMetaInfo() XPluginMetaInfo
+	Stop() error                      // 停止插件
+	PluginMetaInfo() XPluginMetaInfo  // 插件的元信息
 }

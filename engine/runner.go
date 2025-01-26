@@ -21,6 +21,7 @@ import (
 	"strings"
 	"syscall"
 
+	"github.com/hootrhino/rhilex/plugin/discover"
 	wdog "github.com/hootrhino/rhilex/plugin/generic_watchdog"
 	modbusscrc "github.com/hootrhino/rhilex/plugin/modbus_crc_tools"
 	modbusscanner "github.com/hootrhino/rhilex/plugin/modbus_scanner"
@@ -117,6 +118,9 @@ func loadOtherPlugin() {
 		}
 		if name == "telemetry" {
 			plugin = telemetry.NewTelemetry()
+		}
+		if name == "discover" {
+			plugin = discover.NewDiscoverPlugin()
 		}
 		if plugin != nil {
 			if err := rhilexmanager.DefaultPluginTypeManager.LoadPlugin(section.Name(), plugin); err != nil {
