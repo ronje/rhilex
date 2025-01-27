@@ -7,81 +7,98 @@ import (
 	"gopkg.in/natefinch/lumberjack.v2"
 )
 
-/*
-*
-* 配置全局logging记录器
-*
- */
+// LogConfig 定义了日志配置结构体
+type LogConfig struct {
+	AppID         string
+	LogLevel      string
+	EnableConsole bool
+	DebugMode     bool
+	LogMaxSize    int
+	LogMaxBackups int
+	LogMaxAge     int
+	LogCompress   bool
+}
 
+// Logrus 是 logrus 的全局实例
 var Logrus *logrus.Logger
+
+// GLogger 是 logrus 的全局 Entry 实例
 var GLogger *logrus.Entry
 
-func StartGLogger(appId string, LogLevel string, EnableConsole bool,
-	DebugMode bool, LogMaxSize, LogMaxBackups, LogMaxAge int, LogCompress bool) {
+// StartGLogger 启动全局日志记录器
+func StartGLogger(config LogConfig) {
 	Logrus = logrus.New()
-	GLogger = Logrus.WithField("appId", appId)
+	GLogger = Logrus.WithField("appId", config.AppID)
 	Logrus.Formatter = &logrus.JSONFormatter{
 		DisableHTMLEscape: true,
 		TimestampFormat:   "2006-01-02T15:04:05.999999999Z07:00",
 	}
-	if DebugMode {
+	if config.DebugMode {
 		Logrus.SetReportCaller(true)
 	}
-	if EnableConsole {
+	if config.EnableConsole {
 		Logrus.SetOutput(os.Stdout)
 	} else {
 		Logrus.SetOutput(&lumberjack.Logger{
 			Filename:   "rhilex-running-log.txt",
-			MaxSize:    LogMaxSize,    // 超过10Mb备份
-			MaxBackups: LogMaxBackups, // 最多备份3次
-			MaxAge:     LogMaxAge,     // 最大保留天数
-			Compress:   LogCompress,   // 压缩备份
+			MaxSize:    config.LogMaxSize,
+			MaxBackups: config.LogMaxBackups,
+			MaxAge:     config.LogMaxAge,
+			Compress:   config.LogCompress,
 		})
 	}
-
-	setLogLevel(LogLevel)
+	setLogLevel(config.LogLevel)
 }
-func setLogLevel(LogLevel string) {
-	switch LogLevel {
-	case "fatal":
-		Logrus.SetLevel(logrus.FatalLevel)
-	case "error":
-		Logrus.SetLevel(logrus.ErrorLevel)
-	case "warn":
-		Logrus.SetLevel(logrus.WarnLevel)
-	case "debug":
-		Logrus.SetLevel(logrus.DebugLevel)
-	case "info":
-		Logrus.SetLevel(logrus.InfoLevel)
-	case "all", "trace":
-		Logrus.SetLevel(logrus.TraceLevel)
+
+// setLogLevel 设置日志级别
+func setLogLevel(logLevel string) {
+	levelMap := map[string]logrus.Level{
+		"fatal": logrus.FatalLevel,
+		"error": logrus.ErrorLevel,
+		"warn":  logrus.WarnLevel,
+		"debug": logrus.DebugLevel,
+		"info":  logrus.InfoLevel,
+		"all":   logrus.TraceLevel,
+		"trace": logrus.TraceLevel,
 	}
-
+	if level, ok := levelMap[logLevel]; ok {
+		Logrus.SetLevel(level)
+	} else {
+		Logrus.SetLevel(logrus.InfoLevel)
+	}
 }
+
+// Info 记录 INFO 级别的日志
 func Info(args ...interface{}) {
 	GLogger.Info(args...)
 }
+
+// Infof 记录 INFO 级别的格式化日志
 func Infof(format string, args ...interface{}) {
 	GLogger.Infof(format, args...)
 }
+
+// Error 记录 ERROR 级别的日志
 func Error(args ...interface{}) {
 	GLogger.Error(args...)
 }
+
+// Errorf 记录 ERROR 级别的格式化日志
 func Errorf(format string, args ...interface{}) {
 	GLogger.Errorf(format, args...)
 }
+
+// Debug 记录 DEBUG 级别的日志
 func Debug(args ...interface{}) {
 	GLogger.Debug(args...)
 }
+
+// Debugf 记录 DEBUG 级别的格式化日志
 func Debugf(format string, args ...interface{}) {
 	GLogger.Debugf(format, args...)
 }
 
-/*
-*
-* 关闭日志记录器
-*
- */
+// Close 关闭日志记录器
 func Close() error {
 	return GLogger.Writer().Close()
 }

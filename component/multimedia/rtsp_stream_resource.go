@@ -56,20 +56,20 @@ func (r *RTSPResource) Init(uuid string, configMap map[string]interface{}) error
 		return err
 	}
 	r.state = xmanager.MEDIA_PENDING
-	glogger.GLogger.Warningf("RTSP resource %s initialized with config: %+v", uuid, r.config)
+	glogger.GLogger.Infof("RTSP resource %s initialized with config: %+v", uuid, r.config)
 	return nil
 }
 
 // Start 启动RTSP资源
 func (r *RTSPResource) Start(ctx context.Context) error {
 	r.state = xmanager.MEDIA_UP
-	glogger.GLogger.Warningf("RTSP resource %s started, pulling stream from %s", r.uuid, r.config.StreamUrl)
+	glogger.GLogger.Infof("RTSP resource %s started, pulling stream from %s", r.uuid, r.config.StreamUrl)
 	return nil
 }
 
 // Status 获取RTSP资源状态
 func (r *RTSPResource) Status() xmanager.GatewayResourceState {
-	glogger.GLogger.Warningf("RTSP resource %s status: %s", r.uuid, r.state)
+	glogger.GLogger.Infof("RTSP resource %s status: %s", r.uuid, r.state)
 	return r.state
 }
 
@@ -93,7 +93,7 @@ func (r *RTSPResource) Services() []xmanager.ResourceService {
 
 // OnService 处理RTSP资源服务请求
 func (r *RTSPResource) OnService(request xmanager.ResourceServiceRequest) (xmanager.ResourceServiceResponse, error) {
-	glogger.GLogger.Warningf("RTSP resource %s received service request: %+v", r.uuid, request)
+	glogger.GLogger.Debugf("RTSP resource %s received service request: %+v", r.uuid, request)
 	if request.Name == "rtsp" && request.Method == "start" {
 		if len(request.Args) == 1 {
 			streamUrl, ok := request.Args[0].Args[0].(string)
@@ -113,7 +113,7 @@ func (r *RTSPResource) OnService(request xmanager.ResourceServiceRequest) (xmana
 
 // Details 获取RTSP资源详情
 func (r *RTSPResource) Details() *xmanager.GatewayResourceWorker {
-	glogger.GLogger.Warningf("RTSP resource %s details: %+v", r.uuid, r.config)
+	glogger.GLogger.Debugf("RTSP resource %s details: %+v", r.uuid, r.config)
 	if r.manager == nil {
 		return nil
 	}
@@ -124,5 +124,5 @@ func (r *RTSPResource) Details() *xmanager.GatewayResourceWorker {
 // Stop 停止RTSP资源
 func (r *RTSPResource) Stop() {
 	r.state = xmanager.MEDIA_STOP
-	glogger.GLogger.Warningf("RTSP resource %s stopped", r.uuid)
+	glogger.GLogger.Infof("RTSP resource %s stopped", r.uuid)
 }

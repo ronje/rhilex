@@ -73,16 +73,16 @@ func HttpGet(api string) string {
  */
 func RunTestEngine() typex.Rhilex {
 	mainConfig := core.InitGlobalConfig("config/rhilex.ini")
-	glogger.StartGLogger(
-		mainConfig.AppId,
-		mainConfig.LogLevel,
-		mainConfig.EnableConsole,
-		mainConfig.DebugMode,
-		mainConfig.LogMaxSize,
-		mainConfig.LogMaxBackups,
-		mainConfig.LogMaxAge,
-		mainConfig.LogCompress,
-	)
+	glogger.StartGLogger(glogger.LogConfig{
+		AppID:         mainConfig.AppId,
+		LogLevel:      mainConfig.LogLevel,
+		EnableConsole: mainConfig.EnableConsole,
+		DebugMode:     mainConfig.DebugMode,
+		LogMaxSize:    mainConfig.LogMaxSize,
+		LogMaxBackups: mainConfig.LogMaxBackups,
+		LogMaxAge:     mainConfig.LogMaxAge,
+		LogCompress:   mainConfig.LogCompress,
+	})
 	glogger.StartNewRealTimeLogger(core.GlobalConfig.LogLevel)
 	performance.SetDebugMode(mainConfig.EnablePProf)
 	performance.SetGomaxProcs(mainConfig.GomaxProcs)
