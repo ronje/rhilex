@@ -110,9 +110,10 @@ func StopAlarmCenter() {
 
 }
 
-// Load Expr
+// LoadAlarmRule 加载告警规则
 func LoadAlarmRule(uuid string, alarmRule AlarmRule) error {
-	ExprDefines := []ExprDefine{}
+	// 预分配切片容量，避免多次内存分配
+	ExprDefines := make([]ExprDefine, 0, len(alarmRule.ExprDefines))
 	for _, exprDefine := range alarmRule.ExprDefines {
 		program, err := expr.Compile(exprDefine.Expr, expr.AsBool())
 		if err != nil {
@@ -128,46 +129,61 @@ func LoadAlarmRule(uuid string, alarmRule AlarmRule) error {
 	__DefaultAlarmCenter.registry.Set(uuid, NewAlarm)
 	return nil
 }
-func ReLoadAlarmRule(uuid string, alarmRule AlarmRule) error {
-	RemoveExpr(uuid)
-	return LoadAlarmRule(uuid, alarmRule)
-}
 
-// Run Expr
+// RunExpr 运行表达式
 func RunExpr(ruleId, Source string, in map[string]any) (bool, error) {
 	AlarmRule, ok := __DefaultAlarmCenter.registry.Get(ruleId)
-	if ok {
-		group := sync.WaitGroup{}
-		group.Add(len(AlarmRule.ExprDefines))
-		for _, ExprDefine := range AlarmRule.ExprDefines {
-			go func() {
-				defer group.Done()
-				output, err := expr.Run(ExprDefine.program, in)
-				if err != nil {
-					return
-				}
-				switch T := output.(type) {
-				case bool:
-					if T {
-						if AlarmRule.AddLog() {
-							__DefaultAlarmCenter.QueueData <- QueueData{
-								In:        in,
-								RuleId:    ruleId,
-								Source:    Source,
-								Expr:      ExprDefine.Expr,
-								EventType: ExprDefine.EventType,
-								HandleId:  AlarmRule.HandleId,
-								Data:      BeautifulMapPrint(in),
-							}
+	if !ok {
+		return false, errors.New("AlarmRule not exists in registry:" + ruleId)
+	}
+
+	// 定义一个带缓冲的通道，用于限制并发数量
+	errCh := make(chan error, len(AlarmRule.ExprDefines))
+	var wg sync.WaitGroup
+	wg.Add(len(AlarmRule.ExprDefines))
+
+	for _, exprDefine := range AlarmRule.ExprDefines {
+		go func(exprDefine ExprDefine) {
+			defer wg.Done()
+			output, err := expr.Run(exprDefine.program, in)
+			if err != nil {
+				errCh <- err
+				return
+			}
+			switch T := output.(type) {
+			case bool:
+				if T {
+					if AlarmRule.AddLog() {
+						__DefaultAlarmCenter.QueueData <- QueueData{
+							In:        in,
+							RuleId:    ruleId,
+							Source:    Source,
+							Expr:      exprDefine.Expr,
+							EventType: exprDefine.EventType,
+							HandleId:  AlarmRule.HandleId,
+							Data:      BeautifulMapPrint(in),
 						}
 					}
 				}
-			}()
-		}
-		group.Wait()
-		return true, nil
+			}
+		}(exprDefine)
 	}
-	return false, errors.New("AlarmRule not exists in registry:" + ruleId)
+
+	wg.Wait()
+	close(errCh)
+
+	// 检查是否有错误发生
+	for err := range errCh {
+		if err != nil {
+			return false, err
+		}
+	}
+
+	return true, nil
+}
+func ReLoadAlarmRule(uuid string, alarmRule AlarmRule) error {
+	RemoveExpr(uuid)
+	return LoadAlarmRule(uuid, alarmRule)
 }
 
 // Remove Expr
