@@ -17,6 +17,7 @@ package luaexecutor
 
 import (
 	"errors"
+	"fmt"
 
 	lua "github.com/hootrhino/gopher-lua"
 	"github.com/hootrhino/rhilex/component/interpipeline"
@@ -30,14 +31,34 @@ const (
 )
 
 // LUA Callback : Success
+// ExecuteSuccess 执行成功回调，调用 interpipeline.Execute 函数并传递 SUCCESS_KEY
+// vm 是 Lua 虚拟机的状态
+// 返回 interpipeline.Execute 函数的执行结果和错误信息
 func ExecuteSuccess(vm *lua.LState) (interface{}, error) {
-	return interpipeline.Execute(vm, SUCCESS_KEY)
+	// 调用 interpipeline.Execute 函数并传递 SUCCESS_KEY
+	result, err := interpipeline.Execute(vm, SUCCESS_KEY)
+	if err != nil {
+		// 如果执行过程中出现错误，记录错误信息并返回
+		// 这里可以根据实际需求添加更详细的日志记录，如使用日志库
+		return nil, fmt.Errorf("Execute Success Error: %w", err)
+	}
+	return result, nil
 }
 
 // LUA Callback : Failed
-
+// ExecuteFailed 执行失败回调，调用 interpipeline.Execute 函数并传递 FAILED_KEY 和额外的参数
+// vm 是 Lua 虚拟机的状态
+// arg 是传递给 interpipeline.Execute 函数的额外参数
+// 返回 interpipeline.Execute 函数的执行结果和错误信息
 func ExecuteFailed(vm *lua.LState, arg lua.LValue) (interface{}, error) {
-	return interpipeline.Execute(vm, FAILED_KEY, arg)
+	// 调用 interpipeline.Execute 函数并传递 FAILED_KEY 和额外的参数
+	result, err := interpipeline.Execute(vm, FAILED_KEY, arg)
+	if err != nil {
+		// 如果执行过程中出现错误，记录错误信息并返回
+		// 这里可以根据实际需求添加更详细的日志记录，如使用日志库
+		return nil, fmt.Errorf("Execute Failed Error: %w", err)
+	}
+	return result, nil
 }
 
 /*
