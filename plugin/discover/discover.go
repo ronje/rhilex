@@ -19,14 +19,8 @@ type ProbeMessage struct {
 	Token       string `json:"token"`
 }
 
-// to string
 func (pm *ProbeMessage) String() string {
-	bytes, err := json.Marshal(pm)
-	if err != nil {
-		glogger.GLogger.Error(err)
-		return ""
-	}
-	return string(bytes)
+	return fmt.Sprintf("ProbeMessage Type: %s, NodeID: %s, Token: %s", pm.MessageType, pm.NodeID, pm.Token)
 }
 
 // Node 节点信息
