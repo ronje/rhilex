@@ -26,7 +26,9 @@ func CheckLicense() gin.HandlerFunc {
 }
 
 func checkLicense(c *gin.Context) {
-	if len(typex.License.License) == 0 {
+	if typex.License.AuthorizeAdmin == "" ||
+		typex.License.AuthorizePassword == "" ||
+		typex.License.Type == "" {
 		c.AbortWithStatusJSON(400, map[string]interface{}{
 			"code": 4001,
 			"msg":  "Invalid license!",
