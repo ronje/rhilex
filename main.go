@@ -69,7 +69,7 @@ func main() {
 		Commands: []*cli.Command{
 			{
 				Name:  "run",
-				Usage: "start rhilex system",
+				Usage: "Start RHILEX",
 				Flags: []cli.Flag{
 					&cli.StringFlag{
 						Name:  "db",
@@ -504,7 +504,7 @@ func main() {
 			// version
 			{
 				Name:        "version",
-				Usage:       "print rhilex version",
+				Usage:       "Show rhilex Current Version",
 				Description: "Show rhilex Current Version",
 				Flags: []cli.Flag{
 					&cli.StringFlag{
@@ -521,7 +521,7 @@ func main() {
 			// hwinfo
 			{
 				Name:        "hwinfo",
-				Usage:       "print rhilex interface info",
+				Usage:       "Show Local Hardware Info",
 				Description: "Show Local Hardware Info",
 				Action: func(*cli.Context) error {
 					macs, err1 := ossupport.ShowMacAddress()
@@ -539,10 +539,25 @@ func main() {
 			// bench
 			{
 				Name:        "pbench",
-				Usage:       "print hardware performance test result",
-				Description: "Performance Bench Test",
+				Usage:       "Print hardware performance test result",
+				Description: "Print hardware performance test result",
 				Action: func(*cli.Context) error {
 					performance.TestPerformance()
+					return nil
+				},
+			},
+			// check new version
+			{
+				Name:        "checknew",
+				Usage:       "Check Newest Version",
+				Description: "Check Newest Version",
+				Action: func(*cli.Context) error {
+					v, e := engine.CheckNewestVersion()
+					if e != nil {
+						utils.CLog("[LICENCE ACTIVE]:Check Newest Version Failed: %s", e)
+						return nil
+					}
+					utils.CLog("[*] Newest Version found: %s", v)
 					return nil
 				},
 			},
