@@ -13,7 +13,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-package cecolla
+package ithings
 
 import (
 	"encoding/json"
@@ -25,7 +25,6 @@ import (
 	mqtt "github.com/eclipse/paho.mqtt.golang"
 	"github.com/google/uuid"
 	lua "github.com/hootrhino/gopher-lua"
-	"github.com/hootrhino/rhilex/component/cecolla/ithings"
 	"github.com/hootrhino/rhilex/component/cecollalet"
 	"github.com/hootrhino/rhilex/component/intercache"
 	"github.com/hootrhino/rhilex/glogger"
@@ -94,11 +93,11 @@ type IThingsGateway struct {
 	gatewayStatusTopicUp   string
 	gatewayStatusTopicDown string
 	// 子设备
-	IThingsSubDevices []ithings.IThingsSubDevice
+	IThingsSubDevices []IThingsSubDevice
 	// 自己的物模型
-	GatewaySchema *ithings.SchemaSimple
+	GatewaySchema *SchemaSimple
 	// 子设备的物模型
-	SubDeviceSchema *ithings.SchemaSimple
+	SubDeviceSchema *SchemaSimple
 	// 缓存数据值的地方，设备report过来以后，保存在此处
 	DevicePropertiesSlot map[string]any
 }
@@ -114,7 +113,7 @@ func NewIThingsGateway(e typex.Rhilex) typex.XCecolla {
 		DeviceName:     "",
 		DevicePsk:      "",
 	}
-	hd.IThingsSubDevices = []ithings.IThingsSubDevice{}
+	hd.IThingsSubDevices = []IThingsSubDevice{}
 	hd.DevicePropertiesSlot = map[string]any{}
 	return hd
 }
@@ -126,7 +125,7 @@ type IThingsMQTTAuthInfo struct {
 }
 
 func GenerateIThingsMQTTAuthInfo(productID, DeviceName, secret string) (IThingsMQTTAuthInfo, error) {
-	c, u, p := ithings.GenSecretDeviceInfo("hmacsha256", productID, DeviceName, secret)
+	c, u, p := GenSecretDeviceInfo("hmacsha256", productID, DeviceName, secret)
 	return IThingsMQTTAuthInfo{
 		ClientID: c,
 		UserName: u,
@@ -209,7 +208,7 @@ func (hd *IThingsGateway) Start(cctx typex.CCTX) error {
 			glogger.GLogger.Info("Connect IThings with Gateway Mode")
 			token0 := hd.client.Subscribe(hd.gatewayTopicDown, 1, func(c mqtt.Client, msg mqtt.Message) {
 				glogger.Debug("IThingsGateway gateway Down: ", hd.gatewayTopicDown, string(msg.Payload()))
-				response := ithings.IthingsResponse{}
+				response := IthingsResponse{}
 				errUnmarshal := json.Unmarshal(msg.Payload(), &response)
 				if errUnmarshal != nil {
 					glogger.GLogger.Error(errUnmarshal)
@@ -286,7 +285,7 @@ func (hd *IThingsGateway) Start(cctx typex.CCTX) error {
 			// 获取拓扑
 			token1 := hd.client.Subscribe(hd.topologyTopicDown, 1, func(c mqtt.Client, msg mqtt.Message) {
 				glogger.Debug("IThingsGateway topology Down: ", hd.gatewayTopicDown, string(msg.Payload()))
-				response := ithings.IthingsTopologyResponse{}
+				response := IthingsTopologyResponse{}
 				errUnmarshal := json.Unmarshal(msg.Payload(), &response)
 				if errUnmarshal != nil {
 					glogger.GLogger.Error(errUnmarshal)
@@ -419,16 +418,16 @@ func (hd *IThingsGateway) OnCtrl(cmd []byte, b []byte) (any, error) {
 	}
 	// 新建子设备点位表的物模型
 	if Cmd == "CreateSubDeviceSchema" {
-		Properties := []ithings.IthingsCreateSchemaPropertie{}
+		Properties := []IthingsCreateSchemaPropertie{}
 		if errUnmarshal := json.Unmarshal(b, &Properties); errUnmarshal != nil {
 			return nil, errUnmarshal
 		}
 		for _, Property := range Properties {
-			createSchema := ithings.IthingsCreateSchema{
+			createSchema := IthingsCreateSchema{
 				Method:    "createSchema",
 				MsgToken:  uuid.NewString(),
 				Timestamp: time.Now().UnixMilli(),
-				Properties: []ithings.IthingsCreateSchemaPropertie{{
+				Properties: []IthingsCreateSchemaPropertie{{
 					Id:   Property.Id,
 					Name: Property.Name,
 					Type: Property.Type,
@@ -476,7 +475,7 @@ func (hd *IThingsGateway) OnCtrl(cmd []byte, b []byte) (any, error) {
 		}
 		hd.DevicePropertiesSlot[fmt.Sprintf("%s:%s:%s",
 			subDeviceParam.ProductId, subDeviceParam.DeviceName, subDeviceParam.Param)] = subDeviceParam.Value
-		packReport := ithings.NewIthingsPackReport(subDeviceParam.Timestamp,
+		packReport := NewIthingsPackReport(subDeviceParam.Timestamp,
 			subDeviceParam.ProductId, subDeviceParam.DeviceName,
 			subDeviceParam.Param, subDeviceParam.Value)
 		glogger.Debugf("PackReport SubDevice Params: %s %s", hd.propertyUpTopic, packReport.String())
@@ -545,7 +544,7 @@ func (hd *IThingsGateway) OnCtrl(cmd []byte, b []byte) (any, error) {
 			value := hd.DevicePropertiesSlot[fmt.Sprintf("%s:%s:%s", ctrlCmd.ProductId, ctrlCmd.DeviceName, param)]
 			params[param] = value
 		}
-		IthingsGetPropertyReply := ithings.IthingsGetPropertyReply{
+		IthingsGetPropertyReply := IthingsGetPropertyReply{
 			Method:    "getReportReply",
 			MsgToken:  ctrlCmd.Token,
 			Timestamp: time.Now().UnixMilli(),

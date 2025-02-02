@@ -16,7 +16,8 @@
 package rhilexmanager
 
 import (
-	cecolla "github.com/hootrhino/rhilex/component/cecolla"
+	ithings "github.com/hootrhino/rhilex/component/cecolla/ithings"
+	tencent "github.com/hootrhino/rhilex/component/cecolla/tencent"
 	"github.com/hootrhino/rhilex/component/orderedmap"
 	"github.com/hootrhino/rhilex/typex"
 )
@@ -41,13 +42,13 @@ func LoadAllCecType(e typex.Rhilex) {
 	DefaultCecollaTypeManager.Register(typex.TENCENT_IOTHUB_CEC,
 		&typex.XConfig{
 			Engine:     e,
-			NewCecolla: cecolla.NewTencentIoTGateway,
+			NewCecolla: tencent.NewTencentIoTGateway,
 		},
 	)
 	DefaultCecollaTypeManager.Register(typex.ITHINGS_IOTHUB_CEC,
 		&typex.XConfig{
 			Engine:     e,
-			NewCecolla: cecolla.NewIThingsGateway,
+			NewCecolla: ithings.NewIThingsGateway,
 		},
 	)
 }
