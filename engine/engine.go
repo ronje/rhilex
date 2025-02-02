@@ -24,8 +24,6 @@ import (
 	"github.com/hootrhino/rhilex/component/aibase"
 	"github.com/hootrhino/rhilex/component/alarmcenter"
 	"github.com/hootrhino/rhilex/component/applet"
-	"github.com/hootrhino/rhilex/component/cecolla"
-	"github.com/hootrhino/rhilex/component/cecollalet"
 	"github.com/hootrhino/rhilex/component/crontask"
 	datacenter "github.com/hootrhino/rhilex/component/datacenter"
 	"github.com/hootrhino/rhilex/component/eventbus"
@@ -60,12 +58,11 @@ var __DefaultRuleEngine *RuleEngine
 
 // 规则引擎
 type RuleEngine struct {
-	Rules    *orderedmap.OrderedMap[string, *typex.Rule]    `json:"rules"`
-	InEnds   *orderedmap.OrderedMap[string, *typex.InEnd]   `json:"inends"`
-	OutEnds  *orderedmap.OrderedMap[string, *typex.OutEnd]  `json:"outends"`
-	Devices  *orderedmap.OrderedMap[string, *typex.Device]  `json:"devices"`
-	Cecollas *orderedmap.OrderedMap[string, *typex.Cecolla] `json:"cecollas"`
-	Config   *typex.RhilexConfig                            `json:"config"`
+	Rules   *orderedmap.OrderedMap[string, *typex.Rule]   `json:"rules"`
+	InEnds  *orderedmap.OrderedMap[string, *typex.InEnd]  `json:"inends"`
+	OutEnds *orderedmap.OrderedMap[string, *typex.OutEnd] `json:"outends"`
+	Devices *orderedmap.OrderedMap[string, *typex.Device] `json:"devices"`
+	Config  *typex.RhilexConfig                           `json:"config"`
 }
 
 func MainRuleEngine() *RuleEngine {
@@ -76,12 +73,11 @@ func MainRuleEngine() *RuleEngine {
 }
 func InitRuleEngine(config typex.RhilexConfig) typex.Rhilex {
 	__DefaultRuleEngine = &RuleEngine{
-		Rules:    orderedmap.NewOrderedMap[string, *typex.Rule](),
-		InEnds:   orderedmap.NewOrderedMap[string, *typex.InEnd](),
-		OutEnds:  orderedmap.NewOrderedMap[string, *typex.OutEnd](),
-		Devices:  orderedmap.NewOrderedMap[string, *typex.Device](),
-		Cecollas: orderedmap.NewOrderedMap[string, *typex.Cecolla](),
-		Config:   &config,
+		Rules:   orderedmap.NewOrderedMap[string, *typex.Rule](),
+		InEnds:  orderedmap.NewOrderedMap[string, *typex.InEnd](),
+		OutEnds: orderedmap.NewOrderedMap[string, *typex.OutEnd](),
+		Devices: orderedmap.NewOrderedMap[string, *typex.Device](),
+		Config:  &config,
 	}
 	// Init Security License
 	security.InitSecurityLicense()
@@ -107,8 +103,6 @@ func InitRuleEngine(config typex.RhilexConfig) typex.Rhilex {
 	intermetric.InitInternalMetric(__DefaultRuleEngine)
 	// lua applet manager
 	applet.InitAppletRuntime(__DefaultRuleEngine)
-	// lua Cecollalet manager
-	cecollalet.InitCecollaletRuntime(__DefaultRuleEngine)
 	// current only support Internal ai
 	aibase.InitAlgorithmRuntime(__DefaultRuleEngine)
 	// Internal Queue
@@ -121,14 +115,10 @@ func InitRuleEngine(config typex.RhilexConfig) typex.Rhilex {
 	rhilexmanager.InitSourceTypeManager(__DefaultRuleEngine)
 	// Init Target TypeManager
 	rhilexmanager.InitTargetTypeManager(__DefaultRuleEngine)
-	// Cloud Edge Collaboration
-	rhilexmanager.InitCecollaTypeManager(__DefaultRuleEngine)
 	// Init Plugin TypeManager
 	rhilexmanager.InitPluginTypeManager(__DefaultRuleEngine)
 	// Init Multimedia
 	multimedia.InitMultimediaRuntime(__DefaultRuleEngine)
-	// Init Cecolla Runtime
-	cecolla.InitCecollaRuntime(__DefaultRuleEngine)
 	return __DefaultRuleEngine
 }
 
@@ -186,9 +176,6 @@ func (e *RuleEngine) Stop() {
 	// Stop Applet
 	glogger.GLogger.Info("Stop Applet Runtime")
 	applet.Stop()
-	// Stop Cecollalet
-	glogger.GLogger.Info("Stop Cecollalet Runtime")
-	cecollalet.Stop()
 	// Internal Cache
 	glogger.GLogger.Info("Flush Internal Cache")
 	intercache.Flush()
@@ -210,12 +197,6 @@ func (e *RuleEngine) Stop() {
 	glogger.GLogger.Info("Stop Multimedia Runtime")
 	multimedia.StopMultimediaRuntime()
 	glogger.GLogger.Info("Stop Multimedia Runtime Successfully")
-	// Stop Multimedia Runtime
-	glogger.GLogger.Info("Stop Cecolla Runtime")
-	cecolla.StopCecollaRuntime()
-	glogger.GLogger.Info("Stop Cecolla Runtime Successfully")
-
-	// END
 	// UnRegister __DefaultRuleEngine
 	intercache.UnRegisterSlot("__DefaultRuleEngine")
 	// UnRegister __DeviceConfigMap
@@ -398,37 +379,6 @@ func (e *RuleEngine) AllOutEnds() []*typex.OutEnd {
 }
 
 // -----------------------------------------------------------------
-// 云边协同
-// -----------------------------------------------------------------
-func (e *RuleEngine) AllCecollas() []*typex.Cecolla {
-	return e.Cecollas.Values()
-}
-func (e *RuleEngine) SaveCecolla(cecolla *typex.Cecolla) {
-	e.Cecollas.Set(cecolla.UUID, cecolla)
-}
-
-func (e *RuleEngine) GetCecolla(uuid string) *typex.Cecolla {
-	v, ok := e.Cecollas.Get(uuid)
-	if ok {
-		return v
-	}
-	return nil
-}
-
-func (e *RuleEngine) RemoveCecolla(uuid string) {
-	if cecolla := e.GetCecolla(uuid); cecolla != nil {
-		if cecolla.Cecolla != nil {
-			glogger.GLogger.Infof("Cecolla [%s, %s] ready to stop", uuid, cecolla.Name)
-			cecolla.Cecolla.Stop()
-			glogger.GLogger.Infof("Cecolla [%s, %s] stopped", uuid, cecolla.Name)
-			e.Cecollas.Delete(uuid)
-			glogger.GLogger.Infof("Cecolla [%s, %s] has been deleted", uuid, cecolla.Name)
-			cecolla = nil
-		}
-	}
-}
-
-// -----------------------------------------------------------------
 // 获取运行时快照
 // -----------------------------------------------------------------
 func (e *RuleEngine) SnapshotDump() string {
@@ -497,17 +447,6 @@ func (e *RuleEngine) RestartDevice(uuid string) error {
 	return fmt.Errorf("device not exists:%s", uuid)
 }
 
-// 重启云边协同组件
-func (e *RuleEngine) RestartCecolla(uuid string) error {
-	if Cecolla, ok := e.Cecollas.Get(uuid); ok {
-		if Cecolla.Cecolla != nil {
-			Cecolla.Cecolla.SetState(typex.CEC_DOWN) // Down 以后会被自动拉起来
-		}
-		return nil
-	}
-	return fmt.Errorf("cecolla not exists:%s", uuid)
-}
-
 /*
 *-----------------------------------------------------------------
 * 0.6.8 New Api: 将注册权交给设备
@@ -571,13 +510,4 @@ func (e *RuleEngine) CheckTargetType(Type typex.TargetType) error {
 		return nil
 	}
 	return fmt.Errorf("Target Type Not Support:%s", Type)
-}
-
-// 云边协同
-func (e *RuleEngine) CheckCecollaType(Type typex.CecollaType) error {
-	keys := rhilexmanager.DefaultCecollaTypeManager.AllKeys()
-	if utils.SContains(keys, string(Type)) {
-		return nil
-	}
-	return fmt.Errorf("Cecolla Type Not Support:%s", Type)
 }

@@ -77,11 +77,6 @@ func initRhilex(engine typex.Rhilex) {
 			glogger.GLogger.Error("Multimedia load failed:", err)
 		}
 	}
-	for _, mCecolla := range service.AllCecollas() {
-		if err := server.LoadNewestCecolla(mCecolla.UUID, engine); err != nil {
-			glogger.GLogger.Error("Cecolla load failed:", err)
-		}
-	}
 	for _, minEnd := range service.AllMInEnd() {
 		if err := server.LoadNewestInEnd(minEnd.UUID, engine); err != nil {
 			glogger.GLogger.Error("InEnd load failed:", err)

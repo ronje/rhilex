@@ -146,12 +146,4 @@ type Rhilex interface {
 	CheckSourceType(Type InEndType) error
 	CheckDeviceType(Type DeviceType) error
 	CheckTargetType(Type TargetType) error
-	// 云边协同
-	CheckCecollaType(Type CecollaType) error
-	GetCecolla(string) *Cecolla
-	SaveCecolla(*Cecolla)
-	AllCecollas() []*Cecolla
-	RestartCecolla(uuid string) error
-	RemoveCecolla(uuid string)
-	LoadCecollaWithCtx(cecolla *Cecolla, ctx context.Context, cancelCTX context.CancelFunc) error
 }
