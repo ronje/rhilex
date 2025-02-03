@@ -24,6 +24,7 @@ import (
 	"github.com/hootrhino/rhilex/component/aibase"
 	"github.com/hootrhino/rhilex/component/alarmcenter"
 	"github.com/hootrhino/rhilex/component/applet"
+	"github.com/hootrhino/rhilex/component/cecolla"
 	"github.com/hootrhino/rhilex/component/crontask"
 	datacenter "github.com/hootrhino/rhilex/component/datacenter"
 	"github.com/hootrhino/rhilex/component/eventbus"
@@ -119,6 +120,8 @@ func InitRuleEngine(config typex.RhilexConfig) typex.Rhilex {
 	rhilexmanager.InitPluginTypeManager(__DefaultRuleEngine)
 	// Init Multimedia
 	multimedia.InitMultimediaRuntime(__DefaultRuleEngine)
+	// Init Cecolla
+	cecolla.InitCecollaRuntime(__DefaultRuleEngine)
 	return __DefaultRuleEngine
 }
 
@@ -197,10 +200,8 @@ func (e *RuleEngine) Stop() {
 	glogger.GLogger.Info("Stop Multimedia Runtime")
 	multimedia.StopMultimediaRuntime()
 	glogger.GLogger.Info("Stop Multimedia Runtime Successfully")
-	// UnRegister __DefaultRuleEngine
-	intercache.UnRegisterSlot("__DefaultRuleEngine")
-	// UnRegister __DeviceConfigMap
-	intercache.UnRegisterSlot("__DeviceConfigMap")
+	// Stop Cecolla
+	cecolla.StopCecollaRuntime()
 	// Stop Internal Database
 	glogger.GLogger.Info("Stop Internal Database")
 	interdb.StopAll()

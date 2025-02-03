@@ -123,6 +123,6 @@ func (r *RTSPResource) Details() *xmanager.GatewayResourceWorker {
 
 // Stop 停止RTSP资源
 func (r *RTSPResource) Stop() {
-	r.state = xmanager.MEDIA_STOP
+	r.state = xmanager.MEDIA_DOWN
 	glogger.GLogger.Infof("RTSP resource %s stopped", r.uuid)
 }
