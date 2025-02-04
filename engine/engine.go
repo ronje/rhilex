@@ -22,9 +22,9 @@ import (
 
 	lua "github.com/hootrhino/gopher-lua"
 	"github.com/hootrhino/rhilex/alarmcenter"
+	"github.com/hootrhino/rhilex/applet"
+	"github.com/hootrhino/rhilex/cecolla"
 	"github.com/hootrhino/rhilex/component/aibase"
-	"github.com/hootrhino/rhilex/component/applet"
-	"github.com/hootrhino/rhilex/component/cecolla"
 	"github.com/hootrhino/rhilex/component/crontask"
 	"github.com/hootrhino/rhilex/component/eventbus"
 	intercache "github.com/hootrhino/rhilex/component/intercache"

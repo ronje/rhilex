@@ -18,7 +18,7 @@ package test
 import (
 	"time"
 
-	"github.com/hootrhino/rhilex/component/applet"
+	"github.com/hootrhino/rhilex/applet"
 	"github.com/hootrhino/rhilex/typex"
 
 	"github.com/hootrhino/rhilex/glogger"

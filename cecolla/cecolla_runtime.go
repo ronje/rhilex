@@ -17,7 +17,7 @@ package cecolla
 import (
 	"fmt"
 
-	"github.com/hootrhino/rhilex/component/cecolla/ithings"
+	"github.com/hootrhino/rhilex/cecolla/ithings"
 	"github.com/hootrhino/rhilex/component/intercache"
 	"github.com/hootrhino/rhilex/component/xmanager"
 	"github.com/hootrhino/rhilex/glogger"

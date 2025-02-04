@@ -13,11 +13,11 @@ import (
 	"github.com/hootrhino/rhilex/component/multimedia"
 	"github.com/shirou/gopsutil/cpu"
 
+	"github.com/hootrhino/rhilex/applet"
 	"github.com/hootrhino/rhilex/component/apiserver/apis"
 	"github.com/hootrhino/rhilex/component/apiserver/model"
 	"github.com/hootrhino/rhilex/component/apiserver/server"
 	"github.com/hootrhino/rhilex/component/apiserver/service"
-	"github.com/hootrhino/rhilex/component/applet"
 	"github.com/hootrhino/rhilex/component/interdb"
 
 	"github.com/hootrhino/rhilex/glogger"

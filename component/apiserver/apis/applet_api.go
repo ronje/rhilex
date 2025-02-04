@@ -10,7 +10,7 @@ import (
 	"github.com/hootrhino/rhilex/component/luaruntime"
 
 	"github.com/gin-gonic/gin"
-	"github.com/hootrhino/rhilex/component/applet"
+	"github.com/hootrhino/rhilex/applet"
 	"github.com/hootrhino/rhilex/glogger"
 	"github.com/hootrhino/rhilex/typex"
 	"github.com/hootrhino/rhilex/utils"
