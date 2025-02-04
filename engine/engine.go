@@ -38,12 +38,12 @@ import (
 	"github.com/hootrhino/rhilex/component/luaexecutor"
 	"github.com/hootrhino/rhilex/component/multimedia"
 	"github.com/hootrhino/rhilex/component/orderedmap"
-	"github.com/hootrhino/rhilex/component/rhilexmanager"
 	"github.com/hootrhino/rhilex/component/security"
 	supervisor "github.com/hootrhino/rhilex/component/supervisor"
 	transceiver "github.com/hootrhino/rhilex/component/transceiver"
 	core "github.com/hootrhino/rhilex/config"
 	"github.com/hootrhino/rhilex/glogger"
+	"github.com/hootrhino/rhilex/registry"
 	"github.com/hootrhino/rhilex/typex"
 	"github.com/hootrhino/rhilex/utils"
 	"github.com/shirou/gopsutil/v3/disk"
@@ -110,14 +110,14 @@ func InitRuleEngine(config typex.RhilexConfig) typex.Rhilex {
 	interqueue.InitXQueue(__DefaultRuleEngine, core.GlobalConfig.MaxQueueSize)
 	// Init Transceiver Communicator Manager
 	transceiver.InitTransceiverManager(__DefaultRuleEngine)
-	// Init Device TypeManager
-	rhilexmanager.InitDeviceTypeManager(__DefaultRuleEngine)
-	// Init Source TypeManager
-	rhilexmanager.InitSourceTypeManager(__DefaultRuleEngine)
-	// Init Target TypeManager
-	rhilexmanager.InitTargetTypeManager(__DefaultRuleEngine)
-	// Init Plugin TypeManager
-	rhilexmanager.InitPluginTypeManager(__DefaultRuleEngine)
+	// Init Device Registry
+	registry.InitDeviceRegistry(__DefaultRuleEngine)
+	// Init Source Registry
+	registry.InitSourceRegistry(__DefaultRuleEngine)
+	// Init Target Registry
+	registry.InitTargetRegistry(__DefaultRuleEngine)
+	// Init Plugin Registry
+	registry.InitPluginRegistry(__DefaultRuleEngine)
 	// Init Multimedia
 	multimedia.InitMultimediaRuntime(__DefaultRuleEngine)
 	// Init Cecolla
@@ -194,7 +194,7 @@ func (e *RuleEngine) Stop() {
 	glogger.GLogger.Info("Stop Alarm Center Successfully")
 	// Stop PluginType Manager
 	glogger.GLogger.Info("Stop PluginType Manager")
-	rhilexmanager.DefaultPluginTypeManager.Stop()
+	registry.DefaultPluginRegistry.Stop()
 	glogger.GLogger.Info("Stop PluginType Successfully")
 	// Stop Multimedia Runtime
 	glogger.GLogger.Info("Stop Multimedia Runtime")
@@ -455,22 +455,22 @@ func (e *RuleEngine) RestartDevice(uuid string) error {
  */
 func RegisterNewDevice(Type typex.DeviceType, Cfg *typex.XConfig) error {
 	Cfg.Engine = __DefaultRuleEngine
-	rhilexmanager.DefaultDeviceTypeManager.Register(Type, Cfg)
+	registry.DefaultDeviceRegistry.Register(Type, Cfg)
 	return nil
 }
 func RegisterNewSource(Type typex.InEndType, Cfg *typex.XConfig) error {
 	Cfg.Engine = __DefaultRuleEngine
-	rhilexmanager.DefaultSourceTypeManager.Register(Type, Cfg)
+	registry.DefaultSourceRegistry.Register(Type, Cfg)
 	return nil
 }
 func RegisterNewTarget(Type typex.TargetType, Cfg *typex.XConfig) error {
 	Cfg.Engine = __DefaultRuleEngine
-	rhilexmanager.DefaultTargetTypeManager.Register(Type, Cfg)
+	registry.DefaultTargetRegistry.Register(Type, Cfg)
 	return nil
 }
 
 func (e *RuleEngine) CheckSourceType(Type typex.InEndType) error {
-	keys := rhilexmanager.DefaultSourceTypeManager.AllKeys()
+	keys := registry.DefaultSourceRegistry.AllKeys()
 	if utils.SContains(keys, string(Type)) {
 		return nil
 	}
@@ -498,7 +498,7 @@ func (e *RuleEngine) SetTargetStatus(uuid string, SourceState typex.SourceState)
 	}
 }
 func (e *RuleEngine) CheckDeviceType(Type typex.DeviceType) error {
-	keys := rhilexmanager.DefaultDeviceTypeManager.AllKeys()
+	keys := registry.DefaultDeviceRegistry.AllKeys()
 	if utils.SContains(keys, string(Type)) {
 		return nil
 	}
@@ -506,7 +506,7 @@ func (e *RuleEngine) CheckDeviceType(Type typex.DeviceType) error {
 }
 
 func (e *RuleEngine) CheckTargetType(Type typex.TargetType) error {
-	keys := rhilexmanager.DefaultTargetTypeManager.AllKeys()
+	keys := registry.DefaultTargetRegistry.AllKeys()
 	if utils.SContains(keys, string(Type)) {
 		return nil
 	}

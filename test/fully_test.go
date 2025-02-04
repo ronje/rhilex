@@ -4,9 +4,9 @@ import (
 	"context"
 
 	httpserver "github.com/hootrhino/rhilex/component/apiserver"
-	"github.com/hootrhino/rhilex/component/rhilexmanager"
 	"github.com/hootrhino/rhilex/component/rhilexrpc"
 	"github.com/hootrhino/rhilex/glogger"
+	"github.com/hootrhino/rhilex/registry"
 	"github.com/hootrhino/rhilex/typex"
 
 	"testing"
@@ -21,7 +21,7 @@ func TestFullyRun(t *testing.T) {
 	engine := RunTestEngine()
 	engine.Start()
 
-	if err := rhilexmanager.DefaultPluginTypeManager.LoadPlugin("plugin.http_server",
+	if err := registry.DefaultPluginRegistry.LoadPlugin("plugin.http_server",
 		httpserver.NewHttpApiServer(engine)); err != nil {
 		glogger.GLogger.Fatal("Rule load failed:", err)
 	}

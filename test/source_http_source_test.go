@@ -6,7 +6,7 @@ import (
 	"time"
 
 	httpserver "github.com/hootrhino/rhilex/component/apiserver"
-	"github.com/hootrhino/rhilex/component/rhilexmanager"
+	"github.com/hootrhino/rhilex/registry"
 	"github.com/hootrhino/rhilex/utils"
 
 	"github.com/hootrhino/rhilex/typex"
@@ -24,7 +24,7 @@ func Test_http_source(t *testing.T) {
 	hh := httpserver.NewHttpApiServer(engine)
 
 	// HttpApiServer loaded default
-	if err := rhilexmanager.DefaultPluginTypeManager.LoadPlugin("plugin.http_server", hh); err != nil {
+	if err := registry.DefaultPluginRegistry.LoadPlugin("plugin.http_server", hh); err != nil {
 		t.Fatal("Rule load failed:", err)
 	}
 	// http Inend

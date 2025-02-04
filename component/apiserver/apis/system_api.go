@@ -12,7 +12,6 @@ import (
 	"github.com/hootrhino/rhilex/component/apiserver/service"
 	"github.com/hootrhino/rhilex/component/applet"
 	"github.com/hootrhino/rhilex/component/intermetric"
-	"github.com/hootrhino/rhilex/component/rhilexmanager"
 	"github.com/hootrhino/rhilex/component/security"
 	core "github.com/hootrhino/rhilex/config"
 	"github.com/hootrhino/rhilex/glogger"
@@ -22,6 +21,7 @@ import (
 	"github.com/hootrhino/rhilex/periphery/haas506"
 	"github.com/hootrhino/rhilex/periphery/rhilexg1"
 	"github.com/hootrhino/rhilex/periphery/rhilexpro1"
+	"github.com/hootrhino/rhilex/registry"
 	"github.com/hootrhino/rhilex/utils"
 
 	"github.com/gin-gonic/gin"
@@ -94,7 +94,7 @@ func GetSecurityLicense(c *gin.Context, ruleEngine typex.Rhilex) {
 // Get all plugins
 func Plugins(c *gin.Context, ruleEngine typex.Rhilex) {
 	data := []interface{}{}
-	plugins := rhilexmanager.DefaultPluginTypeManager.All()
+	plugins := registry.DefaultPluginRegistry.All()
 	for _, plugin := range plugins {
 		data = append(data, plugin.PluginMetaInfo())
 	}
@@ -123,7 +123,7 @@ func source_count(e typex.Rhilex) map[string]int {
 		"rules":   len(e.AllRules()),
 		"devices": len(e.AllDevices()),
 		"goods":   0,
-		"plugins": rhilexmanager.DefaultPluginTypeManager.Count(),
+		"plugins": registry.DefaultPluginRegistry.Count(),
 		"apps":    applet.AppCount(),
 	}
 }
@@ -190,7 +190,7 @@ func SourceCount(c *gin.Context, ruleEngine typex.Rhilex) {
 		"outends": len(ruleEngine.AllOutEnds()),
 		"rules":   len(ruleEngine.AllRules()),
 		"devices": len(ruleEngine.AllDevices()),
-		"plugins": rhilexmanager.DefaultPluginTypeManager.Count(),
+		"plugins": registry.DefaultPluginRegistry.Count(),
 	}))
 }
 

@@ -13,7 +13,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-package rhilexmanager
+package registry
 
 import (
 	"fmt"
@@ -25,36 +25,36 @@ import (
 	"github.com/hootrhino/rhilex/utils"
 )
 
-var DefaultPluginTypeManager *PluginTypeManager
+var DefaultPluginRegistry *PluginRegistry
 
-type PluginTypeManager struct {
+type PluginRegistry struct {
 	e        typex.Rhilex
 	registry *orderedmap.OrderedMap[string, typex.XPlugin]
 }
 
-func InitPluginTypeManager(e typex.Rhilex) {
-	DefaultPluginTypeManager = &PluginTypeManager{
+func InitPluginRegistry(e typex.Rhilex) {
+	DefaultPluginRegistry = &PluginRegistry{
 		e:        e,
 		registry: orderedmap.NewOrderedMap[string, typex.XPlugin](),
 	}
 }
 
-func (rm *PluginTypeManager) All() []typex.XPlugin {
+func (rm *PluginRegistry) All() []typex.XPlugin {
 	return rm.registry.Values()
 }
 
-func (rm *PluginTypeManager) Count() int {
+func (rm *PluginRegistry) Count() int {
 	return rm.registry.Size()
 }
 
-func (rm *PluginTypeManager) Find(name string) typex.XPlugin {
+func (rm *PluginRegistry) Find(name string) typex.XPlugin {
 	p, ok := rm.registry.Get(name)
 	if ok {
 		return p
 	}
 	return nil
 }
-func (rm *PluginTypeManager) LoadPlugin(sectionK string, p typex.XPlugin) error {
+func (rm *PluginRegistry) LoadPlugin(sectionK string, p typex.XPlugin) error {
 	section := utils.GetINISection(core.GlobalConfig.IniPath, sectionK)
 	if err := p.Init(section); err != nil {
 		return err
@@ -74,7 +74,7 @@ func (rm *PluginTypeManager) LoadPlugin(sectionK string, p typex.XPlugin) error 
 
 }
 
-func (rm *PluginTypeManager) Stop() {
+func (rm *PluginRegistry) Stop() {
 	for _, plugin := range rm.registry.Values() {
 		glogger.GLogger.Infof("Stop plugin:(%s)", plugin.PluginMetaInfo().Name)
 		plugin.Stop()

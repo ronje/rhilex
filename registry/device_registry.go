@@ -13,7 +13,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-package rhilexmanager
+package registry
 
 import (
 	"github.com/hootrhino/rhilex/component/orderedmap"
@@ -21,15 +21,15 @@ import (
 	"github.com/hootrhino/rhilex/typex"
 )
 
-var DefaultDeviceTypeManager *DeviceTypeManager
+var DefaultDeviceRegistry *DeviceRegistry
 
-type DeviceTypeManager struct {
+type DeviceRegistry struct {
 	e        typex.Rhilex
 	registry *orderedmap.OrderedMap[typex.DeviceType, *typex.XConfig]
 }
 
-func InitDeviceTypeManager(e typex.Rhilex) {
-	DefaultDeviceTypeManager = &DeviceTypeManager{
+func InitDeviceRegistry(e typex.Rhilex) {
+	DefaultDeviceRegistry = &DeviceRegistry{
 		e:        e,
 		registry: orderedmap.NewOrderedMap[typex.DeviceType, *typex.XConfig](),
 	}
@@ -37,139 +37,139 @@ func InitDeviceTypeManager(e typex.Rhilex) {
 }
 
 func LoadAllDeviceType(e typex.Rhilex) {
-	DefaultDeviceTypeManager.Register(typex.GENERIC_NEMA_GNS_PROTOCOL,
+	DefaultDeviceRegistry.Register(typex.GENERIC_NEMA_GNS_PROTOCOL,
 		&typex.XConfig{
 			Engine:    e,
 			NewDevice: device.NewNemaGpsMasterDevice,
 		},
 	)
-	DefaultDeviceTypeManager.Register(typex.TAOJINGCHI_UARTHMI_MASTER,
+	DefaultDeviceRegistry.Register(typex.TAOJINGCHI_UARTHMI_MASTER,
 		&typex.XConfig{
 			Engine:    e,
 			NewDevice: device.NewTaoJingChiHmiDevice,
 		},
 	)
-	DefaultDeviceTypeManager.Register(typex.SZY2062016_MASTER,
+	DefaultDeviceRegistry.Register(typex.SZY2062016_MASTER,
 		&typex.XConfig{
 			Engine:    e,
 			NewDevice: device.NewSZY206_2016_MasterGateway,
 		},
 	)
-	DefaultDeviceTypeManager.Register(typex.CJT1882004_MASTER,
+	DefaultDeviceRegistry.Register(typex.CJT1882004_MASTER,
 		&typex.XConfig{
 			Engine:    e,
 			NewDevice: device.NewCJT188_2004_MasterGateway,
 		},
 	)
-	DefaultDeviceTypeManager.Register(typex.DLT6452007_MASTER,
+	DefaultDeviceRegistry.Register(typex.DLT6452007_MASTER,
 		&typex.XConfig{
 			Engine:    e,
 			NewDevice: device.NewDLT645_2007_MasterGateway,
 		},
 	)
-	DefaultDeviceTypeManager.Register(typex.KNX_GATEWAY,
+	DefaultDeviceRegistry.Register(typex.KNX_GATEWAY,
 		&typex.XConfig{
 			Engine:    e,
 			NewDevice: device.NewKNXGateway,
 		},
 	)
-	DefaultDeviceTypeManager.Register(typex.LORA_WAN_GATEWAY,
+	DefaultDeviceRegistry.Register(typex.LORA_WAN_GATEWAY,
 		&typex.XConfig{
 			Engine:    e,
 			NewDevice: device.NewLoraGateway,
 		},
 	)
-	DefaultDeviceTypeManager.Register(typex.GENERIC_HTTP_DEVICE,
+	DefaultDeviceRegistry.Register(typex.GENERIC_HTTP_DEVICE,
 		&typex.XConfig{
 			Engine:    e,
 			NewDevice: device.NewGenericHttpDevice,
 		},
 	)
-	DefaultDeviceTypeManager.Register(typex.GENERIC_CAMERA,
+	DefaultDeviceRegistry.Register(typex.GENERIC_CAMERA,
 		&typex.XConfig{
 			Engine:    e,
 			NewDevice: device.NewVideoCamera,
 		},
 	)
-	DefaultDeviceTypeManager.Register(typex.SIEMENS_PLC,
+	DefaultDeviceRegistry.Register(typex.SIEMENS_PLC,
 		&typex.XConfig{
 			Engine:    e,
 			NewDevice: device.NewSIEMENS_PLC,
 		},
 	)
-	DefaultDeviceTypeManager.Register(typex.GENERIC_MODBUS_MASTER,
+	DefaultDeviceRegistry.Register(typex.GENERIC_MODBUS_MASTER,
 		&typex.XConfig{
 			Engine:    e,
 			NewDevice: device.NewGenericModbusMaster,
 		},
 	)
-	DefaultDeviceTypeManager.Register(typex.GENERIC_MODBUS_SLAVER,
+	DefaultDeviceRegistry.Register(typex.GENERIC_MODBUS_SLAVER,
 		&typex.XConfig{
 			Engine:    e,
 			NewDevice: device.NewGenericModbusSlaver,
 		},
 	)
-	DefaultDeviceTypeManager.Register(typex.GENERIC_UART_RW,
+	DefaultDeviceRegistry.Register(typex.GENERIC_UART_RW,
 		&typex.XConfig{
 			Engine:    e,
 			NewDevice: device.NewGenericUartDevice,
 		},
 	)
-	DefaultDeviceTypeManager.Register(typex.GENERIC_SNMP,
+	DefaultDeviceRegistry.Register(typex.GENERIC_SNMP,
 		&typex.XConfig{
 			Engine:    e,
 			NewDevice: device.NewGenericSnmpDevice,
 		},
 	)
-	DefaultDeviceTypeManager.Register(typex.GENERIC_USER_PROTOCOL,
+	DefaultDeviceRegistry.Register(typex.GENERIC_USER_PROTOCOL,
 		&typex.XConfig{
 			Engine:    e,
 			NewDevice: device.NewGenericUserProtocolDevice,
 		},
 	)
-	DefaultDeviceTypeManager.Register(typex.GENERIC_CAMERA,
+	DefaultDeviceRegistry.Register(typex.GENERIC_CAMERA,
 		&typex.XConfig{
 			Engine:    e,
 			NewDevice: device.NewVideoCamera,
 		},
 	)
-	DefaultDeviceTypeManager.Register(typex.GENERIC_AIS_RECEIVER,
+	DefaultDeviceRegistry.Register(typex.GENERIC_AIS_RECEIVER,
 		&typex.XConfig{
 			Engine:    e,
 			NewDevice: device.NewAISDeviceMaster,
 		},
 	)
-	DefaultDeviceTypeManager.Register(typex.GENERIC_BACNET_IP,
+	DefaultDeviceRegistry.Register(typex.GENERIC_BACNET_IP,
 		&typex.XConfig{
 			Engine:    e,
 			NewDevice: device.NewGenericBacnetIpDevice,
 		},
 	)
-	DefaultDeviceTypeManager.Register(typex.BACNET_ROUTER_GW,
+	DefaultDeviceRegistry.Register(typex.BACNET_ROUTER_GW,
 		&typex.XConfig{
 			Engine:    e,
 			NewDevice: device.NewBacnetRouter,
 		},
 	)
-	DefaultDeviceTypeManager.Register(typex.GENERIC_MBUS_EN13433_MASTER,
+	DefaultDeviceRegistry.Register(typex.GENERIC_MBUS_EN13433_MASTER,
 		&typex.XConfig{
 			Engine:    e,
 			NewDevice: device.NewMBusEn13433MasterGateway,
 		},
 	)
 }
-func (rm *DeviceTypeManager) Register(name typex.DeviceType, f *typex.XConfig) {
+func (rm *DeviceRegistry) Register(name typex.DeviceType, f *typex.XConfig) {
 	f.Type = string(name)
 	rm.registry.Set(name, f)
 }
 
-func (rm *DeviceTypeManager) Find(name typex.DeviceType) *typex.XConfig {
+func (rm *DeviceRegistry) Find(name typex.DeviceType) *typex.XConfig {
 	if xcfg, ok := rm.registry.Get(name); ok {
 		return xcfg
 	}
 	return nil
 }
-func (rm *DeviceTypeManager) All() []*typex.XConfig {
+func (rm *DeviceRegistry) All() []*typex.XConfig {
 	return rm.registry.Values()
 }
 
@@ -177,7 +177,7 @@ func (rm *DeviceTypeManager) All() []*typex.XConfig {
  * 获取所有类型
  *
  */
-func (rm *DeviceTypeManager) AllKeys() []string {
+func (rm *DeviceRegistry) AllKeys() []string {
 	data := []string{}
 	for _, k := range rm.registry.Keys() {
 		data = append(data, k.String())
@@ -185,5 +185,5 @@ func (rm *DeviceTypeManager) AllKeys() []string {
 	return data
 }
 
-func (rm *DeviceTypeManager) Stop() {
+func (rm *DeviceRegistry) Stop() {
 }

@@ -5,7 +5,7 @@ import (
 
 	common "github.com/hootrhino/rhilex/component/apiserver/common"
 	"github.com/hootrhino/rhilex/component/apiserver/server"
-	"github.com/hootrhino/rhilex/component/rhilexmanager"
+	"github.com/hootrhino/rhilex/registry"
 	"github.com/hootrhino/rhilex/typex"
 
 	"github.com/gin-gonic/gin"
@@ -38,7 +38,7 @@ func PluginService(c *gin.Context, ruleEngine typex.Rhilex) {
 		return
 	}
 
-	plugin := rhilexmanager.DefaultPluginTypeManager.Find(form.UUID)
+	plugin := registry.DefaultPluginRegistry.Find(form.UUID)
 	if plugin != nil {
 		result := plugin.Service(typex.ServiceArg{
 			Name: form.Name,
@@ -58,7 +58,7 @@ func PluginService(c *gin.Context, ruleEngine typex.Rhilex) {
  */
 func PluginDetail(c *gin.Context, ruleEngine typex.Rhilex) {
 	uuid, _ := c.GetQuery("uuid")
-	plugin := rhilexmanager.DefaultPluginTypeManager.Find(uuid)
+	plugin := registry.DefaultPluginRegistry.Find(uuid)
 	if plugin != nil {
 		c.JSON(common.HTTP_OK, common.OkWithData(plugin.PluginMetaInfo()))
 		return

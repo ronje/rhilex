@@ -2,7 +2,7 @@ package test
 
 import (
 	httpserver "github.com/hootrhino/rhilex/component/apiserver"
-	"github.com/hootrhino/rhilex/component/rhilexmanager"
+	"github.com/hootrhino/rhilex/registry"
 	"github.com/hootrhino/rhilex/glogger"
 
 	"testing"
@@ -24,7 +24,7 @@ func Test_Generic_Local_camera(t *testing.T) {
 
 	hh := httpserver.NewHttpApiServer(engine)
 	// HttpApiServer loaded default
-	if err := rhilexmanager.DefaultPluginTypeManager.LoadPlugin("plugin.http_server", hh); err != nil {
+	if err := registry.DefaultPluginRegistry.LoadPlugin("plugin.http_server", hh); err != nil {
 		glogger.GLogger.Fatal("http_server load failed:", err)
 		t.Fatal(err)
 	}
@@ -56,7 +56,7 @@ func Test_Generic_RTSP_camera(t *testing.T) {
 	engine.Start()
 
 	hh := httpserver.NewHttpApiServer(engine)
-	if err := rhilexmanager.DefaultPluginTypeManager.LoadPlugin("plugin.http_server", hh); err != nil {
+	if err := registry.DefaultPluginRegistry.LoadPlugin("plugin.http_server", hh); err != nil {
 		glogger.GLogger.Fatal("Rule load failed:", err)
 		t.Fatal(err)
 	}
@@ -84,7 +84,7 @@ func Test_Generic_LOCAL_camera(t *testing.T) {
 	engine.Start()
 
 	hh := httpserver.NewHttpApiServer(engine)
-	if err := rhilexmanager.DefaultPluginTypeManager.LoadPlugin("plugin.http_server", hh); err != nil {
+	if err := registry.DefaultPluginRegistry.LoadPlugin("plugin.http_server", hh); err != nil {
 		glogger.GLogger.Fatal("Rule load failed:", err)
 		t.Fatal(err)
 	}

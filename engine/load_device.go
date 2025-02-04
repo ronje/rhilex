@@ -22,8 +22,8 @@ import (
 	"time"
 
 	intercache "github.com/hootrhino/rhilex/component/intercache"
-	"github.com/hootrhino/rhilex/component/rhilexmanager"
 	"github.com/hootrhino/rhilex/glogger"
+	"github.com/hootrhino/rhilex/registry"
 	"github.com/hootrhino/rhilex/typex"
 )
 
@@ -71,7 +71,7 @@ func (e *RuleEngine) RemoveDevice(uuid string) {
  */
 func (e *RuleEngine) LoadDeviceWithCtx(deviceInstance *typex.Device,
 	ctx context.Context, cancelCTX context.CancelFunc) error {
-	if config := rhilexmanager.DefaultDeviceTypeManager.Find(deviceInstance.Type); config != nil {
+	if config := registry.DefaultDeviceRegistry.Find(deviceInstance.Type); config != nil {
 		return e.loadDevices(config.NewDevice(e), deviceInstance, ctx, cancelCTX)
 	}
 	return fmt.Errorf("unsupported Device type:%s", deviceInstance.Type)

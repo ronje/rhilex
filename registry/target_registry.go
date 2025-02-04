@@ -13,7 +13,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-package rhilexmanager
+package registry
 
 import (
 	"github.com/hootrhino/rhilex/component/orderedmap"
@@ -21,15 +21,15 @@ import (
 	"github.com/hootrhino/rhilex/typex"
 )
 
-var DefaultTargetTypeManager *TargetTypeManager
+var DefaultTargetRegistry *TargetRegistry
 
-type TargetTypeManager struct {
+type TargetRegistry struct {
 	e        typex.Rhilex
 	registry *orderedmap.OrderedMap[typex.TargetType, *typex.XConfig]
 }
 
-func InitTargetTypeManager(e typex.Rhilex) {
-	DefaultTargetTypeManager = &TargetTypeManager{
+func InitTargetRegistry(e typex.Rhilex) {
+	DefaultTargetRegistry = &TargetRegistry{
 		e:        e,
 		registry: orderedmap.NewOrderedMap[typex.TargetType, *typex.XConfig](),
 	}
@@ -38,61 +38,61 @@ func InitTargetTypeManager(e typex.Rhilex) {
 
 func LoadAllTargetType(e typex.Rhilex) {
 
-	DefaultTargetTypeManager.Register(typex.SEMTECH_UDP_FORWARDER,
+	DefaultTargetRegistry.Register(typex.SEMTECH_UDP_FORWARDER,
 		&typex.XConfig{
 			Engine:    e,
 			NewTarget: target.NewSemtechUdpForwarder,
 		},
 	)
-	DefaultTargetTypeManager.Register(typex.GENERIC_UART_TARGET,
+	DefaultTargetRegistry.Register(typex.GENERIC_UART_TARGET,
 		&typex.XConfig{
 			Engine:    e,
 			NewTarget: target.NewGenericUart,
 		},
 	)
-	DefaultTargetTypeManager.Register(typex.MONGO_SINGLE,
+	DefaultTargetRegistry.Register(typex.MONGO_SINGLE,
 		&typex.XConfig{
 			Engine:    e,
 			NewTarget: target.NewMongoTarget,
 		},
 	)
-	DefaultTargetTypeManager.Register(typex.MQTT_TARGET,
+	DefaultTargetRegistry.Register(typex.MQTT_TARGET,
 		&typex.XConfig{
 			Engine:    e,
 			NewTarget: target.NewMqttTarget,
 		},
 	)
-	DefaultTargetTypeManager.Register(typex.HTTP_TARGET,
+	DefaultTargetRegistry.Register(typex.HTTP_TARGET,
 		&typex.XConfig{
 			Engine:    e,
 			NewTarget: target.NewHTTPTarget,
 		},
 	)
-	DefaultTargetTypeManager.Register(typex.TDENGINE_TARGET,
+	DefaultTargetRegistry.Register(typex.TDENGINE_TARGET,
 		&typex.XConfig{
 			Engine:    e,
 			NewTarget: target.NewTdEngineTarget,
 		},
 	)
-	DefaultTargetTypeManager.Register(typex.RHILEX_GRPC_TARGET,
+	DefaultTargetRegistry.Register(typex.RHILEX_GRPC_TARGET,
 		&typex.XConfig{
 			Engine:    e,
 			NewTarget: target.NewRhilexRpcTarget,
 		},
 	)
-	DefaultTargetTypeManager.Register(typex.UDP_TARGET,
+	DefaultTargetRegistry.Register(typex.UDP_TARGET,
 		&typex.XConfig{
 			Engine:    e,
 			NewTarget: target.NewUUdpTarget,
 		},
 	)
-	DefaultTargetTypeManager.Register(typex.TCP_TRANSPORT,
+	DefaultTargetRegistry.Register(typex.TCP_TRANSPORT,
 		&typex.XConfig{
 			Engine:    e,
 			NewTarget: target.NewTTcpTarget,
 		},
 	)
-	DefaultTargetTypeManager.Register(typex.GREPTIME_DATABASE,
+	DefaultTargetRegistry.Register(typex.GREPTIME_DATABASE,
 		&typex.XConfig{
 			Engine:    e,
 			NewTarget: target.NewGrepTimeDbTarget,
@@ -100,19 +100,19 @@ func LoadAllTargetType(e typex.Rhilex) {
 	)
 }
 
-func (rm *TargetTypeManager) Register(name typex.TargetType, f *typex.XConfig) {
+func (rm *TargetRegistry) Register(name typex.TargetType, f *typex.XConfig) {
 	f.Type = string(name)
 	rm.registry.Set(name, f)
 }
 
-func (rm *TargetTypeManager) Find(name typex.TargetType) *typex.XConfig {
+func (rm *TargetRegistry) Find(name typex.TargetType) *typex.XConfig {
 	p, ok := rm.registry.Get(name)
 	if ok {
 		return p
 	}
 	return nil
 }
-func (rm *TargetTypeManager) All() []*typex.XConfig {
+func (rm *TargetRegistry) All() []*typex.XConfig {
 	return rm.registry.Values()
 }
 
@@ -120,7 +120,7 @@ func (rm *TargetTypeManager) All() []*typex.XConfig {
  * 获取所有类型
  *
  */
-func (rm *TargetTypeManager) AllKeys() []string {
+func (rm *TargetRegistry) AllKeys() []string {
 	data := []string{}
 	for _, k := range rm.registry.Keys() {
 		data = append(data, k.String())
@@ -128,5 +128,5 @@ func (rm *TargetTypeManager) AllKeys() []string {
 	return data
 }
 
-func (rm *TargetTypeManager) Stop() {
+func (rm *TargetRegistry) Stop() {
 }

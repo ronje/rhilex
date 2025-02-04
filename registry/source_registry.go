@@ -13,7 +13,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-package rhilexmanager
+package registry
 
 import (
 	"github.com/hootrhino/rhilex/component/orderedmap"
@@ -21,15 +21,15 @@ import (
 	"github.com/hootrhino/rhilex/typex"
 )
 
-var DefaultSourceTypeManager *SourceTypeManager
+var DefaultSourceRegistry *SourceRegistry
 
-type SourceTypeManager struct {
+type SourceRegistry struct {
 	e        typex.Rhilex
 	registry *orderedmap.OrderedMap[typex.InEndType, *typex.XConfig]
 }
 
-func InitSourceTypeManager(e typex.Rhilex) {
-	DefaultSourceTypeManager = &SourceTypeManager{
+func InitSourceRegistry(e typex.Rhilex) {
+	DefaultSourceRegistry = &SourceRegistry{
 		e:        e,
 		registry: orderedmap.NewOrderedMap[typex.InEndType, *typex.XConfig](),
 	}
@@ -37,62 +37,62 @@ func InitSourceTypeManager(e typex.Rhilex) {
 }
 
 func LoadAllSourceType(e typex.Rhilex) {
-	DefaultSourceTypeManager.Register(typex.CUSTOM_PROTOCOL_SERVER,
+	DefaultSourceRegistry.Register(typex.CUSTOM_PROTOCOL_SERVER,
 		&typex.XConfig{
 			Engine:    e,
 			NewSource: source.NewCustomProtocol,
 		},
 	)
-	DefaultSourceTypeManager.Register(typex.COMTC_EVENT_FORWARDER,
+	DefaultSourceRegistry.Register(typex.COMTC_EVENT_FORWARDER,
 		&typex.XConfig{
 			Engine:    e,
 			NewSource: source.NewTransceiverForwarder,
 		},
 	)
-	DefaultSourceTypeManager.Register(typex.HTTP_SERVER,
+	DefaultSourceRegistry.Register(typex.HTTP_SERVER,
 		&typex.XConfig{
 			Engine:    e,
 			NewSource: source.NewHttpInEndSource,
 		},
 	)
-	DefaultSourceTypeManager.Register(typex.COAP_SERVER,
+	DefaultSourceRegistry.Register(typex.COAP_SERVER,
 		&typex.XConfig{
 			Engine:    e,
 			NewSource: source.NewCoAPInEndSource,
 		},
 	)
-	DefaultSourceTypeManager.Register(typex.GRPC_SERVER,
+	DefaultSourceRegistry.Register(typex.GRPC_SERVER,
 		&typex.XConfig{
 			Engine:    e,
 			NewSource: source.NewGrpcInEndSource,
 		},
 	)
 
-	DefaultSourceTypeManager.Register(typex.UDP_SERVER,
+	DefaultSourceRegistry.Register(typex.UDP_SERVER,
 		&typex.XConfig{
 			Engine:    e,
 			NewSource: source.NewUdpInEndSource,
 		},
 	)
-	DefaultSourceTypeManager.Register(typex.TCP_SERVER,
+	DefaultSourceRegistry.Register(typex.TCP_SERVER,
 		&typex.XConfig{
 			Engine:    e,
 			NewSource: source.NewTcpSource,
 		},
 	)
-	DefaultSourceTypeManager.Register(typex.INTERNAL_EVENT,
+	DefaultSourceRegistry.Register(typex.INTERNAL_EVENT,
 		&typex.XConfig{
 			Engine:    e,
 			NewSource: source.NewInternalEventSource,
 		},
 	)
-	DefaultSourceTypeManager.Register(typex.GENERIC_MQTT_SERVER,
+	DefaultSourceRegistry.Register(typex.GENERIC_MQTT_SERVER,
 		&typex.XConfig{
 			Engine:    e,
 			NewSource: source.NewGenericMqttSource,
 		},
 	)
-	DefaultSourceTypeManager.Register(typex.GENERIC_MQTT_SERVER,
+	DefaultSourceRegistry.Register(typex.GENERIC_MQTT_SERVER,
 		&typex.XConfig{
 			Engine:    e,
 			NewSource: source.NewMqttServer,
@@ -100,19 +100,19 @@ func LoadAllSourceType(e typex.Rhilex) {
 	)
 }
 
-func (rm *SourceTypeManager) Register(name typex.InEndType, f *typex.XConfig) {
+func (rm *SourceRegistry) Register(name typex.InEndType, f *typex.XConfig) {
 	f.Type = string(name)
 	rm.registry.Set(name, f)
 }
 
-func (rm *SourceTypeManager) Find(name typex.InEndType) *typex.XConfig {
+func (rm *SourceRegistry) Find(name typex.InEndType) *typex.XConfig {
 	p, ok := rm.registry.Get(name)
 	if ok {
 		return p
 	}
 	return nil
 }
-func (rm *SourceTypeManager) All() []*typex.XConfig {
+func (rm *SourceRegistry) All() []*typex.XConfig {
 	return rm.registry.Values()
 }
 
@@ -120,7 +120,7 @@ func (rm *SourceTypeManager) All() []*typex.XConfig {
  * 获取所有类型
  *
  */
-func (rm *SourceTypeManager) AllKeys() []string {
+func (rm *SourceRegistry) AllKeys() []string {
 	data := []string{}
 	for _, k := range rm.registry.Keys() {
 		data = append(data, k.String())
@@ -128,5 +128,5 @@ func (rm *SourceTypeManager) AllKeys() []string {
 	return data
 }
 
-func (rm *SourceTypeManager) Stop() {
+func (rm *SourceRegistry) Stop() {
 }
