@@ -43,6 +43,7 @@ import (
 	transceiver "github.com/hootrhino/rhilex/component/transceiver"
 	core "github.com/hootrhino/rhilex/config"
 	"github.com/hootrhino/rhilex/glogger"
+	"github.com/hootrhino/rhilex/plugin"
 	"github.com/hootrhino/rhilex/registry"
 	"github.com/hootrhino/rhilex/typex"
 	"github.com/hootrhino/rhilex/utils"
@@ -117,7 +118,7 @@ func InitRuleEngine(config typex.RhilexConfig) typex.Rhilex {
 	// Init Target Registry
 	registry.InitTargetRegistry(__DefaultRuleEngine)
 	// Init Plugin Registry
-	registry.InitPluginRegistry(__DefaultRuleEngine)
+	plugin.InitPluginRegistry(__DefaultRuleEngine)
 	// Init Multimedia
 	multimedia.InitMultimediaRuntime(__DefaultRuleEngine)
 	// Init Cecolla
@@ -194,7 +195,7 @@ func (e *RuleEngine) Stop() {
 	glogger.GLogger.Info("Stop Alarm Center Successfully")
 	// Stop PluginType Manager
 	glogger.GLogger.Info("Stop PluginType Manager")
-	registry.DefaultPluginRegistry.Stop()
+	plugin.DefaultPluginRegistry.Stop()
 	glogger.GLogger.Info("Stop PluginType Successfully")
 	// Stop Multimedia Runtime
 	glogger.GLogger.Info("Stop Multimedia Runtime")

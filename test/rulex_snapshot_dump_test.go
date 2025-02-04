@@ -14,8 +14,8 @@ import (
 	core "github.com/hootrhino/rhilex/config"
 	"github.com/hootrhino/rhilex/engine"
 	"github.com/hootrhino/rhilex/glogger"
+	"github.com/hootrhino/rhilex/plugin"
 	"github.com/hootrhino/rhilex/plugin/demo_plugin"
-	"github.com/hootrhino/rhilex/registry"
 	"github.com/hootrhino/rhilex/typex"
 
 	"google.golang.org/grpc"
@@ -35,11 +35,11 @@ func Test_snapshot_dump(t *testing.T) {
 	hh := httpserver.NewHttpApiServer(engine)
 
 	// HttpApiServer loaded default
-	if err := registry.DefaultPluginRegistry.LoadPlugin("plugin.http_server", hh); err != nil {
+	if err := plugin.DefaultPluginRegistry.LoadPlugin("plugin.http_server", hh); err != nil {
 		glogger.GLogger.Fatal("Rule load failed:", err)
 	}
 	// Load a demo plugin
-	if err := registry.DefaultPluginRegistry.LoadPlugin("plugin.demo", demo_plugin.NewDemoPlugin()); err != nil {
+	if err := plugin.DefaultPluginRegistry.LoadPlugin("plugin.demo", demo_plugin.NewDemoPlugin()); err != nil {
 		glogger.GLogger.Error("Rule load failed:", err)
 	}
 	// Grpc Inend

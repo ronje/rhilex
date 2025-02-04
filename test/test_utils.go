@@ -13,7 +13,7 @@ import (
 
 	httpserver "github.com/hootrhino/rhilex/component/apiserver"
 	"github.com/hootrhino/rhilex/component/performance"
-	"github.com/hootrhino/rhilex/registry"
+	"github.com/hootrhino/rhilex/plugin"
 
 	core "github.com/hootrhino/rhilex/config"
 	"github.com/hootrhino/rhilex/engine"
@@ -144,7 +144,7 @@ func StartTestServer(t *testing.T) {
 	engine := RunTestEngine()
 	engine.Start()
 	// HttpApiServer loaded default
-	if err := registry.DefaultPluginRegistry.LoadPlugin("plugin.http_server", httpserver.NewHttpApiServer(engine)); err != nil {
+	if err := plugin.DefaultPluginRegistry.LoadPlugin("plugin.http_server", httpserver.NewHttpApiServer(engine)); err != nil {
 		t.Fatal(err)
 	}
 }

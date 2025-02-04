@@ -21,6 +21,7 @@ import (
 	"strings"
 	"syscall"
 
+	plugins "github.com/hootrhino/rhilex/plugin"
 	"github.com/hootrhino/rhilex/plugin/discover"
 	wdog "github.com/hootrhino/rhilex/plugin/generic_watchdog"
 	modbusscrc "github.com/hootrhino/rhilex/plugin/modbus_crc_tools"
@@ -34,7 +35,6 @@ import (
 	apiServer "github.com/hootrhino/rhilex/component/apiserver"
 	"github.com/hootrhino/rhilex/component/globalinit"
 	"github.com/hootrhino/rhilex/component/performance"
-	"github.com/hootrhino/rhilex/registry"
 	core "github.com/hootrhino/rhilex/config"
 	glogger "github.com/hootrhino/rhilex/glogger"
 	icmpsender "github.com/hootrhino/rhilex/plugin/icmp_sender"
@@ -64,12 +64,12 @@ func RunRhilex(iniPath string) {
 	engine := InitRuleEngine(mainConfig)
 	engine.Start()
 	license_manager := license_manager.NewLicenseManager(engine)
-	if err := registry.DefaultPluginRegistry.LoadPlugin("plugin.license_manager", license_manager); err != nil {
+	if err := plugins.DefaultPluginRegistry.LoadPlugin("plugin.license_manager", license_manager); err != nil {
 		glogger.GLogger.Error(err)
 		return
 	}
 	apiServer := apiServer.NewHttpApiServer(engine)
-	if err := registry.DefaultPluginRegistry.LoadPlugin("plugin.http_server", apiServer); err != nil {
+	if err := plugins.DefaultPluginRegistry.LoadPlugin("plugin.http_server", apiServer); err != nil {
 		glogger.GLogger.Error(err)
 		return
 	}
@@ -123,7 +123,7 @@ func loadOtherPlugin() {
 			plugin = discover.NewDiscoverPlugin()
 		}
 		if plugin != nil {
-			if err := registry.DefaultPluginRegistry.LoadPlugin(section.Name(), plugin); err != nil {
+			if err := plugins.DefaultPluginRegistry.LoadPlugin(section.Name(), plugin); err != nil {
 				glogger.GLogger.Error(err)
 			}
 		}
