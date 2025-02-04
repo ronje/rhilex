@@ -19,8 +19,8 @@ import (
 	"fmt"
 
 	"github.com/hootrhino/rhilex/component/apiserver/model"
-	"github.com/hootrhino/rhilex/component/datacenter"
 	"github.com/hootrhino/rhilex/component/interdb"
+	"github.com/hootrhino/rhilex/datacenter"
 	"gorm.io/gorm"
 )
 

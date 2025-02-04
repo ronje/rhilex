@@ -18,7 +18,7 @@ package test
 import (
 	"testing"
 
-	"github.com/hootrhino/rhilex/component/datacenter"
+	"github.com/hootrhino/rhilex/datacenter"
 )
 
 // go test -timeout 30s -run ^Test_gen_schema_ddl github.com/hootrhino/rhilex/test -v -count=1

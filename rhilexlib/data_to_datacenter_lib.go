@@ -20,8 +20,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/hootrhino/rhilex/component/datacenter"
 	"github.com/hootrhino/rhilex/component/dataschema"
+	"github.com/hootrhino/rhilex/datacenter"
 	"github.com/hootrhino/rhilex/glogger"
 	"github.com/hootrhino/rhilex/typex"
 
