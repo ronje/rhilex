@@ -233,93 +233,75 @@ func (e *RuleEngine) WorkDevice(Device *typex.Device, data string) (bool, error)
 	return true, nil
 }
 
-/*
-*
-* 执行针对资源端的规则脚本
-*
- */
+// RunSourceCallbacks 执行针对资源端的规则脚本
 func (e *RuleEngine) RunSourceCallbacks(in *typex.InEnd, callbackArgs string) {
 	// 执行来自资源的脚本
 	for _, rule := range in.BindRules {
 		if rule.Status == typex.RULE_RUNNING {
-			_, errA := luaexecutor.ExecuteActions(&rule, lua.LString(callbackArgs))
-			if errA != nil {
-				Debugger, Ok := rule.LuaVM.GetStack(1)
-				if Ok {
-					LValue, _ := rule.LuaVM.GetInfo("f", Debugger, lua.LNil)
-					rule.LuaVM.GetInfo("l", Debugger, lua.LNil)
-					rule.LuaVM.GetInfo("S", Debugger, lua.LNil)
-					rule.LuaVM.GetInfo("u", Debugger, lua.LNil)
-					rule.LuaVM.GetInfo("n", Debugger, lua.LNil)
-					LFunction := LValue.(*lua.LFunction)
-					LastCall := lua.DbgCall{
-						Name: "_main",
-					}
-					if len(LFunction.Proto.DbgCalls) > 0 {
-						LastCall = LFunction.Proto.DbgCalls[0]
-					}
-					glogger.GLogger.WithFields(logrus.Fields{
-						"topic": "rule/log/" + rule.UUID,
-					}).Warnf("Function Name: [%s],"+
-						"What: [%s], Source Line: [%d],"+
-						" Last Call: [%s], Error message: %s",
-						Debugger.Name, Debugger.What, Debugger.CurrentLine,
-						LastCall.Name, errA.Error(),
-					)
-				}
-			} else {
-				_, errS := luaexecutor.ExecuteSuccess(rule.LuaVM)
-				if errS != nil {
-					glogger.GLogger.Error(errS)
-					return // lua 是规则链，有短路原则，中途出错会中断
-				}
+			if err := e.executeRule(&rule, callbackArgs); err != nil {
+				return
 			}
 		}
 	}
 }
 
-/*
-*
-* 执行针对设备端的规则脚本
-*
- */
+// RunDeviceCallbacks 执行针对设备端的规则脚本
 func (e *RuleEngine) RunDeviceCallbacks(Device *typex.Device, callbackArgs string) {
 	for _, rule := range Device.BindRules {
-		_, errA := luaexecutor.ExecuteActions(&rule, lua.LString(callbackArgs))
-		if errA != nil {
-			Debugger, Ok := rule.LuaVM.GetStack(1)
-			if Ok {
-				LValue, _ := rule.LuaVM.GetInfo("f", Debugger, lua.LNil)
-				rule.LuaVM.GetInfo("l", Debugger, lua.LNil)
-				rule.LuaVM.GetInfo("S", Debugger, lua.LNil)
-				rule.LuaVM.GetInfo("u", Debugger, lua.LNil)
-				rule.LuaVM.GetInfo("n", Debugger, lua.LNil)
-				LFunction := LValue.(*lua.LFunction)
-				LastCall := lua.DbgCall{
-					Name: "_main",
-				}
-				if len(LFunction.Proto.DbgCalls) > 0 {
-					LastCall = LFunction.Proto.DbgCalls[0]
-				}
-				glogger.GLogger.WithFields(logrus.Fields{
-					"topic": "rule/log/" + rule.UUID,
-				}).Warnf("Function Name: [%s],"+
-					"What: [%s], Source Line: [%d],"+
-					" Last Call: [%s], Error message: %s",
-					Debugger.Name, Debugger.What, Debugger.CurrentLine,
-					LastCall.Name, errA.Error(),
-				)
-			}
-		} else {
-			_, err2 := luaexecutor.ExecuteSuccess(rule.LuaVM)
-			if err2 != nil {
-				glogger.GLogger.WithFields(logrus.Fields{
-					"topic": "rule/log/" + rule.UUID,
-				}).Info("RunLuaCallbacks error:", err2)
-				return
-			}
+		if err := e.executeRule(&rule, callbackArgs); err != nil {
+			return
 		}
 	}
+}
+
+// executeRule 执行规则脚本的公共逻辑
+func (e *RuleEngine) executeRule(rule *typex.Rule, callbackArgs string) error {
+	// 执行规则动作
+	_, errA := luaexecutor.ExecuteActions(rule, lua.LString(callbackArgs))
+	if errA != nil {
+		e.handleError(rule, errA)
+		return errA
+	}
+
+	// 执行成功处理
+	_, errS := luaexecutor.ExecuteSuccess(rule.LuaVM)
+	if errS != nil {
+		glogger.GLogger.Error(errS)
+		return errS
+	}
+
+	return nil
+}
+
+// handleError 处理规则执行错误
+func (e *RuleEngine) handleError(rule *typex.Rule, err error) {
+	Debugger, Ok := rule.LuaVM.GetStack(1)
+	if !Ok {
+		return
+	}
+
+	LValue, _ := rule.LuaVM.GetInfo("f", Debugger, lua.LNil)
+	rule.LuaVM.GetInfo("l", Debugger, lua.LNil)
+	rule.LuaVM.GetInfo("S", Debugger, lua.LNil)
+	rule.LuaVM.GetInfo("u", Debugger, lua.LNil)
+	rule.LuaVM.GetInfo("n", Debugger, lua.LNil)
+
+	LFunction := LValue.(*lua.LFunction)
+	LastCall := lua.DbgCall{
+		Name: "_main",
+	}
+	if len(LFunction.Proto.DbgCalls) > 0 {
+		LastCall = LFunction.Proto.DbgCalls[0]
+	}
+
+	glogger.GLogger.WithFields(logrus.Fields{
+		"topic": "rule/log/" + rule.UUID,
+	}).Warnf("Function Name: [%s],"+
+		"What: [%s], Source Line: [%d],"+
+		" Last Call: [%s], Error message: %s",
+		Debugger.Name, Debugger.What, Debugger.CurrentLine,
+		LastCall.Name, err.Error(),
+	)
 }
 
 func (e *RuleEngine) GetInEnd(uuid string) *typex.InEnd {
