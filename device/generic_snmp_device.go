@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"github.com/gosnmp/gosnmp"
-	"github.com/hootrhino/rhilex/component/alarmcenter"
+	"github.com/hootrhino/rhilex/alarmcenter"
 	"github.com/hootrhino/rhilex/component/intercache"
 	"github.com/hootrhino/rhilex/component/interdb"
 	"github.com/hootrhino/rhilex/resconfig"
