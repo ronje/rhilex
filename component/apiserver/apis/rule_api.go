@@ -11,7 +11,7 @@ import (
 	"github.com/hootrhino/rhilex/component/apiserver/service"
 	"github.com/hootrhino/rhilex/component/interqueue"
 	"github.com/hootrhino/rhilex/component/luaruntime"
-	transceiver "github.com/hootrhino/rhilex/component/transceiver"
+	transceiver "github.com/hootrhino/rhilex/transceiver"
 	"github.com/hootrhino/rhilex/glogger"
 
 	"github.com/hootrhino/rhilex/typex"

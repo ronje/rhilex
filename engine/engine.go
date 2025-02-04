@@ -40,7 +40,7 @@ import (
 	"github.com/hootrhino/rhilex/component/orderedmap"
 	"github.com/hootrhino/rhilex/component/security"
 	supervisor "github.com/hootrhino/rhilex/component/supervisor"
-	transceiver "github.com/hootrhino/rhilex/component/transceiver"
+	transceiver "github.com/hootrhino/rhilex/transceiver"
 	core "github.com/hootrhino/rhilex/config"
 	"github.com/hootrhino/rhilex/glogger"
 	"github.com/hootrhino/rhilex/plugin"
