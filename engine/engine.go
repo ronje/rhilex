@@ -194,9 +194,9 @@ func (e *RuleEngine) Stop() {
 	alarmcenter.StopAlarmCenter()
 	glogger.GLogger.Info("Stop Alarm Center Successfully")
 	// Stop PluginType Manager
-	glogger.GLogger.Info("Stop PluginType Manager")
-	plugin.DefaultPluginRegistry.Stop()
-	glogger.GLogger.Info("Stop PluginType Successfully")
+	glogger.GLogger.Info("Stop Plugin Registry")
+	plugin.Stop()
+	glogger.GLogger.Info("Stop Plugin Registry Successfully")
 	// Stop Multimedia Runtime
 	glogger.GLogger.Info("Stop Multimedia Runtime")
 	multimedia.StopMultimediaRuntime()

@@ -64,12 +64,12 @@ func RunRhilex(iniPath string) {
 	engine := InitRuleEngine(mainConfig)
 	engine.Start()
 	license_manager := license_manager.NewLicenseManager(engine)
-	if err := plugins.DefaultPluginRegistry.LoadPlugin("plugin.license_manager", license_manager); err != nil {
+	if err := plugins.LoadPlugin("plugin.license_manager", license_manager); err != nil {
 		glogger.GLogger.Error(err)
 		return
 	}
 	apiServer := apiServer.NewHttpApiServer(engine)
-	if err := plugins.DefaultPluginRegistry.LoadPlugin("plugin.http_server", apiServer); err != nil {
+	if err := plugins.LoadPlugin("plugin.http_server", apiServer); err != nil {
 		glogger.GLogger.Error(err)
 		return
 	}
@@ -123,7 +123,7 @@ func loadOtherPlugin() {
 			plugin = discover.NewDiscoverPlugin()
 		}
 		if plugin != nil {
-			if err := plugins.DefaultPluginRegistry.LoadPlugin(section.Name(), plugin); err != nil {
+			if err := plugins.LoadPlugin(section.Name(), plugin); err != nil {
 				glogger.GLogger.Error(err)
 			}
 		}

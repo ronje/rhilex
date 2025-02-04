@@ -94,7 +94,7 @@ func GetSecurityLicense(c *gin.Context, ruleEngine typex.Rhilex) {
 // Get all plugins
 func Plugins(c *gin.Context, ruleEngine typex.Rhilex) {
 	data := []interface{}{}
-	plugins := plugin.DefaultPluginRegistry.All()
+	plugins := plugin.All()
 	for _, plugin := range plugins {
 		data = append(data, plugin.PluginMetaInfo())
 	}
@@ -123,7 +123,7 @@ func source_count(e typex.Rhilex) map[string]int {
 		"rules":   len(e.AllRules()),
 		"devices": len(e.AllDevices()),
 		"goods":   0,
-		"plugins": plugin.DefaultPluginRegistry.Count(),
+		"plugins": plugin.Count(),
 		"apps":    applet.AppCount(),
 	}
 }
@@ -190,7 +190,7 @@ func SourceCount(c *gin.Context, ruleEngine typex.Rhilex) {
 		"outends": len(ruleEngine.AllOutEnds()),
 		"rules":   len(ruleEngine.AllRules()),
 		"devices": len(ruleEngine.AllDevices()),
-		"plugins": plugin.DefaultPluginRegistry.Count(),
+		"plugins": plugin.Count(),
 	}))
 }
 

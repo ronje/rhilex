@@ -28,7 +28,7 @@ func Test_data_to_tdengine(t *testing.T) {
 	hh := httpserver.NewHttpApiServer(engine)
 
 	// HttpApiServer loaded default
-	if err := plugin.DefaultPluginRegistry.LoadPlugin("plugin.http_server", hh); err != nil {
+	if err := plugin.LoadPlugin("plugin.http_server", hh); err != nil {
 		t.Fatal("Rule load failed:", err)
 	}
 	// Grpc Inend

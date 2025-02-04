@@ -21,7 +21,7 @@ func TestFullyRun(t *testing.T) {
 	engine := RunTestEngine()
 	engine.Start()
 
-	if err := plugin.DefaultPluginRegistry.LoadPlugin("plugin.http_server",
+	if err := plugin.LoadPlugin("plugin.http_server",
 		httpserver.NewHttpApiServer(engine)); err != nil {
 		glogger.GLogger.Fatal("Rule load failed:", err)
 	}

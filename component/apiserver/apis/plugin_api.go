@@ -38,7 +38,7 @@ func PluginService(c *gin.Context, ruleEngine typex.Rhilex) {
 		return
 	}
 
-	plugin := plugin.DefaultPluginRegistry.Find(form.UUID)
+	plugin := plugin.Find(form.UUID)
 	if plugin != nil {
 		result := plugin.Service(typex.ServiceArg{
 			Name: form.Name,
@@ -58,7 +58,7 @@ func PluginService(c *gin.Context, ruleEngine typex.Rhilex) {
  */
 func PluginDetail(c *gin.Context, ruleEngine typex.Rhilex) {
 	uuid, _ := c.GetQuery("uuid")
-	plugin := plugin.DefaultPluginRegistry.Find(uuid)
+	plugin := plugin.Find(uuid)
 	if plugin != nil {
 		c.JSON(common.HTTP_OK, common.OkWithData(plugin.PluginMetaInfo()))
 		return

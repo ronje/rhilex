@@ -25,7 +25,7 @@ import (
 	"github.com/hootrhino/rhilex/utils"
 )
 
-var DefaultPluginRegistry *PluginRegistry
+var __DefaultPluginRegistry *PluginRegistry
 
 type PluginRegistry struct {
 	e        typex.Rhilex
@@ -33,7 +33,7 @@ type PluginRegistry struct {
 }
 
 func InitPluginRegistry(e typex.Rhilex) {
-	DefaultPluginRegistry = &PluginRegistry{
+	__DefaultPluginRegistry = &PluginRegistry{
 		e:        e,
 		registry: orderedmap.NewOrderedMap[string, typex.XPlugin](),
 	}
@@ -74,10 +74,24 @@ func (rm *PluginRegistry) LoadPlugin(sectionK string, p typex.XPlugin) error {
 
 }
 
-func (rm *PluginRegistry) Stop() {
-	for _, plugin := range rm.registry.Values() {
+func Stop() {
+	for _, plugin := range __DefaultPluginRegistry.registry.Values() {
 		glogger.GLogger.Infof("Stop plugin:(%s)", plugin.PluginMetaInfo().Name)
 		plugin.Stop()
 		glogger.GLogger.Infof("Stop plugin:(%s) Successfully", plugin.PluginMetaInfo().Name)
 	}
+}
+
+// __DefaultPluginRegistry 作为包级别的变量，在程序启动时被初始化，对外提供封装后的接口
+func LoadPlugin(sectionK string, p typex.XPlugin) error {
+	return __DefaultPluginRegistry.LoadPlugin(sectionK, p)
+}
+func All() []typex.XPlugin {
+	return __DefaultPluginRegistry.All()
+}
+func Count() int {
+	return __DefaultPluginRegistry.Count()
+}
+func Find(name string) typex.XPlugin {
+	return __DefaultPluginRegistry.Find(name)
 }

@@ -20,7 +20,7 @@ func Test_UART_Device(t *testing.T) {
 	engine := RunTestEngine()
 	engine.Start()
 
-	if err := plugin.DefaultPluginRegistry.LoadPlugin("plugin.http_server", httpserver.NewHttpApiServer(engine)); err != nil {
+	if err := plugin.LoadPlugin("plugin.http_server", httpserver.NewHttpApiServer(engine)); err != nil {
 		t.Fatal("HttpServer load failed:", err)
 	}
 
