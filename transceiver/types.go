@@ -25,7 +25,6 @@ type TransceiverConfig struct {
 	Name              string `ini:"name" json:"name" validate:"required"`
 	Address           string `ini:"address" json:"address" validate:"required"`
 	IOTimeout         int64  `ini:"io_timeout" json:"ioTimeout" validate:"required"`
-	ATTimeout         int64  `ini:"at_timeout" json:"atRwTimeout" validate:"required"`
 	BaudRate          int    `ini:"baudrate" json:"baudRate" validate:"required"`
 	DataBits          int    `ini:"databits" json:"dataBits" validate:"required"`
 	Parity            string `ini:"parity" json:"parity" validate:"required"`

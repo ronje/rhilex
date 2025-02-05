@@ -38,10 +38,12 @@ type Transport struct {
 
 func NewTransport(config ExchangeConfig) *Transport {
 	return &Transport{
-		port:   config.Port,
-		logger: config.Logger,
-		reader: bufio.NewReader(config.Port),
-		writer: bufio.NewWriter(config.Port),
+		port:         config.Port,
+		logger:       config.Logger,
+		readTimeout:  config.ReadTimeout,
+		writeTimeout: config.WriteTimeout,
+		reader:       bufio.NewReader(config.Port),
+		writer:       bufio.NewWriter(config.Port),
 		parser: GenericByteParser{
 			edger:   config.PacketEdger,
 			checker: &SimpleChecker{},
@@ -52,13 +54,14 @@ func NewTransport(config ExchangeConfig) *Transport {
 func (transport *Transport) Write(data []byte) error {
 	transport.port.SetWriteDeadline(time.Now().Add(
 		transport.writeTimeout * time.Millisecond))
+	defer transport.port.SetWriteDeadline(time.Time{})
 	data = append(transport.parser.edger.Head[:], data...)
 	data = append(data, transport.parser.edger.Tail[:]...)
 	transport.logger.Debug("Transport.Write=", ByteDumpHexString(data))
 	if _, err := transport.port.Write(data); err != nil {
 		return err
 	}
-	transport.port.SetWriteDeadline(time.Time{})
+
 	return nil
 }
 
@@ -66,6 +69,8 @@ func (transport *Transport) Write(data []byte) error {
 func (transport *Transport) Read() ([]byte, error) {
 	transport.port.SetWriteDeadline(time.Now().Add(
 		transport.readTimeout * time.Millisecond))
+	defer transport.port.SetWriteDeadline(time.Time{})
+
 	n, err := transport.port.Read(transport.buffer)
 	if err != nil {
 		return nil, fmt.Errorf("failed to read from serial port: %v", err)
@@ -79,7 +84,6 @@ func (transport *Transport) Read() ([]byte, error) {
 	if parseErr != nil {
 		return nil, fmt.Errorf("failed to parse data: %v", parseErr)
 	}
-	transport.port.SetWriteDeadline(time.Time{})
 
 	return packetData, nil
 }

@@ -1,6 +1,7 @@
 package discover
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"net"
@@ -160,6 +161,8 @@ func (dp *DiscoverPlugin) broadcastProbeMessages() {
 
 	for {
 		select {
+		case <-context.Background().Done():
+			return
 		case <-ticker.C:
 			if !dp.broadcast {
 				return

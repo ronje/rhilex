@@ -31,7 +31,7 @@ import (
 	"github.com/hootrhino/rhilex/typex"
 )
 
-var DefaultTransceiverManager *TransceiverManager
+var __DefaultTransceiverManager *TransceiverManager
 
 type TransceiverManager struct {
 	Transceivers sync.Map
@@ -39,7 +39,7 @@ type TransceiverManager struct {
 }
 
 func InitTransceiverManager(R typex.Rhilex) {
-	DefaultTransceiverManager = &TransceiverManager{
+	__DefaultTransceiverManager = &TransceiverManager{
 		R:            R,
 		Transceivers: sync.Map{},
 	}
@@ -137,8 +137,8 @@ func LoadTransceiverModules() {
 			glogger.GLogger.Fatal(errMap)
 			os.Exit(1)
 		}
-		Transceiver := NewTransceiver(DefaultTransceiverManager.R)
-		errLoad := DefaultTransceiverManager.Load(config.Name, config, Transceiver)
+		Transceiver := NewTransceiver(__DefaultTransceiverManager.R)
+		errLoad := __DefaultTransceiverManager.Load(config.Name, config, Transceiver)
 		if errLoad != nil {
 			glogger.GLogger.Fatal(errLoad)
 			os.Exit(1)
