@@ -25,8 +25,8 @@ import (
 	"github.com/hootrhino/rhilex/component/apiserver/model"
 	"github.com/hootrhino/rhilex/component/apiserver/server"
 	"github.com/hootrhino/rhilex/component/apiserver/service"
-	"github.com/hootrhino/rhilex/component/multimedia"
 	"github.com/hootrhino/rhilex/component/xmanager"
+	"github.com/hootrhino/rhilex/multimedia"
 	"github.com/hootrhino/rhilex/typex"
 	"github.com/hootrhino/rhilex/utils"
 )

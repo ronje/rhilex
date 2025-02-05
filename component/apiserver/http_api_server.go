@@ -10,7 +10,7 @@ import (
 	"github.com/hootrhino/rhilex/component/crontask"
 	dataschema "github.com/hootrhino/rhilex/component/dataschema"
 	"github.com/hootrhino/rhilex/component/eventbus"
-	"github.com/hootrhino/rhilex/component/multimedia"
+	"github.com/hootrhino/rhilex/multimedia"
 	"github.com/shirou/gopsutil/cpu"
 
 	"github.com/hootrhino/rhilex/applet"
