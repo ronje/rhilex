@@ -91,7 +91,7 @@ func (tc *DefaultTransceiver) Start(Config TransceiverConfig) error {
 			default:
 			}
 			ctx1, cancel1 := context.WithTimeout(context.Background(), config.Timeout)
-			n, buffer := utils.ReadInLeastTimeout(ctx1, serialPort, config.Timeout)
+			n, buffer, _ := utils.ReadInWill(ctx1, serialPort, config.Timeout)
 			cancel1()
 			if n > 0 {
 				glogger.GLogger.Debug("Transceiver.Receive:", string(buffer[:n]))
