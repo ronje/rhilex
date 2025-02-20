@@ -61,7 +61,9 @@ func RunRhilex(iniPath string) {
 	//
 	c := make(chan os.Signal, 1)
 	signal.Notify(c, syscall.SIGINT, syscall.SIGABRT, syscall.SIGTERM)
-	engine := InitRuleEngine(mainConfig)
+	engine := NewRuleEngine(mainConfig)
+	InitAllComponent(engine)
+	StartAllComponent()
 	engine.Start()
 	license_manager := license_manager.NewLicenseManager(engine)
 	if err := plugins.LoadPlugin("plugin.license_manager", license_manager); err != nil {
@@ -77,6 +79,7 @@ func RunRhilex(iniPath string) {
 	loadOtherPlugin()
 	s := <-c
 	glogger.GLogger.Warn("RHILEX Receive Stop Signal: ", s)
+	StopAllComponent()
 	engine.Stop()
 }
 

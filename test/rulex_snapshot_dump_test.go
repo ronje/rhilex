@@ -30,7 +30,7 @@ import (
 func Test_snapshot_dump(t *testing.T) {
 	c := make(chan os.Signal, 1)
 	signal.Notify(c, syscall.SIGINT, syscall.SIGABRT)
-	engine := engine.InitRuleEngine(core.InitGlobalConfig("config/rhilex.ini"))
+	engine := engine.NewRuleEngine(core.InitGlobalConfig("config/rhilex.ini"))
 	engine.Start()
 	hh := httpserver.NewHttpApiServer(engine)
 

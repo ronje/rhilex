@@ -21,42 +21,19 @@ import (
 	"runtime"
 
 	lua "github.com/hootrhino/gopher-lua"
-	"github.com/hootrhino/rhilex/alarmcenter"
-	"github.com/hootrhino/rhilex/applet"
-	"github.com/hootrhino/rhilex/cecolla"
-	"github.com/hootrhino/rhilex/component/aibase"
-	"github.com/hootrhino/rhilex/component/crontask"
-	"github.com/hootrhino/rhilex/component/eventbus"
-	intercache "github.com/hootrhino/rhilex/component/intercache"
-	"github.com/hootrhino/rhilex/component/interdb"
-	"github.com/hootrhino/rhilex/component/interkv"
+
 	"github.com/hootrhino/rhilex/component/intermetric"
-	"github.com/hootrhino/rhilex/component/internotify"
 	"github.com/hootrhino/rhilex/component/interqueue"
-	"github.com/hootrhino/rhilex/component/lostcache"
 	"github.com/hootrhino/rhilex/component/luaexecutor"
 	"github.com/hootrhino/rhilex/component/orderedmap"
-	"github.com/hootrhino/rhilex/component/security"
-	supervisor "github.com/hootrhino/rhilex/component/supervisor"
 	core "github.com/hootrhino/rhilex/config"
-	datacenter "github.com/hootrhino/rhilex/datacenter"
 	"github.com/hootrhino/rhilex/glogger"
-	"github.com/hootrhino/rhilex/multimedia"
-	"github.com/hootrhino/rhilex/plugin"
 	"github.com/hootrhino/rhilex/registry"
-	transceiver "github.com/hootrhino/rhilex/transceiver"
 	"github.com/hootrhino/rhilex/typex"
 	"github.com/hootrhino/rhilex/utils"
 	"github.com/shirou/gopsutil/v3/disk"
 	"github.com/sirupsen/logrus"
 )
-
-/*
-*
-* 全局默认引擎，未来主要留给外部使用
-*
- */
-var __DefaultRuleEngine *RuleEngine
 
 // 规则引擎
 type RuleEngine struct {
@@ -67,63 +44,14 @@ type RuleEngine struct {
 	Config  *typex.RhilexConfig                           `json:"config"`
 }
 
-func MainRuleEngine() *RuleEngine {
-	if __DefaultRuleEngine == nil {
-		glogger.GLogger.Fatal("RuleEngine Not Initialize")
-	}
-	return __DefaultRuleEngine
-}
-func InitRuleEngine(config typex.RhilexConfig) typex.Rhilex {
-	__DefaultRuleEngine = &RuleEngine{
+func NewRuleEngine(config typex.RhilexConfig) typex.Rhilex {
+	return &RuleEngine{
 		Rules:   orderedmap.NewOrderedMap[string, *typex.Rule](),
 		InEnds:  orderedmap.NewOrderedMap[string, *typex.InEnd](),
 		OutEnds: orderedmap.NewOrderedMap[string, *typex.OutEnd](),
 		Devices: orderedmap.NewOrderedMap[string, *typex.Device](),
 		Config:  &config,
 	}
-	// Init Security License
-	security.InitSecurityLicense()
-	// Init EventBus
-	eventbus.InitEventBus(__DefaultRuleEngine)
-	// Init Internal DB
-	interdb.InitAll(__DefaultRuleEngine)
-	alarmcenter.InitAll(__DefaultRuleEngine)
-	internotify.InitAll(__DefaultRuleEngine)
-	datacenter.InitAll(__DefaultRuleEngine)
-	lostcache.InitAll(__DefaultRuleEngine)
-	// Init Alarm Center
-	alarmcenter.InitAlarmCenter(__DefaultRuleEngine)
-	// Data center: future version maybe support
-	datacenter.InitDataCenter(__DefaultRuleEngine)
-	// Internal kv Store
-	interkv.InitInterKVStore(core.GlobalConfig.MaxKvStoreSize)
-	// SuperVisor Admin
-	supervisor.InitResourceSuperVisorAdmin(__DefaultRuleEngine)
-	// Init Global Value Registry
-	intercache.InitGlobalValueRegistry(__DefaultRuleEngine)
-	// Internal Metric
-	intermetric.InitInternalMetric(__DefaultRuleEngine)
-	// lua applet manager
-	applet.InitAppletRuntime(__DefaultRuleEngine)
-	// current only support Internal ai
-	aibase.InitAlgorithmRuntime(__DefaultRuleEngine)
-	// Internal Queue
-	interqueue.InitXQueue(__DefaultRuleEngine, core.GlobalConfig.MaxQueueSize)
-	// Init Transceiver Communicator Manager
-	transceiver.InitTransceiverManager(__DefaultRuleEngine)
-	// Init Device Registry
-	registry.InitDeviceRegistry(__DefaultRuleEngine)
-	// Init Source Registry
-	registry.InitSourceRegistry(__DefaultRuleEngine)
-	// Init Target Registry
-	registry.InitTargetRegistry(__DefaultRuleEngine)
-	// Init Plugin Registry
-	plugin.InitPluginRegistry(__DefaultRuleEngine)
-	// Init Multimedia
-	multimedia.InitMultimediaRuntime(__DefaultRuleEngine)
-	// Init Cecolla
-	cecolla.InitCecollaRuntime(__DefaultRuleEngine)
-	return __DefaultRuleEngine
 }
 
 /*
@@ -132,12 +60,6 @@ func InitRuleEngine(config typex.RhilexConfig) typex.Rhilex {
 *
  */
 func (e *RuleEngine) Start() *typex.RhilexConfig {
-	// RuleEngine __DefaultRuleEngine
-	intercache.RegisterSlot("__DefaultRuleEngine")
-	// RegisterSlot __DeviceConfigMap
-	intercache.RegisterSlot("__DeviceConfigMap")
-	// Internal BUS
-	interqueue.StartXQueue()
 	return e.Config
 }
 func (e *RuleEngine) Version() typex.VersionInfo {
@@ -151,7 +73,6 @@ func (e *RuleEngine) GetConfig() *typex.RhilexConfig {
 // Stop
 func (e *RuleEngine) Stop() {
 	glogger.GLogger.Info("Ready to stop RHILEX")
-	crontask.StopCronRebootExecutor()
 	// 资源 TODO: 后期重构设备资源等，独立资源管理器。
 	for _, inEnd := range e.InEnds.Values() {
 		if inEnd.Source != nil {
@@ -175,46 +96,6 @@ func (e *RuleEngine) Stop() {
 		device.Device.Stop()
 		glogger.GLogger.Infof("Stop Device:(%s) Successfully", device.Name)
 	}
-	// Stop Supervisor Admin
-	supervisor.StopSupervisorAdmin()
-	// Stop Applet
-	glogger.GLogger.Info("Stop Applet Runtime")
-	applet.Stop()
-	// Internal Cache
-	glogger.GLogger.Info("Flush Internal Cache")
-	intercache.Flush()
-	// AI Runtime
-	glogger.GLogger.Info("Stop AI Runtime")
-	aibase.Stop()
-	// Stop transceiver
-	glogger.GLogger.Info("Stop transceiver")
-	transceiver.Stop()
-	// Stop Alarm Center
-	glogger.GLogger.Info("Stop Alarm Center")
-	alarmcenter.StopAlarmCenter()
-	glogger.GLogger.Info("Stop Alarm Center Successfully")
-	// Stop PluginType Manager
-	glogger.GLogger.Info("Stop Plugin Registry")
-	plugin.Stop()
-	glogger.GLogger.Info("Stop Plugin Registry Successfully")
-	// Stop Multimedia Runtime
-	glogger.GLogger.Info("Stop Multimedia Runtime")
-	multimedia.StopMultimediaRuntime()
-	glogger.GLogger.Info("Stop Multimedia Runtime Successfully")
-	// Stop Cecolla
-	cecolla.StopCecollaRuntime()
-	// Stop Internal Database
-	glogger.GLogger.Info("Stop Internal Database")
-	interdb.StopAll()
-	alarmcenter.StopAll()
-	datacenter.StopAll()
-	lostcache.StopAll()
-	internotify.StopAll()
-	// Stop EventBus
-	eventbus.Stop()
-	glogger.GLogger.Info("Stop Internal Database Successfully")
-	glogger.GLogger.Info("Stop RHILEX successfully")
-	glogger.Close()
 }
 
 // 核心功能: Work, 主要就是推流进队列
@@ -429,27 +310,6 @@ func (e *RuleEngine) RestartDevice(uuid string) error {
 		return nil
 	}
 	return fmt.Errorf("device not exists:%s", uuid)
-}
-
-/*
-*-----------------------------------------------------------------
-* 0.6.8 New Api: 将注册权交给设备
-*-----------------------------------------------------------------
- */
-func RegisterNewDevice(Type typex.DeviceType, Cfg *typex.XConfig) error {
-	Cfg.Engine = __DefaultRuleEngine
-	registry.DefaultDeviceRegistry.Register(Type, Cfg)
-	return nil
-}
-func RegisterNewSource(Type typex.InEndType, Cfg *typex.XConfig) error {
-	Cfg.Engine = __DefaultRuleEngine
-	registry.DefaultSourceRegistry.Register(Type, Cfg)
-	return nil
-}
-func RegisterNewTarget(Type typex.TargetType, Cfg *typex.XConfig) error {
-	Cfg.Engine = __DefaultRuleEngine
-	registry.DefaultTargetRegistry.Register(Type, Cfg)
-	return nil
 }
 
 func (e *RuleEngine) CheckSourceType(Type typex.InEndType) error {

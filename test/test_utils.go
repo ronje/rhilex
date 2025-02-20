@@ -86,7 +86,7 @@ func RunTestEngine() typex.Rhilex {
 	glogger.StartNewRealTimeLogger(core.GlobalConfig.LogLevel)
 	performance.SetDebugMode(mainConfig.EnablePProf)
 	performance.SetGomaxProcs(mainConfig.GomaxProcs)
-	return engine.InitRuleEngine(mainConfig)
+	return engine.NewRuleEngine(mainConfig)
 }
 
 /*
