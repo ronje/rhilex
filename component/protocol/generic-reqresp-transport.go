@@ -17,7 +17,7 @@ package protocol
 
 import (
 	"bufio"
-	"errors"
+	"context"
 	"fmt"
 	"io"
 	"time"
@@ -26,7 +26,6 @@ import (
 )
 
 type Transport struct {
-	buffer       []byte
 	writer       io.Writer
 	reader       io.Reader
 	readTimeout  time.Duration
@@ -48,7 +47,6 @@ func NewTransport(config ExchangeConfig) *Transport {
 			edger:   config.PacketEdger,
 			checker: &SimpleChecker{},
 		},
-		buffer: make([]byte, 0, 1024),
 	}
 }
 func (transport *Transport) Write(data []byte) error {
@@ -70,21 +68,18 @@ func (transport *Transport) Read() ([]byte, error) {
 	transport.port.SetWriteDeadline(time.Now().Add(
 		transport.readTimeout * time.Millisecond))
 	defer transport.port.SetWriteDeadline(time.Time{})
-
-	n, err := transport.port.Read(transport.buffer)
-	if err != nil {
-		return nil, fmt.Errorf("failed to read from serial port: %v", err)
+	Ctx, Cancel := context.WithTimeout(context.Background(),
+		transport.readTimeout*time.Millisecond)
+	defer Cancel()
+	N, B, E := ReadInWill(Ctx, transport.port, transport.readTimeout*time.Millisecond)
+	if E != nil {
+		return B[:N], E
 	}
-
-	if n == 0 {
-		return nil, errors.New("no data read from serial port")
-	}
-	transport.logger.Debug("Transport.Read=", ByteDumpHexString(transport.buffer[:n]))
-	packetData, parseErr := transport.parser.ParseBytes(transport.buffer[:n])
+	transport.logger.Debug("Transport.Read=", ByteDumpHexString(B[:N]))
+	packetData, parseErr := transport.parser.ParseBytes(B[:N])
 	if parseErr != nil {
-		return nil, fmt.Errorf("failed to parse data: %v", parseErr)
+		return B[:N], fmt.Errorf("failed to parse data: %v", parseErr)
 	}
-
 	return packetData, nil
 }
 func (transport *Transport) Status() error {
