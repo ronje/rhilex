@@ -1,0 +1,15 @@
+[Unit]
+Description=Rhilex Service
+After=network.target
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/usr/local/rhilex/
+ExecStart=/usr/local/rhilex/rhilex run
+Environment="PATH=/usr/local/rhilex/bin:/usr/local/bin:/usr/bin:/bin"
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
