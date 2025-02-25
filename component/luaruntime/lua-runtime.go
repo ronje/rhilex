@@ -267,6 +267,7 @@ func LoadRuleLibGroup(e typex.Rhilex, scope, uuid string, LState *lua.LState) {
 			"Led1On":  rhilexlib.Led1On(e, uuid),
 			"Led1Off": rhilexlib.Led1Off(e, uuid),
 		}
+		// G1是北京畅维通达的网关，包含了两个型号
 		AddRuleLibToGroup(e, LState, "rhilexg1", Funcs)
 	}
 	{
