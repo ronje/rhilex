@@ -23,12 +23,21 @@ import (
 
 // 3轴加速度传感器，IIC协议
 type Axis3AccSensorConfig struct {
+	Address uint16 `json:"address"`
 }
 
 // Axis3AccSensor 实现 XSource 接口的具体结构体
 type Axis3AccSensor struct {
 	typex.XStatus
 	mainConfig Axis3AccSensorConfig
+}
+
+func NewAxis3AccSensor(e typex.Rhilex) typex.XSource {
+	c := Axis3AccSensor{
+		mainConfig: Axis3AccSensorConfig{Address: 0x18},
+	}
+	c.RuleEngine = e
+	return &c
 }
 
 // Init 实现 Init 方法
