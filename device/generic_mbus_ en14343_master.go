@@ -119,7 +119,7 @@ func NewMBusEn13433MasterGateway(e typex.Rhilex) typex.XDevice {
 	return gw
 }
 
-func (gw *MBusEn13433MasterGateway) Init(devId string, configMap map[string]interface{}) error {
+func (gw *MBusEn13433MasterGateway) Init(devId string, configMap map[string]any) error {
 	gw.PointId = devId
 	intercache.RegisterSlot(gw.PointId)
 
@@ -190,7 +190,7 @@ func (gw *MBusEn13433MasterGateway) SetState(status typex.DeviceState) {
 	gw.status = status
 }
 
-func (gw *MBusEn13433MasterGateway) OnDCACall(UUID string, Command string, Args interface{}) typex.DCAResult {
+func (gw *MBusEn13433MasterGateway) OnDCACall(UUID string, Command string, Args any) typex.DCAResult {
 	return typex.DCAResult{}
 }
 

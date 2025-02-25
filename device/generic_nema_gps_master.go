@@ -13,9 +13,9 @@ import (
 	"time"
 
 	serial "github.com/hootrhino/goserial"
-	"github.com/hootrhino/rhilex/resconfig"
 	"github.com/hootrhino/rhilex/component/intercache"
 	"github.com/hootrhino/rhilex/glogger"
+	"github.com/hootrhino/rhilex/resconfig"
 	"github.com/hootrhino/rhilex/typex"
 	"github.com/hootrhino/rhilex/utils"
 )
@@ -26,7 +26,7 @@ type NemaGpsConfig struct {
 }
 
 type NemaGpsMainConfig struct {
-	GpsConfig  NemaGpsConfig     `json:"gpsConfig" validate:"required"`
+	GpsConfig  NemaGpsConfig        `json:"gpsConfig" validate:"required"`
 	UartConfig resconfig.UartConfig `json:"uartConfig" validate:"required"`
 }
 
@@ -66,7 +66,7 @@ func NewNemaGpsMasterDevice(e typex.Rhilex) typex.XDevice {
 }
 
 //  初始化
-func (gpsd *NemaGpsMasterDevice) Init(devId string, configMap map[string]interface{}) error {
+func (gpsd *NemaGpsMasterDevice) Init(devId string, configMap map[string]any) error {
 	gpsd.PointId = devId
 	intercache.RegisterSlot(gpsd.PointId)
 
@@ -164,7 +164,7 @@ func (gpsd *NemaGpsMasterDevice) SetState(status typex.DeviceState) {
 	gpsd.status = status
 }
 
-func (gpsd *NemaGpsMasterDevice) OnDCACall(UUID string, Command string, Args interface{}) typex.DCAResult {
+func (gpsd *NemaGpsMasterDevice) OnDCACall(UUID string, Command string, Args any) typex.DCAResult {
 	return typex.DCAResult{}
 }
 

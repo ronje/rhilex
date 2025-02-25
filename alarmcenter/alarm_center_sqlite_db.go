@@ -84,7 +84,7 @@ func AlarmDb() *gorm.DB {
 * 注册数据模型
 *
  */
-func AlarmDbRegisterModel(dist ...interface{}) {
+func AlarmDbRegisterModel(dist ...any) {
 	__AlarmSqlite.db.AutoMigrate(dist...)
 }
 func InitAlarmDbModel(db *gorm.DB) {

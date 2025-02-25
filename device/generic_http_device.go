@@ -86,7 +86,7 @@ func NewGenericHttpDevice(e typex.Rhilex) typex.XDevice {
 }
 
 //  初始化
-func (hd *GenericHttpDevice) Init(devId string, configMap map[string]interface{}) error {
+func (hd *GenericHttpDevice) Init(devId string, configMap map[string]any) error {
 	hd.PointId = devId
 	if err := utils.BindSourceConfig(configMap, &hd.mainConfig); err != nil {
 		glogger.GLogger.Error(err)
@@ -158,7 +158,7 @@ func (hd *GenericHttpDevice) SetState(status typex.DeviceState) {
 //
 // --------------------------------------------------------------------------------------------------
 
-func (hd *GenericHttpDevice) OnDCACall(UUID string, Command string, Args interface{}) typex.DCAResult {
+func (hd *GenericHttpDevice) OnDCACall(UUID string, Command string, Args any) typex.DCAResult {
 	return typex.DCAResult{}
 }
 func (hd *GenericHttpDevice) OnCtrl(cmd []byte, args []byte) ([]byte, error) {

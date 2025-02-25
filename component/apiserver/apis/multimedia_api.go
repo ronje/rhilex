@@ -70,8 +70,8 @@ func (cfg MultimediaConfig) JsonString() string {
 	jsonStr, _ := json.Marshal(cfg)
 	return string(jsonStr)
 }
-func (cfg MultimediaConfig) ToMap() map[string]interface{} {
-	m := make(map[string]interface{})
+func (cfg MultimediaConfig) ToMap() map[string]any {
+	m := make(map[string]any)
 	m["streamUrl"] = cfg.StreamUrl
 	m["enablePush"] = cfg.EnablePush
 	m["pushUrl"] = cfg.PushUrl

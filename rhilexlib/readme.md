@@ -32,7 +32,7 @@ import (
 )
 
 // Add 导出函数，用于计算两个数的和
-func Add(rx interface{}) func(*lua.LState) int {
+func Add(rx any) func(*lua.LState) int {
 	return func(L *lua.LState) int {
 		// 获取Lua传递过来的第一个参数并转换为数字
 		a := L.ToNumber(1)

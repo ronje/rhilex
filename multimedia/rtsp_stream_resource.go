@@ -49,7 +49,7 @@ func NewRTSPResource(manager *xmanager.GatewayResourceManager) (xmanager.Gateway
 }
 
 // Init 初始化RTSP资源
-func (r *RTSPResource) Init(uuid string, configMap map[string]interface{}) error {
+func (r *RTSPResource) Init(uuid string, configMap map[string]any) error {
 	r.uuid = uuid
 	err := xmanager.MapToConfig(configMap, &r.config)
 	if err != nil {
@@ -82,7 +82,7 @@ func (r *RTSPResource) Services() []xmanager.ResourceService {
 			Args: []xmanager.ResourceServiceArg{
 				{
 					UUID: r.uuid,
-					Args: []interface{}{r.config.StreamUrl},
+					Args: []any{r.config.StreamUrl},
 				},
 			},
 			Description: "启动RTSP资源",

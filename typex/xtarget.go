@@ -31,7 +31,7 @@ type XTarget interface {
 	//
 	// 用来初始化传递资源配置
 	//
-	Init(outEndId string, configMap map[string]interface{}) error
+	Init(outEndId string, configMap map[string]any) error
 	//
 	// 启动资源
 	//
@@ -47,7 +47,7 @@ type XTarget interface {
 	//
 	// 数据出口
 	//
-	To(data interface{}) (interface{}, error)
+	To(data any) (any, error)
 	//
 	// 停止资源, 用来释放资源
 	//

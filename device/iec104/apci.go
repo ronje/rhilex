@@ -99,7 +99,7 @@ func convertBytes(data []byte) []byte {
 }
 
 // ParseCtr 解析控制域
-func (apci *APCI) ParseCtr() (byte, interface{}, error) {
+func (apci *APCI) ParseCtr() (byte, any, error) {
 	switch {
 	case apci.Ctr1&1 == iFrame:
 		//I帧

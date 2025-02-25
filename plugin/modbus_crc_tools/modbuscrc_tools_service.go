@@ -31,12 +31,12 @@ func (ms *modbusCRCCalculator) Service(arg typex.ServiceArg) typex.ServiceResult
 			{
 				bytes, err := hex.DecodeString(s)
 				if err != nil {
-					return typex.ServiceResult{Out: []map[string]interface{}{
+					return typex.ServiceResult{Out: []map[string]any{
 						{"error": err.Error()},
 					}}
 
 				}
-				return typex.ServiceResult{Out: []map[string]interface{}{
+				return typex.ServiceResult{Out: []map[string]any{
 					{"value": fmt.Sprintf("%02x", uint16ToBytes(calculateCRC16(bytes)))},
 				}}
 			}
@@ -49,19 +49,19 @@ func (ms *modbusCRCCalculator) Service(arg typex.ServiceArg) typex.ServiceResult
 			{
 				bytes, err := hex.DecodeString(stringReverse(s))
 				if err != nil {
-					return typex.ServiceResult{Out: []map[string]interface{}{
+					return typex.ServiceResult{Out: []map[string]any{
 						{"error": err.Error()},
 					}}
 
 				}
-				return typex.ServiceResult{Out: []map[string]interface{}{
+				return typex.ServiceResult{Out: []map[string]any{
 					{"value": fmt.Sprintf("%02x", uint16ToBytes(calculateCRC16(bytes)))},
 				}}
 			}
 		}
 	}
 
-	return typex.ServiceResult{Out: []map[string]interface{}{
+	return typex.ServiceResult{Out: []map[string]any{
 		{"error": "Unsupported operate:" + arg.Name},
 	}}
 }

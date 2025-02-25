@@ -67,7 +67,7 @@ func StopCecollaRuntime() {
 
 // 加载多媒体资源
 func LoadCecollaResource(uuid string, name string, resourceType string,
-	configMap map[string]interface{}, description string) error {
+	configMap map[string]any, description string) error {
 	if __DefaultCecollaResourceManager == nil {
 		return fmt.Errorf("CecollaResourceManager is not initialized")
 	}

@@ -127,11 +127,11 @@ func DeleteOutEnd(c *gin.Context, ruleEngine typex.Rhilex) {
 // Create or Update OutEnd
 func CreateOutEnd(c *gin.Context, ruleEngine typex.Rhilex) {
 	type Form struct {
-		UUID        string                 `json:"uuid"` // 如果空串就是新建, 非空就是更新
-		Type        string                 `json:"type" binding:"required"`
-		Name        string                 `json:"name" binding:"required"`
-		Description string                 `json:"description"`
-		Config      map[string]interface{} `json:"config" binding:"required"`
+		UUID        string         `json:"uuid"` // 如果空串就是新建, 非空就是更新
+		Type        string         `json:"type" binding:"required"`
+		Name        string         `json:"name" binding:"required"`
+		Description string         `json:"description"`
+		Config      map[string]any `json:"config" binding:"required"`
 	}
 	form := Form{}
 
@@ -185,11 +185,11 @@ func RestartOutEnd(c *gin.Context, ruleEngine typex.Rhilex) {
 // 更新
 func UpdateOutEnd(c *gin.Context, ruleEngine typex.Rhilex) {
 	type Form struct {
-		UUID        string                 `json:"uuid"` // 如果空串就是新建, 非空就是更新
-		Type        string                 `json:"type" binding:"required"`
-		Name        string                 `json:"name" binding:"required"`
-		Description string                 `json:"description"`
-		Config      map[string]interface{} `json:"config" binding:"required"`
+		UUID        string         `json:"uuid"` // 如果空串就是新建, 非空就是更新
+		Type        string         `json:"type" binding:"required"`
+		Name        string         `json:"name" binding:"required"`
+		Description string         `json:"description"`
+		Config      map[string]any `json:"config" binding:"required"`
 	}
 	form := Form{}
 

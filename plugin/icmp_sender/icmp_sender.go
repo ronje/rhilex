@@ -53,7 +53,7 @@ func (dm *ICMPSender) Service(arg typex.ServiceArg) typex.ServiceResult {
 	Fields := logrus.Fields{
 		"topic": "plugin/ICMPSenderPing/ICMPSender",
 	}
-	out := typex.ServiceResult{Out: []map[string]interface{}{}}
+	out := typex.ServiceResult{Out: []map[string]any{}}
 	if dm.pinging {
 		glogger.GLogger.WithFields(Fields).Info("ICMPSender pinging now:", arg.Args)
 		return out
@@ -74,7 +74,7 @@ func (dm *ICMPSender) Service(arg typex.ServiceArg) typex.ServiceResult {
 				}
 			}
 			switch tt := arg.Args.(type) {
-			case []interface{}:
+			case []any:
 				if len(tt) < 1 {
 					break
 				}

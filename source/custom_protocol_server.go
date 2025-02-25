@@ -57,7 +57,7 @@ func NewCustomProtocol(e typex.Rhilex) typex.XSource {
 	return &h
 }
 
-func (hh *CustomProtocol) Init(inEndId string, configMap map[string]interface{}) error {
+func (hh *CustomProtocol) Init(inEndId string, configMap map[string]any) error {
 	hh.PointId = inEndId
 	if err := utils.BindSourceConfig(configMap, &hh.mainConfig); err != nil {
 		return err

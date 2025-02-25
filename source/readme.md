@@ -22,7 +22,7 @@ Test(inEndId string) bool
 
 #### 2.2.2 `Init` 方法
 ```go
-Init(inEndId string, configMap map[string]interface{}) error
+Init(inEndId string, configMap map[string]any) error
 ```
 - **功能描述**：用于初始化资源，传递资源配置信息。
 - **参数**：
@@ -106,7 +106,7 @@ UpStream([]byte) (int, error)
 ```go
 type MyExternalResource struct {
     // 结构体成员，用于存储资源的相关信息
-    config map[string]interface{}
+    config map[string]any
     state  SourceState
 }
 
@@ -116,7 +116,7 @@ func (m *MyExternalResource) Test(inEndId string) bool {
     return true
 }
 
-func (m *MyExternalResource) Init(inEndId string, configMap map[string]interface{}) error {
+func (m *MyExternalResource) Init(inEndId string, configMap map[string]any) error {
     // 实现资源初始化逻辑
     // 例如，根据 configMap 中的配置信息初始化连接
     m.config = configMap
@@ -183,7 +183,7 @@ func main() {
     }
 
     // 初始化资源
-    configMap := map[string]interface{}{
+    configMap := map[string]any{
         "host": "localhost",
         "port": 1883,
     }

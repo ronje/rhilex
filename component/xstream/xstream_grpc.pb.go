@@ -118,14 +118,14 @@ func RegisterXStreamServer(s grpc.ServiceRegistrar, srv XStreamServer) {
 	s.RegisterService(&XStream_ServiceDesc, srv)
 }
 
-func _XStream_OnApproached_Handler(srv interface{}, stream grpc.ServerStream) error {
+func _XStream_OnApproached_Handler(srv any, stream grpc.ServerStream) error {
 	return srv.(XStreamServer).OnApproached(&grpc.GenericServerStream[Request, Request]{ServerStream: stream})
 }
 
 // This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
 type XStream_OnApproachedServer = grpc.ClientStreamingServer[Request, Request]
 
-func _XStream_SendStream_Handler(srv interface{}, stream grpc.ServerStream) error {
+func _XStream_SendStream_Handler(srv any, stream grpc.ServerStream) error {
 	m := new(Request)
 	if err := stream.RecvMsg(m); err != nil {
 		return err

@@ -23,7 +23,7 @@ import (
 	"strings"
 )
 
-type ParsedData map[string]interface{}
+type ParsedData map[string]any
 
 // "ID:32:int:BE; Name:40:string:BE; Age:16:int:LE"
 

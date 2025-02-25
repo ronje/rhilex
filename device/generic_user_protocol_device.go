@@ -120,7 +120,7 @@ func NewGenericUserProtocolDevice(e typex.Rhilex) typex.XDevice {
 }
 
 // 初始化
-func (gw *GenericUserProtocolDevice) Init(devId string, configMap map[string]interface{}) error {
+func (gw *GenericUserProtocolDevice) Init(devId string, configMap map[string]any) error {
 	gw.PointId = devId
 	intercache.RegisterSlot(gw.PointId)
 
@@ -340,7 +340,7 @@ func (gw *GenericUserProtocolDevice) SetState(status typex.DeviceState) {
 *
  */
 func (gw *GenericUserProtocolDevice) OnDCACall(_ string, Command string,
-	Args interface{}) typex.DCAResult {
+	Args any) typex.DCAResult {
 
 	return typex.DCAResult{}
 }

@@ -17,18 +17,18 @@ package iec104
 
 import "fmt"
 
-//APDU 104数据包
+// APDU 104数据包
 type APDU struct {
 	APCI     *APCI
 	ASDU     *ASDU
 	Len      int
 	ASDULen  int
 	CtrType  byte
-	CtrFrame interface{}
+	CtrFrame any
 	Signals  []*Signal
 }
 
-//parseAPDU 解析APDU
+// parseAPDU 解析APDU
 func (apdu *APDU) parseAPDU(input []byte) error {
 	if input == nil || len(input) < 4 {
 		return fmt.Errorf("APDU报文[%X]非法", input)

@@ -84,32 +84,32 @@ func setLogLevel(logLevel string) {
 }
 
 // Info 记录 INFO 级别的日志
-func Info(args ...interface{}) {
+func Info(args ...any) {
 	GLogger.Info(args...)
 }
 
 // Infof 记录 INFO 级别的格式化日志
-func Infof(format string, args ...interface{}) {
+func Infof(format string, args ...any) {
 	GLogger.Infof(format, args...)
 }
 
 // Error 记录 ERROR 级别的日志
-func Error(args ...interface{}) {
+func Error(args ...any) {
 	GLogger.Error(args...)
 }
 
 // Errorf 记录 ERROR 级别的格式化日志
-func Errorf(format string, args ...interface{}) {
+func Errorf(format string, args ...any) {
 	GLogger.Errorf(format, args...)
 }
 
 // Debug 记录 DEBUG 级别的日志
-func Debug(args ...interface{}) {
+func Debug(args ...any) {
 	GLogger.Debug(args...)
 }
 
 // Debugf 记录 DEBUG 级别的格式化日志
-func Debugf(format string, args ...interface{}) {
+func Debugf(format string, args ...any) {
 	GLogger.Debugf(format, args...)
 }
 

@@ -28,7 +28,7 @@ func Test_DataToSemtechUdp(t *testing.T) {
 
 	//
 	SEMTECH_UDP_FORWARDER := typex.NewOutEnd(typex.SEMTECH_UDP_FORWARDER,
-		"SEMTECH_UDP_FORWARDER", "SEMTECH_UDP_FORWARDER", map[string]interface{}{
+		"SEMTECH_UDP_FORWARDER", "SEMTECH_UDP_FORWARDER", map[string]any{
 			"host":             "192.168.10.163",
 			"port":             1700,
 			"mac":              "a46a4de31a346180",
@@ -43,7 +43,7 @@ func Test_DataToSemtechUdp(t *testing.T) {
 	defer cancelF1()
 	grpcInend := typex.NewInEnd(typex.GRPC_SERVER,
 		"rhilex Grpc InEnd",
-		"rhilex Grpc InEnd", map[string]interface{}{
+		"rhilex Grpc InEnd", map[string]any{
 			"host": "127.0.0.1",
 			"port": 2581,
 		})

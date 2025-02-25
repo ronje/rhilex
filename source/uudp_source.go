@@ -41,7 +41,7 @@ func NewUdpInEndSource(e typex.Rhilex) typex.XSource {
 }
 
 // Init 初始化UDP数据源，绑定配置信息
-func (udps *udpSource) Init(inEndId string, configMap map[string]interface{}) error {
+func (udps *udpSource) Init(inEndId string, configMap map[string]any) error {
 	udps.PointId = inEndId
 	if err := utils.BindSourceConfig(configMap, &udps.mainConfig); err != nil {
 		glogger.GLogger.Errorf("Failed to bind UDP source config: %v", err)
@@ -144,8 +144,8 @@ func (udps *udpSource) handleClient(data []byte, remoteAddr *net.UDPAddr) {
 
 // udp_client_data 定义对外输出的数据格式
 type udp_client_data struct {
-	ClientAddr string      `json:"clientAddr"`
-	Data       interface{} `json:"data"`
+	ClientAddr string `json:"clientAddr"`
+	Data       any    `json:"data"`
 }
 
 // String 将udp_client_data转换为JSON字符串

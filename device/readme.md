@@ -10,7 +10,7 @@ type XDevice interface {
    // Init方法用于初始化设备，通常用于获取设备的配置信息。
    // devId是设备ID，configMap是设备配置信息的映射。
    // 返回初始化是否成功的错误信息。
-   Init(devId string, configMap map[string]interface{}) error
+   Init(devId string, configMap map[string]any) error
 
    // Start方法用于启动设备的工作进程，使设备开始正常运作。
    // CCTX是上下文，具体作用取决于设备的实现。
@@ -54,7 +54,7 @@ type XDevice interface {
    // OnDCACall方法用于处理来自DCACall服务的调用。
    // UUID是调用方的唯一标识符，Command是要执行的命令，Args是命令参数。
    // 返回DCAResult，包含命令执行结果和错误信息。
-   OnDCACall(UUID string, Command string, Args interface{}) DCAResult
+   OnDCACall(UUID string, Command string, Args any) DCAResult
 }
 
 ```
@@ -84,7 +84,7 @@ func NewTemplateDevice(e typex.Rhilex) typex.XDevice {
 
 // Init 方法用于初始化 TemplateDevice 实例。它接受设备ID和配置信息映射表作为参数，
 // 并将配置信息绑定到 hd 的 mainConfig 字段。如果配置绑定失败，则返回错误。
-func (hd *TemplateDevice) Init(devId string, configMap map[string]interface{}) error {
+func (hd *TemplateDevice) Init(devId string, configMap map[string]any) error {
 	hd.PointId = devId // 设置设备的 PointId 为传入的 devId
 	if err := utils.BindSourceConfig(configMap, &hd.mainConfig); err != nil {
 		glogger.GLogger.Error(err) // 如果绑定配置出错，记录错误日志
@@ -125,7 +125,7 @@ func (hd *TemplateDevice) Status() typex.DeviceState {
 
 // OnDCACall 方法是 TemplateDevice 的 DCA（设备控制命令）回调函数。它接受 UUID、命令和参数，
 // 并返回一个 DCAResult 类型的结果。在这个实现中，它返回一个空的 DCAResult 实例。
-func (hd *TemplateDevice) OnDCACall(UUID string, Command string, Args interface{}) typex.DCAResult {
+func (hd *TemplateDevice) OnDCACall(UUID string, Command string, Args any) typex.DCAResult {
 	return typex.DCAResult{} // 返回一个空的 DCAResult 实例
 }
 
@@ -150,7 +150,7 @@ Status() typex.DeviceState
 
 
 ## 关键接口
-- Init(devId string, configMap map[string]interface{}) error
+- Init(devId string, configMap map[string]any) error
   初始化设备参数，一般在这里准备好数据，校验规则等。
 - Start(cctx typex.CCTX) error
   主要工作线程，比如客户端可以在这里开启。
@@ -162,7 +162,7 @@ Status() typex.DeviceState
 ## 运行时数据
 运行时数据使用cache模块，比如Modbus初始化时向缓存器注册一个槽位：
 ```go
-func (mdev *generic_modbus_device) Init(string, map[string]interface{}) error {
+func (mdev *generic_modbus_device) Init(string, map[string]any) error {
 	mdev.PointId = devId
 	modbuscache.RegisterSlot(mdev.PointId)
     // ....

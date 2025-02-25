@@ -93,7 +93,7 @@ func GetSecurityLicense(c *gin.Context, ruleEngine typex.Rhilex) {
 
 // Get all plugins
 func Plugins(c *gin.Context, ruleEngine typex.Rhilex) {
-	data := []interface{}{}
+	data := []any{}
 	plugins := plugin.All()
 	for _, plugin := range plugins {
 		data = append(data, plugin.PluginMetaInfo())
@@ -141,7 +141,7 @@ func System(c *gin.Context, ruleEngine typex.Rhilex) {
 	// runtime.ReadMemStats(&m)
 	// ip, err0 := utils.HostNameI()
 	memPercent, _ := service.GetMemPercent()
-	hardWareInfo := map[string]interface{}{
+	hardWareInfo := map[string]any{
 		"version":    typex.MainVersion,
 		"diskInfo":   calculateDiskInfo(diskInfo),
 		"memPercent": memPercent,

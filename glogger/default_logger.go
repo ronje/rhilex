@@ -25,7 +25,7 @@ import (
 * 自定义日志
 *
  */
-func DefaultOutput(format string, v ...interface{}) string {
+func DefaultOutput(format string, v ...any) string {
 	timestamp := time.Now().UTC().Format("2006/01/02 15:04:05")
 	logMsg := fmt.Sprintf(format, v...)
 	logLine := fmt.Sprintf("[%s] %s\n", timestamp, logMsg)

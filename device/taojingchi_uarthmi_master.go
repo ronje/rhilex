@@ -68,7 +68,7 @@ func NewTaoJingChiHmiDevice(e typex.Rhilex) typex.XDevice {
 }
 
 //  初始化
-func (uart *TaoJingChiHmiDevice) Init(devId string, configMap map[string]interface{}) error {
+func (uart *TaoJingChiHmiDevice) Init(devId string, configMap map[string]any) error {
 	uart.PointId = devId
 
 	if err := utils.BindSourceConfig(configMap, &uart.mainConfig); err != nil {
@@ -199,6 +199,6 @@ func (uart *TaoJingChiHmiDevice) SetState(status typex.DeviceState) {
 	uart.status = status
 }
 
-func (uart *TaoJingChiHmiDevice) OnDCACall(UUID string, Command string, Args interface{}) typex.DCAResult {
+func (uart *TaoJingChiHmiDevice) OnDCACall(UUID string, Command string, Args any) typex.DCAResult {
 	return typex.DCAResult{}
 }

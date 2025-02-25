@@ -31,15 +31,15 @@ type GatewayResourceWorker struct {
     UUID        string                 // 资源唯一标识
     Name        string                 // 资源名称
     Type        string                 // 资源类型
-    Config      map[string]interface{} // 资源配置
+    Config      map[string]any // 资源配置
     Description string                 // 资源描述
 }
 ```
 
 **方法**：
 - `String() string`：返回资源的字符串表示形式。
-- `GetConfig() map[string]interface{}`：获取资源的配置信息。
-- `CheckConfig(config interface{}) error`：检查资源配置是否有效。
+- `GetConfig() map[string]any`：获取资源的配置信息。
+- `CheckConfig(config any) error`：检查资源配置是否有效。
 
 ### `GatewayResourceManager`
 通用资源管理器，用于管理多个 `GatewayResourceWorker` 实例。
@@ -47,15 +47,15 @@ type GatewayResourceWorker struct {
 ```go
 type GatewayResourceManager struct {
     resources *orderedmap.OrderedMap[string, *GatewayResourceWorker]
-    types     map[string]func(map[string]interface{}) (GatewayResource, error)
+    types     map[string]func(map[string]any) (GatewayResource, error)
     mu        sync.RWMutex
 }
 ```
 
 **方法**：
 - `NewGatewayResourceManager() *GatewayResourceManager`：创建新的资源管理器实例。
-- `RegisterType(resourceType string, factory func(map[string]interface{}) (GatewayResource, error))`：注册资源类型和其对应的 worker 实现。
-- `LoadResource(uuid string, name string, resourceType string, configMap map[string]interface{}, description string) error`：加载资源。
+- `RegisterType(resourceType string, factory func(map[string]any) (GatewayResource, error))`：注册资源类型和其对应的 worker 实现。
+- `LoadResource(uuid string, name string, resourceType string, configMap map[string]any, description string) error`：加载资源。
 - `RestartResource(uuid string) error`：重启指定 UUID 的资源。
 - `StopResource(uuid string) error`：停止并删除指定 UUID 的资源。
 - `GetResourceList() []*GatewayResourceWorker`：获取所有资源的列表。
@@ -129,7 +129,7 @@ type ResourceService struct {
 
 ```go
 type GatewayResource interface {
-    Init(uuid string, configMap map[string]interface{}) error
+    Init(uuid string, configMap map[string]any) error
     Start(context.Context) error
     Status() GatewayResourceState
     Services() []ResourceService
@@ -148,7 +148,7 @@ manager := NewGatewayResourceManager()
 
 ### 注册资源类型
 ```go
-manager.RegisterType("exampleType", func(configMap map[string]interface{}) (GatewayResource, error) {
+manager.RegisterType("exampleType", func(configMap map[string]any) (GatewayResource, error) {
     // 实现资源的创建逻辑
     return nil, nil
 })
@@ -156,7 +156,7 @@ manager.RegisterType("exampleType", func(configMap map[string]interface{}) (Gate
 
 ### 加载资源
 ```go
-configMap := map[string]interface{}{
+configMap := map[string]any{
     "key": "value",
 }
 err := manager.LoadResource("uuid1", "name1", "exampleType", configMap, "description1")

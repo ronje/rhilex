@@ -17,17 +17,17 @@ package utils
 
 import "reflect"
 
-// IsArrayAndGetTypeList 检查给定的 interface{} 是否为数组，并返回其元素类型列表。
-func IsArrayAndGetValueList(i interface{}) ([]interface{}, bool) {
+// IsArrayAndGetTypeList 检查给定的 any 是否为数组，并返回其元素类型列表。
+func IsArrayAndGetValueList(i any) ([]any, bool) {
 	if i == nil {
-		return []interface{}{}, false
+		return []any{}, false
 	}
 	v := reflect.ValueOf(i)
 	if v.Kind() != reflect.Array && v.Kind() != reflect.Slice {
-		return []interface{}{i}, false
+		return []any{i}, false
 	}
 
-	values := make([]interface{}, v.Len())
+	values := make([]any, v.Len())
 	for i := 0; i < v.Len(); i++ {
 		values[i] = v.Index(i).Interface()
 	}

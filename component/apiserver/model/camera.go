@@ -26,11 +26,11 @@ type MMultiMedia struct {
 	Description string
 }
 
-func (md MMultiMedia) GetConfig() map[string]interface{} {
-	result := make(map[string]interface{})
+func (md MMultiMedia) GetConfig() map[string]any {
+	result := make(map[string]any)
 	err := json.Unmarshal([]byte(md.Config), &result)
 	if err != nil {
-		return map[string]interface{}{}
+		return map[string]any{}
 	}
 	return result
 }

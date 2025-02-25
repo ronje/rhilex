@@ -38,15 +38,15 @@ func InitCecollaRoute() {
 }
 
 type CecollaVo struct {
-	UUID        string                 `json:"uuid"`
-	Gid         string                 `json:"gid"`
-	Name        string                 `json:"name"`
-	Type        string                 `json:"type"`
-	Action      string                 `json:"action"`
-	State       int                    `json:"state"`
-	ErrMsg      string                 `json:"errMsg"`
-	Config      map[string]interface{} `json:"config"`
-	Description string                 `json:"description"`
+	UUID        string         `json:"uuid"`
+	Gid         string         `json:"gid"`
+	Name        string         `json:"name"`
+	Type        string         `json:"type"`
+	Action      string         `json:"action"`
+	State       int            `json:"state"`
+	ErrMsg      string         `json:"errMsg"`
+	Config      map[string]any `json:"config"`
+	Description string         `json:"description"`
 }
 
 /*

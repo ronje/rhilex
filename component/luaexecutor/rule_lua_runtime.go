@@ -34,7 +34,7 @@ const (
 // ExecuteSuccess 执行成功回调，调用 interpipeline.Execute 函数并传递 SUCCESS_KEY
 // vm 是 Lua 虚拟机的状态
 // 返回 interpipeline.Execute 函数的执行结果和错误信息
-func ExecuteSuccess(vm *lua.LState) (interface{}, error) {
+func ExecuteSuccess(vm *lua.LState) (any, error) {
 	// 调用 interpipeline.Execute 函数并传递 SUCCESS_KEY
 	result, err := interpipeline.Execute(vm, SUCCESS_KEY)
 	if err != nil {
@@ -50,7 +50,7 @@ func ExecuteSuccess(vm *lua.LState) (interface{}, error) {
 // vm 是 Lua 虚拟机的状态
 // arg 是传递给 interpipeline.Execute 函数的额外参数
 // 返回 interpipeline.Execute 函数的执行结果和错误信息
-func ExecuteFailed(vm *lua.LState, arg lua.LValue) (interface{}, error) {
+func ExecuteFailed(vm *lua.LState, arg lua.LValue) (any, error) {
 	// 调用 interpipeline.Execute 函数并传递 FAILED_KEY 和额外的参数
 	result, err := interpipeline.Execute(vm, FAILED_KEY, arg)
 	if err != nil {

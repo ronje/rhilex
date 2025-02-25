@@ -54,7 +54,7 @@ func (m *GatewayResourceManager) RegisterType(resourceType string,
 
 // LoadResource 加载资源
 func (m *GatewayResourceManager) LoadResource(uuid string, name string, resourceType string,
-	configMap map[string]interface{}, description string) error {
+	configMap map[string]any, description string) error {
 	m.mu.RLock()
 	factory, exists := m.types[resourceType]
 	m.mu.RUnlock()

@@ -104,7 +104,7 @@ func (g *GenericFrame[T]) Deserialize(data []byte) error {
  * 生成通用序列化代码
  *
  */
-func generateCode(v interface{}) string {
+func generateCode(v any) string {
 	val := reflect.ValueOf(v)
 	typ := val.Type()
 
@@ -180,7 +180,7 @@ func Uint8ToByte(Type reflect.Type) string {
  * 输出格式化后的代码
  *
  */
-func GenerateCode(v interface{}) string {
+func GenerateCode(v any) string {
 	code := generateCode(v)
 	formattedCode, err := format.Source([]byte(code))
 	if err != nil {

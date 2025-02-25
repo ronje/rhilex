@@ -117,7 +117,7 @@ func NewDLT645_2007_MasterGateway(e typex.Rhilex) typex.XDevice {
 	return gw
 }
 
-func (gw *DLT645_2007_MasterGateway) Init(devId string, configMap map[string]interface{}) error {
+func (gw *DLT645_2007_MasterGateway) Init(devId string, configMap map[string]any) error {
 	gw.PointId = devId
 	intercache.RegisterSlot(gw.PointId)
 
@@ -384,7 +384,7 @@ func (gw *DLT645_2007_MasterGateway) SetState(status typex.DeviceState) {
 	gw.status = status
 }
 
-func (gw *DLT645_2007_MasterGateway) OnDCACall(UUID string, Command string, Args interface{}) typex.DCAResult {
+func (gw *DLT645_2007_MasterGateway) OnDCACall(UUID string, Command string, Args any) typex.DCAResult {
 	return typex.DCAResult{}
 }
 

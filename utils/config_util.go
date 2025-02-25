@@ -15,7 +15,7 @@ func __initValidator() {
 }
 
 // JSON String to a struct, (can't validate map!!!)
-func TransformConfig(s1 []byte, s2 interface{}) error {
+func TransformConfig(s1 []byte, s2 any) error {
 	if err := json.Unmarshal(s1, &s2); err != nil {
 		return err
 	}
@@ -32,7 +32,7 @@ func TransformConfig(s1 []byte, s2 interface{}) error {
 // Bind config to struct
 // config: a Map, s: a struct variable
 
-func BindSourceConfig(config map[string]interface{}, s interface{}) error {
+func BindSourceConfig(config map[string]any, s any) error {
 	configBytes, err0 := json.Marshal(&config)
 	if err0 != nil {
 		return err0

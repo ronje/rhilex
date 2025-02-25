@@ -44,7 +44,7 @@ func NewTemplateDevice(e typex.Rhilex) typex.XDevice {
 	return hd
 }
 
-func (hd *TemplateDevice) Init(devId string, configMap map[string]interface{}) error {
+func (hd *TemplateDevice) Init(devId string, configMap map[string]any) error {
 	hd.PointId = devId
 	if err := utils.BindSourceConfig(configMap, &hd.mainConfig); err != nil {
 		glogger.GLogger.Error(err)
@@ -79,7 +79,7 @@ func (hd *TemplateDevice) SetState(status typex.DeviceState) {
 	hd.status = status
 }
 
-func (hd *TemplateDevice) OnDCACall(UUID string, Command string, Args interface{}) typex.DCAResult {
+func (hd *TemplateDevice) OnDCACall(UUID string, Command string, Args any) typex.DCAResult {
 	return typex.DCAResult{}
 }
 

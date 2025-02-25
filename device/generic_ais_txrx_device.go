@@ -15,8 +15,8 @@ import (
 	aislib "github.com/hootrhino/go-ais"
 
 	serial "github.com/hootrhino/goserial"
-	"github.com/hootrhino/rhilex/resconfig"
 	"github.com/hootrhino/rhilex/glogger"
+	"github.com/hootrhino/rhilex/resconfig"
 	"github.com/hootrhino/rhilex/typex"
 	"github.com/hootrhino/rhilex/utils"
 )
@@ -32,7 +32,7 @@ type _AISCommonConfig struct {
 	GwSN     string `json:"gwsn" validate:"required"`
 }
 type _AISDeviceMasterConfig struct {
-	CommonConfig _AISCommonConfig  `json:"commonConfig" validate:"required"`
+	CommonConfig _AISCommonConfig     `json:"commonConfig" validate:"required"`
 	HostConfig   resconfig.HostConfig `json:"hostConfig"`
 	UartConfig   resconfig.UartConfig `json:"uartConfig"`
 }
@@ -72,7 +72,7 @@ func NewAISDeviceMaster(e typex.Rhilex) typex.XDevice {
 }
 
 //  初始化
-func (aism *AISDeviceMaster) Init(devId string, configMap map[string]interface{}) error {
+func (aism *AISDeviceMaster) Init(devId string, configMap map[string]any) error {
 	aism.PointId = devId
 	if err := utils.BindSourceConfig(configMap, &aism.mainConfig); err != nil {
 		return err
@@ -283,7 +283,7 @@ func (aism *AISDeviceMaster) SetState(status typex.DeviceState) {
 
 }
 
-func (aism *AISDeviceMaster) OnDCACall(UUID string, Command string, Args interface{}) typex.DCAResult {
+func (aism *AISDeviceMaster) OnDCACall(UUID string, Command string, Args any) typex.DCAResult {
 	return typex.DCAResult{}
 }
 

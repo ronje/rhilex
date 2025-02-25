@@ -77,7 +77,7 @@ func processData(u *TransceiverForwarder, comData RuleData) {
 	}
 }
 
-func (u *TransceiverForwarder) Init(inEndId string, configMap map[string]interface{}) error {
+func (u *TransceiverForwarder) Init(inEndId string, configMap map[string]any) error {
 	u.PointId = inEndId
 	if err := utils.BindSourceConfig(configMap, &u.mainConfig); err != nil {
 		glogger.GLogger.Error(err)

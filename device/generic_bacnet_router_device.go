@@ -106,7 +106,7 @@ func NewBacnetRouter(e typex.Rhilex) typex.XDevice {
 	return br
 }
 
-func (br *BacnetRouter) Init(devId string, configMap map[string]interface{}) error {
+func (br *BacnetRouter) Init(devId string, configMap map[string]any) error {
 	br.PointId = devId
 
 	intercache.RegisterSlot(devId)
@@ -200,7 +200,7 @@ func (br *BacnetRouter) SetState(status typex.DeviceState) {
 	br.status = status
 }
 
-func (br *BacnetRouter) OnDCACall(UUID string, Command string, Args interface{}) typex.DCAResult {
+func (br *BacnetRouter) OnDCACall(UUID string, Command string, Args any) typex.DCAResult {
 	return typex.DCAResult{}
 }
 

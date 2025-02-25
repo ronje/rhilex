@@ -101,7 +101,7 @@ func NewGenericModbusSlaver(e typex.Rhilex) typex.XDevice {
 	return mdev
 }
 
-func (mdev *ModbusSlaver) Init(devId string, configMap map[string]interface{}) error {
+func (mdev *ModbusSlaver) Init(devId string, configMap map[string]any) error {
 	mdev.PointId = devId
 	intercache.RegisterSlot(mdev.PointId)
 	if err := utils.BindSourceConfig(configMap, &mdev.mainConfig); err != nil {
@@ -294,7 +294,7 @@ func (mdev *ModbusSlaver) SetState(status typex.DeviceState) {
 	mdev.status = status
 }
 
-func (mdev *ModbusSlaver) OnDCACall(UUID string, Command string, Args interface{}) typex.DCAResult {
+func (mdev *ModbusSlaver) OnDCACall(UUID string, Command string, Args any) typex.DCAResult {
 	return typex.DCAResult{}
 }
 

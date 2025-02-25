@@ -44,7 +44,7 @@ func NewIthingsResource(manager *xmanager.GatewayResourceManager) (xmanager.Gate
 }
 
 // Init 初始化Ithings资源
-func (r *IthingsResource) Init(uuid string, configMap map[string]interface{}) error {
+func (r *IthingsResource) Init(uuid string, configMap map[string]any) error {
 	r.uuid = uuid
 	err := xmanager.MapToConfig(configMap, &r.config)
 	if err != nil {

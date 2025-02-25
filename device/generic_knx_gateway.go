@@ -46,7 +46,7 @@ func NewKNXGateway(e typex.Rhilex) typex.XDevice {
 	return hd
 }
 
-func (hd *KNXGateway) Init(devId string, configMap map[string]interface{}) error {
+func (hd *KNXGateway) Init(devId string, configMap map[string]any) error {
 	hd.PointId = devId
 	if err := utils.BindSourceConfig(configMap, &hd.mainConfig); err != nil {
 		glogger.GLogger.Error(err)
@@ -85,7 +85,7 @@ func (hd *KNXGateway) SetState(status typex.DeviceState) {
 	hd.status = status
 }
 
-func (hd *KNXGateway) OnDCACall(UUID string, Command string, Args interface{}) typex.DCAResult {
+func (hd *KNXGateway) OnDCACall(UUID string, Command string, Args any) typex.DCAResult {
 	return typex.DCAResult{}
 }
 

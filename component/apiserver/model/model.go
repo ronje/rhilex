@@ -23,7 +23,7 @@ func (f StringList) Value() (driver.Value, error) {
 	return string(b), err
 }
 
-func (f *StringList) Scan(data interface{}) error {
+func (f *StringList) Scan(data any) error {
 	return json.Unmarshal([]byte(data.(string)), f)
 }
 

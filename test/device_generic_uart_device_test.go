@@ -25,7 +25,7 @@ func Test_UART_Device(t *testing.T) {
 	}
 
 	GUART := typex.NewDevice(typex.GENERIC_UART_RW,
-		"UART", "UART", map[string]interface{}{
+		"UART", "UART", map[string]any{
 			"autoRequest": true,
 			"decollator":  "\n",
 			"baudRate":    115200,

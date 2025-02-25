@@ -37,7 +37,7 @@ func NewHttpInEndSource(e typex.Rhilex) typex.XSource {
 }
 
 // Init 初始化HTTP输入端点源
-func (hh *httpInEndSource) Init(inEndId string, configMap map[string]interface{}) error {
+func (hh *httpInEndSource) Init(inEndId string, configMap map[string]any) error {
 	hh.PointId = inEndId
 	// 绑定配置
 	if err := utils.BindSourceConfig(configMap, &hh.mainConfig); err != nil {

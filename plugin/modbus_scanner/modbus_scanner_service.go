@@ -62,12 +62,12 @@ func (ms *modbusScanner) Service(arg typex.ServiceArg) typex.ServiceResult {
 			if ms.cancel != nil {
 				ms.cancel()
 				ms.busying = false
-				return typex.ServiceResult{Out: []map[string]interface{}{
+				return typex.ServiceResult{Out: []map[string]any{
 					{"error": "Device busying now"},
 				}}
 			}
 		}
-		return typex.ServiceResult{Out: []map[string]interface{}{
+		return typex.ServiceResult{Out: []map[string]any{
 			{"error": "Modbus Scanner Busing now"},
 		}}
 	}
@@ -75,5 +75,5 @@ func (ms *modbusScanner) Service(arg typex.ServiceArg) typex.ServiceResult {
 	if arg.Name == "scan" {
 		ms.busying = true
 	}
-	return typex.ServiceResult{Out: []map[string]interface{}{}}
+	return typex.ServiceResult{Out: []map[string]any{}}
 }

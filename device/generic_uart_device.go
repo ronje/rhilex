@@ -108,7 +108,7 @@ func NewGenericUartDevice(e typex.Rhilex) typex.XDevice {
 }
 
 //  初始化
-func (uart *GenericUartDevice) Init(devId string, configMap map[string]interface{}) error {
+func (uart *GenericUartDevice) Init(devId string, configMap map[string]any) error {
 	uart.PointId = devId
 
 	if err := utils.BindSourceConfig(configMap, &uart.mainConfig); err != nil {
@@ -167,7 +167,7 @@ func (uart *GenericUartDevice) Start(cctx typex.CCTX) error {
 			case <-ctx.Done():
 				return
 			case <-sliceTimer.C:
-				mapV := map[string]interface{}{
+				mapV := map[string]any{
 					"tag": uart.mainConfig.RwConfig.Tag,
 				}
 				switch uart.mainConfig.RwConfig.ReadFormat {
@@ -266,6 +266,6 @@ func (uart *GenericUartDevice) SetState(status typex.DeviceState) {
 	uart.status = status
 }
 
-func (uart *GenericUartDevice) OnDCACall(UUID string, Command string, Args interface{}) typex.DCAResult {
+func (uart *GenericUartDevice) OnDCACall(UUID string, Command string, Args any) typex.DCAResult {
 	return typex.DCAResult{}
 }

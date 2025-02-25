@@ -39,13 +39,13 @@ type RedisTarget struct {
 ```go
 type RedisData struct {
     Key   string
-    Data  map[string]interface{}
+    Data  map[string]any
 }
 ```
 - **功能**：用于封装要存储到 Redis 的数据和键。
 - **字段说明**：
   - `Key`：要存储数据的 Redis 键名。
-  - `Data`：要存储的数据，以 `map[string]interface{}` 的形式表示。
+  - `Data`：要存储的数据，以 `map[string]any` 的形式表示。
 
 ## 3. 方法说明
 
@@ -61,7 +61,7 @@ func NewRedisTarget(e typex.Rhilex) typex.XTarget
 
 ### 3.2 `Init`
 ```go
-func (rt *RedisTarget) Init(outEndId string, configMap map[string]interface{}) error
+func (rt *RedisTarget) Init(outEndId string, configMap map[string]any) error
 ```
 - **功能**：初始化 `RedisTarget` 组件。
 - **参数**：
@@ -90,13 +90,13 @@ func (rt *RedisTarget) Status() typex.SourceState
 
 ### 3.5 `To`
 ```go
-func (rt *RedisTarget) To(data interface{}) (interface{}, error)
+func (rt *RedisTarget) To(data any) (any, error)
 ```
 - **功能**：将数据存储到 Redis 中，使用 `HMSET` 命令。
 - **参数**：
-  - `data`：`interface{}` 类型，需要是 `RedisData` 结构体的实例，包含要存储的数据和键。
+  - `data`：`any` 类型，需要是 `RedisData` 结构体的实例，包含要存储的数据和键。
 - **返回值**：
-  - `interface{}` 类型，目前返回 `nil`。
+  - `any` 类型，目前返回 `nil`。
   - `error` 类型，如果存储过程中出现错误，返回相应的错误信息；否则返回 `nil`。
 
 ### 3.6 `Stop`
@@ -132,7 +132,7 @@ func main() {
     redisTarget := NewRedisTarget(mockRhilex)
 
     // 初始化配置
-    configMap := map[string]interface{}{
+    configMap := map[string]any{
         "address":  "localhost:6379",
         "password": "",
         "db":       0,
@@ -160,7 +160,7 @@ func main() {
     fmt.Println("Redis connection status:", status)
 
     // 准备数据
-    data := map[string]interface{}{
+    data := map[string]any{
         "field1": "value1",
         "field2": "value2",
     }

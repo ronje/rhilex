@@ -35,7 +35,7 @@ func NewVideoCamera(e typex.Rhilex) typex.XDevice {
 	return hd
 }
 
-func (hd *videoCamera) Init(devId string, configMap map[string]interface{}) error {
+func (hd *videoCamera) Init(devId string, configMap map[string]any) error {
 	hd.PointId = devId
 	return nil
 }
@@ -73,7 +73,7 @@ func (hd *videoCamera) SetState(status typex.DeviceState) {
 // --------------------------------------------------------------------------------------------------
 //
 // --------------------------------------------------------------------------------------------------
-func (hd *videoCamera) OnDCACall(UUID string, Command string, Args interface{}) typex.DCAResult {
+func (hd *videoCamera) OnDCACall(UUID string, Command string, Args any) typex.DCAResult {
 	return typex.DCAResult{}
 }
 func (hd *videoCamera) OnCtrl(cmd []byte, args []byte) ([]byte, error) {

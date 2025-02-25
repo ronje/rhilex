@@ -65,7 +65,7 @@ func NewVideoCamera(e typex.Rhilex) typex.XDevice {
 }
 
 // 初始化 通常用来获取设备的配置
-func (vc *videoCamera) Init(devId string, configMap map[string]interface{}) error {
+func (vc *videoCamera) Init(devId string, configMap map[string]any) error {
 	vc.PointId = devId
 	if err := utils.BindSourceConfig(configMap, &vc.mainConfig); err != nil {
 		return err
@@ -133,7 +133,6 @@ func (vc *videoCamera) Start(cctx typex.CCTX) error {
 	return nil
 }
 
-
 /*
 *
 * 可以在这里进行PTZ控制
@@ -165,7 +164,7 @@ func (vc *videoCamera) SetState(_ typex.DeviceState) {
 
 }
 
-func (vc *videoCamera) OnDCACall(_ string, _ string, _ interface{}) typex.DCAResult {
+func (vc *videoCamera) OnDCACall(_ string, _ string, _ any) typex.DCAResult {
 	return typex.DCAResult{}
 }
 

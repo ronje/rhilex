@@ -67,13 +67,13 @@ func InitGlobalConfig(path string) typex.RhilexConfig {
 * 从全局缓存器获取设备的配置
 *
  */
-func GetDeviceConfigMap(deviceUuid string) map[string]interface{} {
+func GetDeviceConfigMap(deviceUuid string) map[string]any {
 	Slot := intercache.GetSlot("__DeviceConfigMap")
 	Value, ok := Slot[deviceUuid]
 	if !ok {
 		return nil
 	}
-	configMap := map[string]interface{}{}
+	configMap := map[string]any{}
 	switch T := Value.Value.(type) {
 	case []byte:
 		err := json.Unmarshal(T, &configMap)

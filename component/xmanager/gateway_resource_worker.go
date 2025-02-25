@@ -16,20 +16,21 @@
 // gateway_resource_worker.go
 package xmanager
 
-import "fmt"
 import (
+	"fmt"
+
 	"github.com/go-playground/validator/v10"
 	"github.com/mitchellh/mapstructure"
 )
 
 // GatewayResourceWorker 用于记录流媒体的元信息
 type GatewayResourceWorker struct {
-	Worker      GatewayResource        // 实际的实现接口
-	UUID        string                 // 资源唯一标识
-	Name        string                 // 资源名称
-	Type        string                 // 资源类型
-	Config      map[string]interface{} // 资源配置
-	Description string                 // 资源描述
+	Worker      GatewayResource // 实际的实现接口
+	UUID        string          // 资源唯一标识
+	Name        string          // 资源名称
+	Type        string          // 资源类型
+	Config      map[string]any  // 资源配置
+	Description string          // 资源描述
 }
 
 // to string
@@ -38,12 +39,12 @@ func (g *GatewayResourceWorker) String() string {
 }
 
 // GetConfig 获取配置
-func (g *GatewayResourceWorker) GetConfig() map[string]interface{} {
+func (g *GatewayResourceWorker) GetConfig() map[string]any {
 	return g.Config
 }
 
 // Check Config
-func (g *GatewayResourceWorker) CheckConfig(config interface{}) error {
+func (g *GatewayResourceWorker) CheckConfig(config any) error {
 	if g.Config == nil {
 		return fmt.Errorf("config is nil")
 	}
@@ -70,7 +71,7 @@ func (g *GatewayResourceWorker) CheckConfig(config interface{}) error {
 }
 
 // MapToConfig 将 Map 转换为具体的每个资源专属的结构体配置
-func MapToConfig(m map[string]interface{}, s interface{}) error {
+func MapToConfig(m map[string]any, s any) error {
 	validate := validator.New()
 	err := mapstructure.Decode(m, s)
 	if err != nil {
@@ -80,8 +81,8 @@ func MapToConfig(m map[string]interface{}, s interface{}) error {
 }
 
 // ConfigToMap 反向转换
-func ConfigToMap(s interface{}) (map[string]interface{}, error) {
-	var m map[string]interface{}
+func ConfigToMap(s any) (map[string]any, error) {
+	var m map[string]any
 	err := mapstructure.Decode(s, &m)
 	if err != nil {
 		return nil, err
@@ -90,7 +91,7 @@ func ConfigToMap(s interface{}) (map[string]interface{}, error) {
 }
 
 // NewGatewayResourceWorker 创建新的 GatewayResourceWorker
-func NewGatewayResourceWorker(uuid string, name string, resourceType string, configMap map[string]interface{}, description string, worker GatewayResource) *GatewayResourceWorker {
+func NewGatewayResourceWorker(uuid string, name string, resourceType string, configMap map[string]any, description string, worker GatewayResource) *GatewayResourceWorker {
 	return &GatewayResourceWorker{
 		Worker:      worker,
 		UUID:        uuid,

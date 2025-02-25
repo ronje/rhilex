@@ -102,7 +102,7 @@ func NewSIEMENS_PLC(e typex.Rhilex) typex.XDevice {
 }
 
 // 初始化
-func (s1200 *SIEMENS_PLC) Init(devId string, configMap map[string]interface{}) error {
+func (s1200 *SIEMENS_PLC) Init(devId string, configMap map[string]any) error {
 	s1200.PointId = devId
 	intercache.RegisterSlot(s1200.PointId)
 	if err := utils.BindSourceConfig(configMap, &s1200.mainConfig); err != nil {
@@ -236,7 +236,7 @@ func (s1200 *SIEMENS_PLC) SetState(status typex.DeviceState) {
 	s1200.status = status
 }
 
-func (s1200 *SIEMENS_PLC) OnDCACall(UUID string, Command string, Args interface{}) typex.DCAResult {
+func (s1200 *SIEMENS_PLC) OnDCACall(UUID string, Command string, Args any) typex.DCAResult {
 	return typex.DCAResult{}
 }
 func (s1200 *SIEMENS_PLC) OnCtrl(cmd []byte, args []byte) ([]byte, error) {

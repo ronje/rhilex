@@ -28,7 +28,7 @@ func NewYolo8ObjectDetectionCpu() XAlgorithm {
 		Mode: "GPU",
 	}
 }
-func (Yolo8 *Yolo8ObjectDetectionCpu) Init(Config map[string]interface{}) error {
+func (Yolo8 *Yolo8ObjectDetectionCpu) Init(Config map[string]any) error {
 	return fmt.Errorf("NOT support Arm64")
 }
 func (Yolo8 *Yolo8ObjectDetectionCpu) Load() error {
@@ -40,9 +40,9 @@ func (Yolo8 *Yolo8ObjectDetectionCpu) Load() error {
 * 推断
 *
  */
-func (Yolo8 *Yolo8ObjectDetectionCpu) Forward(Input []byte) (map[string]interface{}, error) {
+func (Yolo8 *Yolo8ObjectDetectionCpu) Forward(Input []byte) (map[string]any, error) {
 
-	return map[string]interface{}{}, nil
+	return map[string]any{}, nil
 }
 func (Yolo8 *Yolo8ObjectDetectionCpu) Unload() error {
 	return nil

@@ -116,7 +116,7 @@ type SnmpSchemaProperty struct {
 }
 
 //  初始化
-func (sd *genericSnmpDevice) Init(devId string, configMap map[string]interface{}) error {
+func (sd *genericSnmpDevice) Init(devId string, configMap map[string]any) error {
 	sd.PointId = devId
 	intercache.RegisterSlot(devId)
 	if err := utils.BindSourceConfig(configMap, &sd.mainConfig); err != nil {
@@ -273,7 +273,7 @@ func (sd *genericSnmpDevice) SetState(status typex.DeviceState) {
 
 }
 
-func (sd *genericSnmpDevice) OnDCACall(UUID string, Command string, Args interface{}) typex.DCAResult {
+func (sd *genericSnmpDevice) OnDCACall(UUID string, Command string, Args any) typex.DCAResult {
 	return typex.DCAResult{}
 }
 

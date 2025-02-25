@@ -40,7 +40,7 @@ func NewCoAPInEndSource(e typex.Rhilex) typex.XSource {
 }
 
 // Init 初始化CoAP输入端点源
-func (cc *coAPInEndSource) Init(inEndId string, configMap map[string]interface{}) error {
+func (cc *coAPInEndSource) Init(inEndId string, configMap map[string]any) error {
 	cc.PointId = inEndId
 	if err := utils.BindSourceConfig(configMap, &cc.mainConfig); err != nil {
 		glogger.GLogger.Errorf("Failed to bind source config: %v", err)

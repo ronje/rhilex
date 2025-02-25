@@ -83,6 +83,6 @@ func DataCenterDb() *gorm.DB {
 * 注册数据模型
 *
  */
-func DataCenterDbRegisterModel(dist ...interface{}) {
+func DataCenterDbRegisterModel(dist ...any) {
 	__DataCenterSqlite.db.AutoMigrate(dist...)
 }

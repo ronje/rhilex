@@ -23,7 +23,7 @@ func JqSelect(rx typex.Rhilex, uuid string) func(*lua.LState) int {
 		// Doc: https://github.com/lichuang/Lua-Source-Internal/blob/master/doc/ch03-Lua%E8%99%9A%E6%8B%9F%E6%9C%BA%E6%A0%88%E7%BB%93%E6%9E%84%E5%8F%8A%E7%9B%B8%E5%85%B3%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84.md
 		jqExpression := stateStack.ToString(2)
 		data := stateStack.ToString(3)
-		var jsonData []interface{}
+		var jsonData []any
 		if err := json.Unmarshal([]byte(data), &jsonData); err != nil {
 			stateStack.Push(lua.LNil)
 			glogger.GLogger.Error("Internal Error: ", err, ", InputData:", string(data))
@@ -60,11 +60,11 @@ func VerifyJqExpression(jqExpression string) (*gojq.Query, error) {
 // JQ
 /**
 * In either case, you cannot use custom type values as the query input.
-* The type should be []interface{} for an array and map[string]interface{} for a map (just like decoded to an interface{} using the encoding/json package).
+* The type should be []any for an array and map[string]any for a map (just like decoded to an any using the encoding/json package).
 * You can't use []int or map[string]string, for example.
-* If you want to query your custom struct, marshal to JSON, unmarshal to interface{} and use it as the query input.
+* If you want to query your custom struct, marshal to JSON, unmarshal to any and use it as the query input.
  */
-func JQ(jqExpression string, inputData interface{}) ([]interface{}, error) {
+func JQ(jqExpression string, inputData any) ([]any, error) {
 	/**
 	Input Data Json:
 			[
@@ -76,7 +76,7 @@ func JQ(jqExpression string, inputData interface{}) ([]interface{}, error) {
 	if err0 != nil {
 		return nil, err0
 	}
-	result := []interface{}{}
+	result := []any{}
 	iterator := query.Run(inputData)
 	for {
 

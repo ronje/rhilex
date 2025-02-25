@@ -198,7 +198,7 @@ func Input(ruleId, Source string, in map[string]any) (bool, error) {
 }
 
 // BeautifulMapPrint 打印一个map，具有漂亮的格式，并返回格式化的字符串。
-func BeautifulMapPrint(m map[string]interface{}) string {
+func BeautifulMapPrint(m map[string]any) string {
 	b, _ := json.Marshal(m)
 	return string(b)
 }

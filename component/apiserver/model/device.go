@@ -28,11 +28,11 @@ type MDevice struct {
 	Description string
 }
 
-func (md MDevice) GetConfig() map[string]interface{} {
-	result := make(map[string]interface{})
+func (md MDevice) GetConfig() map[string]any {
+	result := make(map[string]any)
 	err := json.Unmarshal([]byte(md.Config), &result)
 	if err != nil {
-		return map[string]interface{}{}
+		return map[string]any{}
 	}
 	return result
 }

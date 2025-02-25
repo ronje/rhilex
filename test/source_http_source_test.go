@@ -31,7 +31,7 @@ func Test_http_source(t *testing.T) {
 	httpInend := typex.NewInEnd(
 		"HTTP",
 		"Test",
-		"Test", map[string]interface{}{
+		"Test", map[string]any{
 			"port": 8088,
 			"host": "127.0.0.1",
 		},
@@ -64,7 +64,7 @@ func Test_http_source(t *testing.T) {
 		t.Fatal(err)
 	}
 	res, err := utils.Post(*http.DefaultClient,
-		map[string]interface{}{"data": "ok, let's go!"},
+		map[string]any{"data": "ok, let's go!"},
 		"http://127.0.0.1:8088/in",
 		map[string]string{})
 	if err != nil {

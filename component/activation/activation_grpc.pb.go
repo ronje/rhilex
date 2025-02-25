@@ -86,7 +86,7 @@ func RegisterDeviceActivationServer(s grpc.ServiceRegistrar, srv DeviceActivatio
 	s.RegisterService(&DeviceActivation_ServiceDesc, srv)
 }
 
-func _DeviceActivation_ActivateDevice_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _DeviceActivation_ActivateDevice_Handler(srv any, ctx context.Context, dec func(any) error, interceptor grpc.UnaryServerInterceptor) (any, error) {
 	in := new(ActivationRequest)
 	if err := dec(in); err != nil {
 		return nil, err
@@ -98,7 +98,7 @@ func _DeviceActivation_ActivateDevice_Handler(srv interface{}, ctx context.Conte
 		Server:     srv,
 		FullMethod: DeviceActivation_ActivateDevice_FullMethodName,
 	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+	handler := func(ctx context.Context, req any) (any, error) {
 		return srv.(DeviceActivationServer).ActivateDevice(ctx, req.(*ActivationRequest))
 	}
 	return interceptor(ctx, in, info, handler)

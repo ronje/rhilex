@@ -102,7 +102,7 @@ func NewGenericBacnetIpDevice(e typex.Rhilex) typex.XDevice {
 	return g
 }
 
-func (dev *GenericBacnetIpDevice) Init(devId string, configMap map[string]interface{}) error {
+func (dev *GenericBacnetIpDevice) Init(devId string, configMap map[string]any) error {
 	dev.PointId = devId
 	// 先给个空的
 	dev.remoteDeviceMap = make(map[uint32]btypes.Device)
@@ -296,11 +296,11 @@ func (dev *GenericBacnetIpDevice) Start(cctx typex.CCTX) error {
 }
 
 type ReadBacnetValue struct {
-	Tag              string      `json:"tag"`
-	DeviceId         uint32      `json:"deviceId"`
-	PropertyType     string      `json:"propertyType"`
-	PropertyInstance uint32      `json:"propertyInstance"`
-	Value            interface{} `json:"value"`
+	Tag              string `json:"tag"`
+	DeviceId         uint32 `json:"deviceId"`
+	PropertyType     string `json:"propertyType"`
+	PropertyInstance uint32 `json:"propertyInstance"`
+	Value            any    `json:"value"`
 }
 
 /*
@@ -401,6 +401,6 @@ func (dev *GenericBacnetIpDevice) SetState(state typex.DeviceState) {
 	dev.status = state
 }
 
-func (dev *GenericBacnetIpDevice) OnDCACall(UUID string, Command string, Args interface{}) typex.DCAResult {
+func (dev *GenericBacnetIpDevice) OnDCACall(UUID string, Command string, Args any) typex.DCAResult {
 	return typex.DCAResult{}
 }

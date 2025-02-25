@@ -21,7 +21,7 @@ func Test_AIBASE_ANN_MNIST(t *testing.T) {
 	engine.Start()
 	// Grpc Inend
 	grpcInend := typex.NewInEnd("GRPC", "Test_AIBASE_ANN_MNIST",
-		"Test_AIBASE_ANN_MNIST", map[string]interface{}{
+		"Test_AIBASE_ANN_MNIST", map[string]any{
 			"host": "127.0.0.1",
 			"port": 2581,
 		})

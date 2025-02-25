@@ -17,7 +17,7 @@ import (
 * }
  */
 
-func INIToStruct(iniPath string, s string, v interface{}) error {
+func INIToStruct(iniPath string, s string, v any) error {
 	cfg, err := ini.Load(iniPath)
 	if err != nil {
 		glogger.GLogger.Fatalf("Fail to read config file: %v", err)
@@ -39,7 +39,7 @@ func GetINISection(iniPath string, s string) *ini.Section {
 }
 
 // INI转结构体
-func InIMapToStruct(section *ini.Section, s interface{}) error {
+func InIMapToStruct(section *ini.Section, s any) error {
 	if reflect.ValueOf(s).Kind() != reflect.Ptr {
 		return errors.New("config must be a pointer type")
 	}
@@ -47,7 +47,7 @@ func InIMapToStruct(section *ini.Section, s interface{}) error {
 }
 
 // Section 映射成一个结构体
-func InISectionToValues(iniPath string, sectionName string, s interface{}) error {
+func InISectionToValues(iniPath string, sectionName string, s any) error {
 	iniFile, err1 := ini.Load(iniPath)
 	if err1 != nil {
 		return err1

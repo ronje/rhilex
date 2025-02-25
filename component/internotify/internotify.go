@@ -34,7 +34,7 @@ type BaseEvent struct {
 	Event   string
 	Ts      uint64
 	Summary string
-	Info    interface{}
+	Info    any
 }
 
 func (be BaseEvent) String() string {

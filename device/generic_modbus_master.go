@@ -183,7 +183,7 @@ func NewGenericModbusMaster(e typex.Rhilex) typex.XDevice {
 }
 
 //  初始化
-func (mdev *GenericModbusMaster) Init(devId string, configMap map[string]interface{}) error {
+func (mdev *GenericModbusMaster) Init(devId string, configMap map[string]any) error {
 	mdev.PointId = devId
 	mdev.retryTimes = 0
 	intercache.RegisterSlot(mdev.PointId)
@@ -524,7 +524,7 @@ func (mdev *GenericModbusMaster) SetState(status typex.DeviceState) {
 	mdev.status = status
 }
 
-func (mdev *GenericModbusMaster) OnDCACall(UUID string, Command string, Args interface{}) typex.DCAResult {
+func (mdev *GenericModbusMaster) OnDCACall(UUID string, Command string, Args any) typex.DCAResult {
 	return typex.DCAResult{}
 }
 

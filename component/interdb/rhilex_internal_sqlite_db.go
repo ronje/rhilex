@@ -83,7 +83,7 @@ func InterDb() *gorm.DB {
 * 注册数据模型
 *
  */
-func InterDbRegisterModel(dist ...interface{}) {
+func InterDbRegisterModel(dist ...any) {
 	__InternalSqlite.db.AutoMigrate(dist...)
 }
 
@@ -93,38 +93,38 @@ func GetDB() *gorm.DB {
 }
 
 // Create 创建数据
-func Create(value interface{}) error {
+func Create(value any) error {
 	return __InternalSqlite.db.Create(value).Error
 }
 
 // Read 查询数据
-func Read(dest interface{}, conditions ...interface{}) error {
+func Read(dest any, conditions ...any) error {
 	return __InternalSqlite.db.Find(dest, conditions...).Error
 }
 
 // ReadWithPagination 分页查询数据
-func ReadWithPagination(dest interface{}, page, pageSize int, conditions ...interface{}) error {
+func ReadWithPagination(dest any, page, pageSize int, conditions ...any) error {
 	offset := (page - 1) * pageSize
 	return __InternalSqlite.db.Where(conditions).Offset(offset).Limit(pageSize).Find(dest).Error
 }
 
 // Update 更新数据
-func Update(value interface{}, conditions ...interface{}) error {
+func Update(value any, conditions ...any) error {
 	return __InternalSqlite.db.Where(conditions).Updates(value).Error
 }
 
 // Delete 删除数据
-func Delete(value interface{}, conditions ...interface{}) error {
+func Delete(value any, conditions ...any) error {
 	return __InternalSqlite.db.Where(conditions).Delete(value).Error
 }
 
 // CreateTable 创建表
-func CreateTable(models ...interface{}) error {
+func CreateTable(models ...any) error {
 	return __InternalSqlite.db.AutoMigrate(models...)
 }
 
 // DropTable 删除表
-func DropTable(models ...interface{}) error {
+func DropTable(models ...any) error {
 	return __InternalSqlite.db.Migrator().DropTable(models...)
 }
 

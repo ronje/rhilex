@@ -26,7 +26,7 @@ func TestFullyRun(t *testing.T) {
 		glogger.GLogger.Fatal("Rule load failed:", err)
 	}
 	// Grpc Inend
-	grpcInend := typex.NewInEnd("GRPC_SERVER", "rhilex Grpc InEnd", "rhilex Grpc InEnd", map[string]interface{}{
+	grpcInend := typex.NewInEnd("GRPC_SERVER", "rhilex Grpc InEnd", "rhilex Grpc InEnd", map[string]any{
 		"host": "127.0.0.1",
 		"port": 2583,
 	})

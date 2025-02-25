@@ -101,7 +101,7 @@ func NewSZY206_2016_MasterGateway(e typex.Rhilex) typex.XDevice {
 	return gw
 }
 
-func (gw *SZY206_2016_MasterGateway) Init(devId string, configMap map[string]interface{}) error {
+func (gw *SZY206_2016_MasterGateway) Init(devId string, configMap map[string]any) error {
 	gw.PointId = devId
 	intercache.RegisterSlot(gw.PointId)
 
@@ -348,7 +348,7 @@ func (gw *SZY206_2016_MasterGateway) SetState(status typex.DeviceState) {
 	gw.status = status
 }
 
-func (gw *SZY206_2016_MasterGateway) OnDCACall(UUID string, Command string, Args interface{}) typex.DCAResult {
+func (gw *SZY206_2016_MasterGateway) OnDCACall(UUID string, Command string, Args any) typex.DCAResult {
 	return typex.DCAResult{}
 }
 

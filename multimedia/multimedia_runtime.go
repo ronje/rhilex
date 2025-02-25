@@ -66,7 +66,7 @@ func StopMultimediaRuntime() {
 
 // 加载多媒体资源
 func LoadMultimediaResource(uuid string, name string, resourceType string,
-	configMap map[string]interface{}, description string) error {
+	configMap map[string]any, description string) error {
 	if __DefaultMultimediaResourceManager == nil {
 		return fmt.Errorf("MultimediaResourceManager is not initialized")
 	}

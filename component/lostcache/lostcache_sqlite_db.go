@@ -84,6 +84,6 @@ func LostCacheDb() *gorm.DB {
 * 注册数据模型
 *
  */
-func LostCacheDbRegisterModel(dist ...interface{}) {
+func LostCacheDbRegisterModel(dist ...any) {
 	__LostCache.db.AutoMigrate(dist...)
 }

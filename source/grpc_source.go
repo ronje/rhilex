@@ -52,7 +52,7 @@ func NewGrpcInEndSource(e typex.Rhilex) typex.XSource {
 }
 
 // Init 初始化gRPC输入端点源
-func (g *grpcInEndSource) Init(inEndId string, configMap map[string]interface{}) error {
+func (g *grpcInEndSource) Init(inEndId string, configMap map[string]any) error {
 	g.PointId = inEndId
 	if err := utils.BindSourceConfig(configMap, &g.mainConfig); err != nil {
 		glogger.GLogger.Errorf("Failed to bind source config: %v", err)

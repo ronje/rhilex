@@ -23,7 +23,7 @@ func LoadNewestInEnd(uuid string, ruleEngine typex.Rhilex) error {
 	if mInEnd == nil {
 		return errors.New("Inend not exists:" + uuid)
 	}
-	config := map[string]interface{}{}
+	config := map[string]any{}
 	if err1 := json.Unmarshal([]byte(mInEnd.Config), &config); err1 != nil {
 		glogger.GLogger.Error(err1)
 		return err1
@@ -82,7 +82,7 @@ func LoadNewestOutEnd(uuid string, ruleEngine typex.Rhilex) error {
 		return err
 	}
 
-	config := map[string]interface{}{}
+	config := map[string]any{}
 	if err := json.Unmarshal([]byte(mOutEnd.Config), &config); err != nil {
 		return err
 	}
@@ -121,7 +121,7 @@ func LoadNewestDevice(uuid string, ruleEngine typex.Rhilex) error {
 	if err != nil {
 		return err
 	}
-	config := map[string]interface{}{}
+	config := map[string]any{}
 	if err := json.Unmarshal([]byte(mDevice.Config), &config); err != nil {
 		return err
 	}

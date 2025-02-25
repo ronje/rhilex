@@ -253,7 +253,7 @@ func (e *RuleEngine) SnapshotDump() string {
 	var m runtime.MemStats
 	runtime.ReadMemStats(&m)
 
-	system := map[string]interface{}{
+	system := map[string]any{
 		"version":  typex.MainVersion,
 		"diskInfo": int(diskInfo.UsedPercent),
 		"system":   utils.BToMb(m.Sys),
@@ -261,7 +261,7 @@ func (e *RuleEngine) SnapshotDump() string {
 		"total":    utils.BToMb(m.TotalAlloc),
 		"osArch":   runtime.GOOS + "-" + runtime.GOARCH,
 	}
-	data := map[string]interface{}{
+	data := map[string]any{
 		"rules":      e.Rules.Values(),
 		"inends":     e.InEnds.Values(),
 		"outends":    e.OutEnds.Values(),

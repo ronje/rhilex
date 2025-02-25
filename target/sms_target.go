@@ -55,7 +55,7 @@ func NewSMSTarget(e typex.Rhilex) typex.XTarget {
 	return ht
 }
 
-func (ht *SMSTarget) Init(outEndId string, configMap map[string]interface{}) error {
+func (ht *SMSTarget) Init(outEndId string, configMap map[string]any) error {
 	ht.PointId = outEndId
 	if err := utils.BindSourceConfig(configMap, &ht.mainConfig); err != nil {
 		return err
@@ -89,7 +89,7 @@ func (O sms_template) String() string {
 		return string(bytes)
 	}
 }
-func (ht *SMSTarget) To(data interface{}) (interface{}, error) {
+func (ht *SMSTarget) To(data any) (any, error) {
 	sms_template := sms_template{}
 	switch T := data.(type) {
 	case string:

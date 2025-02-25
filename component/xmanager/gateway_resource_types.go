@@ -106,7 +106,7 @@ func (s *ResourceService) String() string {
 
 // GatewayResource 多媒体资源工作接口
 type GatewayResource interface {
-	Init(uuid string, configMap map[string]interface{}) error
+	Init(uuid string, configMap map[string]any) error
 	Start(context.Context) error
 	Status() GatewayResourceState
 	Services() []ResourceService

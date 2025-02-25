@@ -9,7 +9,7 @@ import (
 // go test -timeout 30s -run ^TestJsonFilter github.com/hootrhino/rhilex/test -v -count=1
 func TestJsonFilter(t *testing.T) {
 	// SELECT * FROM DATA WHERE a1.value GT(>) 3.14
-	r := Reduce(map[string]interface{}{
+	r := Reduce(map[string]any{
 		"a1": float64(3.14),
 		"a2": float64(3.15),
 		"a3": float64(3.16),
@@ -33,16 +33,16 @@ func TestJsonFilter(t *testing.T) {
 *
  */
 type FilterCondition struct {
-	Key      string      // 期望的Key, 如果是 * 则表示只要满足条件的全部拿出来
-	Label    string      // 期望的Label
-	Operator string      // 操作条件 EQ:==, LT:<, GT:>, LTE:<=, GTE:>=
-	Type     string      // 数据类型 1 number 2 string
-	InValue  interface{} // 对比的值1
-	OutValue interface{} // 对比的值2
+	Key      string // 期望的Key, 如果是 * 则表示只要满足条件的全部拿出来
+	Label    string // 期望的Label
+	Operator string // 操作条件 EQ:==, LT:<, GT:>, LTE:<=, GTE:>=
+	Type     string // 数据类型 1 number 2 string
+	InValue  any    // 对比的值1
+	OutValue any    // 对比的值2
 }
 
-func Reduce(in map[string]interface{}, fcs []FilterCondition) map[string]interface{} {
-	retV := map[string]interface{}{}
+func Reduce(in map[string]any, fcs []FilterCondition) map[string]any {
+	retV := map[string]any{}
 	for k, v := range in {
 		for _, fc := range fcs {
 
@@ -70,7 +70,7 @@ func Reduce(in map[string]interface{}, fcs []FilterCondition) map[string]interfa
 	return retV
 }
 
-func checkType(in interface{}) (string, bool) {
+func checkType(in any) (string, bool) {
 	tin := reflect.TypeOf(in).Name()
 	ok := false
 	t := ""
@@ -116,7 +116,7 @@ func checkType(in interface{}) (string, bool) {
 	return t, ok
 }
 
-func Match(in interface{}, fc FilterCondition) (interface{}, bool, error) {
+func Match(in any, fc FilterCondition) (any, bool, error) {
 	tin := reflect.TypeOf(in).Name()
 	InType, checkOk := checkType(in)
 	if InType != fc.Type {

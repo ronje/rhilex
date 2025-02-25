@@ -67,7 +67,7 @@ func Test_Codec(t *testing.T) {
 	// Grpc Inend
 	grpcInend := typex.NewInEnd("GRPC",
 		"rhilex Grpc InEnd",
-		"rhilex Grpc InEnd", map[string]interface{}{
+		"rhilex Grpc InEnd", map[string]any{
 			"port": 2581,
 		})
 	ctx, cancelF := typex.NewCCTX() // ,ctx, cancelF
@@ -76,7 +76,7 @@ func Test_Codec(t *testing.T) {
 	}
 	grpcCodec1 := typex.NewOutEnd("GRPC_CODEC_TARGET",
 		"GRPC_CODEC_TARGET",
-		"GRPC_CODEC_TARGET", map[string]interface{}{
+		"GRPC_CODEC_TARGET", map[string]any{
 			"host": "127.0.0.1",
 			"port": 1998,
 			"type": "DECODE",
@@ -88,7 +88,7 @@ func Test_Codec(t *testing.T) {
 	}
 	grpcCodec2 := typex.NewOutEnd("GRPC_CODEC_TARGET",
 		"GRPC_CODEC_TARGET",
-		"GRPC_CODEC_TARGET", map[string]interface{}{
+		"GRPC_CODEC_TARGET", map[string]any{
 			"host": "127.0.0.1",
 			"port": 1998,
 			"type": "ENCODE",

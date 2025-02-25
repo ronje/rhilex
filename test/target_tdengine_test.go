@@ -35,7 +35,7 @@ func Test_data_to_tdengine(t *testing.T) {
 	grpcInend := typex.NewInEnd(
 		"GRPC",
 		"Test_data_to_tdengine",
-		"Test_data_to_tdengine", map[string]interface{}{
+		"Test_data_to_tdengine", map[string]any{
 			"port":             2581,
 			"host":             "127.0.0.1",
 			"cacheOfflineData": true,
@@ -48,7 +48,7 @@ func Test_data_to_tdengine(t *testing.T) {
 	tdOutEnd := typex.NewOutEnd(typex.TDENGINE_TARGET,
 		"Test_data_to_tdengine",
 		"Test_data_to_tdengine",
-		map[string]interface{}{
+		map[string]any{
 			"fqdn":           "127.0.0.1",
 			"port":           6041,
 			"username":       "root",

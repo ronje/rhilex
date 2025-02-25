@@ -64,7 +64,7 @@ func NewLoraGateway(e typex.Rhilex) typex.XDevice {
 	return hd
 }
 
-func (hd *LoraGateway) Init(devId string, configMap map[string]interface{}) error {
+func (hd *LoraGateway) Init(devId string, configMap map[string]any) error {
 	hd.PointId = devId
 	if err := utils.BindSourceConfig(configMap, &hd.mainConfig); err != nil {
 		glogger.GLogger.Error(err)
@@ -99,7 +99,7 @@ func (hd *LoraGateway) SetState(status typex.DeviceState) {
 	hd.status = status
 }
 
-func (hd *LoraGateway) OnDCACall(UUID string, Command string, Args interface{}) typex.DCAResult {
+func (hd *LoraGateway) OnDCACall(UUID string, Command string, Args any) typex.DCAResult {
 	return typex.DCAResult{}
 }
 

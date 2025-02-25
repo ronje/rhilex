@@ -106,7 +106,7 @@ func (td *tdEngineTarget) url() string {
 // 注册InEndID到资源
 //
 
-func (td *tdEngineTarget) Init(outEndId string, configMap map[string]interface{}) error {
+func (td *tdEngineTarget) Init(outEndId string, configMap map[string]any) error {
 	td.PointId = outEndId
 	if err := utils.BindSourceConfig(configMap, &td.mainConfig); err != nil {
 		return err
@@ -219,7 +219,7 @@ func execQuery(client http.Client, username string, password string, sql string,
 * 比如: 10.22,220.12,123,......
 *
  */
-func (td *tdEngineTarget) To(data interface{}) (interface{}, error) {
+func (td *tdEngineTarget) To(data any) (any, error) {
 	switch T := data.(type) {
 	case string:
 		{

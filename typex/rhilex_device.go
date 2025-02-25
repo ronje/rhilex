@@ -19,21 +19,21 @@ import "github.com/hootrhino/rhilex/utils"
 
 // 设备元数据, 本质是保存在配置里面的数据的一个内存映射实例
 type Device struct {
-	UUID        string                 `json:"uuid"`        // UUID
-	Name        string                 `json:"name"`        // 设备名称，例如：灯光开关
-	Type        DeviceType             `json:"type"`        // 类型,一般是设备-型号，比如 ARDUINO-R3
-	AutoRestart bool                   `json:"autoRestart"` // 是否允许挂了的时候重启
-	Description string                 `json:"description"` // 设备描述信息
-	BindRules   map[string]Rule        `json:"-"`           // 与之关联的规则
-	State       DeviceState            `json:"state"`       // 状态
-	Config      map[string]interface{} `json:"config"`      // 配置
-	Device      XDevice                `json:"-"`           // 实体设备
+	UUID        string          `json:"uuid"`        // UUID
+	Name        string          `json:"name"`        // 设备名称，例如：灯光开关
+	Type        DeviceType      `json:"type"`        // 类型,一般是设备-型号，比如 ARDUINO-R3
+	AutoRestart bool            `json:"autoRestart"` // 是否允许挂了的时候重启
+	Description string          `json:"description"` // 设备描述信息
+	BindRules   map[string]Rule `json:"-"`           // 与之关联的规则
+	State       DeviceState     `json:"state"`       // 状态
+	Config      map[string]any  `json:"config"`      // 配置
+	Device      XDevice         `json:"-"`           // 实体设备
 }
 
 func NewDevice(t DeviceType,
 	name string,
 	description string,
-	config map[string]interface{}) *Device {
+	config map[string]any) *Device {
 	return &Device{
 		UUID:        utils.DeviceUuid(),
 		Name:        name,

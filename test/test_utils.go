@@ -21,12 +21,12 @@ import (
 	"github.com/hootrhino/rhilex/typex"
 )
 
-func Equal(a, b interface{}) {
+func Equal(a, b any) {
 	if a != nil {
 		panic(fmt.Sprintf("Assert Failed: %v %v", a, b))
 	}
 }
-func HttpPost(data map[string]interface{}, url string) string {
+func HttpPost(data map[string]any, url string) string {
 	p, errs1 := json.Marshal(data)
 	if errs1 != nil {
 		glogger.GLogger.Fatal(errs1)

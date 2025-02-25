@@ -15,7 +15,7 @@ func IsListDuplicated(list []string) bool {
 	for _, value := range list {
 		tmpMap[value] = 1
 	}
-	var keys []interface{}
+	var keys []any
 	for k := range tmpMap {
 		keys = append(keys, k)
 	}

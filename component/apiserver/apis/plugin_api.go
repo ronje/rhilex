@@ -28,9 +28,9 @@ func InitPluginsRoute() {
 
 func PluginService(c *gin.Context, ruleEngine typex.Rhilex) {
 	type Form struct {
-		UUID string      `json:"uuid" binding:"required"`
-		Name string      `json:"name" binding:"required"`
-		Args interface{} `json:"args"`
+		UUID string `json:"uuid" binding:"required"`
+		Name string `json:"name" binding:"required"`
+		Args any    `json:"args"`
 	}
 	form := Form{}
 	if err := c.ShouldBindJSON(&form); err != nil {

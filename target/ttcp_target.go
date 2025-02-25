@@ -73,7 +73,7 @@ func NewTTcpTarget(e typex.Rhilex) typex.XTarget {
 	return ht
 }
 
-func (ht *TTcpTarget) Init(outEndId string, configMap map[string]interface{}) error {
+func (ht *TTcpTarget) Init(outEndId string, configMap map[string]any) error {
 	ht.PointId = outEndId
 	if err := utils.BindSourceConfig(configMap, &ht.mainConfig); err != nil {
 		return err
@@ -155,7 +155,7 @@ func (ht *TTcpTarget) Status() typex.SourceState {
 * 透传模式：字符串和十六进制
 *
  */
-func (ht *TTcpTarget) To(data interface{}) (interface{}, error) {
+func (ht *TTcpTarget) To(data any) (any, error) {
 	if ht.client != nil {
 		switch T := data.(type) {
 		case string:

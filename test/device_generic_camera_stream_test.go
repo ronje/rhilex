@@ -29,7 +29,7 @@ func Test_Generic_Local_camera(t *testing.T) {
 		t.Fatal(err)
 	}
 	GENERIC_CAMERA := typex.NewDevice(typex.GENERIC_CAMERA,
-		"GENERIC_CAMERA", "GENERIC_CAMERA", map[string]interface{}{
+		"GENERIC_CAMERA", "GENERIC_CAMERA", map[string]any{
 			"inputMode":    "REMOTE_STREAM_RTSP",
 			"inputAddr":    "rtsp://192.168.1.210:554/av0_0",
 			"outputMode":   "LOCAL_STREAM_SERVER",
@@ -61,7 +61,7 @@ func Test_Generic_RTSP_camera(t *testing.T) {
 		t.Fatal(err)
 	}
 	GENERIC_CAMERA := typex.NewDevice(typex.GENERIC_CAMERA,
-		"GENERIC_CAMERA", "GENERIC_CAMERA", map[string]interface{}{
+		"GENERIC_CAMERA", "GENERIC_CAMERA", map[string]any{
 			"maxThread":    10,
 			"inputMode":    "RTSP",
 			"device":       "video0",
@@ -89,7 +89,7 @@ func Test_Generic_LOCAL_camera(t *testing.T) {
 		t.Fatal(err)
 	}
 	GENERIC_CAMERA := typex.NewDevice(typex.GENERIC_CAMERA,
-		"GENERIC_CAMERA", "GENERIC_CAMERA", map[string]interface{}{
+		"GENERIC_CAMERA", "GENERIC_CAMERA", map[string]any{
 			"maxThread":    10,
 			"inputMode":    "LOCAL",
 			"device":       "video0",

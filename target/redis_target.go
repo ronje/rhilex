@@ -42,7 +42,7 @@ type RedisTarget struct {
 // RedisData 用于封装要存储到Redis的数据和键
 type RedisData struct {
 	Key  string
-	Data map[string]interface{}
+	Data map[string]any
 }
 
 // NewRedisTarget 创建一个新的RedisTarget实例
@@ -55,7 +55,7 @@ func NewRedisTarget(e typex.Rhilex) typex.XTarget {
 }
 
 // Init 初始化RedisTarget
-func (rt *RedisTarget) Init(outEndId string, configMap map[string]interface{}) error {
+func (rt *RedisTarget) Init(outEndId string, configMap map[string]any) error {
 	rt.PointId = outEndId
 
 	if err := utils.BindSourceConfig(configMap, &rt.mainConfig); err != nil {
@@ -101,7 +101,7 @@ func (rt *RedisTarget) Status() typex.SourceState {
 }
 
 // To 将数据存储到Redis中，使用 HMSET 命令
-func (rt *RedisTarget) To(data interface{}) (interface{}, error) {
+func (rt *RedisTarget) To(data any) (any, error) {
 	// 将 data 转换为 RedisData 结构体
 	redisData, ok := data.(RedisData)
 	if !ok {

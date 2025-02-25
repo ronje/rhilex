@@ -35,9 +35,9 @@ type Algorithm struct {
 *
  */
 type XAlgorithm interface {
-	Init(map[string]interface{}) error              // 初始化环境
-	Load() error                                    // 加载模型
-	Forward([]byte) (map[string]interface{}, error) // 用数据去执行
-	Unload() error                                  // 卸载模型
-	AlgorithmDetail() Algorithm                     // 获取信息
+	Init(map[string]any) error              // 初始化环境
+	Load() error                            // 加载模型
+	Forward([]byte) (map[string]any, error) // 用数据去执行
+	Unload() error                          // 卸载模型
+	AlgorithmDetail() Algorithm             // 获取信息
 }

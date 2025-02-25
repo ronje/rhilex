@@ -39,9 +39,9 @@ type ModbusSlaverRegister struct {
 	// 2: 离散输入Coils      Discrete Inputs
 	// 3: 保持寄存器         Holding Registers
 	// 4: 输入寄存器         Input Registers
-	Type    int         `json:"type"`
-	Address int         `json:"address"`
-	Value   interface{} `json:"value"`
+	Type    int `json:"type"`
+	Address int `json:"address"`
+	Value   any `json:"value"`
 }
 type ModbusSlaverRegisterVo struct {
 	Coils             []ModbusSlaverRegister `json:"coils"`
@@ -164,7 +164,7 @@ func ModbusSlaverSheetPageList(c *gin.Context, ruleEngine typex.Rhilex) {
 	Result := service.WrapPageResult(*pager, AllList, 64)
 	c.JSON(common.HTTP_OK, common.OkWithData(Result))
 }
-func transValue(V interface{}) string {
+func transValue(V any) string {
 	switch T := V.(type) {
 	case string:
 		return T

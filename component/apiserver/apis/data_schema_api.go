@@ -77,12 +77,12 @@ type IotPropertyVo struct {
 	Rule        IoTPropertyRuleVo `json:"rule"`        // 规则,IoTPropertyRule
 }
 type IoTPropertyRuleVo struct {
-	DefaultValue interface{} `json:"defaultValue"` // 默认值
-	Max          *int        `json:"max"`          // 最大值
-	Min          *int        `json:"min"`          // 最小值
-	TrueLabel    string      `json:"trueLabel"`    // 真值label
-	FalseLabel   string      `json:"falseLabel"`   // 假值label
-	Round        *int        `json:"round"`        // 小数点位
+	DefaultValue any    `json:"defaultValue"` // 默认值
+	Max          *int   `json:"max"`          // 最大值
+	Min          *int   `json:"min"`          // 最小值
+	TrueLabel    string `json:"trueLabel"`    // 真值label
+	FalseLabel   string `json:"falseLabel"`   // 假值label
+	Round        *int   `json:"round"`        // 小数点位
 }
 
 func (O IoTPropertyRuleVo) Check() error {

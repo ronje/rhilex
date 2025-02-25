@@ -110,7 +110,6 @@ func (tcps *TcpSource) Start(cctx typex.CCTX) error {
 
 }
 
-
 /*
 *
 * 大端转换法
@@ -187,8 +186,8 @@ func (tcps *TcpSource) handleClient(id string, conn net.Conn) {
 *
  */
 type tcp_client_data struct {
-	ClientAddr string      `json:"clientAddr"`
-	Data       interface{} `json:"data"`
+	ClientAddr string `json:"clientAddr"`
+	Data       any    `json:"data"`
 }
 
 func (O tcp_client_data) String() string {
@@ -202,7 +201,7 @@ func (tcps *TcpSource) Details() *typex.InEnd {
 	return tcps.RuleEngine.GetInEnd(tcps.PointId)
 }
 
-func (tcps *TcpSource) Init(inEndId string, configMap map[string]interface{}) error {
+func (tcps *TcpSource) Init(inEndId string, configMap map[string]any) error {
 	tcps.PointId = inEndId
 	if err := utils.BindSourceConfig(configMap, &tcps.mainConfig); err != nil {
 		return err

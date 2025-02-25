@@ -26,14 +26,14 @@ type InEnd struct {
 	Description string          `json:"description"`
 	BindRules   map[string]Rule `json:"-"`
 	//
-	Config map[string]interface{} `json:"config"`
-	Source XSource                `json:"-"`
+	Config map[string]any `json:"config"`
+	Source XSource        `json:"-"`
 }
 
 func NewInEnd(Type InEndType,
 	n string,
 	d string,
-	c map[string]interface{}) *InEnd {
+	c map[string]any) *InEnd {
 
 	return &InEnd{
 		UUID:        utils.InUuid(),
@@ -44,6 +44,6 @@ func NewInEnd(Type InEndType,
 		Config:      c,
 	}
 }
-func (in *InEnd) GetConfig(k string) interface{} {
+func (in *InEnd) GetConfig(k string) any {
 	return (in.Config)[k]
 }

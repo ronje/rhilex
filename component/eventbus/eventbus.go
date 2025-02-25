@@ -36,7 +36,7 @@ type EventMessage struct {
 	Type    string
 	Event   string
 	Ts      uint64
-	Payload interface{}
+	Payload any
 }
 
 func (E EventMessage) String() string {

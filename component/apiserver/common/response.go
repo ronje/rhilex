@@ -12,9 +12,9 @@ const HTTP_OK int = 200
 
 // Http Return
 type R struct {
-	Code int         `json:"code" binding:"required"`
-	Msg  string      `json:"msg" binding:"required"`
-	Data interface{} `json:"data"`
+	Code int    `json:"code" binding:"required"`
+	Msg  string `json:"msg" binding:"required"`
+	Data any    `json:"data"`
 }
 
 // 空响应
@@ -33,7 +33,7 @@ func ReturnEmptyObjs() R {
 func OkWithEmpty() R {
 	return R{200, SUCCESS, []EmptyObj{}}
 }
-func OkWithData(data interface{}) R {
+func OkWithData(data any) R {
 	return R{200, SUCCESS, data}
 }
 func OkWithMsg(msg string) R {

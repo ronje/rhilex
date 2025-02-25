@@ -50,11 +50,12 @@ const (
 
 // XStatus for source status
 type XStatus struct {
-	PointId    string             // Input: Source; Output: Target
-	Ctx        context.Context    // context
-	CancelCTX  context.CancelFunc // cancel
-	RuleEngine Rhilex             // rhilex
-	Busy       bool               // 是否处于忙碌状态, 防止请求拥挤
+	PointId     string             // Input: Source; Output: Target
+	Ctx         context.Context    // context
+	CancelCTX   context.CancelFunc // cancel
+	RuleEngine  Rhilex             // rhilex
+	Busy        bool               // 是否处于忙碌状态, 防止请求拥挤
+	SourceState SourceState
 }
 
 // XSource 接口代表了一个终端资源，例如实际的MQTT客户端。
@@ -63,7 +64,7 @@ type XSource interface {
 	// Init方法用于初始化资源，传递资源配置信息。
 	// inEndId是资源的标识符，configMap是资源配置的映射。
 	// 返回初始化是否成功的错误信息。
-	Init(inEndId string, configMap map[string]interface{}) error
+	Init(inEndId string, configMap map[string]any) error
 	// Start方法用于启动资源。
 	// CCTX是上下文，具体作用取决于资源的实现。
 	// 返回启动是否成功的错误信息。

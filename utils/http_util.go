@@ -18,7 +18,7 @@ import (
 * HTTP POST
 *
  */
-func Post(client http.Client, data interface{},
+func Post(client http.Client, data any,
 	url string, headers map[string]string) (string, error) {
 	bites, errs1 := json.Marshal(data)
 	if errs1 != nil {

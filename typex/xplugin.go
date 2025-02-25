@@ -21,12 +21,12 @@ func (s PluginType) String() string {
 
 // 插件的服务参数
 type ServiceArg struct {
-	UUID string      `json:"uuid"` // 插件UUID, Rhilex用来查找插件的
-	Name string      `json:"name"` // 服务名, 在服务中响应识别
-	Args interface{} `json:"args"` // 服务参数
+	UUID string `json:"uuid"` // 插件UUID, Rhilex用来查找插件的
+	Name string `json:"name"` // 服务名, 在服务中响应识别
+	Args any    `json:"args"` // 服务参数
 }
 type ServiceResult struct {
-	Out interface{} `json:"out"`
+	Out any `json:"out"`
 }
 
 /*

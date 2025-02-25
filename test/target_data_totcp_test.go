@@ -21,7 +21,7 @@ func Test_DataToTcp(t *testing.T) {
 	engine.Start()
 
 	// Grpc Inend
-	grpcInend := typex.NewInEnd(typex.GRPC_SERVER, "GRPC", "GRPC", map[string]interface{}{
+	grpcInend := typex.NewInEnd(typex.GRPC_SERVER, "GRPC", "GRPC", map[string]any{
 		"port": 2581,
 		"host": "127.0.0.1",
 	})
@@ -31,7 +31,7 @@ func Test_DataToTcp(t *testing.T) {
 	}
 
 	OutEnd := typex.NewOutEnd(typex.TCP_TRANSPORT,
-		"TCP_TRANSPORT", "TCP_TRANSPORT", map[string]interface{}{
+		"TCP_TRANSPORT", "TCP_TRANSPORT", map[string]any{
 			"host":             "127.0.0.1",
 			"port":             8891,
 			"pingPacket":       "rhilex\r\n",

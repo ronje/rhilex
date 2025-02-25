@@ -109,7 +109,7 @@ func RegisterAIBaseServiceServer(s grpc.ServiceRegistrar, srv AIBaseServiceServe
 	s.RegisterService(&AIBaseService_ServiceDesc, srv)
 }
 
-func _AIBaseService_Call_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _AIBaseService_Call_Handler(srv any, ctx context.Context, dec func(any) error, interceptor grpc.UnaryServerInterceptor) (any, error) {
 	in := new(CallRequest)
 	if err := dec(in); err != nil {
 		return nil, err
@@ -121,13 +121,13 @@ func _AIBaseService_Call_Handler(srv interface{}, ctx context.Context, dec func(
 		Server:     srv,
 		FullMethod: AIBaseService_Call_FullMethodName,
 	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+	handler := func(ctx context.Context, req any) (any, error) {
 		return srv.(AIBaseServiceServer).Call(ctx, req.(*CallRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _AIBaseService_Stream_Handler(srv interface{}, stream grpc.ServerStream) error {
+func _AIBaseService_Stream_Handler(srv any, stream grpc.ServerStream) error {
 	return srv.(AIBaseServiceServer).Stream(&grpc.GenericServerStream[StreamRequest, StreamResponse]{ServerStream: stream})
 }
 

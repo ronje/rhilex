@@ -70,7 +70,7 @@ func NewGrepTimeDbTarget(e typex.Rhilex) typex.XTarget {
 	return grep
 }
 
-func (grep *GrepTimeDbTarget) Init(outEndId string, configMap map[string]interface{}) error {
+func (grep *GrepTimeDbTarget) Init(outEndId string, configMap map[string]any) error {
 	grep.PointId = outEndId
 	if err := utils.BindSourceConfig(configMap, &grep.mainConfig); err != nil {
 		return err
@@ -125,11 +125,11 @@ func (grep *GrepTimeDbTarget) Status() typex.SourceState {
 }
 
 // To: data-Map
-func (grep *GrepTimeDbTarget) To(data interface{}) (interface{}, error) {
+func (grep *GrepTimeDbTarget) To(data any) (any, error) {
 
 	switch T := data.(type) {
 	case string:
-		Map := map[string]interface{}{}
+		Map := map[string]any{}
 		errUnmarshal := json.Unmarshal([]byte(T), &Map)
 		if errUnmarshal != nil {
 			glogger.GLogger.Error(errUnmarshal)
@@ -142,7 +142,7 @@ func (grep *GrepTimeDbTarget) To(data interface{}) (interface{}, error) {
 		}
 		Table.AddTimestampColumn("ts", types.TIMESTAMP_MILLISECOND)
 		Table.AddTagColumn("gateway_sn", types.STRING)
-		values := []interface{}{time.Now().UnixMilli(), grep.mainConfig.GrepTimeDbTargetConfig.GwSn}
+		values := []any{time.Now().UnixMilli(), grep.mainConfig.GrepTimeDbTargetConfig.GwSn}
 		for k, v := range Map {
 			switch VT := v.(type) {
 			case bool:

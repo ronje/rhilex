@@ -58,19 +58,19 @@ multimedia.StopMultimediaRuntime()
 
 #### 3. `LoadMultimediaResource`
 ```go
-func LoadMultimediaResource(uuid string, name string, resourceType string, configMap map[string]interface{}, description string) error
+func LoadMultimediaResource(uuid string, name string, resourceType string, configMap map[string]any, description string) error
 ```
 - **功能描述**：加载多媒体资源。如果 `MultimediaResourceManager` 未初始化，则返回错误信息。
 - **参数**：
   - `uuid`：字符串类型，资源的唯一标识符。
   - `name`：字符串类型，资源的名称。
   - `resourceType`：字符串类型，资源的类型，如 "RTSP"、"RTMP" 等。
-  - `configMap`：`map[string]interface{}` 类型，资源的配置信息。
+  - `configMap`：`map[string]any` 类型，资源的配置信息。
   - `description`：字符串类型，资源的描述信息。
 - **返回值**：如果加载失败，返回错误信息；否则返回 `nil`。
 - **示例**：
 ```go
-err := multimedia.LoadMultimediaResource("uuid-1", "name", "RTSP", map[string]interface{}{}, "description")
+err := multimedia.LoadMultimediaResource("uuid-1", "name", "RTSP", map[string]any{}, "description")
 if err != nil {
     panic(err)
 }
@@ -169,7 +169,7 @@ multimedia.StartMultimediaResourceMonitoring()
 
 #### 10. `RegisterMultimediaResourceType`
 ```go
-func RegisterMultimediaResourceType(resourceType string, factory func(map[string]interface{}) (xmanager.GatewayResource, error))
+func RegisterMultimediaResourceType(resourceType string, factory func(map[string]any) (xmanager.GatewayResource, error))
 ```
 - **功能描述**：注册多媒体资源类型和对应的工厂函数。如果 `MultimediaResourceManager` 未初始化，则直接返回。
 - **参数**：
@@ -178,7 +178,7 @@ func RegisterMultimediaResourceType(resourceType string, factory func(map[string
 - **返回值**：无
 - **示例**：
 ```go
-factory := func(configMap map[string]interface{}) (xmanager.GatewayResource, error) {
+factory := func(configMap map[string]any) (xmanager.GatewayResource, error) {
     // 实现工厂函数
     return nil, nil
 }

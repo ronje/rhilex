@@ -24,7 +24,7 @@ func TestInitData(t *testing.T) {
 		glogger.GLogger.Fatal("Rule load failed:", err)
 	}
 	// Grpc Inend
-	grpcInend := typex.NewInEnd("GRPC", "rhilex Grpc InEnd", "rhilex Grpc InEnd", map[string]interface{}{
+	grpcInend := typex.NewInEnd("GRPC", "rhilex Grpc InEnd", "rhilex Grpc InEnd", map[string]any{
 		"port": "2581",
 	})
 	b1, _ := json.Marshal(grpcInend.Config)
@@ -36,7 +36,7 @@ func TestInitData(t *testing.T) {
 		Description: grpcInend.Description,
 	})
 	// CoAP Inend
-	coapInend := typex.NewInEnd("COAP", "rhilex COAP InEnd", "rhilex COAP InEnd", map[string]interface{}{
+	coapInend := typex.NewInEnd("COAP", "rhilex COAP InEnd", "rhilex COAP InEnd", map[string]any{
 		"port": "2582",
 	})
 	b2, _ := json.Marshal(coapInend.Config)
@@ -48,7 +48,7 @@ func TestInitData(t *testing.T) {
 		Description: coapInend.Description,
 	})
 	// Http Inend
-	httpInend := typex.NewInEnd("HTTP", "rhilex HTTP InEnd", "rhilex HTTP InEnd", map[string]interface{}{
+	httpInend := typex.NewInEnd("HTTP", "rhilex HTTP InEnd", "rhilex HTTP InEnd", map[string]any{
 		"port": "2583",
 	})
 	b3, _ := json.Marshal(httpInend.Config)
@@ -61,7 +61,7 @@ func TestInitData(t *testing.T) {
 	})
 
 	// Udp Inend
-	udpInend := typex.NewInEnd("UDP", "rhilex UDP InEnd", "rhilex UDP InEnd", map[string]interface{}{
+	udpInend := typex.NewInEnd("UDP", "rhilex UDP InEnd", "rhilex UDP InEnd", map[string]any{
 		"port": "2584",
 	})
 	b4, _ := json.Marshal(udpInend.Config)

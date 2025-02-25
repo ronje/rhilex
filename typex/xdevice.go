@@ -88,9 +88,9 @@ const (
 )
 
 type DCAModel struct {
-	UUID    string      `json:"uuid"`
-	Command string      `json:"command"`
-	Args    interface{} `json:"args"`
+	UUID    string `json:"uuid"`
+	Command string `json:"command"`
+	Args    any    `json:"args"`
 }
 type DCAResult struct {
 	Error error
@@ -100,7 +100,7 @@ type DCAResult struct {
 // 真实工作设备,即具体实现
 type XDevice interface {
 	// 初始化 通常用来获取设备的配置
-	Init(devId string, configMap map[string]interface{}) error
+	Init(devId string, configMap map[string]any) error
 	// 启动, 设备的工作进程
 	Start(CCTX) error
 	// 新特性, 适用于自定义协议读写
@@ -115,7 +115,7 @@ type XDevice interface {
 	SetState(DeviceState)
 	// 外部调用, 该接口是个高级功能, 准备为了设计分布式部署设备的时候用, 但是相当长时间内都不会开启
 	// 默认情况下该接口没有用
-	OnDCACall(UUID string, Command string, Args interface{}) DCAResult
+	OnDCACall(UUID string, Command string, Args any) DCAResult
 }
 
 /*
@@ -124,9 +124,9 @@ type XDevice interface {
 *
  */
 type DeviceTopology struct {
-	Id       string                 // 子设备的ID
-	Name     string                 // 子设备名
-	LinkType int                    // 物理连接方式: 0-ETH 1-WIFI 3-BLE 4 LORA 5 OTHER
-	State    int                    // 状态: 0-Down 1-Working
-	Info     map[string]interface{} // 子设备的一些额外信息
+	Id       string         // 子设备的ID
+	Name     string         // 子设备名
+	LinkType int            // 物理连接方式: 0-ETH 1-WIFI 3-BLE 4 LORA 5 OTHER
+	State    int            // 状态: 0-Down 1-Working
+	Info     map[string]any // 子设备的一些额外信息
 }
