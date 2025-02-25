@@ -18,17 +18,17 @@
 
 #include <stdint.h>
 
-#define LIS3DHTR_ADDR 24
-#define DEVICE_ID_REG 0x0F
-#define CTRL_REG0 0x1E
-#define OUT_X_MSB_REG 0x29
-#define OUT_X_LSB_REG 0x28
-#define OUT_Y_MSB_REG 0x2B
-#define OUT_Y_LSB_REG 0x2A
-#define OUT_Z_MSB_REG 0x2D
-#define OUT_Z_LSB_REG 0x2C
-#define CTRL_REG1_REG 0x20
-#define CTRL_REG4_REG 0x23
+#define LIS3DHTR_ADDR 24   // 地址
+#define DEVICE_ID_REG 0x0F // 设备ID寄存器
+#define CTRL_REG0 0x1E     // 控制寄存器0
+#define OUT_X_MSB_REG 0x29 // X轴数据高位寄存器
+#define OUT_X_LSB_REG 0x28 // X轴数据低位寄存器
+#define OUT_Y_MSB_REG 0x2B // Y轴数据高位寄存器
+#define OUT_Y_LSB_REG 0x2A // Y轴数据低位寄存器
+#define OUT_Z_MSB_REG 0x2D // Z轴数据高位寄存器
+#define OUT_Z_LSB_REG 0x2C // Z轴数据低位寄存器
+#define CTRL_REG1_REG 0x20 // 控制寄存器1
+#define CTRL_REG4_REG 0x23 // 控制寄存器4
 
 // 翻译加速度值
 double _translateAccValue(uint8_t data);
