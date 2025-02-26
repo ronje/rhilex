@@ -86,7 +86,7 @@ func RegisterRhilexRpcServer(s grpc.ServiceRegistrar, srv RhilexRpcServer) {
 	s.RegisterService(&RhilexRpc_ServiceDesc, srv)
 }
 
-func _RhilexRpc_Request_Handler(srv any, ctx context.Context, dec func(any) error, interceptor grpc.UnaryServerInterceptor) (any, error) {
+func _RhilexRpc_Request_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(RpcRequest)
 	if err := dec(in); err != nil {
 		return nil, err
@@ -98,7 +98,7 @@ func _RhilexRpc_Request_Handler(srv any, ctx context.Context, dec func(any) erro
 		Server:     srv,
 		FullMethod: RhilexRpc_Request_FullMethodName,
 	}
-	handler := func(ctx context.Context, req any) (any, error) {
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(RhilexRpcServer).Request(ctx, req.(*RpcRequest))
 	}
 	return interceptor(ctx, in, info, handler)

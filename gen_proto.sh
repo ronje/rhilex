@@ -8,7 +8,7 @@ export PATH=$PATH:$GOROOT:$GOPATH:$GOBIN
 # go get -u google.golang.org/grpc
 # go install google.golang.org/protobuf/cmd/protoc-gen-go@latest
 # go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@latest
-echo -e "\033[42;33m>>>\033[0m [BEGIN]"
+echo -e "\033[42;33m>>>\033[0m [BEGIN] >>>"
 # RhilexRpc
 echo ">>> Generating RhilexRpc Proto..."
 protoc -I ./component/rhilexrpc --go_out=./component/rhilexrpc --go_opt paths=source_relative \
@@ -22,13 +22,6 @@ protoc -I ./component/xstream --go_out ./component/xstream --go_opt paths=source
     --go-grpc_out=./component/xstream --go-grpc_opt paths=source_relative \
     ./component/xstream/xstream.proto
 echo ">>> Generate XStream Proto OK."
-
-# Trailer
-echo ">>> Generating Trailer Proto..."
-protoc -I ./component/trailer --go_out ./component/trailer --go_opt paths=source_relative \
-    --go-grpc_out=./component/trailer --go-grpc_opt paths=source_relative \
-    ./component/trailer/trailer.proto
-echo ">>> Generate Trailer Proto OK."
 
 # AI Base
 echo ">>> Generating Aibase Proto..."
@@ -50,4 +43,11 @@ protoc -I ./component/activation \
     ./component/activation/activation.proto
 echo ">>> Generate Activation Proto OK."
 
-echo -e "\033[42;33m>>>\033[0m [FINISHED]"
+# Stream
+echo ">>> Generating Tunnel Proto... "
+protoc -I ./plugin/tunnel --go_out ./plugin/tunnel --go_opt paths=source_relative \
+    --go-grpc_out=./plugin/tunnel --go-grpc_opt paths=source_relative \
+    ./plugin/tunnel/tunnel.proto
+echo ">>> Generate Tunnel Proto OK."
+
+echo -e "\033[42;33m>>>\033[0m [FINISHED] >>>"

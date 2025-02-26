@@ -13,7 +13,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-package tunplugin
+package tunnel
 
 import (
 	"github.com/hootrhino/rhilex/typex"
