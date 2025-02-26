@@ -89,6 +89,6 @@ func EN6400_GetAccelerator(rx typex.Rhilex, uuid string) func(*lua.LState) int {
 			l.Push(&t)
 			l.Push(lua.LNil)
 		}
-		return 1
+		return 2
 	}
 }
