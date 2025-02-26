@@ -19,11 +19,20 @@
 package en6400
 
 /*
-#cgo CFLAGS: -I./lis3dhtr
-#include "lis3dhtr.c"
+#cgo CFLAGS: -I./lis3dhtr -v
+#cgo LDFLAGS: -lm
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
 #include "lis3dhtr.h"
+#include "lis3dhtr.c"
 */
 import "C"
+
+import (
+	"fmt"
+	"unsafe"
+)
 
 // AccelerationData 存储加速度数据
 type AccelerationData struct {
@@ -31,15 +40,35 @@ type AccelerationData struct {
 	Y float64
 	Z float64
 }
-
+// To String
+func (a AccelerationData) String() string {
+	return fmt.Sprintf("AccelerationData = X: %.2f, Y: %.2f, Z: %.2f", a.X, a.Y, a.Z)
+}
 // ReadAcceleration 读取加速度数据
-func ReadAcceleration() AccelerationData {
-	var x, y, z C.double
-	C.readAcceleration(&x, &y, &z)
+func ReadAcceleration() (AccelerationData, error) {
+	devicePath := C.CString("/dev/i2c-1")
+	defer C.free(unsafe.Pointer(devicePath))
 
-	return AccelerationData{
-		X: float64(x),
-		Y: float64(y),
-		Z: float64(z),
+	file := C.open_i2c_device(devicePath)
+	if int(file) < 0 {
+		return AccelerationData{}, fmt.Errorf("Can not open I2C device")
 	}
+	defer C.close(file)
+	// 设置 I2C 地址
+	if int(C.set_i2c_address(file, C.int(C.LIS3DHTR_ADDR))) < 0 {
+		return AccelerationData{}, fmt.Errorf("Can not set I2C address")
+	}
+	// 初始化 LIS3DHT 传感器
+	if int(C.init_lis3dht(file)) < 0 {
+		return AccelerationData{}, fmt.Errorf("Can not init LIS3DHT")
+	}
+	var xAcc, yAcc, zAcc C.float
+	if int(C.read_acceleration_data(file, &xAcc, &yAcc, &zAcc)) != 0 {
+		return AccelerationData{}, fmt.Errorf("Can not read acceleration data")
+	}
+	return AccelerationData{
+		X: float64(xAcc),
+		Y: float64(yAcc),
+		Z: float64(zAcc),
+	}, nil
 }
