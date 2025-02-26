@@ -19,7 +19,7 @@
 package en6400
 
 /*
-#cgo CFLAGS: -I./lis3dhtr -v
+#cgo CFLAGS: -I./lis3dhtr
 #cgo LDFLAGS: -lm
 #include <stdio.h>
 #include <stdlib.h>
