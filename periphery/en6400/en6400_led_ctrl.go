@@ -50,6 +50,7 @@ func _EN6400_GPIOAllInit() {
 func _EN6400_LedInit(Pin string, direction string) {
 	//gpio export
 	cmd := fmt.Sprintf("echo %s > /sys/class/gpio/export", Pin)
+	log.Println("[EN6400B_GPIOInit] export cmd:", cmd)
 	_, err := exec.Command("sh", "-c", cmd).Output()
 	if err != nil {
 		log.Println("[EN6400B_GPIOInit] error", err)
@@ -57,6 +58,7 @@ func _EN6400_LedInit(Pin string, direction string) {
 	}
 	// gpio set direction
 	cmd = fmt.Sprintf("echo %s > /sys/class/gpio/gpio%s/direction", direction, Pin)
+	log.Println("[EN6400B_GPIOInit] direction cmd:", cmd)
 	_, err = exec.Command("sh", "-c", cmd).Output()
 	if err != nil {
 		log.Println("[EN6400B_GPIOInit] error", err)

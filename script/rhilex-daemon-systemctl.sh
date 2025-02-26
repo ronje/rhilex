@@ -45,36 +45,36 @@ WantedBy=multi-user.target"
 # 安装服务的函数
 install_service() {
     echo "Creating service file..."
-    echo "$SERVICE_CONTENT" | sudo tee /etc/systemd/system/$SERVICE_NAME > /dev/null
-    sudo systemctl daemon-reload
-    sudo systemctl enable $SERVICE_NAME
-    sudo systemctl start $SERVICE_NAME
+    echo "$SERVICE_CONTENT" | tee /etc/systemd/system/$SERVICE_NAME > /dev/null
+    systemctl daemon-reload
+    systemctl enable $SERVICE_NAME
+    systemctl start $SERVICE_NAME
     echo "Service installed and started successfully."
 }
 
 # 卸载服务的函数
 uninstall_service() {
     echo "Stopping service..."
-    sudo systemctl stop $SERVICE_NAME
+    systemctl stop $SERVICE_NAME
     echo "Disabling service..."
-    sudo systemctl disable $SERVICE_NAME
+    systemctl disable $SERVICE_NAME
     echo "Removing service file..."
-    sudo rm /etc/systemd/system/$SERVICE_NAME
-    sudo systemctl daemon-reload
+    rm /etc/systemd/system/$SERVICE_NAME
+    systemctl daemon-reload
     echo "Service uninstalled successfully."
 }
 
 # 重启服务的函数
 restart_service() {
     echo "Restarting service..."
-    sudo systemctl restart $SERVICE_NAME
+    systemctl restart $SERVICE_NAME
     echo "Service restarted successfully."
 }
 
 # 获取服务状态的函数
 get_service_status() {
     echo "Getting service status..."
-    sudo systemctl status $SERVICE_NAME
+    systemctl status $SERVICE_NAME
 }
 
 # 显示帮助信息的函数
