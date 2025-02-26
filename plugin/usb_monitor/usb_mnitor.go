@@ -28,7 +28,7 @@ func (usbm *usbMonitor) Init(_ *ini.Section) error {
 }
 
 func (usbm *usbMonitor) Start(_ typex.Rhilex) error {
-	return errors.New("USB monitor plugin not support windows")
+	return errors.New("USB monitor plugin not support")
 }
 
 func (usbm *usbMonitor) Stop() error {
