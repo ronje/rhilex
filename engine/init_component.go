@@ -90,10 +90,6 @@ func InitAllComponent(__DefaultRuleEngine typex.Rhilex) {
 	cecolla.InitCecollaRuntime(__DefaultRuleEngine)
 }
 func StartAllComponent() {
-	// RuleEngine __DefaultRuleEngine
-	intercache.RegisterSlot("__DefaultRuleEngine")
-	// RegisterSlot __DeviceConfigMap
-	intercache.RegisterSlot("__DeviceConfigMap")
 	// Internal BUS
 	interqueue.StartXQueue()
 }

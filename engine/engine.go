@@ -22,6 +22,7 @@ import (
 
 	lua "github.com/hootrhino/gopher-lua"
 
+	intercache "github.com/hootrhino/rhilex/component/intercache"
 	"github.com/hootrhino/rhilex/component/intermetric"
 	"github.com/hootrhino/rhilex/component/interqueue"
 	"github.com/hootrhino/rhilex/component/luaexecutor"
@@ -60,6 +61,10 @@ func NewRuleEngine(config typex.RhilexConfig) typex.Rhilex {
 *
  */
 func (e *RuleEngine) Start() *typex.RhilexConfig {
+	// RuleEngine __DefaultRuleEngine
+	intercache.RegisterSlot("__DefaultRuleEngine")
+	// RegisterSlot __DeviceConfigMap
+	intercache.RegisterSlot("__DeviceConfigMap")
 	return e.Config
 }
 func (e *RuleEngine) Version() typex.VersionInfo {
@@ -96,6 +101,10 @@ func (e *RuleEngine) Stop() {
 		device.Device.Stop()
 		glogger.GLogger.Infof("Stop Device:(%s) Successfully", device.Name)
 	}
+	// UnRegisterSlot __DefaultRuleEngine
+	intercache.UnRegisterSlot("__DefaultRuleEngine")
+	// UnRegisterSlot __DeviceConfigMap
+	intercache.UnRegisterSlot("__DeviceConfigMap")
 }
 
 // 核心功能: Work, 主要就是推流进队列
