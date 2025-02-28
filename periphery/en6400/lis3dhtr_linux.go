@@ -32,18 +32,21 @@ import "C"
 import (
 	"fmt"
 	"unsafe"
+	"math"
 )
 
 // AccelerationData 存储加速度数据
 type AccelerationData struct {
-	X float64
-	Y float64
-	Z float64
+	X float32
+	Y float32
+	Z float32
 }
+
 // To String
 func (a AccelerationData) String() string {
 	return fmt.Sprintf("AccelerationData = X: %.2f, Y: %.2f, Z: %.2f", a.X, a.Y, a.Z)
 }
+
 // ReadAcceleration 读取加速度数据
 func ReadAcceleration() (AccelerationData, error) {
 	devicePath := C.CString("/dev/i2c-1")
@@ -67,8 +70,12 @@ func ReadAcceleration() (AccelerationData, error) {
 		return AccelerationData{}, fmt.Errorf("Can not read acceleration data")
 	}
 	return AccelerationData{
-		X: float64(xAcc),
-		Y: float64(yAcc),
-		Z: float64(zAcc),
+		X: roundFloat(float32(xAcc), 4),
+		Y: roundFloat(float32(yAcc), 4),
+		Z: roundFloat(float32(zAcc), 4),
 	}, nil
+}
+func roundFloat(num float32, precision int) float32 {
+	factor := math.Pow10(precision)
+	return float32(math.Round(float64(num)*factor) / factor)
 }

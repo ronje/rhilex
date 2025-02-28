@@ -22,9 +22,9 @@ import "fmt"
 
 // AccelerationData 存储加速度数据
 type AccelerationData struct {
-	X float64
-	Y float64
-	Z float64
+	X float32
+	Y float32
+	Z float32
 }
 
 // To String
