@@ -1,4 +1,19 @@
-package usbmonitor
+// Copyright (C) 2025 wwhai
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Affero General Public License as
+// published by the Free Software Foundation, either version 3 of the
+// License, or (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Affero General Public License for more details.
+//
+// You should have received a copy of the GNU Affero General Public License
+// along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+package USBMonitorPlugin
 
 import (
 	"errors"
@@ -13,29 +28,29 @@ import (
 * USB 热插拔监控器, 方便观察USB状态, 本插件只支持Linux！！！
 *
  */
-type usbMonitor struct {
+type USBMonitorPlugin struct {
 	uuid string
 }
 
-func NewUsbMonitor() typex.XPlugin {
-	return &usbMonitor{
+func NewUSBMonitorPlugin() typex.XPlugin {
+	return &USBMonitorPlugin{
 		uuid: "USB-MONITOR",
 	}
 }
-func (usbm *usbMonitor) Init(_ *ini.Section) error {
+func (usbm *USBMonitorPlugin) Init(_ *ini.Section) error {
 	return nil
 
 }
 
-func (usbm *usbMonitor) Start(_ typex.Rhilex) error {
+func (usbm *USBMonitorPlugin) Start(_ typex.Rhilex) error {
 	return errors.New("USB monitor plugin not support")
 }
 
-func (usbm *usbMonitor) Stop() error {
+func (usbm *USBMonitorPlugin) Stop() error {
 	return nil
 }
 
-func (usbm *usbMonitor) PluginMetaInfo() typex.XPluginMetaInfo {
+func (usbm *USBMonitorPlugin) PluginMetaInfo() typex.XPluginMetaInfo {
 	return typex.XPluginMetaInfo{
 		UUID:        usbm.uuid,
 		Name:        "USB Monitor",
@@ -49,6 +64,6 @@ func (usbm *usbMonitor) PluginMetaInfo() typex.XPluginMetaInfo {
 * 服务调用接口
 *
  */
-func (usbm *usbMonitor) Service(arg typex.ServiceArg) typex.ServiceResult {
+func (usbm *USBMonitorPlugin) Service(arg typex.ServiceArg) typex.ServiceResult {
 	return typex.ServiceResult{}
 }

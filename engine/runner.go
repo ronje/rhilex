@@ -105,7 +105,7 @@ func loadOtherPlugin() {
 		}
 		var plugin typex.XPlugin
 		if name == "usbmonitor" {
-			plugin = usbmonitor.NewUsbMonitor()
+			plugin = usbmonitor.NewUSBMonitorPlugin()
 		}
 		if name == "icmpsender" {
 			plugin = icmpsender.NewICMPSender()
