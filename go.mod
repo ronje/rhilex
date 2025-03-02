@@ -82,6 +82,7 @@ require (
 	github.com/cloudwego/iasm v0.2.0 // indirect
 	github.com/cpuguy83/go-md2man/v2 v2.0.4 // indirect
 	github.com/creack/goselect v0.1.2 // indirect
+	github.com/creack/pty v1.1.24
 	github.com/dsnet/golib/memfile v1.0.0 // indirect
 	github.com/expr-lang/expr v1.16.9
 	github.com/gabriel-vasile/mimetype v1.4.3 // indirect

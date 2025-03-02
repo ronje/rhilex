@@ -24,12 +24,11 @@ import (
 	plugins "github.com/hootrhino/rhilex/plugin"
 	"github.com/hootrhino/rhilex/plugin/discover"
 	wdog "github.com/hootrhino/rhilex/plugin/generic_watchdog"
-	modbusscrc "github.com/hootrhino/rhilex/plugin/modbus_crc_tools"
 	modbusscanner "github.com/hootrhino/rhilex/plugin/modbus_scanner"
 	ngrokc "github.com/hootrhino/rhilex/plugin/ngrokc"
 	telemetry "github.com/hootrhino/rhilex/plugin/telemetry"
-	ttyterminal "github.com/hootrhino/rhilex/plugin/ttyd_terminal"
 	usbmonitor "github.com/hootrhino/rhilex/plugin/usb_monitor"
+	"github.com/hootrhino/rhilex/plugin/webterminal"
 	ini "gopkg.in/ini.v1"
 
 	apiServer "github.com/hootrhino/rhilex/component/apiserver"
@@ -91,10 +90,11 @@ func loadOtherPlugin() {
 		name := strings.TrimPrefix(section.Name(), "plugin.")
 		enable, err := section.GetKey("enable")
 		if err != nil {
+			glogger.GLogger.Error(err)
 			continue
 		}
 		if !enable.MustBool(false) {
-			glogger.GLogger.Warnf("Plugin is disable:%s", name)
+			glogger.GLogger.Fatalf("'enable' Must be Bool")
 			continue
 		}
 		var plugin typex.XPlugin
@@ -107,12 +107,6 @@ func loadOtherPlugin() {
 		if name == "modbus_scanner" {
 			plugin = modbusscanner.NewModbusScanner()
 		}
-		if name == "ttyd" {
-			plugin = ttyterminal.NewWebTTYPlugin()
-		}
-		if name == "modbus_crc_tools" {
-			plugin = modbusscrc.NewModbusCrcCalculator()
-		}
 		if name == "soft_wdog" {
 			plugin = wdog.NewGenericWatchDog()
 		}
@@ -124,6 +118,9 @@ func loadOtherPlugin() {
 		}
 		if name == "discover" {
 			plugin = discover.NewDiscoverPlugin()
+		}
+		if name == "webterminal" {
+			plugin = webterminal.NewWebTerminal()
 		}
 		if plugin != nil {
 			if err := plugins.LoadPlugin(section.Name(), plugin); err != nil {
