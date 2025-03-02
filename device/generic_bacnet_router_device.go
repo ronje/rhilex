@@ -50,7 +50,7 @@ type BacnetRouterMainConfig struct {
 
 type BacnetRouter struct {
 	typex.XStatus
-	status               typex.DeviceState
+	status               typex.SourceState
 	mainConfig           BacnetRouterMainConfig
 	bacnetClient         bacnet.Client
 	selfPropertyData     map[uint32][2]btypes.Object
@@ -102,7 +102,7 @@ func NewBacnetRouter(e typex.Rhilex) typex.XDevice {
 		Id   uint32
 		Tag  string
 	}{}
-	br.status = typex.DEV_DOWN
+	br.status = typex.SOURCE_DOWN
 	return br
 }
 
@@ -172,16 +172,16 @@ func (br *BacnetRouter) Start(cctx typex.CCTX) error {
 	go client.StartPoll(br.Ctx)
 	br.bacnetClient = client
 	client.SetLogger(glogger.GLogger.Logger)
-	br.status = typex.DEV_UP
+	br.status = typex.SOURCE_UP
 	return nil
 }
 
-func (br *BacnetRouter) Status() typex.DeviceState {
+func (br *BacnetRouter) Status() typex.SourceState {
 	return br.status
 }
 
 func (br *BacnetRouter) Stop() {
-	br.status = typex.DEV_DOWN
+	br.status = typex.SOURCE_DOWN
 	if br.CancelCTX != nil {
 		br.CancelCTX()
 	}
@@ -196,7 +196,7 @@ func (br *BacnetRouter) Details() *typex.Device {
 	return br.RuleEngine.GetDevice(br.PointId)
 }
 
-func (br *BacnetRouter) SetState(status typex.DeviceState) {
+func (br *BacnetRouter) SetState(status typex.SourceState) {
 	br.status = status
 }
 

@@ -22,7 +22,7 @@ func CtrlDevice(rx typex.Rhilex, uuid string) func(*lua.LState) int {
 		data := l.ToString(4)
 		Device := rx.GetDevice(devUUID)
 		if Device != nil {
-			if Device.Device.Status() == typex.DEV_UP {
+			if Device.Device.Status() == typex.SOURCE_UP {
 				result, err := Device.Device.OnCtrl([]byte(cmd), []byte(data))
 				//
 				CtrlResponse := hex.EncodeToString(result)

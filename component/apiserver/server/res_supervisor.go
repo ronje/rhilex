@@ -189,7 +189,7 @@ func StartDeviceSupervisor(DeviceCtx context.Context, device *typex.Device, rule
 
 		// 资源可能不会及时DOWN
 		currentDeviceStatus := currentDevice.Device.Status()
-		if currentDeviceStatus == typex.DEV_DOWN {
+		if currentDeviceStatus == typex.SOURCE_DOWN {
 			ErrMsg := ""
 			Slot := intercache.GetSlot("__DefaultRuleEngine")
 			if Slot != nil {

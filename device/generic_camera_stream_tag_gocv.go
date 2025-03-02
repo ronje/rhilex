@@ -45,7 +45,7 @@ type _MainConfig struct {
 // 摄像头
 type videoCamera struct {
 	typex.XStatus
-	status        typex.DeviceState
+	status        typex.SourceState
 	mainConfig    _MainConfig
 	ffmpegProcess *exec.Cmd
 }
@@ -53,7 +53,7 @@ type videoCamera struct {
 func NewVideoCamera(e typex.Rhilex) typex.XDevice {
 	videoCamera := new(videoCamera)
 	videoCamera.RuleEngine = e
-	videoCamera.status = typex.DEV_DOWN
+	videoCamera.status = typex.SOURCE_DOWN
 	videoCamera.mainConfig = _MainConfig{
 		InputMode:    __INPUT_LOCAL_CAMERA,              // 默认是本地摄像头
 		InputAddr:    "0",                               // 默认值
@@ -107,7 +107,7 @@ func (vc *videoCamera) Start(cctx typex.CCTX) error {
 			pushUrl := __internal_jpeg_stream_server_url + calculateMD5(vc.Details().Name)
 			go vc.startFFMPEGProcess(vc.mainConfig.InputAddr, pushUrl)
 		}
-		vc.status = typex.DEV_UP
+		vc.status = typex.SOURCE_UP
 		return nil
 	}
 	// 本地FLV只能推FLV格式
@@ -117,7 +117,7 @@ func (vc *videoCamera) Start(cctx typex.CCTX) error {
 			pushUrl := __internal_ws_server_url + calculateMD5(vc.Details().Name)
 			go vc.startFFMPEGProcess(vc.mainConfig.InputAddr, pushUrl)
 		}
-		vc.status = typex.DEV_UP
+		vc.status = typex.SOURCE_UP
 		return nil
 	}
 	// 输出到远端只能H264
@@ -126,7 +126,7 @@ func (vc *videoCamera) Start(cctx typex.CCTX) error {
 			// 直接使用远程地址
 			go vc.startFFMPEGProcess(vc.mainConfig.InputAddr, vc.mainConfig.OutputAddr)
 		}
-		vc.status = typex.DEV_UP
+		vc.status = typex.SOURCE_UP
 		return nil
 	}
 	glogger.GLogger.Errorf("Start failed, Output Mode Invalid:%s", vc.mainConfig.OutputMode)
@@ -143,12 +143,12 @@ func (vc *videoCamera) OnCtrl(cmd []byte, args []byte) ([]byte, error) {
 }
 
 // 设备当前状态
-func (vc *videoCamera) Status() typex.DeviceState {
+func (vc *videoCamera) Status() typex.SourceState {
 	return vc.status
 }
 
 func (vc *videoCamera) Stop() {
-	vc.status = typex.DEV_DOWN
+	vc.status = typex.SOURCE_DOWN
 	if vc.CancelCTX != nil {
 		vc.CancelCTX()
 	}
@@ -160,7 +160,7 @@ func (vc *videoCamera) Details() *typex.Device {
 
 }
 
-func (vc *videoCamera) SetState(_ typex.DeviceState) {
+func (vc *videoCamera) SetState(_ typex.SourceState) {
 
 }
 
@@ -183,7 +183,7 @@ func (vc *videoCamera) OnDCACall(_ string, _ string, _ any) typex.DCAResult {
 
 func (vc *videoCamera) startFFMPEGProcess(inputUrl, pushAddr string) {
 	defer func() {
-		vc.status = typex.DEV_DOWN
+		vc.status = typex.SOURCE_DOWN
 		if vc.ffmpegProcess != nil {
 			vc.stopFFMPEGProcess()
 		}

@@ -73,7 +73,7 @@ func DeviceDetail(c *gin.Context, ruleEngine typex.Rhilex) {
 	//
 	device := ruleEngine.GetDevice(mdev.UUID)
 	if device == nil {
-		DeviceVo.State = int(typex.DEV_STOP)
+		DeviceVo.State = int(typex.SOURCE_STOP)
 	} else {
 		DeviceVo.State = int(device.Device.Status())
 	}
@@ -105,7 +105,7 @@ func ListDevice(c *gin.Context, ruleEngine typex.Rhilex) {
 		//
 		device := ruleEngine.GetDevice(mdev.UUID)
 		if device == nil {
-			DeviceVo.State = int(typex.DEV_STOP)
+			DeviceVo.State = int(typex.SOURCE_STOP)
 		} else {
 			DeviceVo.State = int(device.Device.Status())
 		}
@@ -143,7 +143,7 @@ func ListDeviceByGroup(c *gin.Context, ruleEngine typex.Rhilex) {
 		//
 		device := ruleEngine.GetDevice(mdev.UUID)
 		if device == nil {
-			DeviceVo.State = int(typex.DEV_STOP)
+			DeviceVo.State = int(typex.SOURCE_STOP)
 		} else {
 			DeviceVo.State = int(device.Device.Status())
 		}
@@ -267,7 +267,7 @@ func DeleteDevice(c *gin.Context, ruleEngine typex.Rhilex) {
 NEXT:
 	old := ruleEngine.GetDevice(uuid)
 	if old != nil {
-		if old.Device.Status() == typex.DEV_UP {
+		if old.Device.Status() == typex.SOURCE_UP {
 			old.Device.Stop()
 		}
 	}

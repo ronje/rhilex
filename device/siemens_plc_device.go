@@ -66,7 +66,7 @@ type S1200MainConfig struct {
 // https://www.ad.siemens.com.cn/productportal/prods/s7-1200_plc_easy_plus/07-Program/02-basic/01-Data_Type/01-basic.html
 type SIEMENS_PLC struct {
 	typex.XStatus
-	status              typex.DeviceState
+	status              typex.SourceState
 	RuleEngine          typex.Rhilex
 	mainConfig          S1200MainConfig
 	client              gos7.Client
@@ -168,12 +168,12 @@ func (s1200 *SIEMENS_PLC) Start(cctx typex.CCTX) error {
 	if err := s1200.handler.Connect(); err != nil {
 		return err
 	} else {
-		s1200.status = typex.DEV_UP
+		s1200.status = typex.SOURCE_UP
 	}
 
 	s1200.client = gos7.NewClient(s1200.handler)
 	if !s1200.mainConfig.CommonConfig.AutoRequest {
-		s1200.status = typex.DEV_UP
+		s1200.status = typex.SOURCE_UP
 		return nil
 	}
 	go func(ctx context.Context) {
@@ -206,9 +206,9 @@ func (s1200 *SIEMENS_PLC) Start(cctx typex.CCTX) error {
 }
 
 // 设备当前状态
-func (s1200 *SIEMENS_PLC) Status() typex.DeviceState {
+func (s1200 *SIEMENS_PLC) Status() typex.SourceState {
 	if s1200.client == nil {
-		return typex.DEV_DOWN
+		return typex.SOURCE_DOWN
 	}
 	return s1200.status
 
@@ -216,7 +216,7 @@ func (s1200 *SIEMENS_PLC) Status() typex.DeviceState {
 
 // 停止设备
 func (s1200 *SIEMENS_PLC) Stop() {
-	s1200.status = typex.DEV_DOWN
+	s1200.status = typex.SOURCE_DOWN
 	if s1200.CancelCTX != nil {
 		s1200.CancelCTX()
 	}
@@ -232,7 +232,7 @@ func (s1200 *SIEMENS_PLC) Details() *typex.Device {
 }
 
 // 状态
-func (s1200 *SIEMENS_PLC) SetState(status typex.DeviceState) {
+func (s1200 *SIEMENS_PLC) SetState(status typex.SourceState) {
 	s1200.status = status
 }
 

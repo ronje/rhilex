@@ -139,7 +139,7 @@ type Rhilex interface {
 	//
 	RestartDevice(uuid string) error
 	//
-	SetDeviceStatus(uuid string, s DeviceState)
+	SetDeviceStatus(uuid string, s SourceState)
 	//
 	SetSourceStatus(uuid string, s SourceState)
 	// 检查类型是否支持

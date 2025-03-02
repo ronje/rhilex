@@ -63,7 +63,7 @@ type CJT188_2004_MasterGatewayMainConfig struct {
 
 type CJT188_2004_MasterGateway struct {
 	typex.XStatus
-	status      typex.DeviceState
+	status      typex.SourceState
 	mainConfig  CJT188_2004_MasterGatewayMainConfig
 	DataPoints  map[string]CJT188_2004_DataPoint
 	uartHandler *cjt1882004.CJT188ClientHandler
@@ -201,7 +201,7 @@ func (gw *CJT188_2004_MasterGateway) Start(cctx typex.CCTX) error {
 		goto END
 	}
 END:
-	gw.status = typex.DEV_UP
+	gw.status = typex.SOURCE_UP
 	return nil
 }
 
@@ -335,22 +335,22 @@ func (gw *CJT188_2004_MasterGateway) work(handler *cjt1882004.CJT188ClientHandle
 		}
 	}
 }
-func (gw *CJT188_2004_MasterGateway) Status() typex.DeviceState {
+func (gw *CJT188_2004_MasterGateway) Status() typex.SourceState {
 	if gw.mainConfig.CommonConfig.Mode == "UART" {
 		if gw.uartHandler == nil {
-			return typex.DEV_DOWN
+			return typex.SOURCE_DOWN
 		}
 	}
 	if gw.mainConfig.CommonConfig.Mode == "TCP" {
 		if gw.tcpHandler == nil {
-			return typex.DEV_DOWN
+			return typex.SOURCE_DOWN
 		}
 	}
 	return gw.status
 }
 
 func (gw *CJT188_2004_MasterGateway) Stop() {
-	gw.status = typex.DEV_DOWN
+	gw.status = typex.SOURCE_DOWN
 	if gw.CancelCTX != nil {
 		gw.CancelCTX()
 	}
@@ -371,7 +371,7 @@ func (gw *CJT188_2004_MasterGateway) Details() *typex.Device {
 	return gw.RuleEngine.GetDevice(gw.PointId)
 }
 
-func (gw *CJT188_2004_MasterGateway) SetState(status typex.DeviceState) {
+func (gw *CJT188_2004_MasterGateway) SetState(status typex.SourceState) {
 	gw.status = status
 }
 

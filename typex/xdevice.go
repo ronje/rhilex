@@ -6,45 +6,6 @@
 // 因此需要抽象出来一个层专门来描述这些设备
 package typex
 
-type DeviceState int
-
-const (
-	// 设备故障
-	DEV_DOWN DeviceState = 0
-	// 设备启用
-	DEV_UP DeviceState = 1
-	// 暂停，这是个占位值，只为了和其他地方统一值,但是没用
-	_ DeviceState = 2
-	// 外部停止
-	DEV_STOP DeviceState = 3
-	// 准备态
-	DEV_PENDING DeviceState = 4
-	// 被禁用
-	DEV_DISABLE DeviceState = 5
-)
-
-func (s DeviceState) String() string {
-	if s == 0 {
-		return "DOWN"
-	}
-	if s == 1 {
-		return "UP"
-	}
-	if s == 2 {
-		return "PAUSE"
-	}
-	if s == 3 {
-		return "STOP"
-	}
-	if s == 4 {
-		return "PENDING"
-	}
-	if s == 5 {
-		return "DISABLE"
-	}
-	return "ERROR"
-}
-
 type DeviceType string
 
 func (d DeviceType) String() string {
@@ -106,13 +67,13 @@ type XDevice interface {
 	// 新特性, 适用于自定义协议读写
 	OnCtrl(cmd []byte, args []byte) ([]byte, error)
 	// 设备当前状态
-	Status() DeviceState
+	Status() SourceState
 	// 停止设备, 在这里释放资源,一般是先置状态为STOP,然后CancelContext()
 	Stop()
 
 	Details() *Device
 	// 状态
-	SetState(DeviceState)
+	SetState(SourceState)
 	// 外部调用, 该接口是个高级功能, 准备为了设计分布式部署设备的时候用, 但是相当长时间内都不会开启
 	// 默认情况下该接口没有用
 	OnDCACall(UUID string, Command string, Args any) DCAResult

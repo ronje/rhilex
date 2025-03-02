@@ -33,7 +33,7 @@ type NemaGpsMainConfig struct {
 type NemaGpsMasterDevice struct {
 	typex.XStatus
 	serialPort serial.Port
-	status     typex.DeviceState
+	status     typex.SourceState
 	RuleEngine typex.Rhilex
 	mainConfig NemaGpsMainConfig
 	locker     sync.Locker
@@ -127,7 +127,7 @@ func (gpsd *NemaGpsMasterDevice) Start(cctx typex.CCTX) error {
 			}
 		}
 	}(gpsd.Ctx)
-	gpsd.status = typex.DEV_UP
+	gpsd.status = typex.SOURCE_UP
 	return nil
 }
 
@@ -136,16 +136,16 @@ func (gpsd *NemaGpsMasterDevice) OnCtrl(cmd []byte, args []byte) ([]byte, error)
 }
 
 // 设备当前状态
-func (gpsd *NemaGpsMasterDevice) Status() typex.DeviceState {
+func (gpsd *NemaGpsMasterDevice) Status() typex.SourceState {
 	if gpsd.serialPort == nil {
-		gpsd.status = typex.DEV_DOWN
+		gpsd.status = typex.SOURCE_DOWN
 	}
 	return gpsd.status
 }
 
 // 停止设备
 func (gpsd *NemaGpsMasterDevice) Stop() {
-	gpsd.status = typex.DEV_DOWN
+	gpsd.status = typex.SOURCE_DOWN
 	intercache.UnRegisterSlot(gpsd.PointId)
 	if gpsd.CancelCTX != nil {
 		gpsd.CancelCTX()
@@ -160,7 +160,7 @@ func (gpsd *NemaGpsMasterDevice) Details() *typex.Device {
 	return gpsd.RuleEngine.GetDevice(gpsd.PointId)
 }
 
-func (gpsd *NemaGpsMasterDevice) SetState(status typex.DeviceState) {
+func (gpsd *NemaGpsMasterDevice) SetState(status typex.SourceState) {
 	gpsd.status = status
 }
 

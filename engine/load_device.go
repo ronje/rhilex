@@ -147,7 +147,7 @@ func startDevice(xDevice typex.XDevice, e *RuleEngine,
 		glogger.GLogger.Error("Device start error:", err)
 		return err
 	}
-	xDevice.SetState(typex.DEV_UP)
+	xDevice.SetState(typex.SOURCE_UP)
 	// LoadNewestDevice
 	// 2023-06-14新增： 重启成功后数据会丢失,还得加载最新的Rule到设备中
 	device := xDevice.Details()

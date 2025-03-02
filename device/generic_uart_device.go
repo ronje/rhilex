@@ -52,7 +52,7 @@ type GenericUartMainConfig struct {
 type GenericUartDevice struct {
 	typex.XStatus
 	serialPort serial.Port
-	status     typex.DeviceState
+	status     typex.SourceState
 	RuleEngine typex.Rhilex
 	mainConfig GenericUartMainConfig
 	locker     sync.Locker
@@ -154,7 +154,7 @@ func (uart *GenericUartDevice) Start(cctx typex.CCTX) error {
 
 	uart.serialPort = serialPort
 	if !*uart.mainConfig.CommonConfig.AutoRequest {
-		uart.status = typex.DEV_UP
+		uart.status = typex.SOURCE_UP
 		return nil
 	}
 	go func(ctx context.Context) {
@@ -206,7 +206,7 @@ func (uart *GenericUartDevice) Start(cctx typex.CCTX) error {
 			}
 		}
 	}(uart.Ctx)
-	uart.status = typex.DEV_UP
+	uart.status = typex.SOURCE_UP
 	return nil
 }
 
@@ -239,16 +239,16 @@ func (uart *GenericUartDevice) OnCtrl(cmd []byte, args []byte) ([]byte, error) {
 }
 
 // 设备当前状态
-func (uart *GenericUartDevice) Status() typex.DeviceState {
+func (uart *GenericUartDevice) Status() typex.SourceState {
 	if uart.serialPort == nil {
-		uart.status = typex.DEV_DOWN
+		uart.status = typex.SOURCE_DOWN
 	}
 	return uart.status
 }
 
 // 停止设备
 func (uart *GenericUartDevice) Stop() {
-	uart.status = typex.DEV_DOWN
+	uart.status = typex.SOURCE_DOWN
 	if uart.CancelCTX != nil {
 		uart.CancelCTX()
 	}
@@ -262,7 +262,7 @@ func (uart *GenericUartDevice) Details() *typex.Device {
 	return uart.RuleEngine.GetDevice(uart.PointId)
 }
 
-func (uart *GenericUartDevice) SetState(status typex.DeviceState) {
+func (uart *GenericUartDevice) SetState(status typex.SourceState) {
 	uart.status = status
 }
 

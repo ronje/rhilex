@@ -25,7 +25,7 @@ type Device struct {
 	AutoRestart bool            `json:"autoRestart"` // 是否允许挂了的时候重启
 	Description string          `json:"description"` // 设备描述信息
 	BindRules   map[string]Rule `json:"-"`           // 与之关联的规则
-	State       DeviceState     `json:"state"`       // 状态
+	State       SourceState     `json:"state"`       // 状态
 	Config      map[string]any  `json:"config"`      // 配置
 	Device      XDevice         `json:"-"`           // 实体设备
 }

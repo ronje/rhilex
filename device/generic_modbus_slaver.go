@@ -49,7 +49,7 @@ type ModbusSlaverConfig struct {
 
 type ModbusSlaver struct {
 	typex.XStatus
-	status           typex.DeviceState
+	status           typex.SourceState
 	mainConfig       ModbusSlaverConfig
 	registers        map[string]*dmodbus.ModbusRegister
 	server           *mbserver.Server
@@ -96,7 +96,7 @@ func NewGenericModbusSlaver(e typex.Rhilex) typex.XDevice {
 	}
 
 	mdev.registers = map[string]*dmodbus.ModbusRegister{}
-	mdev.status = typex.DEV_DOWN
+	mdev.status = typex.SOURCE_DOWN
 
 	return mdev
 }
@@ -254,11 +254,11 @@ func (mdev *ModbusSlaver) Start(cctx typex.CCTX) error {
 			return err2
 		}
 	}
-	mdev.status = typex.DEV_UP
+	mdev.status = typex.SOURCE_UP
 	return nil
 }
 
-func (mdev *ModbusSlaver) Status() typex.DeviceState {
+func (mdev *ModbusSlaver) Status() typex.SourceState {
 	return mdev.status
 }
 
@@ -276,7 +276,7 @@ func getRegisterAddressAndNumber(frame mbserver.Framer) (int, int, int) {
 }
 
 func (mdev *ModbusSlaver) Stop() {
-	mdev.status = typex.DEV_DOWN
+	mdev.status = typex.SOURCE_DOWN
 	if mdev.CancelCTX != nil {
 		mdev.CancelCTX()
 	}
@@ -290,7 +290,7 @@ func (mdev *ModbusSlaver) Details() *typex.Device {
 	return mdev.RuleEngine.GetDevice(mdev.PointId)
 }
 
-func (mdev *ModbusSlaver) SetState(status typex.DeviceState) {
+func (mdev *ModbusSlaver) SetState(status typex.SourceState) {
 	mdev.status = status
 }
 

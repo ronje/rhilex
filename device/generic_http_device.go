@@ -38,7 +38,7 @@ type __HttpMainConfig struct {
 type GenericHttpDevice struct {
 	typex.XStatus
 	client     http.Client
-	status     typex.DeviceState
+	status     typex.SourceState
 	RuleEngine typex.Rhilex
 	mainConfig __HttpMainConfig
 	locker     sync.Locker
@@ -126,18 +126,18 @@ func (hd *GenericHttpDevice) Start(cctx typex.CCTX) error {
 		}()
 
 	}
-	hd.status = typex.DEV_UP
+	hd.status = typex.SOURCE_UP
 	return nil
 }
 
 // 设备当前状态
-func (hd *GenericHttpDevice) Status() typex.DeviceState {
+func (hd *GenericHttpDevice) Status() typex.SourceState {
 	return hd.status
 }
 
 // 停止设备
 func (hd *GenericHttpDevice) Stop() {
-	hd.status = typex.DEV_DOWN
+	hd.status = typex.SOURCE_DOWN
 	if hd.CancelCTX != nil {
 		hd.CancelCTX()
 	}
@@ -149,7 +149,7 @@ func (hd *GenericHttpDevice) Details() *typex.Device {
 }
 
 // 状态
-func (hd *GenericHttpDevice) SetState(status typex.DeviceState) {
+func (hd *GenericHttpDevice) SetState(status typex.SourceState) {
 	hd.status = status
 
 }

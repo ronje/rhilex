@@ -44,7 +44,7 @@ func TJCWriteToHmi(rx typex.Rhilex) func(*lua.LState) int {
 			args = append(args, l2.String())
 		})
 		if Device != nil {
-			if Device.Device.Status() == typex.DEV_UP {
+			if Device.Device.Status() == typex.SOURCE_UP {
 				bytes, errMarshal := json.Marshal(args)
 				if errMarshal != nil {
 					l.Push(lua.LString(errMarshal.Error()))

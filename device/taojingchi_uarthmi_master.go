@@ -39,7 +39,7 @@ type TaoJingChiHmiMainConfig struct {
 type TaoJingChiHmiDevice struct {
 	typex.XStatus
 	serialPort serial.Port
-	status     typex.DeviceState
+	status     typex.SourceState
 	RuleEngine typex.Rhilex
 	mainConfig TaoJingChiHmiMainConfig
 	locker     sync.Locker
@@ -112,13 +112,13 @@ func (uart *TaoJingChiHmiDevice) Start(cctx typex.CCTX) error {
 			data, err := readUntilEndMarker(uart.serialPort, buffer[:])
 			if err != nil {
 				glogger.Error(err)
-				uart.status = typex.DEV_DOWN
+				uart.status = typex.SOURCE_DOWN
 				return
 			}
 			uart.RuleEngine.WorkDevice(uart.Details(), string(data))
 		}
 	}(uart)
-	uart.status = typex.DEV_UP
+	uart.status = typex.SOURCE_UP
 	return nil
 }
 
@@ -172,16 +172,16 @@ func (uart *TaoJingChiHmiDevice) OnCtrl(cmd []byte, args []byte) ([]byte, error)
 }
 
 // 设备当前状态
-func (uart *TaoJingChiHmiDevice) Status() typex.DeviceState {
+func (uart *TaoJingChiHmiDevice) Status() typex.SourceState {
 	if uart.serialPort == nil {
-		uart.status = typex.DEV_DOWN
+		uart.status = typex.SOURCE_DOWN
 	}
 	return uart.status
 }
 
 // 停止设备
 func (uart *TaoJingChiHmiDevice) Stop() {
-	uart.status = typex.DEV_DOWN
+	uart.status = typex.SOURCE_DOWN
 	if uart.CancelCTX != nil {
 		uart.CancelCTX()
 	}
@@ -195,7 +195,7 @@ func (uart *TaoJingChiHmiDevice) Details() *typex.Device {
 	return uart.RuleEngine.GetDevice(uart.PointId)
 }
 
-func (uart *TaoJingChiHmiDevice) SetState(status typex.DeviceState) {
+func (uart *TaoJingChiHmiDevice) SetState(status typex.SourceState) {
 	uart.status = status
 }
 

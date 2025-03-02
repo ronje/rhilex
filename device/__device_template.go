@@ -34,7 +34,7 @@ type TemplateDeviceMainConfig struct {
 
 type TemplateDevice struct {
 	typex.XStatus
-	status     typex.DeviceState
+	status     typex.SourceState
 	mainConfig TemplateDeviceMainConfig
 }
 
@@ -58,16 +58,16 @@ func (hd *TemplateDevice) Start(cctx typex.CCTX) error {
 	hd.Ctx = cctx.Ctx
 	hd.CancelCTX = cctx.CancelCTX
 
-	hd.status = typex.DEV_UP
+	hd.status = typex.SOURCE_UP
 	return nil
 }
 
-func (hd *TemplateDevice) Status() typex.DeviceState {
+func (hd *TemplateDevice) Status() typex.SourceState {
 	return hd.Status
 }
 
 func (hd *TemplateDevice) Stop() {
-	hd.status = typex.DEV_DOWN
+	hd.status = typex.SOURCE_DOWN
 	hd.CancelCTX()
 }
 
@@ -75,7 +75,7 @@ func (hd *TemplateDevice) Details() *typex.Device {
 	return hd.RuleEngine.GetDevice(hd.PointId)
 }
 
-func (hd *TemplateDevice) SetState(status typex.DeviceState) {
+func (hd *TemplateDevice) SetState(status typex.SourceState) {
 	hd.status = status
 }
 

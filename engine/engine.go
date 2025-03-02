@@ -97,7 +97,7 @@ func (e *RuleEngine) Stop() {
 	}
 	for _, device := range e.Devices.Values() {
 		glogger.GLogger.Infof("Stop Device:(%s)", device.Name)
-		e.GetDevice(device.UUID).State = typex.DEV_STOP
+		e.GetDevice(device.UUID).State = typex.SOURCE_STOP
 		device.Device.Stop()
 		glogger.GLogger.Infof("Stop Device:(%s) Successfully", device.Name)
 	}
@@ -314,7 +314,7 @@ func (e *RuleEngine) RestartOutEnd(uuid string) error {
 func (e *RuleEngine) RestartDevice(uuid string) error {
 	if Device, ok := e.Devices.Get(uuid); ok {
 		if Device.Device != nil {
-			Device.Device.SetState(typex.DEV_DOWN) // Down 以后会被自动拉起来
+			Device.Device.SetState(typex.SOURCE_DOWN) // Down 以后会被自动拉起来
 		}
 		return nil
 	}
@@ -331,7 +331,7 @@ func (e *RuleEngine) CheckSourceType(Type typex.InEndType) error {
 
 // 0.7.0
 // 更新设备的运行时状态
-func (e *RuleEngine) SetDeviceStatus(uuid string, DeviceState typex.DeviceState) {
+func (e *RuleEngine) SetDeviceStatus(uuid string, DeviceState typex.SourceState) {
 	Device := e.GetDevice(uuid)
 	if Device != nil {
 		Device.State = DeviceState

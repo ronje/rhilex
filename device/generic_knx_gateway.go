@@ -35,7 +35,7 @@ type KNXGatewayMainConfig struct {
 
 type KNXGateway struct {
 	typex.XStatus
-	status      typex.DeviceState
+	status      typex.SourceState
 	mainConfig  KNXGatewayMainConfig
 	GroupTunnel knx.GroupTunnel
 }
@@ -64,16 +64,16 @@ func (hd *KNXGateway) Start(cctx typex.CCTX) error {
 		return err
 	}
 	hd.GroupTunnel = GroupTunnel
-	hd.status = typex.DEV_UP
+	hd.status = typex.SOURCE_UP
 	return nil
 }
 
-func (hd *KNXGateway) Status() typex.DeviceState {
+func (hd *KNXGateway) Status() typex.SourceState {
 	return hd.status
 }
 
 func (hd *KNXGateway) Stop() {
-	hd.status = typex.DEV_DOWN
+	hd.status = typex.SOURCE_DOWN
 	hd.CancelCTX()
 }
 
@@ -81,7 +81,7 @@ func (hd *KNXGateway) Details() *typex.Device {
 	return hd.RuleEngine.GetDevice(hd.PointId)
 }
 
-func (hd *KNXGateway) SetState(status typex.DeviceState) {
+func (hd *KNXGateway) SetState(status typex.SourceState) {
 	hd.status = status
 }
 

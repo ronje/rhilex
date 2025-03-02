@@ -106,7 +106,7 @@ func (g *ModbusMasterGroupedTag) String() string {
 
 type GenericModbusMaster struct {
 	typex.XStatus
-	status     typex.DeviceState
+	status     typex.SourceState
 	RuleEngine typex.Rhilex
 	//
 	rtuHandler *modbus.RTUClientHandler
@@ -178,7 +178,7 @@ func NewGenericModbusMaster(e typex.Rhilex) typex.XDevice {
 	mdev.RegisterWithTags = map[string]*dmodbus.ModbusRegister{}
 	mdev.RegisterGroups = []*ModbusMasterGroupedTag{}
 	mdev.Busy = false
-	mdev.status = typex.DEV_DOWN
+	mdev.status = typex.SOURCE_DOWN
 	return mdev
 }
 
@@ -474,7 +474,7 @@ func (mdev *GenericModbusMaster) Start(cctx typex.CCTX) error {
 		}
 	}
 
-	mdev.status = typex.DEV_UP
+	mdev.status = typex.SOURCE_UP
 	return nil
 }
 func (mdev *GenericModbusMaster) RTURead() []ReadRegisterValue {
@@ -485,17 +485,17 @@ func (mdev *GenericModbusMaster) TCPRead() []ReadRegisterValue {
 }
 
 // 设备当前状态
-func (mdev *GenericModbusMaster) Status() typex.DeviceState {
+func (mdev *GenericModbusMaster) Status() typex.SourceState {
 	// 容错5次
 	if mdev.retryTimes > 5 {
-		return typex.DEV_DOWN
+		return typex.SOURCE_DOWN
 	}
 	return mdev.status
 }
 
 // 停止设备
 func (mdev *GenericModbusMaster) Stop() {
-	mdev.status = typex.DEV_DOWN
+	mdev.status = typex.SOURCE_DOWN
 	if mdev.CancelCTX != nil {
 		mdev.CancelCTX()
 	}
@@ -520,7 +520,7 @@ func (mdev *GenericModbusMaster) Details() *typex.Device {
 }
 
 // 状态
-func (mdev *GenericModbusMaster) SetState(status typex.DeviceState) {
+func (mdev *GenericModbusMaster) SetState(status typex.SourceState) {
 	mdev.status = status
 }
 

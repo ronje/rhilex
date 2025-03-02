@@ -92,7 +92,7 @@ func ListCecolla(c *gin.Context, ruleEngine typex.Rhilex) {
 		CecollaVo.Action = mCecolla.Action
 		CecollaVo.Description = mCecolla.Description
 		CecollaVo.Config = mCecolla.GetConfig()
-		CecollaVo.State = int(typex.DEV_STOP)
+		CecollaVo.State = int(typex.SOURCE_STOP)
 		Group := service.GetResourceGroup(mCecolla.UUID)
 		CecollaVo.Gid = Group.UUID
 
@@ -125,7 +125,7 @@ func ListCecollaByGroup(c *gin.Context, ruleEngine typex.Rhilex) {
 		CecollaVo.Action = mCecolla.Action
 		CecollaVo.Description = mCecolla.Description
 		CecollaVo.Config = mCecolla.GetConfig()
-		CecollaVo.State = int(typex.DEV_STOP)
+		CecollaVo.State = int(typex.SOURCE_STOP)
 		Group := service.GetResourceGroup(mCecolla.UUID)
 		CecollaVo.Gid = Group.UUID
 

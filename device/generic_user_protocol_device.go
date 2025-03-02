@@ -61,7 +61,7 @@ type GenericUserProtocolConfig struct {
 }
 type GenericUserProtocolDevice struct {
 	typex.XStatus
-	status      typex.DeviceState
+	status      typex.SourceState
 	RuleEngine  typex.Rhilex
 	uartHandler *userproto.UserProtocolClientHandler
 	tcpHandler  *userproto.UserProtocolClientHandler
@@ -203,7 +203,7 @@ func (gw *GenericUserProtocolDevice) Start(cctx typex.CCTX) error {
 		goto END
 	}
 END:
-	gw.status = typex.DEV_UP
+	gw.status = typex.SOURCE_UP
 	return nil
 }
 
@@ -291,15 +291,15 @@ func (gw *GenericUserProtocolDevice) OnCtrl(cmd []byte, _ []byte) ([]byte, error
 }
 
 // 设备当前状态
-func (gw *GenericUserProtocolDevice) Status() typex.DeviceState {
+func (gw *GenericUserProtocolDevice) Status() typex.SourceState {
 	if gw.mainConfig.CommonConfig.Mode == "UART" {
 		if gw.uartHandler == nil {
-			return typex.DEV_DOWN
+			return typex.SOURCE_DOWN
 		}
 	}
 	if gw.mainConfig.CommonConfig.Mode == "TCP" {
 		if gw.tcpHandler == nil {
-			return typex.DEV_DOWN
+			return typex.SOURCE_DOWN
 		}
 	}
 	return gw.status
@@ -307,7 +307,7 @@ func (gw *GenericUserProtocolDevice) Status() typex.DeviceState {
 
 // 停止设备
 func (gw *GenericUserProtocolDevice) Stop() {
-	gw.status = typex.DEV_DOWN
+	gw.status = typex.SOURCE_DOWN
 	if gw.CancelCTX != nil {
 		gw.CancelCTX()
 	}
@@ -330,7 +330,7 @@ func (gw *GenericUserProtocolDevice) Details() *typex.Device {
 }
 
 // 状态
-func (gw *GenericUserProtocolDevice) SetState(status typex.DeviceState) {
+func (gw *GenericUserProtocolDevice) SetState(status typex.SourceState) {
 	gw.status = status
 }
 
