@@ -1,9 +1,18 @@
-// 抽象设备：
-// 1.0 以后的大功能：支持抽象设备，抽象设备就是外挂的设备，Rhilex本来是个规则引擎，但是1.0之前的版本没有对硬件设备进行抽象支持
-// 因此，1.0以后增加对硬件的抽象
-// Target Source 描述了数据的流向，抽象设备描述了数据的载体。
-// 举例：外挂一个设备，这个设备具备双工控制功能，例如电磁开关等，此时它强调的是设备的物理功能，而数据则不是主体。
-// 因此需要抽象出来一个层专门来描述这些设备
+// Copyright (C) 2024 wwhai
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Affero General Public License as
+// published by the Free Software Foundation, either version 3 of the
+// License, or (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Affero General Public License for more details.
+//
+// You should have received a copy of the GNU Affero General Public License
+// along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
 package typex
 
 type DeviceType string
