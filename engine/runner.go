@@ -88,13 +88,19 @@ func loadOtherPlugin() {
 	sections := cfg.ChildSections("plugin")
 	for _, section := range sections {
 		name := strings.TrimPrefix(section.Name(), "plugin.")
+		if name == "http_server" {
+			continue
+		}
+		if name == "license_manager" {
+			continue
+		}
 		enable, err := section.GetKey("enable")
 		if err != nil {
 			glogger.GLogger.Error(err)
 			continue
 		}
+
 		if !enable.MustBool(false) {
-			glogger.GLogger.Fatalf("'enable' Must be Bool")
 			continue
 		}
 		var plugin typex.XPlugin

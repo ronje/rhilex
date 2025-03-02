@@ -16,11 +16,15 @@ package webterminal
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"os"
 	"os/exec"
+	"runtime"
 	"sync"
 	"time"
+
+	_ "embed"
 
 	"github.com/creack/pty"
 	"github.com/gorilla/websocket"
@@ -29,6 +33,9 @@ import (
 	"github.com/hootrhino/rhilex/utils"
 	"gopkg.in/ini.v1"
 )
+
+//go:embed index.html
+var indexHTML []byte
 
 type WebTerminalConfig struct {
 	ListenPort int `ini:"listen_port" json:"listen_port"`
@@ -60,6 +67,9 @@ func NewWebTerminal() *WebTerminal {
 
 func (wt *WebTerminal) Init(config *ini.Section) error {
 	glogger.GLogger.Debug("Init web terminal")
+	if runtime.GOOS == "windows" {
+		return fmt.Errorf("WebTerminal not support windows")
+	}
 	if err := utils.InIMapToStruct(config, &wt.mainConfig); err != nil {
 		return err
 	}
@@ -90,6 +100,9 @@ func (wt *WebTerminal) Start(rhilex typex.Rhilex) error {
 	}
 
 	serverMux := http.NewServeMux()
+	serverMux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		w.Write(indexHTML)
+	})
 	serverMux.HandleFunc("/ws", wt.handleTerminal)
 	wt.httpServer = &http.Server{
 		Addr:    ":2579",
@@ -111,7 +124,7 @@ func (wt *WebTerminal) Stop() error {
 	// 取消上下文
 	wt.cancel()
 	// 等待所有 goroutine 完成
-	wt.wg.Wait()
+	// wt.wg.Wait()
 
 	if wt.terminalPty != nil {
 		if err := wt.terminalPty.Close(); err != nil {
