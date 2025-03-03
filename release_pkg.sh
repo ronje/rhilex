@@ -141,7 +141,7 @@ upload_to_file_server(){
         echo "[*] Uploading [$FILE] to [${UPLOAD_URL}${upload_path}]"
         curl -T "$FILE" "${UPLOAD_URL}${upload_path}" --user $BASIC_AUTH
         if [ $? -eq 0 ]; then
-            echo "[v] Upload $FILE successfully."
+            echo "[v] Upload successfully, Download URL: ${UPLOAD_URL}${upload_path}"
         else
             echo "[x] Upload $FILE failure."
         fi
