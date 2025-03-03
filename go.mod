@@ -11,6 +11,7 @@ require (
 	github.com/chirpstack/chirpstack/api/go/v4 v4.9.0
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/eclipse/paho.mqtt.golang v1.5.0
+	github.com/fsnotify/fsnotify v1.7.0
 	github.com/gin-contrib/static v1.1.2
 	github.com/gin-gonic/gin v1.10.0
 	github.com/go-playground/validator/v10 v10.22.1

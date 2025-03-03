@@ -27,7 +27,7 @@ import (
 	modbusscanner "github.com/hootrhino/rhilex/plugin/modbus_scanner"
 	ngrokc "github.com/hootrhino/rhilex/plugin/ngrokc"
 	telemetry "github.com/hootrhino/rhilex/plugin/telemetry"
-	usbmonitor "github.com/hootrhino/rhilex/plugin/usb_monitor"
+	usbmonitor "github.com/hootrhino/rhilex/plugin/usbmonitor"
 	"github.com/hootrhino/rhilex/plugin/webterminal"
 	ini "gopkg.in/ini.v1"
 
