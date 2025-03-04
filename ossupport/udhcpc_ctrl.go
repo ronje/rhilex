@@ -20,8 +20,57 @@ import (
 	"fmt"
 	"log"
 	"os/exec"
+	"strings"
 	"time"
 )
+
+// UDHCPClient 封装 udhcpc 功能的结构体
+type UDHCPClient struct {
+	Interface string
+}
+
+// NewUDHCPClient 创建一个新的 UDHCPClient 实例
+func NewUDHCPClient(iface string) *UDHCPClient {
+	return &UDHCPClient{
+		Interface: iface,
+	}
+}
+
+// RunCommand 执行 udhcpc 命令的辅助函数
+func (u *UDHCPClient) RunCommand(args ...string) (string, error) {
+	cmdArgs := append([]string{"-i", u.Interface}, args...)
+	cmd := exec.Command("udhcpc", cmdArgs...)
+	output, err := cmd.CombinedOutput()
+	if err != nil {
+		return "", fmt.Errorf("failed to run udhcpc command: %v, output: %s", err, string(output))
+	}
+	return strings.TrimSpace(string(output)), nil
+}
+
+// RequestIP 向 DHCP 服务器请求 IP 地址
+func (u *UDHCPClient) RequestIP() (string, error) {
+	return u.RunCommand()
+}
+
+// RequestIPInBackground 以守护进程模式请求 IP 地址
+func (u *UDHCPClient) RequestIPInBackground() (string, error) {
+	return u.RunCommand("-b")
+}
+
+// RequestIPWithTimeout 以指定超时时间请求 IP 地址
+func (u *UDHCPClient) RequestIPWithTimeout(timeout int) (string, error) {
+	return u.RunCommand("-t", fmt.Sprintf("%d", timeout))
+}
+
+// RequestIPQuietly 以安静模式请求 IP 地址
+func (u *UDHCPClient) RequestIPQuietly() (string, error) {
+	return u.RunCommand("-q")
+}
+
+// RequestIPWithScript 以指定脚本请求 IP 地址
+func (u *UDHCPClient) RequestIPWithScript(scriptPath string) (string, error) {
+	return u.RunCommand("-s", scriptPath)
+}
 
 // AllocateIPAddressUsingUdhcpc 使用 udhcpc 命令为指定的网络接口分配 IP 地址。
 // interfaceName 是要分配 IP 地址的网络接口的名称。
