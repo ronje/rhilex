@@ -120,7 +120,7 @@ func (tc *DefaultTransceiver) Info() CommunicatorInfo {
 	return CommunicatorInfo{
 		Name:     tc.mainConfig.Name,
 		Model:    "RHILEX TRANSCEIVER",
-		Type:     LORA,
+		Type:     COMMON_RF,
 		Vendor:   "RHILEX-TECH",
 		Mac:      "00:00:00:00:00:00",
 		Firmware: "v0.0.1",
