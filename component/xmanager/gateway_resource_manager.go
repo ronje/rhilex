@@ -123,6 +123,22 @@ func (m *GatewayResourceManager) GetResourceList() []*GatewayResourceWorker {
 	return m.resources.Values()
 }
 
+// PaginationResources 分页获取
+func (m *GatewayResourceManager) PaginationResources(current, size int) []*GatewayResourceWorker {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+	workers := m.resources.Values()
+	start := (current - 1) * size
+	end := start + size
+	if start > len(workers) {
+		start = len(workers)
+	}
+	if end > len(workers) {
+		end = len(workers)
+	}
+	return workers[start:end]
+}
+
 // GetResourceDetails 获取资源详情
 func (m *GatewayResourceManager) GetResource(uuid string) (*GatewayResourceWorker, error) {
 	m.mu.RLock()
