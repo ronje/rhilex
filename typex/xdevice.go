@@ -1,49 +1,19 @@
-// 抽象设备：
-// 1.0 以后的大功能：支持抽象设备，抽象设备就是外挂的设备，Rhilex本来是个规则引擎，但是1.0之前的版本没有对硬件设备进行抽象支持
-// 因此，1.0以后增加对硬件的抽象
-// Target Source 描述了数据的流向，抽象设备描述了数据的载体。
-// 举例：外挂一个设备，这个设备具备双工控制功能，例如电磁开关等，此时它强调的是设备的物理功能，而数据则不是主体。
-// 因此需要抽象出来一个层专门来描述这些设备
+// Copyright (C) 2024 wwhai
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Affero General Public License as
+// published by the Free Software Foundation, either version 3 of the
+// License, or (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Affero General Public License for more details.
+//
+// You should have received a copy of the GNU Affero General Public License
+// along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
 package typex
-
-type DeviceState int
-
-const (
-	// 设备故障
-	DEV_DOWN DeviceState = 0
-	// 设备启用
-	DEV_UP DeviceState = 1
-	// 暂停，这是个占位值，只为了和其他地方统一值,但是没用
-	_ DeviceState = 2
-	// 外部停止
-	DEV_STOP DeviceState = 3
-	// 准备态
-	DEV_PENDING DeviceState = 4
-	// 被禁用
-	DEV_DISABLE DeviceState = 5
-)
-
-func (s DeviceState) String() string {
-	if s == 0 {
-		return "DOWN"
-	}
-	if s == 1 {
-		return "UP"
-	}
-	if s == 2 {
-		return "PAUSE"
-	}
-	if s == 3 {
-		return "STOP"
-	}
-	if s == 4 {
-		return "PENDING"
-	}
-	if s == 5 {
-		return "DISABLE"
-	}
-	return "ERROR"
-}
 
 type DeviceType string
 
@@ -88,9 +58,9 @@ const (
 )
 
 type DCAModel struct {
-	UUID    string      `json:"uuid"`
-	Command string      `json:"command"`
-	Args    interface{} `json:"args"`
+	UUID    string `json:"uuid"`
+	Command string `json:"command"`
+	Args    any    `json:"args"`
 }
 type DCAResult struct {
 	Error error
@@ -100,22 +70,22 @@ type DCAResult struct {
 // 真实工作设备,即具体实现
 type XDevice interface {
 	// 初始化 通常用来获取设备的配置
-	Init(devId string, configMap map[string]interface{}) error
+	Init(devId string, configMap map[string]any) error
 	// 启动, 设备的工作进程
 	Start(CCTX) error
 	// 新特性, 适用于自定义协议读写
 	OnCtrl(cmd []byte, args []byte) ([]byte, error)
 	// 设备当前状态
-	Status() DeviceState
+	Status() SourceState
 	// 停止设备, 在这里释放资源,一般是先置状态为STOP,然后CancelContext()
 	Stop()
 
 	Details() *Device
 	// 状态
-	SetState(DeviceState)
+	SetState(SourceState)
 	// 外部调用, 该接口是个高级功能, 准备为了设计分布式部署设备的时候用, 但是相当长时间内都不会开启
 	// 默认情况下该接口没有用
-	OnDCACall(UUID string, Command string, Args interface{}) DCAResult
+	OnDCACall(UUID string, Command string, Args any) DCAResult
 }
 
 /*
@@ -124,9 +94,9 @@ type XDevice interface {
 *
  */
 type DeviceTopology struct {
-	Id       string                 // 子设备的ID
-	Name     string                 // 子设备名
-	LinkType int                    // 物理连接方式: 0-ETH 1-WIFI 3-BLE 4 LORA 5 OTHER
-	State    int                    // 状态: 0-Down 1-Working
-	Info     map[string]interface{} // 子设备的一些额外信息
+	Id       string         // 子设备的ID
+	Name     string         // 子设备名
+	LinkType int            // 物理连接方式: 0-ETH 1-WIFI 3-BLE 4 LORA 5 OTHER
+	State    int            // 状态: 0-Down 1-Working
+	Info     map[string]any // 子设备的一些额外信息
 }

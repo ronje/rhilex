@@ -18,7 +18,7 @@ package service
 import (
 	"fmt"
 
-	"github.com/hootrhino/rhilex/component/datacenter"
+	"github.com/hootrhino/rhilex/datacenter"
 )
 
 // TableColumnInfo 表结构列信息结构体

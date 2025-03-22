@@ -84,7 +84,7 @@ func InterNotifyDb() *gorm.DB {
 * 注册数据模型
 *
  */
-func InterNotifyRegisterModel(dist ...interface{}) {
+func InterNotifyRegisterModel(dist ...any) {
 	__InterNotifySqlite.db.AutoMigrate(dist...)
 }
 func InitInterNotifyModel(db *gorm.DB) {

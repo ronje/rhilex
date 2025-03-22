@@ -38,15 +38,15 @@ func InitCecollaRoute() {
 }
 
 type CecollaVo struct {
-	UUID        string                 `json:"uuid"`
-	Gid         string                 `json:"gid"`
-	Name        string                 `json:"name"`
-	Type        string                 `json:"type"`
-	Action      string                 `json:"action"`
-	State       int                    `json:"state"`
-	ErrMsg      string                 `json:"errMsg"`
-	Config      map[string]interface{} `json:"config"`
-	Description string                 `json:"description"`
+	UUID        string         `json:"uuid"`
+	Gid         string         `json:"gid"`
+	Name        string         `json:"name"`
+	Type        string         `json:"type"`
+	Action      string         `json:"action"`
+	State       int            `json:"state"`
+	ErrMsg      string         `json:"errMsg"`
+	Config      map[string]any `json:"config"`
+	Description string         `json:"description"`
 }
 
 /*
@@ -68,22 +68,6 @@ func CecollaDetail(c *gin.Context, ruleEngine typex.Rhilex) {
 	CecollaVo.Action = mCecolla.Action
 	CecollaVo.Description = mCecolla.Description
 	CecollaVo.Config = mCecolla.GetConfig()
-	Slot := intercache.GetSlot("__DefaultRuleEngine")
-	if Slot != nil {
-		CacheValue, ok := Slot[mCecolla.UUID]
-		if ok {
-			CecollaVo.ErrMsg = CacheValue.ErrMsg
-		}
-	}
-	//
-	cecolla := ruleEngine.GetCecolla(mCecolla.UUID)
-	if cecolla == nil {
-		CecollaVo.State = int(typex.DEV_STOP)
-	} else {
-		CecollaVo.State = int(cecolla.Cecolla.Status())
-	}
-	Group := service.GetResourceGroup(mCecolla.UUID)
-	CecollaVo.Gid = Group.UUID
 	c.JSON(common.HTTP_OK, common.OkWithData(CecollaVo))
 }
 
@@ -108,13 +92,7 @@ func ListCecolla(c *gin.Context, ruleEngine typex.Rhilex) {
 		CecollaVo.Action = mCecolla.Action
 		CecollaVo.Description = mCecolla.Description
 		CecollaVo.Config = mCecolla.GetConfig()
-		//
-		cecolla := ruleEngine.GetCecolla(mCecolla.UUID)
-		if cecolla == nil {
-			CecollaVo.State = int(typex.DEV_STOP)
-		} else {
-			CecollaVo.State = int(cecolla.Cecolla.Status())
-		}
+		CecollaVo.State = int(typex.SOURCE_STOP)
 		Group := service.GetResourceGroup(mCecolla.UUID)
 		CecollaVo.Gid = Group.UUID
 
@@ -147,13 +125,7 @@ func ListCecollaByGroup(c *gin.Context, ruleEngine typex.Rhilex) {
 		CecollaVo.Action = mCecolla.Action
 		CecollaVo.Description = mCecolla.Description
 		CecollaVo.Config = mCecolla.GetConfig()
-		//
-		cecolla := ruleEngine.GetCecolla(mCecolla.UUID)
-		if cecolla == nil {
-			CecollaVo.State = int(typex.DEV_STOP)
-		} else {
-			CecollaVo.State = int(cecolla.Cecolla.Status())
-		}
+		CecollaVo.State = int(typex.SOURCE_STOP)
 		Group := service.GetResourceGroup(mCecolla.UUID)
 		CecollaVo.Gid = Group.UUID
 
@@ -166,14 +138,7 @@ func ListCecollaByGroup(c *gin.Context, ruleEngine typex.Rhilex) {
 
 // 重启
 func RestartCecolla(c *gin.Context, ruleEngine typex.Rhilex) {
-	uuid, _ := c.GetQuery("uuid")
-	err := ruleEngine.RestartCecolla(uuid)
-	if err != nil {
-		c.JSON(common.HTTP_OK, common.Error400(err))
-		return
-	}
 	c.JSON(common.HTTP_OK, common.Ok())
-
 }
 
 // 删除
@@ -197,7 +162,6 @@ func DeleteCecolla(c *gin.Context, ruleEngine typex.Rhilex) {
 		if err2 != nil {
 			return err2
 		}
-		ruleEngine.RemoveCecolla(uuid)
 		return nil
 	})
 	if txErr != nil {
@@ -219,10 +183,7 @@ func CreateCecolla(c *gin.Context, ruleEngine typex.Rhilex) {
 		c.JSON(common.HTTP_OK, common.Error400(err))
 		return
 	}
-	if err := ruleEngine.CheckCecollaType(typex.CecollaType(form.Type)); err != nil {
-		c.JSON(common.HTTP_OK, common.Error400(err))
-		return
-	}
+
 	if service.CheckCecollaNameDuplicate(form.Name) {
 		c.JSON(common.HTTP_OK, common.Error("Cecolla Name Duplicated"))
 		return
@@ -263,10 +224,7 @@ end
 		c.JSON(common.HTTP_OK, common.Errorf("Group not found:%s", form.Gid))
 		return
 	}
-	if err := server.LoadNewestCecolla(newUUID, ruleEngine); err != nil {
-		c.JSON(common.HTTP_OK, common.OkWithMsg(err.Error()))
-		return
-	}
+
 	c.JSON(common.HTTP_OK, common.Ok())
 
 }
@@ -299,7 +257,7 @@ func UpdateCecollaAction(c *gin.Context, ruleEngine typex.Rhilex) {
 		c.JSON(common.HTTP_OK, common.Error400(err))
 		return
 	}
-	ruleEngine.RestartCecolla(form.UUID)
+
 	c.JSON(common.HTTP_OK, common.Ok())
 
 }
@@ -340,11 +298,7 @@ func UpdateCecolla(c *gin.Context, ruleEngine typex.Rhilex) {
 		c.JSON(common.HTTP_OK, common.Error400(txErr))
 		return
 	}
-	if err := server.LoadNewestCecolla(form.UUID, ruleEngine); err != nil {
-		c.JSON(common.HTTP_OK, common.Error400(err))
-		return
-	}
-	ruleEngine.RestartCecolla(form.UUID)
+
 	c.JSON(common.HTTP_OK, common.Ok())
 }
 
@@ -371,21 +325,5 @@ func GetCecollaErrorMsg(c *gin.Context, ruleEngine typex.Rhilex) {
  *
  */
 func GetCecollaSchema(c *gin.Context, ruleEngine typex.Rhilex) {
-	uuid, _ := c.GetQuery("uuid")
-	cecolla := ruleEngine.GetCecolla(uuid)
-	if cecolla == nil {
-		c.JSON(common.HTTP_OK, common.OkWithMsg("Cecolla Not Exists:"+uuid))
-		return
-	}
-	response, err := cecolla.Cecolla.OnCtrl([]byte("GetSchema"), []byte{})
-	if err != nil {
-		c.JSON(common.HTTP_OK, common.OkWithMsg(err.Error()))
-		return
-	}
-	switch T := response.(type) {
-	case map[string]any:
-		c.JSON(common.HTTP_OK, common.OkWithData(T))
-		return
-	}
-	c.JSON(common.HTTP_OK, common.OkWithMsg("Empty Schema"))
+	c.JSON(common.HTTP_OK, common.Ok())
 }

@@ -17,7 +17,7 @@ package test
 import (
 	"testing"
 
-	"github.com/hootrhino/rhilex/component/alarmcenter"
+	"github.com/hootrhino/rhilex/alarmcenter"
 )
 
 // go test -timeout 30s -run ^Test_alarm_Center_Normal$ github.com/hootrhino/rhilex/test -v -count=1

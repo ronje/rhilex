@@ -15,7 +15,9 @@
 
 package interdb
 
-import "github.com/hootrhino/rhilex/typex"
+import (
+	"github.com/hootrhino/rhilex/typex" 
+)
 
 func InitAll(e typex.Rhilex) {
 	InitInterDb(e)

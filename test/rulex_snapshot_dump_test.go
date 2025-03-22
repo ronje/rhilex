@@ -10,11 +10,11 @@ import (
 	"time"
 
 	httpserver "github.com/hootrhino/rhilex/component/apiserver"
-	"github.com/hootrhino/rhilex/component/rhilexmanager"
 	"github.com/hootrhino/rhilex/component/rhilexrpc"
 	core "github.com/hootrhino/rhilex/config"
 	"github.com/hootrhino/rhilex/engine"
 	"github.com/hootrhino/rhilex/glogger"
+	"github.com/hootrhino/rhilex/plugin"
 	"github.com/hootrhino/rhilex/plugin/demo_plugin"
 	"github.com/hootrhino/rhilex/typex"
 
@@ -30,20 +30,20 @@ import (
 func Test_snapshot_dump(t *testing.T) {
 	c := make(chan os.Signal, 1)
 	signal.Notify(c, syscall.SIGINT, syscall.SIGABRT)
-	engine := engine.InitRuleEngine(core.InitGlobalConfig("config/rhilex.ini"))
+	engine := engine.NewRuleEngine(core.InitGlobalConfig("config/rhilex.ini"))
 	engine.Start()
 	hh := httpserver.NewHttpApiServer(engine)
 
 	// HttpApiServer loaded default
-	if err := rhilexmanager.DefaultPluginTypeManager.LoadPlugin("plugin.http_server", hh); err != nil {
+	if err := plugin.LoadPlugin("plugin.http_server", hh); err != nil {
 		glogger.GLogger.Fatal("Rule load failed:", err)
 	}
 	// Load a demo plugin
-	if err := rhilexmanager.DefaultPluginTypeManager.LoadPlugin("plugin.demo", demo_plugin.NewDemoPlugin()); err != nil {
+	if err := plugin.LoadPlugin("plugin.demo", demo_plugin.NewDemoPlugin()); err != nil {
 		glogger.GLogger.Error("Rule load failed:", err)
 	}
 	// Grpc Inend
-	grpcInend := typex.NewInEnd("GRPC", "rhilex Grpc InEnd", "rhilex Grpc InEnd", map[string]interface{}{
+	grpcInend := typex.NewInEnd("GRPC", "rhilex Grpc InEnd", "rhilex Grpc InEnd", map[string]any{
 		"port": 2581,
 	})
 	ctx, cancelF := typex.NewCCTX() // ,ctx, cancelF

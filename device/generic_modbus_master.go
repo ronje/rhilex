@@ -26,7 +26,7 @@ import (
 
 	"time"
 
-	"github.com/hootrhino/rhilex/component/alarmcenter"
+	"github.com/hootrhino/rhilex/alarmcenter"
 	intercache "github.com/hootrhino/rhilex/component/intercache"
 	"github.com/hootrhino/rhilex/component/interdb"
 	"github.com/hootrhino/rhilex/device/dmodbus"
@@ -106,7 +106,7 @@ func (g *ModbusMasterGroupedTag) String() string {
 
 type GenericModbusMaster struct {
 	typex.XStatus
-	status     typex.DeviceState
+	status     typex.SourceState
 	RuleEngine typex.Rhilex
 	//
 	rtuHandler *modbus.RTUClientHandler
@@ -178,12 +178,12 @@ func NewGenericModbusMaster(e typex.Rhilex) typex.XDevice {
 	mdev.RegisterWithTags = map[string]*dmodbus.ModbusRegister{}
 	mdev.RegisterGroups = []*ModbusMasterGroupedTag{}
 	mdev.Busy = false
-	mdev.status = typex.DEV_DOWN
+	mdev.status = typex.SOURCE_DOWN
 	return mdev
 }
 
 //  初始化
-func (mdev *GenericModbusMaster) Init(devId string, configMap map[string]interface{}) error {
+func (mdev *GenericModbusMaster) Init(devId string, configMap map[string]any) error {
 	mdev.PointId = devId
 	mdev.retryTimes = 0
 	intercache.RegisterSlot(mdev.PointId)
@@ -245,27 +245,27 @@ func (mdev *GenericModbusMaster) Init(devId string, configMap map[string]interfa
 	}
 
 	// 子设备上线,推向云边协同
-	for _, Alias := range subDevicesAlias {
-		if *mdev.mainConfig.CecollaConfig.Enable {
-			cecolla := mdev.RuleEngine.GetCecolla(mdev.mainConfig.CecollaConfig.CecollaId)
-			if cecolla != nil {
-				ProductId, DeviceName, err := ithings.ParseProductInfo(Alias)
-				if err != nil {
-					glogger.Error(err)
-				} else {
-					param := ithings.SubDeviceParam{
-						Timestamp:  int64(LastFetchTime),
-						ProductId:  ProductId,
-						DeviceName: DeviceName,
-					}
-					_, errOnCtrl := cecolla.Cecolla.OnCtrl([]byte("SubDeviceSetOnline"), []byte(param.String()))
-					if errOnCtrl != nil {
-						glogger.Error(errOnCtrl)
-					}
-				}
-			}
-		}
-	}
+	// for _, Alias := range subDevicesAlias {
+	// 	if *mdev.mainConfig.CecollaConfig.Enable {
+	// cecolla := mdev.RuleEngine.GetCecolla(mdev.mainConfig.CecollaConfig.CecollaId)
+	// if cecolla != nil {
+	// 	ProductId, DeviceName, err := ithings.ParseProductInfo(Alias)
+	// 	if err != nil {
+	// 		glogger.Error(err)
+	// 	} else {
+	// 		param := ithings.SubDeviceParam{
+	// 			Timestamp:  int64(LastFetchTime),
+	// 			ProductId:  ProductId,
+	// 			DeviceName: DeviceName,
+	// 		}
+	// 		_, errOnCtrl := cecolla.Cecolla.OnCtrl([]byte("SubDeviceSetOnline"), []byte(param.String()))
+	// 		if errOnCtrl != nil {
+	// 			glogger.Error(errOnCtrl)
+	// 		}
+	// 	}
+	// }
+	// }
+	// }
 	// 开启优化
 	if *mdev.mainConfig.CommonConfig.EnableOptimize {
 		rws := make([]*dmodbus.ModbusRegister, len(mdev.Registers))
@@ -459,22 +459,22 @@ func (mdev *GenericModbusMaster) Start(cctx typex.CCTX) error {
 					DeviceId:  DeviceId,
 				})
 			}
-			cecolla := mdev.RuleEngine.GetCecolla(mdev.mainConfig.CecollaConfig.CecollaId)
-			if bytes, errMarshal := json.Marshal(Properties); errMarshal != nil {
-				glogger.Error(errMarshal)
-			} else {
-				if cecolla != nil {
-					// CreateSubDeviceSchema
-					_, errOnCtrl := cecolla.Cecolla.OnCtrl([]byte("CreateSubDeviceSchema"), bytes)
-					if errOnCtrl != nil {
-						glogger.Error(errOnCtrl)
-					}
-				}
-			}
+			// cecolla := mdev.RuleEngine.GetCecolla(mdev.mainConfig.CecollaConfig.CecollaId)
+			// if bytes, errMarshal := json.Marshal(Properties); errMarshal != nil {
+			// 	glogger.Error(errMarshal)
+			// } else {
+			// 	if cecolla != nil {
+			// 		// CreateSubDeviceSchema
+			// 		_, errOnCtrl := cecolla.Cecolla.OnCtrl([]byte("CreateSubDeviceSchema"), bytes)
+			// 		if errOnCtrl != nil {
+			// 			glogger.Error(errOnCtrl)
+			// 		}
+			// 	}
+			// }
 		}
 	}
 
-	mdev.status = typex.DEV_UP
+	mdev.status = typex.SOURCE_UP
 	return nil
 }
 func (mdev *GenericModbusMaster) RTURead() []ReadRegisterValue {
@@ -485,17 +485,17 @@ func (mdev *GenericModbusMaster) TCPRead() []ReadRegisterValue {
 }
 
 // 设备当前状态
-func (mdev *GenericModbusMaster) Status() typex.DeviceState {
+func (mdev *GenericModbusMaster) Status() typex.SourceState {
 	// 容错5次
 	if mdev.retryTimes > 5 {
-		return typex.DEV_DOWN
+		return typex.SOURCE_DOWN
 	}
 	return mdev.status
 }
 
 // 停止设备
 func (mdev *GenericModbusMaster) Stop() {
-	mdev.status = typex.DEV_DOWN
+	mdev.status = typex.SOURCE_DOWN
 	if mdev.CancelCTX != nil {
 		mdev.CancelCTX()
 	}
@@ -520,11 +520,11 @@ func (mdev *GenericModbusMaster) Details() *typex.Device {
 }
 
 // 状态
-func (mdev *GenericModbusMaster) SetState(status typex.DeviceState) {
+func (mdev *GenericModbusMaster) SetState(status typex.SourceState) {
 	mdev.status = status
 }
 
-func (mdev *GenericModbusMaster) OnDCACall(UUID string, Command string, Args interface{}) typex.DCAResult {
+func (mdev *GenericModbusMaster) OnDCACall(UUID string, Command string, Args any) typex.DCAResult {
 	return typex.DCAResult{}
 }
 
@@ -701,11 +701,11 @@ func (mdev *GenericModbusMaster) modbusSingleRead() []ReadRegisterValue {
 					LastFetchTime: lastTimes,
 					ErrMsg:        err.Error(),
 				})
+				time.Sleep(time.Duration(r.Frequency) * time.Millisecond)
 				continue
 			}
 			// ValidData := [4]byte{0, 0, 0, 0}
 			copy(__modbusReadResult[:], results[:])
-
 			AnyValue := utils.ParseRegisterValue(len(results), r.DataType, r.DataOrder, float32(r.Weight), __modbusReadResult)
 			Value := utils.CovertAnyType(AnyValue)
 			Reg := ReadRegisterValue{
@@ -725,25 +725,25 @@ func (mdev *GenericModbusMaster) modbusSingleRead() []ReadRegisterValue {
 			})
 			// 数据推向云边协同
 			if *mdev.mainConfig.CecollaConfig.Enable {
-				cecolla := mdev.RuleEngine.GetCecolla(mdev.mainConfig.CecollaConfig.CecollaId)
-				if cecolla != nil {
-					ProductId, DeviceName, err := ithings.ParseProductInfo(r.Alias)
-					if err != nil {
-						glogger.Error(err)
-					} else {
-						param := ithings.SubDeviceParam{
-							Timestamp:  int64(lastTimes),
-							Param:      r.Tag,
-							ProductId:  ProductId,
-							DeviceName: DeviceName,
-							Value:      AnyValue,
-						}
-						_, OnCtrl := cecolla.Cecolla.OnCtrl([]byte("PackReportSubDeviceParams"), []byte(param.String()))
-						if OnCtrl != nil {
-							glogger.Error(OnCtrl)
-						}
-					}
-				}
+				// cecolla := mdev.RuleEngine.GetCecolla(mdev.mainConfig.CecollaConfig.CecollaId)
+				// if cecolla != nil {
+				// 	ProductId, DeviceName, err := ithings.ParseProductInfo(r.Alias)
+				// 	if err != nil {
+				// 		glogger.Error(err)
+				// 	} else {
+				// 		param := ithings.SubDeviceParam{
+				// 			Timestamp:  int64(lastTimes),
+				// 			Param:      r.Tag,
+				// 			ProductId:  ProductId,
+				// 			DeviceName: DeviceName,
+				// 			Value:      AnyValue,
+				// 		}
+				// 		_, OnCtrl := cecolla.Cecolla.OnCtrl([]byte("PackReportSubDeviceParams"), []byte(param.String()))
+				// 		if OnCtrl != nil {
+				// 			glogger.Error(OnCtrl)
+				// 		}
+				// 	}
+				// }
 			}
 			if !*mdev.mainConfig.CommonConfig.BatchRequest {
 				if bytes, errMarshal := json.Marshal(Reg); errMarshal != nil {
@@ -768,6 +768,7 @@ func (mdev *GenericModbusMaster) modbusSingleRead() []ReadRegisterValue {
 					LastFetchTime: lastTimes,
 					ErrMsg:        err.Error(),
 				})
+				time.Sleep(time.Duration(r.Frequency) * time.Millisecond)
 				continue
 			}
 			// ValidData := [4]byte{0, 0, 0, 0}
@@ -791,25 +792,25 @@ func (mdev *GenericModbusMaster) modbusSingleRead() []ReadRegisterValue {
 			})
 			// 数据推向云边协同
 			if *mdev.mainConfig.CecollaConfig.Enable {
-				cecolla := mdev.RuleEngine.GetCecolla(mdev.mainConfig.CecollaConfig.CecollaId)
-				if cecolla != nil {
-					ProductId, DeviceName, err := ithings.ParseProductInfo(r.Alias)
-					if err != nil {
-						glogger.Error(err)
-					} else {
-						param := ithings.SubDeviceParam{
-							Timestamp:  int64(lastTimes),
-							Param:      r.Tag,
-							ProductId:  ProductId,
-							DeviceName: DeviceName,
-							Value:      AnyValue,
-						}
-						_, OnCtrl := cecolla.Cecolla.OnCtrl([]byte("PackReportSubDeviceParams"), []byte(param.String()))
-						if OnCtrl != nil {
-							glogger.Error(OnCtrl)
-						}
-					}
-				}
+				// cecolla := mdev.RuleEngine.GetCecolla(mdev.mainConfig.CecollaConfig.CecollaId)
+				// if cecolla != nil {
+				// 	ProductId, DeviceName, err := ithings.ParseProductInfo(r.Alias)
+				// 	if err != nil {
+				// 		glogger.Error(err)
+				// 	} else {
+				// 		param := ithings.SubDeviceParam{
+				// 			Timestamp:  int64(lastTimes),
+				// 			Param:      r.Tag,
+				// 			ProductId:  ProductId,
+				// 			DeviceName: DeviceName,
+				// 			Value:      AnyValue,
+				// 		}
+				// 		_, OnCtrl := cecolla.Cecolla.OnCtrl([]byte("PackReportSubDeviceParams"), []byte(param.String()))
+				// 		if OnCtrl != nil {
+				// 			glogger.Error(OnCtrl)
+				// 		}
+				// 	}
+				// }
 			}
 			if !*mdev.mainConfig.CommonConfig.BatchRequest {
 				if bytes, errMarshal := json.Marshal(Reg); errMarshal != nil {
@@ -835,6 +836,7 @@ func (mdev *GenericModbusMaster) modbusSingleRead() []ReadRegisterValue {
 					LastFetchTime: lastTimes,
 					ErrMsg:        err.Error(),
 				})
+				time.Sleep(time.Duration(r.Frequency) * time.Millisecond)
 				continue
 			}
 			// ValidData := [4]byte{0, 0, 0, 0}
@@ -858,25 +860,25 @@ func (mdev *GenericModbusMaster) modbusSingleRead() []ReadRegisterValue {
 			})
 			// 数据推向云边协同
 			if *mdev.mainConfig.CecollaConfig.Enable {
-				cecolla := mdev.RuleEngine.GetCecolla(mdev.mainConfig.CecollaConfig.CecollaId)
-				if cecolla != nil {
-					ProductId, DeviceName, err := ithings.ParseProductInfo(r.Alias)
-					if err != nil {
-						glogger.Error(err)
-					} else {
-						param := ithings.SubDeviceParam{
-							Timestamp:  int64(lastTimes),
-							Param:      r.Tag,
-							ProductId:  ProductId,
-							DeviceName: DeviceName,
-							Value:      AnyValue,
-						}
-						_, errOnCtrl := cecolla.Cecolla.OnCtrl([]byte("PackReportSubDeviceParams"), []byte(param.String()))
-						if errOnCtrl != nil {
-							glogger.Error(errOnCtrl)
-						}
-					}
-				}
+				// cecolla := mdev.RuleEngine.GetCecolla(mdev.mainConfig.CecollaConfig.CecollaId)
+				// if cecolla != nil {
+				// 	ProductId, DeviceName, err := ithings.ParseProductInfo(r.Alias)
+				// 	if err != nil {
+				// 		glogger.Error(err)
+				// 	} else {
+				// 		param := ithings.SubDeviceParam{
+				// 			Timestamp:  int64(lastTimes),
+				// 			Param:      r.Tag,
+				// 			ProductId:  ProductId,
+				// 			DeviceName: DeviceName,
+				// 			Value:      AnyValue,
+				// 		}
+				// 		_, errOnCtrl := cecolla.Cecolla.OnCtrl([]byte("PackReportSubDeviceParams"), []byte(param.String()))
+				// 		if errOnCtrl != nil {
+				// 			glogger.Error(errOnCtrl)
+				// 		}
+				// 	}
+				// }
 			}
 			if !*mdev.mainConfig.CommonConfig.BatchRequest {
 				if bytes, errMarshal := json.Marshal(Reg); errMarshal != nil {
@@ -901,6 +903,7 @@ func (mdev *GenericModbusMaster) modbusSingleRead() []ReadRegisterValue {
 					LastFetchTime: lastTimes,
 					ErrMsg:        err.Error(),
 				})
+				time.Sleep(time.Duration(r.Frequency) * time.Millisecond)
 				continue
 			}
 			// ValidData := [4]byte{0, 0, 0, 0}
@@ -924,25 +927,25 @@ func (mdev *GenericModbusMaster) modbusSingleRead() []ReadRegisterValue {
 			})
 			// 数据推向云边协同
 			if *mdev.mainConfig.CecollaConfig.Enable {
-				cecolla := mdev.RuleEngine.GetCecolla(mdev.mainConfig.CecollaConfig.CecollaId)
-				if cecolla != nil {
-					ProductId, DeviceName, err := ithings.ParseProductInfo(r.Alias)
-					if err != nil {
-						glogger.Error(err)
-					} else {
-						param := ithings.SubDeviceParam{
-							Timestamp:  int64(lastTimes),
-							Param:      r.Tag,
-							ProductId:  ProductId,
-							DeviceName: DeviceName,
-							Value:      AnyValue,
-						}
-						_, OnCtrl := cecolla.Cecolla.OnCtrl([]byte("PackReportSubDeviceParams"), []byte(param.String()))
-						if OnCtrl != nil {
-							glogger.Error(OnCtrl)
-						}
-					}
-				}
+				// cecolla := mdev.RuleEngine.GetCecolla(mdev.mainConfig.CecollaConfig.CecollaId)
+				// if cecolla != nil {
+				// 	ProductId, DeviceName, err := ithings.ParseProductInfo(r.Alias)
+				// 	if err != nil {
+				// 		glogger.Error(err)
+				// 	} else {
+				// 		param := ithings.SubDeviceParam{
+				// 			Timestamp:  int64(lastTimes),
+				// 			Param:      r.Tag,
+				// 			ProductId:  ProductId,
+				// 			DeviceName: DeviceName,
+				// 			Value:      AnyValue,
+				// 		}
+				// 		_, OnCtrl := cecolla.Cecolla.OnCtrl([]byte("PackReportSubDeviceParams"), []byte(param.String()))
+				// 		if OnCtrl != nil {
+				// 			glogger.Error(OnCtrl)
+				// 		}
+				// 	}
+				// }
 			}
 			if !*mdev.mainConfig.CommonConfig.BatchRequest {
 				if bytes, errMarshal := json.Marshal(Reg); errMarshal != nil {

@@ -51,16 +51,16 @@ func InitUserProtocolRoute() {
 }
 
 type UserProtocolMasterPointVo struct {
-	DeviceUuid    string      `json:"device_uuid"`
-	UUID          string      `json:"uuid"`
-	Command       string      `json:"command"`
-	Tag           string      `json:"tag"`
-	Alias         string      `json:"alias"`
-	Frequency     *uint64     `json:"frequency"`
-	Status        int         `json:"status"`        // 运行时数据
-	LastFetchTime uint64      `json:"lastFetchTime"` // 运行时数据
-	Value         interface{} `json:"value"`         // 运行时数据
-	ErrMsg        string      `json:"errMsg"`        // 运行时数据
+	DeviceUuid    string  `json:"device_uuid"`
+	UUID          string  `json:"uuid"`
+	Command       string  `json:"command"`
+	Tag           string  `json:"tag"`
+	Alias         string  `json:"alias"`
+	Frequency     *uint64 `json:"frequency"`
+	Status        int     `json:"status"`        // 运行时数据
+	LastFetchTime uint64  `json:"lastFetchTime"` // 运行时数据
+	Value         any     `json:"value"`         // 运行时数据
+	ErrMsg        string  `json:"errMsg"`        // 运行时数据
 }
 
 /*
@@ -318,11 +318,11 @@ type UserProtocolDeviceDto struct {
 	Config string
 }
 
-func (md UserProtocolDeviceDto) GetConfig() map[string]interface{} {
-	result := make(map[string]interface{})
+func (md UserProtocolDeviceDto) GetConfig() map[string]any {
+	result := make(map[string]any)
 	err := json.Unmarshal([]byte(md.Config), &result)
 	if err != nil {
-		return map[string]interface{}{}
+		return map[string]any{}
 	}
 	return result
 }

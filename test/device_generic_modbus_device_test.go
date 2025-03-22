@@ -5,8 +5,8 @@ import (
 
 	mbserver "github.com/hootrhino/gomodbus-server"
 	httpserver "github.com/hootrhino/rhilex/component/apiserver"
-	"github.com/hootrhino/rhilex/component/rhilexmanager"
 	"github.com/hootrhino/rhilex/glogger"
+	"github.com/hootrhino/rhilex/plugin"
 
 	"testing"
 	"time"
@@ -23,18 +23,18 @@ func Test_Generic_modbus_device_tcp_mode(t *testing.T) {
 
 	hh := httpserver.NewHttpApiServer(engine)
 	// HttpApiServer loaded default
-	if err := rhilexmanager.DefaultPluginTypeManager.LoadPlugin("plugin.http_server", hh); err != nil {
+	if err := plugin.LoadPlugin("plugin.http_server", hh); err != nil {
 		glogger.GLogger.Fatal("Rule load failed:", err)
 		t.Fatal(err)
 	}
 	GMODBUS := typex.NewDevice(typex.GENERIC_MODBUS_MASTER,
-		"GENERIC_MODBUS", "GENERIC_MODBUS", map[string]interface{}{
+		"GENERIC_MODBUS", "GENERIC_MODBUS", map[string]any{
 			"mode": "TCP",
 			// "mode":        "UART",
 			"autoRequest": true,
 			"timeout":     10,
 			"frequency":   5,
-			"config": map[string]interface{}{
+			"config": map[string]any{
 				"uart":     "COM4", // 虚拟串口测试, COM2上连了个MODBUS-POOL测试器
 				"dataBits": 8,
 				"parity":   "N",
@@ -43,7 +43,7 @@ func Test_Generic_modbus_device_tcp_mode(t *testing.T) {
 				"host":     "127.0.0.1",
 				"port":     1502,
 			},
-			"registers": []map[string]interface{}{
+			"registers": []map[string]any{
 				{
 					"tag":      "node1",
 					"function": 3,

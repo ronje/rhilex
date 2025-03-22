@@ -39,7 +39,7 @@ type logger struct {
 }
 
 func (l *logger) Log(ctx context.Context, lvl ngrok_log.LogLevel, msg string,
-	data map[string]interface{}) {
+	data map[string]any) {
 	Level, err := ngrok_log.StringFromLogLevel(lvl)
 	if err != nil {
 		glogger.GLogger.Error(err)

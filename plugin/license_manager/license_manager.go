@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/hootrhino/rhilex-common-misc/misc"
+	"github.com/hootrhino/rhilex/glogger"
 	"github.com/hootrhino/rhilex/ossupport"
 	"github.com/hootrhino/rhilex/typex"
 	"github.com/hootrhino/rhilex/utils"
@@ -33,32 +34,32 @@ func NewLicenseManager(r typex.Rhilex) *LicenseManager {
 func validateLicense(key_path, license_path string) error {
 	licBytesB64, err := os.ReadFile(license_path)
 	if err != nil {
-		utils.CLog("[LOAD LICENSE] load license file failed")
+		glogger.DefaultOutput("[LOAD LICENSE] load license file failed")
 		os.Exit(0)
 	}
 	keyBytes, err := os.ReadFile(key_path)
 	if err != nil {
-		utils.CLog("[LOAD LICENSE] load key file failed")
+		glogger.DefaultOutput("[LOAD LICENSE] load key file failed")
 		os.Exit(0)
 	}
 	licBytes, err2 := base64.StdEncoding.DecodeString(string(licBytesB64))
 	if err2 != nil {
-		utils.CLog("[LOAD LICENSE] decode key file failed")
+		glogger.DefaultOutput("[LOAD LICENSE] decode key file failed")
 		os.Exit(0)
 	}
 	privateKey, errParse := misc.ParsePrivateKey(keyBytes)
 	if errParse != nil {
-		utils.CLog("[LOAD LICENSE] parse key file failed")
+		glogger.DefaultOutput("[LOAD LICENSE] parse key file failed")
 		os.Exit(0)
 	}
 	adminSalt, err := misc.RSADecrypt(licBytes, privateKey)
 	if err != nil {
-		utils.CLog("[LOAD LICENSE] decrypt key file failed")
+		glogger.DefaultOutput("[LOAD LICENSE] decrypt key file failed")
 		os.Exit(0)
 	}
 	LocalLicense, err := utils.ParseAuthInfo(string(adminSalt))
 	if err != nil {
-		utils.CLog("[LOAD LICENSE] parse auth info failed")
+		glogger.DefaultOutput("[LOAD LICENSE] parse auth info failed")
 		os.Exit(0)
 	}
 	LocalLicense.License = string(licBytesB64)
@@ -68,7 +69,7 @@ func validateLicense(key_path, license_path string) error {
 	T2s := T2.Format("2006-01-02 15:04:05")
 	//
 	if !LocalLicense.ValidateTime() {
-		utils.CLog("[LOAD LICENSE] License has expired, Valid from %s to %s\n", T1s, T2s)
+		glogger.DefaultOutput("[LOAD LICENSE] License has expired, Valid from %s to %s\n", T1s, T2s)
 		os.Exit(0)
 	}
 	// validate local mac
@@ -81,26 +82,26 @@ func validateLicense(key_path, license_path string) error {
 		localMac, err3 = ossupport.GetLinuxMacAddr(LocalLicense.Iface)
 	}
 	if err3 != nil {
-		utils.CLog("[LOAD LICENSE] fetch local mac address failed")
+		glogger.DefaultOutput("[LOAD LICENSE] fetch local mac address failed")
 		os.Exit(0)
 	}
 	if localMac != LocalLicense.MAC {
-		utils.CLog("[LOAD LICENSE] Local Mac:%s; certificate Mac:%s", localMac, LocalLicense.MAC)
+		glogger.DefaultOutput("[LOAD LICENSE] Local Mac:%s; certificate Mac:%s", localMac, LocalLicense.MAC)
 		os.Exit(0)
 	}
 	typex.License = LocalLicense
-	utils.CLog("[LOAD LICENSE] license load success")
+	glogger.DefaultOutput("[LOAD LICENSE] license load success")
 	return nil
 }
 func (dm *LicenseManager) Init(section *ini.Section) error {
 	license_path, err1 := section.GetKey("license_path")
 	if err1 != nil {
-		utils.CLog("[LOAD LICENSE] load license file failed")
+		glogger.DefaultOutput("[LOAD LICENSE] load license file failed")
 		os.Exit(0)
 	}
 	key_path, err2 := section.GetKey("key_path")
 	if err2 != nil {
-		utils.CLog("[LOAD LICENSE] load key file failed")
+		glogger.DefaultOutput("[LOAD LICENSE] load key file failed")
 		os.Exit(0)
 	}
 	return validateLicense(key_path.String(), license_path.String())

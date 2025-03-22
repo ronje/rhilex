@@ -39,7 +39,7 @@ func clearInBackground(data *sync.Map, rate int64) {
 			{
 			}
 		}
-		data.Range(func(k, v interface{}) bool {
+		data.Range(func(k, v any) bool {
 			if v.(user).ts+rate <= time.Now().Unix() {
 				data.Delete(k)
 			}

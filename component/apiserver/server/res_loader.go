@@ -23,7 +23,7 @@ func LoadNewestInEnd(uuid string, ruleEngine typex.Rhilex) error {
 	if mInEnd == nil {
 		return errors.New("Inend not exists:" + uuid)
 	}
-	config := map[string]interface{}{}
+	config := map[string]any{}
 	if err1 := json.Unmarshal([]byte(mInEnd.Config), &config); err1 != nil {
 		glogger.GLogger.Error(err1)
 		return err1
@@ -82,7 +82,7 @@ func LoadNewestOutEnd(uuid string, ruleEngine typex.Rhilex) error {
 		return err
 	}
 
-	config := map[string]interface{}{}
+	config := map[string]any{}
 	if err := json.Unmarshal([]byte(mOutEnd.Config), &config); err != nil {
 		return err
 	}
@@ -121,7 +121,7 @@ func LoadNewestDevice(uuid string, ruleEngine typex.Rhilex) error {
 	if err != nil {
 		return err
 	}
-	config := map[string]interface{}{}
+	config := map[string]any{}
 	if err := json.Unmarshal([]byte(mDevice.Config), &config); err != nil {
 		return err
 	}
@@ -166,51 +166,6 @@ func LoadNewestDevice(uuid string, ruleEngine typex.Rhilex) error {
 		// return err2
 	}
 	go StartDeviceSupervisor(ctx, dev, ruleEngine)
-	return nil
-
-}
-
-/*
-*
-* 云边协同器
-*
- */
-var loadCecollaLocker = sync.Mutex{}
-
-// LoadNewestCecolla
-func LoadNewestCecolla(uuid string, ruleEngine typex.Rhilex) error {
-	loadCecollaLocker.Lock()
-	defer loadCecollaLocker.Unlock()
-	mCecolla, err := service.GetMCecollaWithUUID(uuid)
-	if err != nil {
-		return err
-	}
-	config := map[string]interface{}{}
-	if err := json.Unmarshal([]byte(mCecolla.Config), &config); err != nil {
-		return err
-	}
-	// 所有的更新都先停止资源,然后再加载
-	old := ruleEngine.GetCecolla(uuid)
-	if old != nil {
-		old.Cecolla.Stop()
-	}
-	ruleEngine.RemoveCecolla(uuid) // 删除内存里面的
-	cecolla := typex.NewCecolla(typex.CecollaType(mCecolla.Type), mCecolla.Name,
-		mCecolla.Description, mCecolla.GetConfig())
-	// 挂脚本
-	cecolla.Action = mCecolla.Action
-	// Important !!!!!!!!
-	cecolla.UUID = mCecolla.UUID // 本质上是配置和内存的数据映射起来
-	// 最新的配置
-	cecolla.Config = mCecolla.GetConfig()
-	// 参数传给 --> startCecolla()
-	ctx, cancelCTX := typex.NewCCTX()
-	err2 := ruleEngine.LoadCecollaWithCtx(cecolla, ctx, cancelCTX)
-	if err2 != nil {
-		glogger.GLogger.Error(err2)
-		// return err2
-	}
-	go StartCecollaSupervisor(ctx, cecolla, ruleEngine)
 	return nil
 
 }

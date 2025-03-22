@@ -37,23 +37,25 @@ func NewAmixer(cardName, controlName string) *Amixer {
 	}
 }
 
+// volumeRegex is a pre-compiled regular expression for extracting volume percentage
+var volumeRegex = regexp.MustCompile(`\[([0-9]+)%\]`)
+
 // GetVolume retrieves the current volume level
 func (a *Amixer) GetVolume() (int, error) {
 	cmd := exec.Command("amixer", "-c", a.cardName, "get", a.controlName)
 	output, err := cmd.CombinedOutput()
 	if err != nil {
-		return 0, err
+		return 0, fmt.Errorf("error getting volume: %w", err)
 	}
 
 	lines := strings.Split(string(output), "\n")
 	for _, line := range lines {
 		if strings.Contains(line, "[%") {
-			re := regexp.MustCompile(`\[([0-9]+)%\]`)
-			matches := re.FindStringSubmatch(line)
+			matches := volumeRegex.FindStringSubmatch(line)
 			if len(matches) > 1 {
 				volume, err := strconv.Atoi(matches[1])
 				if err != nil {
-					return 0, err
+					return 0, fmt.Errorf("error converting volume to integer: %w", err)
 				}
 				return volume, nil
 			}
@@ -63,29 +65,27 @@ func (a *Amixer) GetVolume() (int, error) {
 	return 0, fmt.Errorf("volume not found")
 }
 
-// SetVolume sets the volume to the specified level
-func (a *Amixer) SetVolume(volume int) error {
-	cmd := exec.Command("amixer", "-c", a.cardName, "set", a.controlName, strconv.Itoa(volume)+"%")
-	if output, err := cmd.CombinedOutput(); err != nil {
-		return fmt.Errorf("error setting volume: %s, output: %s", err, output)
+// runAmixerCommand is a helper function to run amixer commands
+func (a *Amixer) runAmixerCommand(args ...string) error {
+	cmd := exec.Command("amixer", append([]string{"-c", a.cardName}, args...)...)
+	output, err := cmd.CombinedOutput()
+	if err != nil {
+		return fmt.Errorf("error running amixer command: %w, output: %s", err, output)
 	}
 	return nil
+}
+
+// SetVolume sets the volume to the specified level
+func (a *Amixer) SetVolume(volume int) error {
+	return a.runAmixerCommand("set", a.controlName, strconv.Itoa(volume)+"%")
 }
 
 // Mute toggles the mute state
 func (a *Amixer) Mute() error {
-	cmd := exec.Command("amixer", "-c", a.cardName, "set", a.controlName, "mute")
-	if output, err := cmd.CombinedOutput(); err != nil {
-		return fmt.Errorf("error muting: %s, output: %s", err, output)
-	}
-	return nil
+	return a.runAmixerCommand("set", a.controlName, "mute")
 }
 
 // Unmute toggles the unmute state
 func (a *Amixer) Unmute() error {
-	cmd := exec.Command("amixer", "-c", a.cardName, "set", a.controlName, "unmute")
-	if output, err := cmd.CombinedOutput(); err != nil {
-		return fmt.Errorf("error unmuting: %s, output: %s", err, output)
-	}
-	return nil
+	return a.runAmixerCommand("set", a.controlName, "unmute")
 }

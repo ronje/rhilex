@@ -6,17 +6,18 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/hootrhino/rhilex/component/alarmcenter"
+	"github.com/hootrhino/rhilex/alarmcenter"
 	"github.com/hootrhino/rhilex/component/crontask"
 	dataschema "github.com/hootrhino/rhilex/component/dataschema"
 	"github.com/hootrhino/rhilex/component/eventbus"
+	"github.com/hootrhino/rhilex/multimedia"
 	"github.com/shirou/gopsutil/cpu"
 
+	"github.com/hootrhino/rhilex/applet"
 	"github.com/hootrhino/rhilex/component/apiserver/apis"
 	"github.com/hootrhino/rhilex/component/apiserver/model"
 	"github.com/hootrhino/rhilex/component/apiserver/server"
 	"github.com/hootrhino/rhilex/component/apiserver/service"
-	"github.com/hootrhino/rhilex/component/applet"
 	"github.com/hootrhino/rhilex/component/interdb"
 
 	"github.com/hootrhino/rhilex/glogger"
@@ -69,9 +70,11 @@ func initRhilex(engine typex.Rhilex) {
 		},
 		)
 	}
-	for _, mCecolla := range service.AllCecollas() {
-		if err := server.LoadNewestCecolla(mCecolla.UUID, engine); err != nil {
-			glogger.GLogger.Error("Cecolla load failed:", err)
+	// multimedia
+	for _, Multimedia := range service.AllMultiMedia() {
+		if err := multimedia.LoadMultimediaResource(Multimedia.UUID, Multimedia.Name,
+			Multimedia.Type, Multimedia.GetConfig(), Multimedia.Description); err != nil {
+			glogger.GLogger.Error("Multimedia load failed:", err)
 		}
 	}
 	for _, minEnd := range service.AllMInEnd() {
@@ -127,6 +130,7 @@ func (hs *ApiServerPlugin) Init(config *ini.Section) error {
 		&model.MDevice{},
 		&model.MCecolla{},
 		&model.MApplet{},
+		&model.MMultiMedia{},
 		&alarmcenter.MAlarmRule{},
 		&model.MGenericGroup{},
 		&model.MGenericGroupRelation{},
@@ -233,6 +237,8 @@ func (hs *ApiServerPlugin) LoadRoute() {
 	apis.LoadAlarmRuleRoute()
 	// 告警日志
 	apis.LoadAlarmLogRoute()
+	// 多媒体
+	apis.InitMultiMediaRoute()
 }
 
 // ApiServerPlugin Start

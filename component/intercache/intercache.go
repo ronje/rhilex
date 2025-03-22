@@ -30,7 +30,7 @@ type CacheValue struct {
 	ErrMsg         string
 	LastFetchTime  uint64
 	ExpirationTime time.Time // 缓存过期时间
-	Value          interface{}
+	Value          any
 }
 
 var __DefaultValueCache *GlobalValueRegistry

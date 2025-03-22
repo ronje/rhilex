@@ -45,7 +45,7 @@ info:
 
 build:
 	CGO_ENABLED=1 GOOS=linux go generate
-	go build $(GO_BUILD_OPTIONS) -o ${APP}
+	CGO_ENABLED=1 GOOS=linux go build $(GO_BUILD_OPTIONS) -o ${APP}
 
 .PHONY: x64linux
 x64linux:

@@ -15,8 +15,8 @@ import (
 	aislib "github.com/hootrhino/go-ais"
 
 	serial "github.com/hootrhino/goserial"
-	"github.com/hootrhino/rhilex/resconfig"
 	"github.com/hootrhino/rhilex/glogger"
+	"github.com/hootrhino/rhilex/resconfig"
 	"github.com/hootrhino/rhilex/typex"
 	"github.com/hootrhino/rhilex/utils"
 )
@@ -32,13 +32,13 @@ type _AISCommonConfig struct {
 	GwSN     string `json:"gwsn" validate:"required"`
 }
 type _AISDeviceMasterConfig struct {
-	CommonConfig _AISCommonConfig  `json:"commonConfig" validate:"required"`
+	CommonConfig _AISCommonConfig     `json:"commonConfig" validate:"required"`
 	HostConfig   resconfig.HostConfig `json:"hostConfig"`
 	UartConfig   resconfig.UartConfig `json:"uartConfig"`
 }
 type AISDeviceMaster struct {
 	typex.XStatus
-	status      typex.DeviceState
+	status      typex.SourceState
 	mainConfig  _AISDeviceMasterConfig
 	RuleEngine  typex.Rhilex
 	tcpListener net.Listener // TCP 接收端
@@ -72,7 +72,7 @@ func NewAISDeviceMaster(e typex.Rhilex) typex.XDevice {
 }
 
 //  初始化
-func (aism *AISDeviceMaster) Init(devId string, configMap map[string]interface{}) error {
+func (aism *AISDeviceMaster) Init(devId string, configMap map[string]any) error {
 	aism.PointId = devId
 	if err := utils.BindSourceConfig(configMap, &aism.mainConfig); err != nil {
 		return err
@@ -101,7 +101,7 @@ func (aism *AISDeviceMaster) Start(cctx typex.CCTX) error {
 		glogger.GLogger.Infof("AIS TCP server started on TCP://%s:%v",
 			aism.mainConfig.HostConfig.Host, aism.mainConfig.HostConfig.Port)
 		go aism.handleTcpConnect(listener)
-		aism.status = typex.DEV_UP
+		aism.status = typex.SOURCE_UP
 		return nil
 	}
 	// 串口收发卡
@@ -163,7 +163,7 @@ func (aism *AISDeviceMaster) Start(cctx typex.CCTX) error {
 							continue
 						}
 						readyStatus = false
-						aism.status = typex.DEV_DOWN
+						aism.status = typex.SOURCE_DOWN
 						glogger.GLogger.Errorf("serialPort %s Read error", aism.mainConfig.UartConfig.Uart)
 						return
 					}
@@ -190,7 +190,7 @@ func (aism *AISDeviceMaster) Start(cctx typex.CCTX) error {
 				rawAiSString := string(buffer[:offset])
 				if err != nil {
 					glogger.GLogger.Error(err)
-					aism.status = typex.DEV_DOWN
+					aism.status = typex.SOURCE_DOWN
 					return
 				}
 				// 可能会收到心跳包: !HRT710,Q,003,0*06
@@ -243,21 +243,21 @@ func (aism *AISDeviceMaster) Start(cctx typex.CCTX) error {
 				}
 			}
 		}()
-		aism.status = typex.DEV_UP
+		aism.status = typex.SOURCE_UP
 		return nil
 	}
-	aism.status = typex.DEV_DOWN
+	aism.status = typex.SOURCE_DOWN
 	return fmt.Errorf("Invalid work mode:%s", aism.mainConfig.CommonConfig.Mode)
 }
 
 // 设备当前状态
-func (aism *AISDeviceMaster) Status() typex.DeviceState {
+func (aism *AISDeviceMaster) Status() typex.SourceState {
 	return aism.status
 }
 
 // 停止设备
 func (aism *AISDeviceMaster) Stop() {
-	aism.status = typex.DEV_DOWN
+	aism.status = typex.SOURCE_DOWN
 	if aism.CancelCTX != nil {
 		aism.CancelCTX()
 	}
@@ -278,12 +278,12 @@ func (aism *AISDeviceMaster) Details() *typex.Device {
 }
 
 // 状态
-func (aism *AISDeviceMaster) SetState(status typex.DeviceState) {
+func (aism *AISDeviceMaster) SetState(status typex.SourceState) {
 	aism.status = status
 
 }
 
-func (aism *AISDeviceMaster) OnDCACall(UUID string, Command string, Args interface{}) typex.DCAResult {
+func (aism *AISDeviceMaster) OnDCACall(UUID string, Command string, Args any) typex.DCAResult {
 	return typex.DCAResult{}
 }
 
@@ -390,7 +390,7 @@ func (aism *AISDeviceMaster) handleIO(session *__AISDeviceSession) {
 			glogger.GLogger.Error(err)
 			delete(aism.DevicesSessionMap, session.SN)
 			session.Transport.Close()
-			aism.status = typex.DEV_DOWN
+			aism.status = typex.SOURCE_DOWN
 			return
 		}
 		// 可能会收到心跳包: !HRT710,Q,003,0*06

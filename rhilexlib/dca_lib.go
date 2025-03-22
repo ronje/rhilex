@@ -18,7 +18,7 @@ func DCACall(rx typex.Rhilex, uuid string) func(*lua.LState) int {
 		LuaTArgs := l.ToTable(4)
 		Device := rx.GetDevice(UUID)
 		// glogger.GLogger.Infof("DCACall => %s:%s(%v)", UUID, Command, LuaTArgs)
-		CallArgs := []interface{}{}
+		CallArgs := []any{}
 		LuaTArgs.ForEach(func(k, v lua.LValue) {
 			CallArgs = append(CallArgs, v)
 		})

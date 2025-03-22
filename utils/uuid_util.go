@@ -41,6 +41,9 @@ func AlarmRuleUuid() string {
 func GroupUuid() string {
 	return MakeUUID("GROUP")
 }
+func MultimediaUuid() string {
+	return MakeUUID("MULTIMEDIA")
+}
 func AppUuid() string {
 	return MakeUUID("APP")
 }

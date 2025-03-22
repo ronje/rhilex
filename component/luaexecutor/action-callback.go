@@ -22,6 +22,49 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
+// executeRule 执行单个规则
+func executeRule(rule *typex.Rule, callbackArgs lua.LValue) bool {
+	_, errA := ExecuteActions(rule, callbackArgs)
+	if errA != nil {
+		handleError(rule, errA)
+		return false
+	}
+
+	_, errS := ExecuteSuccess(rule.LuaVM)
+	if errS != nil {
+		glogger.GLogger.Error(errS)
+		return false // lua 是规则链，有短路原则，中途出错会中断
+	}
+	return true
+}
+
+// handleError 处理规则执行错误
+func handleError(rule *typex.Rule, err error) {
+	Debugger, Ok := rule.LuaVM.GetStack(1)
+	if Ok {
+		LValue, _ := rule.LuaVM.GetInfo("f", Debugger, lua.LNil)
+		rule.LuaVM.GetInfo("l", Debugger, lua.LNil)
+		rule.LuaVM.GetInfo("S", Debugger, lua.LNil)
+		rule.LuaVM.GetInfo("u", Debugger, lua.LNil)
+		rule.LuaVM.GetInfo("n", Debugger, lua.LNil)
+		LFunction := LValue.(*lua.LFunction)
+		LastCall := lua.DbgCall{
+			Name: "_main",
+		}
+		if len(LFunction.Proto.DbgCalls) > 0 {
+			LastCall = LFunction.Proto.DbgCalls[0]
+		}
+		glogger.GLogger.WithFields(logrus.Fields{
+			"topic": "rule/log/" + rule.UUID,
+		}).Warnf("Function Name: [%s],"+
+			"What: [%s], Source Line: [%d],"+
+			" Last Call: [%s], Error message: %s",
+			Debugger.Name, Debugger.What, Debugger.CurrentLine,
+			LastCall.Name, err.Error(),
+		)
+	}
+}
+
 /*
 *
 * 执行针对资源端的规则脚本
@@ -31,37 +74,8 @@ func RunSourceCallbacks(in *typex.InEnd, callbackArgs string) {
 	// 执行来自资源的脚本
 	for _, rule := range in.BindRules {
 		if rule.Status == typex.RULE_RUNNING {
-			_, errA := ExecuteActions(&rule, lua.LString(callbackArgs))
-			if errA != nil {
-				Debugger, Ok := rule.LuaVM.GetStack(1)
-				if Ok {
-					LValue, _ := rule.LuaVM.GetInfo("f", Debugger, lua.LNil)
-					rule.LuaVM.GetInfo("l", Debugger, lua.LNil)
-					rule.LuaVM.GetInfo("S", Debugger, lua.LNil)
-					rule.LuaVM.GetInfo("u", Debugger, lua.LNil)
-					rule.LuaVM.GetInfo("n", Debugger, lua.LNil)
-					LFunction := LValue.(*lua.LFunction)
-					LastCall := lua.DbgCall{
-						Name: "_main",
-					}
-					if len(LFunction.Proto.DbgCalls) > 0 {
-						LastCall = LFunction.Proto.DbgCalls[0]
-					}
-					glogger.GLogger.WithFields(logrus.Fields{
-						"topic": "rule/log/" + rule.UUID,
-					}).Warnf("Function Name: [%s],"+
-						"What: [%s], Source Line: [%d],"+
-						" Last Call: [%s], Error message: %s",
-						Debugger.Name, Debugger.What, Debugger.CurrentLine,
-						LastCall.Name, errA.Error(),
-					)
-				}
-			} else {
-				_, errS := ExecuteSuccess(rule.LuaVM)
-				if errS != nil {
-					glogger.GLogger.Error(errS)
-					return // lua 是规则链，有短路原则，中途出错会中断
-				}
+			if !executeRule(&rule, lua.LString(callbackArgs)) {
+				return
 			}
 		}
 	}
@@ -74,39 +88,8 @@ func RunSourceCallbacks(in *typex.InEnd, callbackArgs string) {
  */
 func RunDeviceCallbacks(Device *typex.Device, callbackArgs string) {
 	for _, rule := range Device.BindRules {
-		_, errA := ExecuteActions(&rule, lua.LString(callbackArgs))
-		if errA != nil {
-			Debugger, Ok := rule.LuaVM.GetStack(1)
-			if Ok {
-				LValue, _ := rule.LuaVM.GetInfo("f", Debugger, lua.LNil)
-				rule.LuaVM.GetInfo("l", Debugger, lua.LNil)
-				rule.LuaVM.GetInfo("S", Debugger, lua.LNil)
-				rule.LuaVM.GetInfo("u", Debugger, lua.LNil)
-				rule.LuaVM.GetInfo("n", Debugger, lua.LNil)
-				LFunction := LValue.(*lua.LFunction)
-				LastCall := lua.DbgCall{
-					Name: "_main",
-				}
-				if len(LFunction.Proto.DbgCalls) > 0 {
-					LastCall = LFunction.Proto.DbgCalls[0]
-				}
-				glogger.GLogger.WithFields(logrus.Fields{
-					"topic": "rule/log/" + rule.UUID,
-				}).Warnf("Function Name: [%s],"+
-					"What: [%s], Source Line: [%d],"+
-					" Last Call: [%s], Error message: %s",
-					Debugger.Name, Debugger.What, Debugger.CurrentLine,
-					LastCall.Name, errA.Error(),
-				)
-			}
-		} else {
-			_, err2 := ExecuteSuccess(rule.LuaVM)
-			if err2 != nil {
-				glogger.GLogger.WithFields(logrus.Fields{
-					"topic": "rule/log/" + rule.UUID,
-				}).Info("RunLuaCallbacks error:", err2)
-				return
-			}
+		if !executeRule(&rule, lua.LString(callbackArgs)) {
+			return
 		}
 	}
 }

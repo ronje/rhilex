@@ -22,7 +22,7 @@ func Test_DataToGrepTime(t *testing.T) {
 	engine.Start()
 
 	// Grpc Inend
-	grpcInend := typex.NewInEnd(typex.GRPC_SERVER, "GRPC", "GRPC", map[string]interface{}{
+	grpcInend := typex.NewInEnd(typex.GRPC_SERVER, "GRPC", "GRPC", map[string]any{
 		"port": 2581,
 		"host": "127.0.0.1",
 	})
@@ -32,7 +32,7 @@ func Test_DataToGrepTime(t *testing.T) {
 	}
 
 	OutEnd := typex.NewOutEnd(typex.GREPTIME_DATABASE,
-		"GREPTIME_DATABASE", "GREPTIME_DATABASE", map[string]interface{}{
+		"GREPTIME_DATABASE", "GREPTIME_DATABASE", map[string]any{
 			"gwsn":             "rhilex",
 			"host":             "127.0.0.1",
 			"port":             4001,

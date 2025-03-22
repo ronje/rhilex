@@ -26,11 +26,11 @@ type MOutEnd struct {
 	Config      string
 }
 
-func (md MOutEnd) GetConfig() map[string]interface{} {
-	result := make(map[string]interface{})
+func (md MOutEnd) GetConfig() map[string]any {
+	result := make(map[string]any)
 	err := json.Unmarshal([]byte(md.Config), &result)
 	if err != nil {
-		return map[string]interface{}{}
+		return map[string]any{}
 	}
 	return result
 }

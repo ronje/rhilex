@@ -22,8 +22,8 @@ import (
 	"time"
 
 	intercache "github.com/hootrhino/rhilex/component/intercache"
-	"github.com/hootrhino/rhilex/component/rhilexmanager"
 	"github.com/hootrhino/rhilex/glogger"
+	"github.com/hootrhino/rhilex/registry"
 	"github.com/hootrhino/rhilex/typex"
 )
 
@@ -71,7 +71,7 @@ func (e *RuleEngine) RemoveDevice(uuid string) {
  */
 func (e *RuleEngine) LoadDeviceWithCtx(deviceInstance *typex.Device,
 	ctx context.Context, cancelCTX context.CancelFunc) error {
-	if config := rhilexmanager.DefaultDeviceTypeManager.Find(deviceInstance.Type); config != nil {
+	if config := registry.DefaultDeviceRegistry.Find(deviceInstance.Type); config != nil {
 		return e.loadDevices(config.NewDevice(e), deviceInstance, ctx, cancelCTX)
 	}
 	return fmt.Errorf("unsupported Device type:%s", deviceInstance.Type)
@@ -147,7 +147,7 @@ func startDevice(xDevice typex.XDevice, e *RuleEngine,
 		glogger.GLogger.Error("Device start error:", err)
 		return err
 	}
-	xDevice.SetState(typex.DEV_UP)
+	xDevice.SetState(typex.SOURCE_UP)
 	// LoadNewestDevice
 	// 2023-06-14新增： 重启成功后数据会丢失,还得加载最新的Rule到设备中
 	device := xDevice.Details()

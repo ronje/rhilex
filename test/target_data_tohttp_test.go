@@ -20,7 +20,7 @@ func Test_DataToHttp(t *testing.T) {
 	engine.Start()
 
 	// Grpc Inend
-	grpcInend := typex.NewInEnd(typex.GRPC_SERVER, "GRPC", "GRPC", map[string]interface{}{
+	grpcInend := typex.NewInEnd(typex.GRPC_SERVER, "GRPC", "GRPC", map[string]any{
 		"port": 2581,
 		"host": "127.0.0.1",
 	})
@@ -30,10 +30,10 @@ func Test_DataToHttp(t *testing.T) {
 	}
 
 	OutEnd := typex.NewOutEnd(typex.TCP_TRANSPORT,
-		"HTTP", "HTTP", map[string]interface{}{
+		"HTTP", "HTTP", map[string]any{
 			"url":              "http://127.0.0.1:8899",
 			"cacheOfflineData": true,
-			"headers": map[string]interface{}{
+			"headers": map[string]any{
 				"secret": "test-ok",
 			},
 		},

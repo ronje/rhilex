@@ -15,6 +15,7 @@
 
 package dmodbus
 
+ 
 const (
 	READ_COIL                        = 1  //  Read Coil
 	READ_DISCRETE_INPUT              = 2  //  Read Discrete Input

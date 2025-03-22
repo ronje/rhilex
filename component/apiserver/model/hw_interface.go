@@ -26,11 +26,11 @@ type MUart struct {
 	Config      string `gorm:"not null"` // 配置, 串口配置、或者网卡、USB等
 }
 
-func (md MUart) GetConfig() map[string]interface{} {
-	result := map[string]interface{}{}
+func (md MUart) GetConfig() map[string]any {
+	result := map[string]any{}
 	err := json.Unmarshal([]byte(md.Config), &result)
 	if err != nil {
-		return map[string]interface{}{}
+		return map[string]any{}
 	}
 	return result
 }

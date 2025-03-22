@@ -35,7 +35,7 @@ func (d Decimal) Value() (driver.Value, error) {
 
 // Scan implements the sql.Scanner interface for the Decimal type.
 // It can now handle string, *float64, and *float32 inputs.
-func (d *Decimal) Scan(input interface{}) error {
+func (d *Decimal) Scan(input any) error {
 	switch v := input.(type) {
 	case string:
 		f, err := strconv.ParseFloat(v, 64)

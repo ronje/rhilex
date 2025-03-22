@@ -257,17 +257,25 @@ func LoadRuleLibGroup(e typex.Rhilex, scope, uuid string, LState *lua.LState) {
 	}
 	{
 		Funcs := map[string]func(l *lua.LState) int{
-			"DO1Set":  rhilexlib.RHILEXG1_DO1Set(e, uuid),
-			"DO1Get":  rhilexlib.RHILEXG1_DO1Get(e, uuid),
-			"DO2Set":  rhilexlib.RHILEXG1_DO2Set(e, uuid),
-			"DO2Get":  rhilexlib.RHILEXG1_DO2Get(e, uuid),
-			"DI1Get":  rhilexlib.RHILEXG1_DI1Get(e, uuid),
-			"DI2Get":  rhilexlib.RHILEXG1_DI2Get(e, uuid),
-			"DI3Get":  rhilexlib.RHILEXG1_DI3Get(e, uuid),
-			"Led1On":  rhilexlib.Led1On(e, uuid),
-			"Led1Off": rhilexlib.Led1Off(e, uuid),
+			"DO1Set": rhilexlib.RHILEXG1_DO1Set(e, uuid),
+			"DO1Get": rhilexlib.RHILEXG1_DO1Get(e, uuid),
+			"DO2Set": rhilexlib.RHILEXG1_DO2Set(e, uuid),
+			"DO2Get": rhilexlib.RHILEXG1_DO2Get(e, uuid),
+			"DI1Get": rhilexlib.RHILEXG1_DI1Get(e, uuid),
+			"DI2Get": rhilexlib.RHILEXG1_DI2Get(e, uuid),
+			"DI3Get": rhilexlib.RHILEXG1_DI3Get(e, uuid),
 		}
+		// G1是全志H3版本，后续即将弃用
 		AddRuleLibToGroup(e, LState, "rhilexg1", Funcs)
+	}
+	{
+		Funcs := map[string]func(l *lua.LState) int{
+			"Led1On":         rhilexlib.EN6400_LedOn(e, uuid),
+			"Led1Off":        rhilexlib.EN6400_LedOff(e, uuid),
+			"GetAccelerator": rhilexlib.EN6400_GetAccelerator(e, uuid),
+		}
+		// G1是北京畅维通达的网关，包含了两个型号
+		AddRuleLibToGroup(e, LState, "en6400", Funcs)
 	}
 	{
 		Funcs := map[string]func(l *lua.LState) int{
@@ -351,33 +359,6 @@ func LoadRuleLibGroup(e typex.Rhilex, scope, uuid string, LState *lua.LState) {
 			"F6": rhilexlib.SlaverF6(e),
 		}
 		AddRuleLibToGroup(e, LState, "modbus_slaver", Funcs)
-	}
-	{
-		Funcs := map[string]func(l *lua.LState) int{
-			"CtrlReplySuccess":        rhilexlib.IthingsCtrlReplySuccess(e),
-			"CtrlReplyFailure":        rhilexlib.IthingsCtrlReplyFailure(e),
-			"ActionReplySuccess":      rhilexlib.IthingsActionReplySuccess(e),
-			"ActionReplyFailure":      rhilexlib.IthingsActionReplyFailure(e),
-			"PropertyReplySuccess":    rhilexlib.IthingsPropertyReplySuccess(e),
-			"PropertyReplyFailure":    rhilexlib.IthingsPropertyReplyFailure(e),
-			"PropertyReport":          rhilexlib.IthingsPropertyReport(e),
-			"GetProperties":           rhilexlib.IthingsGetProperties(e),
-			"GetPropertyReplySuccess": rhilexlib.IthingsGetPropertyReplySuccess(e),
-		}
-		AddRuleLibToGroup(e, LState, "ithings", Funcs)
-	}
-	{
-		Funcs := map[string]func(l *lua.LState) int{
-			"CtrlReplySuccess":     rhilexlib.TencentIothubCtrlReplySuccess(e),
-			"CtrlReplyFailure":     rhilexlib.TencentIothubCtrlReplyFailure(e),
-			"ActionReplySuccess":   rhilexlib.TencentIothubActionReplySuccess(e),
-			"ActionReplyFailure":   rhilexlib.TencentIothubActionReplyFailure(e),
-			"PropertyReplySuccess": rhilexlib.TencentIothubPropertyReplySuccess(e),
-			"PropertyReplyFailure": rhilexlib.TencentIothubPropertyReplyFailure(e),
-			"PropertyReport":       rhilexlib.TencentIothubPropertyReport(e),
-			"GetPropertyReply":     rhilexlib.TencentIothubGetPropertyReply(e),
-		}
-		AddRuleLibToGroup(e, LState, "tciothub", Funcs)
 	}
 	{
 		Funcs := map[string]func(l *lua.LState) int{

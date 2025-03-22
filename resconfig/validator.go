@@ -31,7 +31,7 @@ type ConfigValidator interface {
 }
 
 // ConvertAndValidateJSONToStruct 接收JSON数据和结构体指针，将JSON映射到结构体并进行验证
-func ValidateConfig(jsonData []byte, structPtr interface{}) error {
+func ValidateConfig(jsonData []byte, structPtr any) error {
 	// 反射获取结构体类型
 	val := reflect.ValueOf(structPtr)
 	if val.Kind() != reflect.Ptr || val.IsNil() {

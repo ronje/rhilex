@@ -51,18 +51,18 @@ func InitSzy2062016Route() {
 }
 
 type Szy2062016MasterPointVo struct {
-	DeviceUuid    string      `json:"device_uuid"`
-	UUID          string      `json:"uuid"`
-	MeterId       string      `json:"meterId"`
-	MeterType     string      `json:"meterType"`
-	Tag           string      `json:"tag"`
-	Alias         string      `json:"alias"`
-	Frequency     *uint64     `json:"frequency"`
-	Weight        *float64    `json:"weight"`
-	Status        int         `json:"status"`        // 运行时数据
-	LastFetchTime uint64      `json:"lastFetchTime"` // 运行时数据
-	Value         interface{} `json:"value"`         // 运行时数据
-	ErrMsg        string      `json:"errMsg"`        // 运行时数据
+	DeviceUuid    string   `json:"device_uuid"`
+	UUID          string   `json:"uuid"`
+	MeterId       string   `json:"meterId"`
+	MeterType     string   `json:"meterType"`
+	Tag           string   `json:"tag"`
+	Alias         string   `json:"alias"`
+	Frequency     *uint64  `json:"frequency"`
+	Weight        *float64 `json:"weight"`
+	Status        int      `json:"status"`        // 运行时数据
+	LastFetchTime uint64   `json:"lastFetchTime"` // 运行时数据
+	Value         any      `json:"value"`         // 运行时数据
+	ErrMsg        string   `json:"errMsg"`        // 运行时数据
 }
 
 /*
@@ -328,11 +328,11 @@ type Szy2062016DeviceDto struct {
 	Config string
 }
 
-func (md Szy2062016DeviceDto) GetConfig() map[string]interface{} {
-	result := make(map[string]interface{})
+func (md Szy2062016DeviceDto) GetConfig() map[string]any {
+	result := make(map[string]any)
 	err := json.Unmarshal([]byte(md.Config), &result)
 	if err != nil {
-		return map[string]interface{}{}
+		return map[string]any{}
 	}
 	return result
 }

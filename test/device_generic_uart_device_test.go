@@ -4,7 +4,7 @@ import (
 	"time"
 
 	httpserver "github.com/hootrhino/rhilex/component/apiserver"
-	"github.com/hootrhino/rhilex/component/rhilexmanager"
+	"github.com/hootrhino/rhilex/plugin"
 
 	"testing"
 
@@ -20,12 +20,12 @@ func Test_UART_Device(t *testing.T) {
 	engine := RunTestEngine()
 	engine.Start()
 
-	if err := rhilexmanager.DefaultPluginTypeManager.LoadPlugin("plugin.http_server", httpserver.NewHttpApiServer(engine)); err != nil {
+	if err := plugin.LoadPlugin("plugin.http_server", httpserver.NewHttpApiServer(engine)); err != nil {
 		t.Fatal("HttpServer load failed:", err)
 	}
 
 	GUART := typex.NewDevice(typex.GENERIC_UART_RW,
-		"UART", "UART", map[string]interface{}{
+		"UART", "UART", map[string]any{
 			"autoRequest": true,
 			"decollator":  "\n",
 			"baudRate":    115200,

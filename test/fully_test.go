@@ -4,9 +4,9 @@ import (
 	"context"
 
 	httpserver "github.com/hootrhino/rhilex/component/apiserver"
-	"github.com/hootrhino/rhilex/component/rhilexmanager"
 	"github.com/hootrhino/rhilex/component/rhilexrpc"
 	"github.com/hootrhino/rhilex/glogger"
+	"github.com/hootrhino/rhilex/plugin"
 	"github.com/hootrhino/rhilex/typex"
 
 	"testing"
@@ -16,21 +16,23 @@ import (
 	"google.golang.org/grpc/credentials/insecure"
 )
 
+// go test -timeout 30s -run ^TestFullyRun$ github.com/hootrhino/rhilex/test -v -count=1
 func TestFullyRun(t *testing.T) {
 	engine := RunTestEngine()
 	engine.Start()
 
-	if err := rhilexmanager.DefaultPluginTypeManager.LoadPlugin("plugin.http_server", httpserver.NewHttpApiServer(engine)); err != nil {
+	if err := plugin.LoadPlugin("plugin.http_server",
+		httpserver.NewHttpApiServer(engine)); err != nil {
 		glogger.GLogger.Fatal("Rule load failed:", err)
 	}
 	// Grpc Inend
-	grpcInend := typex.NewInEnd("GRPC", "rhilex Grpc InEnd", "rhilex Grpc InEnd", map[string]interface{}{
+	grpcInend := typex.NewInEnd("GRPC_SERVER", "rhilex Grpc InEnd", "rhilex Grpc InEnd", map[string]any{
 		"host": "127.0.0.1",
-		"port": 2581,
+		"port": 2583,
 	})
 	ctx, cancelF := typex.NewCCTX() // ,ctx, cancelF
 	if err := engine.LoadInEndWithCtx(grpcInend, ctx, cancelF); err != nil {
-		glogger.GLogger.Error("grpcInend load failed:", err)
+		glogger.GLogger.Fatal("grpcInend load failed:", err)
 	}
 	//
 	// Load Rule
@@ -45,7 +47,9 @@ func TestFullyRun(t *testing.T) {
 		`
 		Actions = {
 			function(args)
-			    return true, args
+			Debug(args)
+			print("[LUA Actions Callback RULE ==================> 1] ==>", args)
+			return true, args
 			end,
 		}`,
 		`function Failed(error) print("[LUA Failed Callback]", error) end`)
@@ -60,7 +64,8 @@ func TestFullyRun(t *testing.T) {
 		`
 		Actions = {
 			function(args)
-				print("[LUA Actions Callback RULE ==================> 1] ==>", data)
+			Debug(args)
+				print("[LUA Actions Callback RULE ==================> 2] ==>", args)
 				return true, args
 			end
 		}`,
@@ -76,7 +81,8 @@ func TestFullyRun(t *testing.T) {
 		`
 		Actions = {
 			function(args)
-			    print("[LUA Actions Callback RULE ==================> 2] ==>", data)
+			Debug(args)
+			    print("[LUA Actions Callback RULE ==================> 3] ==>", args)
 				return true, args
 			end
 		}`,
@@ -91,11 +97,14 @@ func TestFullyRun(t *testing.T) {
 		`
 		Actions = {
 			function(args)
+			Debug(args)
 				return true, args
 			end,
 			function(args)
-			    print("[HelloLib] ==>", Hello())
-			    return true, args
+			Debug(args)
+			print("[LUA Actions Callback RULE ==================> 4] ==>", args)
+			print("[HelloLib] ==>", Hello())
+			return true, args
 			end,
 			function(args)
 			    print(rhilexlib:Time())
@@ -104,40 +113,34 @@ func TestFullyRun(t *testing.T) {
 		}`,
 		`function Failed(error) print("[rhilexlib:J2T(data) Failed Callback]", error) end`)
 	if err := engine.LoadRule(rule1); err != nil {
-		glogger.GLogger.Error(err)
+		glogger.GLogger.Fatal(err)
 	}
 	if err := engine.LoadRule(rule2); err != nil {
-		glogger.GLogger.Error(err)
+		glogger.GLogger.Fatal(err)
 	}
 	if err := engine.LoadRule(rule3); err != nil {
-		glogger.GLogger.Error(err)
+		glogger.GLogger.Fatal(err)
 	}
 	if err := engine.LoadRule(rule4); err != nil {
-		glogger.GLogger.Error(err)
+		glogger.GLogger.Fatal(err)
 	}
-	conn, err := grpc.Dial("127.0.0.1:2581", grpc.WithTransportCredentials(insecure.NewCredentials()))
+	conn, err := grpc.NewClient("127.0.0.1:2583", grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
-		glogger.GLogger.Error(err)
+		glogger.GLogger.Fatal(err)
 	}
 	defer conn.Close()
 	client := rhilexrpc.NewRhilexRpcClient(conn)
-	for i := 0; i < 30; i++ {
-		glogger.GLogger.Infof("Test count ==========================>>: %v", i)
+	for i := 0; i < 10; i++ {
+		glogger.GLogger.Infof("Test count: %v", i)
 		resp, err := client.Request(context.Background(), &rhilexrpc.RpcRequest{
 			Value: (`{"co2":10,"hum":30,"lex":22,"temp":100}`),
 		})
 
 		if err != nil {
-			glogger.GLogger.Error(err)
+			glogger.GLogger.Fatal(err)
 		}
 		glogger.GLogger.Infof("rhilex Rpc Call Result ====>>: %v", resp.GetMessage())
 	}
-
-	glogger.GLogger.Info("Test Http system Api===> " + HttpGet("http://127.0.0.1:2580/api/v1/system"))
-	glogger.GLogger.Info("Test Http inends Api===> " + HttpGet("http://127.0.0.1:2580/api/v1/inends"))
-	glogger.GLogger.Info("Test Http outends Api===> " + HttpGet("http://127.0.0.1:2580/api/v1/outends"))
-	glogger.GLogger.Info("Test Http rules Api===> " + HttpGet("http://127.0.0.1:2580/api/v1/rules"))
-
 	time.Sleep(5 * time.Second)
 	engine.Stop()
 }

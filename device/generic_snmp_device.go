@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"github.com/gosnmp/gosnmp"
-	"github.com/hootrhino/rhilex/component/alarmcenter"
+	"github.com/hootrhino/rhilex/alarmcenter"
 	"github.com/hootrhino/rhilex/component/intercache"
 	"github.com/hootrhino/rhilex/component/interdb"
 	"github.com/hootrhino/rhilex/resconfig"
@@ -43,7 +43,7 @@ type _GSNMPConfig struct {
 
 type genericSnmpDevice struct {
 	typex.XStatus
-	status     typex.DeviceState
+	status     typex.SourceState
 	RuleEngine typex.Rhilex
 	locker     sync.Locker
 	mainConfig _GSNMPConfig
@@ -116,7 +116,7 @@ type SnmpSchemaProperty struct {
 }
 
 //  初始化
-func (sd *genericSnmpDevice) Init(devId string, configMap map[string]interface{}) error {
+func (sd *genericSnmpDevice) Init(devId string, configMap map[string]any) error {
 	sd.PointId = devId
 	intercache.RegisterSlot(devId)
 	if err := utils.BindSourceConfig(configMap, &sd.mainConfig); err != nil {
@@ -193,7 +193,7 @@ func (sd *genericSnmpDevice) Start(cctx typex.CCTX) error {
 	// Start
 	//---------------------------------------------------------------------------------
 	if !*sd.mainConfig.CommonConfig.AutoRequest {
-		sd.status = typex.DEV_UP
+		sd.status = typex.SOURCE_UP
 		return nil
 	}
 	go func(sd *genericSnmpDevice) {
@@ -244,18 +244,18 @@ func (sd *genericSnmpDevice) Start(cctx typex.CCTX) error {
 		}
 
 	}(sd)
-	sd.status = typex.DEV_UP
+	sd.status = typex.SOURCE_UP
 	return nil
 }
 
 // 设备当前状态
-func (sd *genericSnmpDevice) Status() typex.DeviceState {
+func (sd *genericSnmpDevice) Status() typex.SourceState {
 	return sd.status
 }
 
 // 停止设备
 func (sd *genericSnmpDevice) Stop() {
-	sd.status = typex.DEV_DOWN
+	sd.status = typex.SOURCE_DOWN
 	if sd.CancelCTX != nil {
 		sd.CancelCTX()
 	}
@@ -268,12 +268,12 @@ func (sd *genericSnmpDevice) Details() *typex.Device {
 }
 
 // 状态
-func (sd *genericSnmpDevice) SetState(status typex.DeviceState) {
+func (sd *genericSnmpDevice) SetState(status typex.SourceState) {
 	sd.status = status
 
 }
 
-func (sd *genericSnmpDevice) OnDCACall(UUID string, Command string, Args interface{}) typex.DCAResult {
+func (sd *genericSnmpDevice) OnDCACall(UUID string, Command string, Args any) typex.DCAResult {
 	return typex.DCAResult{}
 }
 

@@ -8,7 +8,7 @@ import (
 	"net"
 	"time"
 
-	"github.com/hootrhino/rhilex/component/alarmcenter"
+	"github.com/hootrhino/rhilex/alarmcenter"
 	"github.com/hootrhino/rhilex/component/apiserver/model"
 	"github.com/hootrhino/rhilex/component/intercache"
 	"github.com/hootrhino/rhilex/component/interdb"
@@ -54,7 +54,7 @@ type BacnetMainConfig struct {
 type GenericBacnetIpDevice struct {
 	typex.XStatus
 	bacnetClient bacnet.Client
-	status       typex.DeviceState
+	status       typex.SourceState
 	RuleEngine   typex.Rhilex
 	mainConfig   BacnetMainConfig
 	// 点位表
@@ -98,11 +98,11 @@ func NewGenericBacnetIpDevice(e typex.Rhilex) typex.XDevice {
 		},
 	}
 	g.SubDeviceDataPoints = make([]bacnetDataPoint, 0)
-	g.status = typex.DEV_DOWN
+	g.status = typex.SOURCE_DOWN
 	return g
 }
 
-func (dev *GenericBacnetIpDevice) Init(devId string, configMap map[string]interface{}) error {
+func (dev *GenericBacnetIpDevice) Init(devId string, configMap map[string]any) error {
 	dev.PointId = devId
 	// 先给个空的
 	dev.remoteDeviceMap = make(map[uint32]btypes.Device)
@@ -291,16 +291,16 @@ func (dev *GenericBacnetIpDevice) Start(cctx typex.CCTX) error {
 		}
 	}(dev.Ctx)
 
-	dev.status = typex.DEV_UP
+	dev.status = typex.SOURCE_UP
 	return nil
 }
 
 type ReadBacnetValue struct {
-	Tag              string      `json:"tag"`
-	DeviceId         uint32      `json:"deviceId"`
-	PropertyType     string      `json:"propertyType"`
-	PropertyInstance uint32      `json:"propertyInstance"`
-	Value            interface{} `json:"value"`
+	Tag              string `json:"tag"`
+	DeviceId         uint32 `json:"deviceId"`
+	PropertyType     string `json:"propertyType"`
+	PropertyInstance uint32 `json:"propertyInstance"`
+	Value            any    `json:"value"`
 }
 
 /*
@@ -377,12 +377,12 @@ func (dev *GenericBacnetIpDevice) OnCtrl(cmd []byte, args []byte) ([]byte, error
 	return nil, errors.New("not Support")
 }
 
-func (dev *GenericBacnetIpDevice) Status() typex.DeviceState {
+func (dev *GenericBacnetIpDevice) Status() typex.SourceState {
 	return dev.status
 }
 
 func (dev *GenericBacnetIpDevice) Stop() {
-	dev.status = typex.DEV_DOWN
+	dev.status = typex.SOURCE_DOWN
 	if dev.CancelCTX != nil {
 		dev.CancelCTX()
 	}
@@ -397,10 +397,10 @@ func (dev *GenericBacnetIpDevice) Details() *typex.Device {
 	return dev.RuleEngine.GetDevice(dev.PointId)
 }
 
-func (dev *GenericBacnetIpDevice) SetState(state typex.DeviceState) {
+func (dev *GenericBacnetIpDevice) SetState(state typex.SourceState) {
 	dev.status = state
 }
 
-func (dev *GenericBacnetIpDevice) OnDCACall(UUID string, Command string, Args interface{}) typex.DCAResult {
+func (dev *GenericBacnetIpDevice) OnDCACall(UUID string, Command string, Args any) typex.DCAResult {
 	return typex.DCAResult{}
 }

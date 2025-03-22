@@ -68,7 +68,7 @@ func NewMongoTarget(e typex.Rhilex) typex.XTarget {
 	return mg
 }
 
-func (m *mongoTarget) Init(outEndId string, configMap map[string]interface{}) error {
+func (m *mongoTarget) Init(outEndId string, configMap map[string]any) error {
 	m.PointId = outEndId
 	if err := utils.BindSourceConfig(configMap, &m.mainConfig); err != nil {
 		return err
@@ -128,11 +128,11 @@ func (m *mongoTarget) Stop() {
 	}
 }
 
-func (m *mongoTarget) To(data interface{}) (interface{}, error) {
+func (m *mongoTarget) To(data any) (any, error) {
 	switch T := data.(type) {
 	case string:
 		// 将 JSON 数据解析为 map
-		var data map[string]interface{}
+		var data map[string]any
 
 		if err := bson.UnmarshalExtJSON([]byte(T), false, &data); err != nil {
 			glogger.GLogger.Error("Mongo To Failed:", err)

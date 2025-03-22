@@ -17,10 +17,11 @@ package core
 
 import (
 	"encoding/json"
-	"github.com/hootrhino/rhilex/component/intercache"
-	"github.com/hootrhino/rhilex/typex"
 	"log"
 	"os"
+
+	"github.com/hootrhino/rhilex/component/intercache"
+	"github.com/hootrhino/rhilex/typex"
 
 	"gopkg.in/ini.v1"
 )
@@ -53,11 +54,11 @@ func InitGlobalConfig(path string) typex.RhilexConfig {
 		ExtLibs:               []string{},
 		DataSchemaSecret:      []string{"rhilex-secret"},
 	}
-	if err := cfg.Section("app").MapTo(&GlobalConfig); err != nil {
+	if err := cfg.Section("main").MapTo(&GlobalConfig); err != nil {
 		log.Fatalf("[RHILEX INIT] Fail to map config file: %v", err)
 		os.Exit(1)
 	}
-	log.Println("[RHILEX INIT] RHILEX config init successfully")
+	log.Println("[RHILEX INIT] RHILEX config load successfully:", path)
 	return GlobalConfig
 }
 
@@ -66,13 +67,13 @@ func InitGlobalConfig(path string) typex.RhilexConfig {
 * 从全局缓存器获取设备的配置
 *
  */
-func GetDeviceConfigMap(deviceUuid string) map[string]interface{} {
+func GetDeviceConfigMap(deviceUuid string) map[string]any {
 	Slot := intercache.GetSlot("__DeviceConfigMap")
 	Value, ok := Slot[deviceUuid]
 	if !ok {
 		return nil
 	}
-	configMap := map[string]interface{}{}
+	configMap := map[string]any{}
 	switch T := Value.Value.(type) {
 	case []byte:
 		err := json.Unmarshal(T, &configMap)

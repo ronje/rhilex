@@ -1,0 +1,11 @@
+{
+    "type": "COMMERCIAL",
+    "device_id": "00000000001",
+    "authorize_admin": "RHILEX.COMMERCIAL",
+    "authorize_password": "RHILEX.COMMERCIAL",
+    "begin_authorize": 0,
+    "end_authorize": 0,
+    "iface": "eth0",
+    "mac": "A8:A1:59:2E:A2:D9",
+    "license": ""
+}

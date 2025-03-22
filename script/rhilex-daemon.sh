@@ -15,27 +15,29 @@
 
 #!/bin/bash
 
+# 服务相关的名称和路径定义
 SERVICE_NAME="rhilex"
 WORKING_DIRECTORY="/usr/local/rhilex"
 EXECUTABLE_PATH="$WORKING_DIRECTORY/$SERVICE_NAME"
 CONFIG_PATH="$WORKING_DIRECTORY/$SERVICE_NAME.ini"
 
-SERVICE_FILE="/etc/init.d/$SERVICE_NAME.service"
+SERVICE_FILE="/etc/init.d/$SERVICE_NAME"
 
-STOP_SIGNAL="/var/run/rhilex-stop.sinal"
+STOP_SIGNAL="/var/run/rhilex-stop.signal"
 UPGRADE_SIGNAL="/var/run/rhilex-upgrade.lock"
 
 SOURCE_DIR="$PWD"
 
-
+# 日志函数，用于记录不同级别的日志信息
 log() {
     local level=$1
     shift
     echo "[$level] $(date +'%Y-%m-%d %H:%M:%S') - $@"
 }
 
-install(){
-cat > "$SERVICE_FILE" << EOL
+# 安装服务的函数
+install() {
+    cat > "$SERVICE_FILE" << EOL
 #!/bin/sh
 
 export PATH=\$PATH:/usr/local/bin:/usr/bin:/usr/sbin:/usr/local/sbin:/sbin
@@ -53,14 +55,6 @@ export PATH=\$PATH:/usr/local/bin:/usr/bin:/usr/sbin:/usr/local/sbin:/sbin
 #
 # Create Time: $(date +'%Y-%m-%d %H:%M:%S')
 #
-EXECUTABLE_PATH="$WORKING_DIRECTORY/rhilex"
-CONFIG_PATH="$WORKING_DIRECTORY/rhilex.ini"
-
-log() {
-    local level=\$1
-    shift
-    echo "[\$level] \$(date +'%Y-%m-%d %H:%M:%S') - \$@"
-}
 
 start() {
     rm -f $UPGRADE_SIGNAL
@@ -156,18 +150,35 @@ esac
 EOL
 
     mkdir -p $WORKING_DIRECTORY
-    chmod +x $SOURCE_DIR/rhilex
-    log INFO "Copy rhilex to $WORKING_DIRECTORY"
-    cp -rfp "$SOURCE_DIR/rhilex" "$EXECUTABLE_PATH"
+    chmod +x "$SOURCE_DIR/$SERVICE_NAME"
+    if cp -rfp "$SOURCE_DIR/$SERVICE_NAME" "$EXECUTABLE_PATH"; then
+        log INFO "Copy rhilex to $WORKING_DIRECTORY"
+    else
+        log ERROR "Failed to copy rhilex to $WORKING_DIRECTORY"
+        exit 1
+    fi
 
-    log INFO "Copy rhilex.ini to $WORKING_DIRECTORY"
-    cp -rfp "$SOURCE_DIR/rhilex.ini" "$CONFIG_PATH"
+    if cp -rfp "$SOURCE_DIR/$SERVICE_NAME.ini" "$CONFIG_PATH"; then
+        log INFO "Copy rhilex.ini to $WORKING_DIRECTORY"
+    else
+        log ERROR "Failed to copy rhilex.ini to $WORKING_DIRECTORY"
+        exit 1
+    fi
 
-    log INFO "Copy license.lic to $WORKING_DIRECTORY"
-    cp -rfp "$SOURCE_DIR/license.lic" "$WORKING_DIRECTORY/"
+    if cp -rfp "$SOURCE_DIR/license.lic" "$WORKING_DIRECTORY/"; then
+        log INFO "Copy license.lic to $WORKING_DIRECTORY"
+    else
+        log ERROR "Failed to copy license.lic to $WORKING_DIRECTORY"
+        exit 1
+    fi
 
-    log INFO "Copy license.key to $WORKING_DIRECTORY"
-    cp -rfp "$SOURCE_DIR/license.key" "$WORKING_DIRECTORY/"
+    if cp -rfp "$SOURCE_DIR/license.key" "$WORKING_DIRECTORY/"; then
+        log INFO "Copy license.key to $WORKING_DIRECTORY"
+    else
+        log ERROR "Failed to copy license.key to $WORKING_DIRECTORY"
+        exit 1
+    fi
+
     chmod 755 $SERVICE_FILE
     if [ $? -eq 0 ]; then
         log INFO "rhilex service has been created and extracted."
@@ -177,6 +188,7 @@ EOL
     exit 0
 }
 
+# 移除文件的函数，根据文件是否为目录选择不同的删除方式
 __remove_files() {
     local file=$1
     log INFO "Removing $file."
@@ -192,13 +204,14 @@ __remove_files() {
     fi
 }
 
-uninstall(){
+# 卸载服务的函数
+uninstall() {
     if [ -e "$SERVICE_FILE" ]; then
         $SERVICE_FILE stop
     fi
     __remove_files "$SERVICE_FILE"
     __remove_files "$WORKING_DIRECTORY/license.*"
-    __remove_files "$WORKING_DIRECTORY/rhilex*"
+    __remove_files "$WORKING_DIRECTORY/$SERVICE_NAME*"
     __remove_files "$WORKING_DIRECTORY/md5.sum"
     __remove_files "$WORKING_DIRECTORY/*.txt"
     __remove_files "$WORKING_DIRECTORY/upload/"
@@ -210,22 +223,27 @@ uninstall(){
     log INFO "rhilex has been uninstalled."
 }
 
+# 调用服务文件的 start 命令启动服务
 start() {
     $SERVICE_FILE start
 }
 
+# 调用服务文件的 restart 命令重启服务
 restart() {
     $SERVICE_FILE restart
 }
 
+# 调用服务文件的 stop 命令停止服务
 stop() {
     $SERVICE_FILE stop
 }
 
+# 调用服务文件的 status 命令查看服务状态
 status() {
     $SERVICE_FILE status
 }
 
+# 根据输入的参数执行对应的操作
 case "$1" in
     install)
         install
@@ -234,8 +252,7 @@ case "$1" in
         start
     ;;
     restart)
-        stop
-        start
+        restart
     ;;
     stop)
         stop
@@ -247,8 +264,9 @@ case "$1" in
         status
     ;;
     *)
-        log INFO "Usage: $0 {start|restart|stop|status}"
+        log INFO "Usage: $0 {install|start|restart|stop|status}"
         log INFO "You must specify one of the following options:"
+        log INFO "    $0 install  - Install Rhilex service"
         log INFO "    $0 start    - Start the service"
         log INFO "    $0 restart  - Restart the service"
         log INFO "    $0 stop     - Stop the service"

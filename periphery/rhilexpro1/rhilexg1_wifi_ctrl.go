@@ -20,6 +20,7 @@ import (
 	"context"
 	"fmt"
 	"math"
+	"net"
 	"os"
 	"os/exec"
 	"strconv"
@@ -43,6 +44,30 @@ network={
     auth_alg=OPEN
 }
 `
+
+// isWirelessInterface checks if the given interface name corresponds to a wireless interface.
+func isWirelessInterface(ifName string) bool {
+	// On Linux, wireless interfaces typically have a directory under /sys/class/net/<iface>/wireless
+	_, err := os.Stat(fmt.Sprintf("/sys/class/net/%s/wireless", ifName))
+	return !os.IsNotExist(err)
+}
+
+// getWlanList returns a list of wireless interfaces.
+func getWlanList() ([]net.Interface, error) {
+	ifaces, err := net.Interfaces()
+	if err != nil {
+		return nil, err
+	}
+
+	var wlanIfaces []net.Interface
+	for _, iface := range ifaces {
+		if isWirelessInterface(iface.Name) {
+			wlanIfaces = append(wlanIfaces, iface)
+		}
+	}
+
+	return wlanIfaces, nil
+}
 
 func SetWifi(iface, ssid, psk string, timeout time.Duration) error {
 	if len(psk) < 8 {
@@ -80,14 +105,14 @@ func SetWifi(iface, ssid, psk string, timeout time.Duration) error {
 		}
 	}
 	{
-
-		cmd := exec.CommandContext(ctx, "udhcpc", "-i", iface)
+		// dhclient wlx0cc6551c5026
+		cmd := exec.CommandContext(ctx, "dhclient", iface)
 		if err := cmd.Start(); err != nil {
-			return fmt.Errorf("failed to start wpa_supplicant: %v", err)
+			return fmt.Errorf("failed to start dhclient: %v", err)
 		}
 	}
 	select {
-	case <-time.After(5 * time.Second):
+	case <-time.After(10 * time.Second):
 	case <-ctx.Done():
 		return ctx.Err()
 	}

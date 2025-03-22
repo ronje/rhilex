@@ -36,7 +36,7 @@ func NewYolo8ObjectDetectionCpu() XAlgorithm {
 		Mode: "GPU",
 	}
 }
-func (Yolo8 *Yolo8ObjectDetectionCpu) Init(Config map[string]interface{}) error {
+func (Yolo8 *Yolo8ObjectDetectionCpu) Init(Config map[string]any) error {
 	// Yolo8.Path = Config["path"].(string)
 	// Yolo8.Mode = Config["mode"].(string)
 	Yolo8.Path = "./component/aibase/models/yolov8n.onnx"
@@ -61,7 +61,7 @@ func (Yolo8 *Yolo8ObjectDetectionCpu) Load() error {
 * 推断
 *
  */
-func (Yolo8 *Yolo8ObjectDetectionCpu) Forward(Input []byte) (map[string]interface{}, error) {
+func (Yolo8 *Yolo8ObjectDetectionCpu) Forward(Input []byte) (map[string]any, error) {
 	ImgMat, err := gocv.NewMatFromBytes(640, 640, gocv.MatTypeCV16S, Input)
 	if err != nil {
 		return nil, err
@@ -69,7 +69,7 @@ func (Yolo8 *Yolo8ObjectDetectionCpu) Forward(Input []byte) (map[string]interfac
 	blob := gocv.BlobFromImage(ImgMat, 1/255.0, image.Point{640, 640}, gocv.Scalar{}, true, false)
 	Yolo8.DnnNet.SetInput(blob, "")
 	Result := GetYolo8ForwardResult(Yolo8.DnnNet.Forward(""))
-	return map[string]interface{}{
+	return map[string]any{
 		"Result": Result,
 	}, nil
 }

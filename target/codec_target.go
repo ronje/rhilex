@@ -65,7 +65,7 @@ func NewRhilexRpcTarget(rx typex.Rhilex) typex.XTarget {
 }
 
 // 用来初始化传递资源配置
-func (ct *RhilexRpcTarget) Init(outEndId string, configMap map[string]interface{}) error {
+func (ct *RhilexRpcTarget) Init(outEndId string, configMap map[string]any) error {
 	ct.PointId = outEndId
 	//
 	if err := utils.BindSourceConfig(configMap, &ct.mainConfig); err != nil {
@@ -120,7 +120,7 @@ func (ct *RhilexRpcTarget) Details() *typex.OutEnd {
 }
 
 // 数据出口
-func (ct *RhilexRpcTarget) To(data interface{}) (interface{}, error) {
+func (ct *RhilexRpcTarget) To(data any) (any, error) {
 	switch T := data.(type) {
 	case string:
 		dataRequest := &rhilexrpc.RpcRequest{

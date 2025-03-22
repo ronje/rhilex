@@ -64,7 +64,7 @@ type MBusEn13433MasterGatewayMainConfig struct {
 
 type MBusEn13433MasterGateway struct {
 	typex.XStatus
-	status         typex.DeviceState
+	status         typex.SourceState
 	mainConfig     MBusEn13433MasterGatewayMainConfig
 	MBusDataPoints map[string]MBusDataPoint
 }
@@ -119,7 +119,7 @@ func NewMBusEn13433MasterGateway(e typex.Rhilex) typex.XDevice {
 	return gw
 }
 
-func (gw *MBusEn13433MasterGateway) Init(devId string, configMap map[string]interface{}) error {
+func (gw *MBusEn13433MasterGateway) Init(devId string, configMap map[string]any) error {
 	gw.PointId = devId
 	intercache.RegisterSlot(gw.PointId)
 
@@ -166,16 +166,16 @@ func (gw *MBusEn13433MasterGateway) Start(cctx typex.CCTX) error {
 	gw.Ctx = cctx.Ctx
 	gw.CancelCTX = cctx.CancelCTX
 
-	gw.status = typex.DEV_UP
+	gw.status = typex.SOURCE_UP
 	return nil
 }
 
-func (gw *MBusEn13433MasterGateway) Status() typex.DeviceState {
+func (gw *MBusEn13433MasterGateway) Status() typex.SourceState {
 	return gw.status
 }
 
 func (gw *MBusEn13433MasterGateway) Stop() {
-	gw.status = typex.DEV_DOWN
+	gw.status = typex.SOURCE_DOWN
 	if gw.CancelCTX != nil {
 		gw.CancelCTX()
 	}
@@ -186,11 +186,11 @@ func (gw *MBusEn13433MasterGateway) Details() *typex.Device {
 	return gw.RuleEngine.GetDevice(gw.PointId)
 }
 
-func (gw *MBusEn13433MasterGateway) SetState(status typex.DeviceState) {
+func (gw *MBusEn13433MasterGateway) SetState(status typex.SourceState) {
 	gw.status = status
 }
 
-func (gw *MBusEn13433MasterGateway) OnDCACall(UUID string, Command string, Args interface{}) typex.DCAResult {
+func (gw *MBusEn13433MasterGateway) OnDCACall(UUID string, Command string, Args any) typex.DCAResult {
 	return typex.DCAResult{}
 }
 

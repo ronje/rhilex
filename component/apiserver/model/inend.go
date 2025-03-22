@@ -29,11 +29,11 @@ type MInEnd struct {
 	XDataModels string
 }
 
-func (md MInEnd) GetConfig() map[string]interface{} {
-	result := make(map[string]interface{})
+func (md MInEnd) GetConfig() map[string]any {
+	result := make(map[string]any)
 	err := json.Unmarshal([]byte(md.Config), &result)
 	if err != nil {
-		return map[string]interface{}{}
+		return map[string]any{}
 	}
 	return result
 }

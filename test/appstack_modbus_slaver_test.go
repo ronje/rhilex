@@ -18,7 +18,7 @@ package test
 import (
 	"time"
 
-	"github.com/hootrhino/rhilex/component/applet"
+	"github.com/hootrhino/rhilex/applet"
 	"github.com/hootrhino/rhilex/typex"
 
 	"github.com/hootrhino/rhilex/glogger"
@@ -33,11 +33,11 @@ func Test_ModbusSlaverF5(t *testing.T) {
 	engine.Start()
 	Slaver := typex.NewDevice(typex.GENERIC_MODBUS_SLAVER,
 		"GENERIC_MODBUS_SLAVER", "GENERIC_MODBUS_SLAVER",
-		map[string]interface{}{
-			"commonConfig": map[string]interface{}{
+		map[string]any{
+			"commonConfig": map[string]any{
 				"mode": "TCP",
 			},
-			"hostConfig": map[string]interface{}{
+			"hostConfig": map[string]any{
 				"host": "127.0.0.1",
 				"port": 1501,
 			},

@@ -2,8 +2,8 @@ package test
 
 import (
 	httpserver "github.com/hootrhino/rhilex/component/apiserver"
-	"github.com/hootrhino/rhilex/component/rhilexmanager"
 	"github.com/hootrhino/rhilex/glogger"
+	"github.com/hootrhino/rhilex/plugin"
 
 	"testing"
 	"time"
@@ -17,12 +17,12 @@ func Test_Generic_snmp_device(t *testing.T) {
 
 	hh := httpserver.NewHttpApiServer(engine)
 	// HttpApiServer loaded default
-	if err := rhilexmanager.DefaultPluginTypeManager.LoadPlugin("plugin.http_server", hh); err != nil {
+	if err := plugin.LoadPlugin("plugin.http_server", hh); err != nil {
 		glogger.GLogger.Fatal("Rule load failed:", err)
 		t.Fatal(err)
 	}
 	GENERIC_SNMP := typex.NewDevice(typex.GENERIC_SNMP,
-		"GENERIC_SNMP", "GENERIC_SNMP", map[string]interface{}{
+		"GENERIC_SNMP", "GENERIC_SNMP", map[string]any{
 			"timeout":   10,
 			"frequency": 5,
 			"target":    "127.0.0.1",

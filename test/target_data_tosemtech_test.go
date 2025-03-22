@@ -7,8 +7,8 @@ import (
 	"time"
 
 	httpserver "github.com/hootrhino/rhilex/component/apiserver"
-	"github.com/hootrhino/rhilex/component/rhilexmanager"
 	"github.com/hootrhino/rhilex/component/rhilexrpc"
+	"github.com/hootrhino/rhilex/plugin"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 
@@ -21,14 +21,14 @@ func Test_DataToSemtechUdp(t *testing.T) {
 	engine := RunTestEngine()
 	engine.Start()
 
-	if err := rhilexmanager.DefaultPluginTypeManager.LoadPlugin("plugin.http_server",
+	if err := plugin.LoadPlugin("plugin.http_server",
 		httpserver.NewHttpApiServer(engine)); err != nil {
 		t.Fatal("HttpServer load failed:", err)
 	}
 
 	//
 	SEMTECH_UDP_FORWARDER := typex.NewOutEnd(typex.SEMTECH_UDP_FORWARDER,
-		"SEMTECH_UDP_FORWARDER", "SEMTECH_UDP_FORWARDER", map[string]interface{}{
+		"SEMTECH_UDP_FORWARDER", "SEMTECH_UDP_FORWARDER", map[string]any{
 			"host":             "192.168.10.163",
 			"port":             1700,
 			"mac":              "a46a4de31a346180",
@@ -43,7 +43,7 @@ func Test_DataToSemtechUdp(t *testing.T) {
 	defer cancelF1()
 	grpcInend := typex.NewInEnd(typex.GRPC_SERVER,
 		"rhilex Grpc InEnd",
-		"rhilex Grpc InEnd", map[string]interface{}{
+		"rhilex Grpc InEnd", map[string]any{
 			"host": "127.0.0.1",
 			"port": 2581,
 		})

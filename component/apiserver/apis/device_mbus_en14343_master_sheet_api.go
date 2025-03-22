@@ -51,20 +51,20 @@ func InitMBusRoute() {
 }
 
 type MBusMasterPointVo struct {
-	UUID          string      `json:"uuid"`
-	DeviceUuid    string      `json:"device_uuid"`
-	SlaverId      string      `json:"slaverId"`
-	Type          string      `json:"type"`
-	Tag           string      `json:"tag"`
-	Alias         string      `json:"alias"`
-	Manufacturer  string      `json:"manufacturer"`
-	Frequency     *uint64     `json:"frequency"`
-	DataLength    *uint64     `json:"dataLength"`
-	Weight        *float64    `json:"weight"`
-	Status        int         `json:"status"`        // 运行时数据
-	LastFetchTime uint64      `json:"lastFetchTime"` // 运行时数据
-	Value         interface{} `json:"value"`         // 运行时数据
-	ErrMsg        string      `json:"errMsg"`        // 运行时数据
+	UUID          string   `json:"uuid"`
+	DeviceUuid    string   `json:"device_uuid"`
+	SlaverId      string   `json:"slaverId"`
+	Type          string   `json:"type"`
+	Tag           string   `json:"tag"`
+	Alias         string   `json:"alias"`
+	Manufacturer  string   `json:"manufacturer"`
+	Frequency     *uint64  `json:"frequency"`
+	DataLength    *uint64  `json:"dataLength"`
+	Weight        *float64 `json:"weight"`
+	Status        int      `json:"status"`        // 运行时数据
+	LastFetchTime uint64   `json:"lastFetchTime"` // 运行时数据
+	Value         any      `json:"value"`         // 运行时数据
+	ErrMsg        string   `json:"errMsg"`        // 运行时数据
 
 }
 
@@ -345,11 +345,11 @@ type MbusDeviceDto struct {
 	Config string
 }
 
-func (md MbusDeviceDto) GetConfig() map[string]interface{} {
-	result := make(map[string]interface{})
+func (md MbusDeviceDto) GetConfig() map[string]any {
+	result := make(map[string]any)
 	err := json.Unmarshal([]byte(md.Config), &result)
 	if err != nil {
-		return map[string]interface{}{}
+		return map[string]any{}
 	}
 	return result
 }

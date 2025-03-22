@@ -51,16 +51,16 @@ func InitSnmpRoute() {
 }
 
 type SnmpOidVo struct {
-	UUID          string      `json:"uuid,omitempty"`
-	DeviceUUID    string      `json:"device_uuid"`
-	Oid           string      `json:"oid"`
-	Tag           string      `json:"tag"`
-	Alias         string      `json:"alias"`
-	Frequency     *uint64     `json:"frequency"`
-	ErrMsg        string      `json:"errMsg"`        // 运行时数据
-	Status        int         `json:"status"`        // 运行时数据
-	LastFetchTime uint64      `json:"lastFetchTime"` // 运行时数据
-	Value         interface{} `json:"value"`         // 运行时数据
+	UUID          string  `json:"uuid,omitempty"`
+	DeviceUUID    string  `json:"device_uuid"`
+	Oid           string  `json:"oid"`
+	Tag           string  `json:"tag"`
+	Alias         string  `json:"alias"`
+	Frequency     *uint64 `json:"frequency"`
+	ErrMsg        string  `json:"errMsg"`        // 运行时数据
+	Status        int     `json:"status"`        // 运行时数据
+	LastFetchTime uint64  `json:"lastFetchTime"` // 运行时数据
+	Value         any     `json:"value"`         // 运行时数据
 }
 
 /*

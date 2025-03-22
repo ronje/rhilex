@@ -64,7 +64,7 @@ func NewHTTPTarget(e typex.Rhilex) typex.XTarget {
 	return ht
 }
 
-func (ht *HTTPTarget) Init(outEndId string, configMap map[string]interface{}) error {
+func (ht *HTTPTarget) Init(outEndId string, configMap map[string]any) error {
 	ht.PointId = outEndId
 	if err := utils.BindSourceConfig(configMap, &ht.mainConfig); err != nil {
 		return err
@@ -123,7 +123,7 @@ func (ht *HTTPTarget) Status() typex.SourceState {
 
 }
 
-func (ht *HTTPTarget) To(data interface{}) (interface{}, error) {
+func (ht *HTTPTarget) To(data any) (any, error) {
 	switch T := data.(type) {
 	case string:
 

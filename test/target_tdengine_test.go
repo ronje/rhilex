@@ -8,8 +8,8 @@ import (
 	"time"
 
 	httpserver "github.com/hootrhino/rhilex/component/apiserver"
-	"github.com/hootrhino/rhilex/component/rhilexmanager"
 	"github.com/hootrhino/rhilex/component/rhilexrpc"
+	"github.com/hootrhino/rhilex/plugin"
 	"github.com/hootrhino/rhilex/typex"
 
 	"google.golang.org/grpc"
@@ -28,14 +28,14 @@ func Test_data_to_tdengine(t *testing.T) {
 	hh := httpserver.NewHttpApiServer(engine)
 
 	// HttpApiServer loaded default
-	if err := rhilexmanager.DefaultPluginTypeManager.LoadPlugin("plugin.http_server", hh); err != nil {
+	if err := plugin.LoadPlugin("plugin.http_server", hh); err != nil {
 		t.Fatal("Rule load failed:", err)
 	}
 	// Grpc Inend
 	grpcInend := typex.NewInEnd(
 		"GRPC",
 		"Test_data_to_tdengine",
-		"Test_data_to_tdengine", map[string]interface{}{
+		"Test_data_to_tdengine", map[string]any{
 			"port":             2581,
 			"host":             "127.0.0.1",
 			"cacheOfflineData": true,
@@ -48,7 +48,7 @@ func Test_data_to_tdengine(t *testing.T) {
 	tdOutEnd := typex.NewOutEnd(typex.TDENGINE_TARGET,
 		"Test_data_to_tdengine",
 		"Test_data_to_tdengine",
-		map[string]interface{}{
+		map[string]any{
 			"fqdn":           "127.0.0.1",
 			"port":           6041,
 			"username":       "root",

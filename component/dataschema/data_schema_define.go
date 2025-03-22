@@ -81,7 +81,7 @@ type IoTProperty struct {
 	Type        IoTPropertyType `json:"type"`            // 类型, 只能是上面几种
 	Rw          string          `json:"rw"`              // R读 W写 RW读写
 	Unit        string          `json:"unit"`            // 单位 例如：摄氏度、米、牛等等
-	Value       interface{}     `json:"value,omitempty"` // Value 是运行时值, 前端不用填写
+	Value       any             `json:"value,omitempty"` // Value 是运行时值, 前端不用填写
 	Rule        IoTPropertyRule `json:"-"`
 }
 
@@ -280,7 +280,7 @@ func (I IoTProperty) ValidateRule() error {
 *
  */
 type Validator interface {
-	Validate(Value interface{}) error
+	Validate(Value any) error
 }
 
 /*
@@ -299,7 +299,7 @@ func (S StringRule) String() string {
 	return string(bytes)
 }
 
-func (S StringRule) Validate(Value interface{}) error {
+func (S StringRule) Validate(Value any) error {
 	switch SV := Value.(type) {
 	case string:
 		L := len(SV)
@@ -328,7 +328,7 @@ func (V IntegerRule) String() string {
 	return string(bytes)
 }
 
-func (V IntegerRule) Validate(Value interface{}) error {
+func (V IntegerRule) Validate(Value any) error {
 	if ok, T := isNumber(Value); ok {
 		if T <= float64(V.Max) && T >= float64(V.Min) {
 			return nil
@@ -353,7 +353,7 @@ func (V FloatRule) String() string {
 	bytes, _ := json.Marshal(V)
 	return string(bytes)
 }
-func (V FloatRule) Validate(Value interface{}) error {
+func (V FloatRule) Validate(Value any) error {
 	if ok, T := isNumber(Value); ok {
 		if T <= float64(V.Max) && T >= float64(V.Min) {
 			return nil
@@ -414,7 +414,7 @@ func (V BoolRule) String() string {
 	return string(bytes)
 }
 
-func (V BoolRule) Validate(Value interface{}) error {
+func (V BoolRule) Validate(Value any) error {
 	switch Value.(type) {
 	case bool:
 		return nil
@@ -436,7 +436,7 @@ func (V GeoRule) String() string {
 	return string(bytes)
 }
 
-func (V GeoRule) Validate(Value interface{}) error {
+func (V GeoRule) Validate(Value any) error {
 	switch T := Value.(type) {
 	case string:
 		if isValidGEO(T) {

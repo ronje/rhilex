@@ -21,7 +21,7 @@ import (
 
 type videoCamera struct {
 	typex.XStatus
-	status typex.DeviceState
+	status typex.SourceState
 }
 
 /*
@@ -35,7 +35,7 @@ func NewVideoCamera(e typex.Rhilex) typex.XDevice {
 	return hd
 }
 
-func (hd *videoCamera) Init(devId string, configMap map[string]interface{}) error {
+func (hd *videoCamera) Init(devId string, configMap map[string]any) error {
 	hd.PointId = devId
 	return nil
 }
@@ -44,18 +44,18 @@ func (hd *videoCamera) Start(cctx typex.CCTX) error {
 	hd.Ctx = cctx.Ctx
 	hd.CancelCTX = cctx.CancelCTX
 
-	hd.status = typex.DEV_UP
+	hd.status = typex.SOURCE_UP
 	return nil
 }
 
 // 设备当前状态
-func (hd *videoCamera) Status() typex.DeviceState {
+func (hd *videoCamera) Status() typex.SourceState {
 	return hd.status
 }
 
 // 停止设备
 func (hd *videoCamera) Stop() {
-	hd.status = typex.DEV_DOWN
+	hd.status = typex.SOURCE_DOWN
 	hd.CancelCTX()
 }
 
@@ -65,7 +65,7 @@ func (hd *videoCamera) Details() *typex.Device {
 }
 
 // 状态
-func (hd *videoCamera) SetState(status typex.DeviceState) {
+func (hd *videoCamera) SetState(status typex.SourceState) {
 	hd.status = status
 
 }
@@ -73,7 +73,7 @@ func (hd *videoCamera) SetState(status typex.DeviceState) {
 // --------------------------------------------------------------------------------------------------
 //
 // --------------------------------------------------------------------------------------------------
-func (hd *videoCamera) OnDCACall(UUID string, Command string, Args interface{}) typex.DCAResult {
+func (hd *videoCamera) OnDCACall(UUID string, Command string, Args any) typex.DCAResult {
 	return typex.DCAResult{}
 }
 func (hd *videoCamera) OnCtrl(cmd []byte, args []byte) ([]byte, error) {

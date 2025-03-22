@@ -35,14 +35,14 @@ func InitDeviceRoute() {
 }
 
 type DeviceVo struct {
-	UUID        string                 `json:"uuid"`
-	Gid         string                 `json:"gid"`
-	Name        string                 `json:"name"`
-	Type        string                 `json:"type"`
-	State       int                    `json:"state"`
-	ErrMsg      string                 `json:"errMsg"`
-	Config      map[string]interface{} `json:"config"`
-	Description string                 `json:"description"`
+	UUID        string         `json:"uuid"`
+	Gid         string         `json:"gid"`
+	Name        string         `json:"name"`
+	Type        string         `json:"type"`
+	State       int            `json:"state"`
+	ErrMsg      string         `json:"errMsg"`
+	Config      map[string]any `json:"config"`
+	Description string         `json:"description"`
 }
 
 /*
@@ -73,7 +73,7 @@ func DeviceDetail(c *gin.Context, ruleEngine typex.Rhilex) {
 	//
 	device := ruleEngine.GetDevice(mdev.UUID)
 	if device == nil {
-		DeviceVo.State = int(typex.DEV_STOP)
+		DeviceVo.State = int(typex.SOURCE_STOP)
 	} else {
 		DeviceVo.State = int(device.Device.Status())
 	}
@@ -105,7 +105,7 @@ func ListDevice(c *gin.Context, ruleEngine typex.Rhilex) {
 		//
 		device := ruleEngine.GetDevice(mdev.UUID)
 		if device == nil {
-			DeviceVo.State = int(typex.DEV_STOP)
+			DeviceVo.State = int(typex.SOURCE_STOP)
 		} else {
 			DeviceVo.State = int(device.Device.Status())
 		}
@@ -143,7 +143,7 @@ func ListDeviceByGroup(c *gin.Context, ruleEngine typex.Rhilex) {
 		//
 		device := ruleEngine.GetDevice(mdev.UUID)
 		if device == nil {
-			DeviceVo.State = int(typex.DEV_STOP)
+			DeviceVo.State = int(typex.SOURCE_STOP)
 		} else {
 			DeviceVo.State = int(device.Device.Status())
 		}
@@ -267,7 +267,7 @@ func DeleteDevice(c *gin.Context, ruleEngine typex.Rhilex) {
 NEXT:
 	old := ruleEngine.GetDevice(uuid)
 	if old != nil {
-		if old.Device.Status() == typex.DEV_UP {
+		if old.Device.Status() == typex.SOURCE_UP {
 			old.Device.Stop()
 		}
 	}
@@ -320,17 +320,6 @@ func CreateDevice(c *gin.Context, ruleEngine typex.Rhilex) {
 	json.Unmarshal(configJson, &deviceConfig)
 	if deviceConfig.CecollaConfig.Enable != nil {
 		if *deviceConfig.CecollaConfig.Enable {
-			Cecolla := ruleEngine.GetCecolla(deviceConfig.CecollaConfig.CecollaId)
-			if Cecolla == nil {
-				c.JSON(common.HTTP_OK, common.Error400(fmt.Errorf("Cecolla not exists:%s",
-					deviceConfig.CecollaConfig.CecollaId)))
-				return
-			}
-			value := intercache.GetValue("__CecollaBinding", deviceConfig.CecollaConfig.CecollaId)
-			if value.Value != nil {
-				c.JSON(common.HTTP_OK, common.Error400(fmt.Errorf("Cecolla already bind to device:%s", value.Value)))
-				return
-			}
 
 		}
 	}
@@ -430,16 +419,6 @@ func UpdateDevice(c *gin.Context, ruleEngine typex.Rhilex) {
 	json.Unmarshal(configJson, &deviceConfig)
 	if deviceConfig.CecollaConfig.Enable != nil {
 		if *deviceConfig.CecollaConfig.Enable {
-			if Cecolla := ruleEngine.GetCecolla(deviceConfig.CecollaConfig.CecollaId); Cecolla == nil {
-				c.JSON(common.HTTP_OK, common.Error400(fmt.Errorf("Cecolla not exists:%s",
-					deviceConfig.CecollaConfig.CecollaId)))
-				return
-			}
-			value := intercache.GetValue("__CecollaBinding", deviceConfig.CecollaConfig.CecollaId)
-			if value.Value != nil {
-				c.JSON(common.HTTP_OK, common.Error400(fmt.Errorf("Cecolla already bind to device:%s", value.Value)))
-				return
-			}
 
 		}
 	}

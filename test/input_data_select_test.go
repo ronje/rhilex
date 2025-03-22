@@ -11,11 +11,11 @@ import (
 func TestJq1(t *testing.T) {
 
 	jqExpression := `.[] | select(.id == 1)`
-	inputData := []interface{}{
-		map[string]interface{}{"id": 1, "name": "A1"},
-		map[string]interface{}{"id": 2, "name": "A2"},
-		map[string]interface{}{"id": 3, "name": "A3"},
-		map[string]interface{}{"id": 4, "name": "A4"},
+	inputData := []any{
+		map[string]any{"id": 1, "name": "A1"},
+		map[string]any{"id": 2, "name": "A2"},
+		map[string]any{"id": 3, "name": "A3"},
+		map[string]any{"id": 4, "name": "A4"},
 	}
 
 	l1, _ := rhilexlib.JQ(jqExpression, inputData)
@@ -29,11 +29,11 @@ func TestJq2(t *testing.T) {
 	jqExpression2 := `.[] | select(.id == 3)|select(.temp > 10)`
 	jqExpression3 := `.[] | select(.temp > 100.11)`
 	jqExpression4 := `.[] | select(.hum == 44.5566)`
-	inputData := []interface{}{
-		map[string]interface{}{"id": 1, "name": "A1", "temp": 10, "hum": 20},
-		map[string]interface{}{"id": 2, "name": "A2", "temp": 100.2343, "hum": 0},
-		map[string]interface{}{"id": 3, "name": "A3", "temp": 0.03, "hum": 20.34},
-		map[string]interface{}{"id": 4, "name": "A4", "temp": 12345676.4322454, "hum": 44.5566},
+	inputData := []any{
+		map[string]any{"id": 1, "name": "A1", "temp": 10, "hum": 20},
+		map[string]any{"id": 2, "name": "A2", "temp": 100.2343, "hum": 0},
+		map[string]any{"id": 3, "name": "A3", "temp": 0.03, "hum": 20.34},
+		map[string]any{"id": 4, "name": "A4", "temp": 12345676.4322454, "hum": 44.5566},
 	}
 	l1, _ := rhilexlib.JQ(jqExpression1, inputData)
 	json1, _ := json.Marshal(l1)
@@ -59,8 +59,8 @@ func TestJq3(t *testing.T) {
 	jqExpression1 := `.[] | select(.id == 1)|select(.temp == 10)`
 	jqExpression2 := `.[] | select(.temp > 100.11)`
 	jqExpression3 := `.[] | select(.hum == 44.5566)`
-	inputData := []interface{}{
-		map[string]interface{}{"id": 1, "name": "A1", "temp": 10, "hum": 20},
+	inputData := []any{
+		map[string]any{"id": 1, "name": "A1", "temp": 10, "hum": 20},
 	}
 	l1, _ := rhilexlib.JQ(jqExpression1, inputData)
 	json1, _ := json.Marshal(l1)
@@ -68,7 +68,6 @@ func TestJq3(t *testing.T) {
 	json2, _ := json.Marshal(l2)
 	l3, _ := rhilexlib.JQ(jqExpression3, inputData)
 	json3, _ := json.Marshal(l3)
-
 
 	t.Log(string(json1))
 	t.Log(string(json2))

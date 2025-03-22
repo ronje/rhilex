@@ -35,7 +35,7 @@ func NewGenericMqttSource(e typex.Rhilex) typex.XSource {
 	return src
 }
 
-func (tc *genericMqttSource) Init(inEndId string, configMap map[string]interface{}) error {
+func (tc *genericMqttSource) Init(inEndId string, configMap map[string]any) error {
 	tc.PointId = inEndId
 	if err := utils.BindSourceConfig(configMap, &tc.mainConfig); err != nil {
 		return err

@@ -10,7 +10,7 @@ type XDevice interface {
    // Init方法用于初始化设备，通常用于获取设备的配置信息。
    // devId是设备ID，configMap是设备配置信息的映射。
    // 返回初始化是否成功的错误信息。
-   Init(devId string, configMap map[string]interface{}) error
+   Init(devId string, configMap map[string]any) error
 
    // Start方法用于启动设备的工作进程，使设备开始正常运作。
    // CCTX是上下文，具体作用取决于设备的实现。
@@ -54,7 +54,7 @@ type XDevice interface {
    // OnDCACall方法用于处理来自DCACall服务的调用。
    // UUID是调用方的唯一标识符，Command是要执行的命令，Args是命令参数。
    // 返回DCAResult，包含命令执行结果和错误信息。
-   OnDCACall(UUID string, Command string, Args interface{}) DCAResult
+   OnDCACall(UUID string, Command string, Args any) DCAResult
 }
 
 ```
@@ -84,7 +84,7 @@ func NewTemplateDevice(e typex.Rhilex) typex.XDevice {
 
 // Init 方法用于初始化 TemplateDevice 实例。它接受设备ID和配置信息映射表作为参数，
 // 并将配置信息绑定到 hd 的 mainConfig 字段。如果配置绑定失败，则返回错误。
-func (hd *TemplateDevice) Init(devId string, configMap map[string]interface{}) error {
+func (hd *TemplateDevice) Init(devId string, configMap map[string]any) error {
 	hd.PointId = devId // 设置设备的 PointId 为传入的 devId
 	if err := utils.BindSourceConfig(configMap, &hd.mainConfig); err != nil {
 		glogger.GLogger.Error(err) // 如果绑定配置出错，记录错误日志
@@ -98,13 +98,13 @@ func (hd *TemplateDevice) Init(devId string, configMap map[string]interface{}) e
 func (hd *TemplateDevice) Start(cctx typex.CCTX) error {
 	hd.Ctx = cctx.Ctx           // 设置上下文
 	hd.CancelCTX = cctx.CancelCTX // 设置取消函数
-	hd.status = typex.DEV_UP    // 设置设备状态为 UP
+	hd.status = typex.SOURCE_UP    // 设置设备状态为 UP
 	return nil                  // 返回 nil，表示启动成功
 }
 
 // Stop 方法用于停止 TemplateDevice 实例。它将设备状态设置为 DEV_DOWN 并调用取消函数。
 func (hd *TemplateDevice) Stop() {
-	hd.status = typex.DEV_DOWN // 设置设备状态为 DOWN
+	hd.status = typex.SOURCE_DOWN // 设置设备状态为 DOWN
 	hd.CancelCTX()             // 调用取消函数，可能用于取消上下文中的操作
 }
 
@@ -114,18 +114,18 @@ func (hd *TemplateDevice) Details() *typex.Device {
 }
 
 // SetState 方法用于设置 TemplateDevice 的状态。
-func (hd *TemplateDevice) SetState(status typex.DeviceState) {
+func (hd *TemplateDevice) SetState(status typex.SourceState) {
 	hd.status = status // 设置设备状态
 }
 
 // Status 方法返回 TemplateDevice 的当前状态。在这个实现中，它总是返回 DEV_UP。
-func (hd *TemplateDevice) Status() typex.DeviceState {
-	return typex.DEV_UP // 表示设备状态为 UP
+func (hd *TemplateDevice) Status() typex.SourceState {
+	return typex.SOURCE_UP // 表示设备状态为 UP
 }
 
 // OnDCACall 方法是 TemplateDevice 的 DCA（设备控制命令）回调函数。它接受 UUID、命令和参数，
 // 并返回一个 DCAResult 类型的结果。在这个实现中，它返回一个空的 DCAResult 实例。
-func (hd *TemplateDevice) OnDCACall(UUID string, Command string, Args interface{}) typex.DCAResult {
+func (hd *TemplateDevice) OnDCACall(UUID string, Command string, Args any) typex.DCAResult {
 	return typex.DCAResult{} // 返回一个空的 DCAResult 实例
 }
 
@@ -138,11 +138,11 @@ func (hd *TemplateDevice) OnCtrl(cmd []byte, args []byte) ([]byte, error) {
 ```
 ## 状态管理
 ```go
-SetState(status typex.DeviceState) {
+SetState(status typex.SourceState) {
 	hd.status = status
 }
 
-Status() typex.DeviceState
+Status() typex.SourceState
 ```
 - SetState:外部设置状态，固定写法：hd.status = status
 - Status：返回自己的状态
@@ -150,19 +150,19 @@ Status() typex.DeviceState
 
 
 ## 关键接口
-- Init(devId string, configMap map[string]interface{}) error
+- Init(devId string, configMap map[string]any) error
   初始化设备参数，一般在这里准备好数据，校验规则等。
 - Start(cctx typex.CCTX) error
   主要工作线程，比如客户端可以在这里开启。
 - Stop() error
   停止的时候回调，用来释放资源
-- Status() typex.DeviceState
+- Status() typex.SourceState
   状态回调，决定了运行时对资源的生命周期控制时机。
 
 ## 运行时数据
 运行时数据使用cache模块，比如Modbus初始化时向缓存器注册一个槽位：
 ```go
-func (mdev *generic_modbus_device) Init(string, map[string]interface{}) error {
+func (mdev *generic_modbus_device) Init(string, map[string]any) error {
 	mdev.PointId = devId
 	modbuscache.RegisterSlot(mdev.PointId)
     // ....
@@ -171,7 +171,7 @@ func (mdev *generic_modbus_device) Init(string, map[string]interface{}) error {
 停止的时候卸载缓存模块:
 ```go
 func (mdev *generic_modbus_device) Stop() {
-	mdev.status = typex.DEV_DOWN
+	mdev.status = typex.SOURCE_DOWN
 	if mdev.CancelCTX != nil {
 		mdev.CancelCTX()
 	}

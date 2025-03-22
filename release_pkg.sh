@@ -1,4 +1,4 @@
-#! /bin/bash
+#!/bin/bash
 set -e
 APP=rhilex
 RESPOSITORY="https://github.com/hootrhino"
@@ -34,7 +34,6 @@ make_zip() {
         echo "[!] Should have release target."
         exit 1
     fi
-
 }
 
 build_windows() {
@@ -57,49 +56,52 @@ build_riscv64_linux() {
 }
 
 cross_compile() {
+    local target_archs=("${ARCHS[@]}")
+    if [ -n "$1" ]; then
+        target_archs=("$1")
+    fi
+
     if [ ! -d "./_release/" ]; then
         mkdir -p ./_release/
     else
         rm -rf ./_release/
         mkdir -p ./_release/
     fi
-    for arch in "${ARCHS[@]}"; do
+    for arch in "${target_archs[@]}"; do
         echo -e "\033[34m [★] Compile target =>\033[43;34m ["$arch"]. \033[0m"
-        if [[ "${arch}" == "windows" ]]; then
-            build_windows $arch
-            make_zip $arch
-            echo -e "\033[33m [v] Compile target => ["$arch"] Ok. \033[0m"
-        fi
-        if [[ "${arch}" == "x86linux" ]]; then
-            build_x86linux $arch
-            make_zip $arch
-            echo -e "\033[33m [v] Compile target => ["$arch"] Ok. \033[0m"
-        fi
-        if [[ "${arch}" == "x64linux" ]]; then
-            build_x64linux $arch
-            make_zip $arch
-            echo -e "\033[33m [v] Compile target => ["$arch"] Ok. \033[0m"
-
-        fi
-        if [[ "${arch}" == "arm64linux" ]]; then
-            # sudo apt install gcc-arm-linux-gnueabi -y
-            build_arm64linux $arch
-            make_zip $arch
-            echo -e "\033[33m [v] Compile target => ["$arch"] Ok. \033[0m"
-
-        fi
-        if [[ "${arch}" == "arm32linux" ]]; then
-            # sudo apt install gcc-arm-linux-gnueabi -y
-            build_arm32linux $arch
-            make_zip $arch
-            echo -e "\033[33m [v] Compile target => ["$arch"] Ok. \033[0m"
-        fi
-        if [[ "${arch}" == "riscv64linux" ]]; then
-            # sudo apt install g++-riscv64-linux-gnu gcc-riscv64-linux-gnu -y
-            build_riscv64_linux $arch
-            make_zip $arch
-            echo -e "\033[33m [v] Compile target => ["$arch"] Ok. \033[0m"
-        fi
+        case "$arch" in
+            "windows")
+                build_windows $arch
+                make_zip $arch
+                echo -e "\033[33m [v] Compile target => ["$arch"] Ok. \033[0m"
+                ;;
+            "x64linux")
+                build_x64linux $arch
+                make_zip $arch
+                echo -e "\033[33m [v] Compile target => ["$arch"] Ok. \033[0m"
+                ;;
+            "arm64linux")
+                # sudo apt install gcc-arm-linux-gnueabi -y
+                build_arm64linux $arch
+                make_zip $arch
+                echo -e "\033[33m [v] Compile target => ["$arch"] Ok. \033[0m"
+                ;;
+            "arm32linux")
+                # sudo apt install gcc-arm-linux-gnueabi -y
+                build_arm32linux $arch
+                make_zip $arch
+                echo -e "\033[33m [v] Compile target => ["$arch"] Ok. \033[0m"
+                ;;
+            "riscv64linux")
+                # sudo apt install g++-riscv64-linux-gnu gcc-riscv64-linux-gnu -y
+                build_riscv64_linux $arch
+                make_zip $arch
+                echo -e "\033[33m [v] Compile target => ["$arch"] Ok. \033[0m"
+                ;;
+            *)
+                echo "[!] Unknown architecture: $arch"
+                ;;
+        esac
     done
 }
 
@@ -139,7 +141,7 @@ upload_to_file_server(){
         echo "[*] Uploading [$FILE] to [${UPLOAD_URL}${upload_path}]"
         curl -T "$FILE" "${UPLOAD_URL}${upload_path}" --user $BASIC_AUTH
         if [ $? -eq 0 ]; then
-            echo "[v] Upload $FILE successfully."
+            echo "[v] Upload successfully, Download URL: ${UPLOAD_URL}${upload_path}"
         else
             echo "[x] Upload $FILE failure."
         fi
@@ -154,7 +156,6 @@ init_env() {
         rm -rf ./_build/
         mkdir -p ./_build/
     fi
-
 }
 
 check_cmd() {
@@ -168,24 +169,31 @@ check_cmd() {
             echo -e "\033[32m [v] $dep has been installed. \033[0m"
         fi
     done
-
 }
+
 build_project() {
     check_cmd
     init_env
     cp -r $(ls | egrep -v '^_build$') ./_build/
     cd ./_build/
-    cross_compile
+    cross_compile $2
     gen_changelog
 }
 
 display_help() {
     cat << EOF
-Usage: $0 <command>
+Usage: $0 <command> [target_arch]
 
 Commands:
   upload   Uploads the build to the file server.
-  build    Builds the project.
+  build    Builds the project. You can specify a target architecture as the second argument.
+           Available target architectures are:
+             - arm32linux
+             - arm64linux
+             - riscv64linux
+             - x64linux
+             - windows
+           If no target architecture is specified, all architectures will be built.
   help     Displays this help message.
 
 EOF
@@ -197,7 +205,7 @@ main() {
             upload_to_file_server
         ;;
         build)
-            build_project
+            build_project $1 $2
         ;;
         help)
             display_help

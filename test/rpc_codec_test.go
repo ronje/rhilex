@@ -8,9 +8,9 @@ import (
 	"time"
 
 	httpserver "github.com/hootrhino/rhilex/component/apiserver"
-	"github.com/hootrhino/rhilex/component/rhilexmanager"
 	"github.com/hootrhino/rhilex/component/rhilexrpc"
 	"github.com/hootrhino/rhilex/glogger"
+	"github.com/hootrhino/rhilex/plugin"
 	"github.com/hootrhino/rhilex/typex"
 
 	"google.golang.org/grpc"
@@ -61,13 +61,13 @@ func Test_Codec(t *testing.T) {
 	_startServer()
 	hh := httpserver.NewHttpApiServer(engine)
 	// HttpApiServer loaded default
-	if err := rhilexmanager.DefaultPluginTypeManager.LoadPlugin("plugin.http_server", hh); err != nil {
+	if err := plugin.LoadPlugin("plugin.http_server", hh); err != nil {
 		glogger.GLogger.Fatal("Rule load failed:", err)
 	}
 	// Grpc Inend
 	grpcInend := typex.NewInEnd("GRPC",
 		"rhilex Grpc InEnd",
-		"rhilex Grpc InEnd", map[string]interface{}{
+		"rhilex Grpc InEnd", map[string]any{
 			"port": 2581,
 		})
 	ctx, cancelF := typex.NewCCTX() // ,ctx, cancelF
@@ -76,7 +76,7 @@ func Test_Codec(t *testing.T) {
 	}
 	grpcCodec1 := typex.NewOutEnd("GRPC_CODEC_TARGET",
 		"GRPC_CODEC_TARGET",
-		"GRPC_CODEC_TARGET", map[string]interface{}{
+		"GRPC_CODEC_TARGET", map[string]any{
 			"host": "127.0.0.1",
 			"port": 1998,
 			"type": "DECODE",
@@ -88,7 +88,7 @@ func Test_Codec(t *testing.T) {
 	}
 	grpcCodec2 := typex.NewOutEnd("GRPC_CODEC_TARGET",
 		"GRPC_CODEC_TARGET",
-		"GRPC_CODEC_TARGET", map[string]interface{}{
+		"GRPC_CODEC_TARGET", map[string]any{
 			"host": "127.0.0.1",
 			"port": 1998,
 			"type": "ENCODE",

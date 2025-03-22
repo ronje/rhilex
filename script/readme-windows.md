@@ -1,69 +1,50 @@
-<!--
- Copyright (C) 2024 wwhai
+# Rhilex 安装卸载脚本说明文档
 
- This program is free software: you can redistribute it and/or modify
- it under the terms of the GNU Affero General Public License as
- published by the Free Software Foundation, either version 3 of the
- License, or (at your option) any later version.
+## 1. 脚本概述
+该 PowerShell 脚本用于实现 Rhilex 应用程序的安装、卸载功能，并提供帮助信息。脚本会将 `rhilex.exe`、`license.*`、`*.ini` 这些文件复制到指定的安装目录，同时生成系统服务脚本，在卸载时会删除所有相关文件。
 
- This program is distributed in the hope that it will be useful,
- but WITHOUT ANY WARRANTY; without even the implied warranty of
- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- GNU Affero General Public License for more details.
+## 2. 脚本使用前提
+- 运行此脚本需要具备管理员权限，因为脚本会涉及到创建和删除 Windows 服务，以及操作 `C:\Program Files` 目录下的文件。
+- 脚本运行前，请确保 `rhilex.exe`、`license.*`、`*.ini` 这些文件存在于脚本所在的同一目录下。
 
- You should have received a copy of the GNU Affero General Public License
- along with this program.  If not, see <https://www.gnu.org/licenses/>.
--->
+## 3. 脚本参数及功能说明
 
+### 3.1 安装（`install`）
+- **参数**：`install`
+- **功能**：
+  - **创建安装目录**：如果 `C:\Program Files\Rhilex` 目录不存在，脚本会自动创建该目录。
+  - **复制文件**：将脚本所在目录下的 `rhilex.exe`、`license.*` 和 `*.ini` 文件复制到 `C:\Program Files\Rhilex` 目录。
+  - **生成系统服务脚本**：在安装目录下生成一个名为 `RhilexService.ps1` 的 PowerShell 脚本，该脚本的作用是启动 `rhilex.exe`。
+  - **创建并启动服务**：使用 `New-Service` 命令创建一个名为 `RhilexService` 的 Windows 服务，将其设置为自动启动，并立即启动该服务。
 
-# Rhilex服务操作指南
-本指南将帮助您在Windows操作系统中安装、卸载和查看Rhilex服务的状态。请按照以下步骤操作：
-## 前提条件
-- 确保您已以管理员权限登录到Windows。
-- 确认`rhilex.exe`和`rhilex.ini`文件位于同一个目录中。
-- 下载并保存提供的PowerShell脚本`Install-RhilexService.ps1`到`rhilex.exe`所在的目录。
-## 安装Rhilex服务
-1. **打开命令提示符（管理员）**：
-   - 按下`Win + R`键，输入`cmd`，然后按`Enter`。
-   - 右键点击命令提示符窗口，选择“以管理员身份运行”。
-2. **导航到脚本所在目录**：
-   - 在命令提示符中，输入以下命令并按`Enter`：
-     ```
-     cd 路径\到\rhilex.exe\的目录
-     ```
-     请将`路径\到\rhilex.exe\的目录`替换为实际的路径。
-3. **运行安装脚本**：
-   - 输入以下命令并按`Enter`：
-     ```
-     .\Install-RhilexService.ps1 -action install
-     ```
-   - 如果提示权限问题，请确认是否以管理员身份运行命令提示符。
-4. **确认服务安装成功**：
-   - 安装完成后，您可以通过服务管理器检查Rhilex服务是否已成功安装并设置为自动启动。
-## 卸载Rhilex服务
-1. **打开命令提示符（管理员）**：
-   - 按照上述步骤打开命令提示符。
-2. **导航到脚本所在目录**：
-   - 使用`cd`命令导航到包含`rhilex.exe`的目录。
-3. **运行卸载脚本**：
-   - 输入以下命令并按`Enter`：
-     ```
-     .\Install-RhilexService.ps1 -action uninstall
-     ```
-4. **确认服务卸载成功**：
-   - 卸载完成后，可以通过服务管理器检查Rhilex服务是否已被移除。
-## 查看Rhilex服务状态
-1. **打开命令提示符（管理员）**：
-   - 按照上述步骤打开命令提示符。
-2. **导航到脚本所在目录**：
-   - 使用`cd`命令导航到包含`rhilex.exe`的目录。
-3. **运行查看状态脚本**：
-   - 输入以下命令并按`Enter`：
-     ```
-     .\Install-RhilexService.ps1 -action status
-     ```
-   - 脚本将显示Rhilex服务的当前状态。
-## 注意事项
-- 在执行任何操作之前，请确保已保存所有重要数据。
-- 如果服务在卸载后仍然存在，您可能需要手动通过服务管理器进行移除。
-- 如果遇到任何问题，请检查脚本是否有正确的执行权限，或者联系技术支持。
+### 3.2 卸载（`uninstall`）
+- **参数**：`uninstall`
+- **功能**：
+  - **停止并删除服务**：如果 `RhilexService` 服务存在，脚本会先停止该服务，然后将其从系统服务列表中删除。
+  - **删除安装目录及文件**：删除 `C:\Program Files\Rhilex` 目录及其下的所有文件和子目录。
+
+### 3.3 帮助（`help`）
+- **参数**：`help`
+- **功能**：显示脚本的使用说明，包括脚本的基本用法和各个操作的功能描述。
+
+## 4. 脚本使用示例
+
+### 4.1 安装 Rhilex
+```powershell
+powershell -File InstallUninstallScript.ps1 install
+```
+
+### 4.2 卸载 Rhilex
+```powershell
+powershell -File InstallUninstallScript.ps1 uninstall
+```
+
+### 4.3 查看帮助信息
+```powershell
+powershell -File InstallUninstallScript.ps1 help
+```
+
+## 5. 注意事项
+- 脚本运行过程中如果出现错误，会输出相应的错误信息，方便用户进行排查。
+- 请确保在运行脚本前关闭所有与 Rhilex 相关的程序和服务，以免影响安装或卸载过程。
+- 若要再次安装 Rhilex，建议先卸载已有的版本，以避免文件冲突和服务冲突。

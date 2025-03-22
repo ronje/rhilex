@@ -20,6 +20,7 @@ import "os"
 func Init_RHILEXPRO1() error {
 	env := os.Getenv("ARCHSUPPORT")
 	if env == "RHILEXPRO1" {
+		// 初始化
 	}
 	return nil
 }

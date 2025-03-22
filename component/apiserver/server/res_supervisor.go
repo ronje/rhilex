@@ -64,7 +64,7 @@ func StartInSupervisor(InCtx context.Context, in *typex.InEnd, ruleEngine typex.
 			}
 			info := fmt.Sprintf("Source:(%s,%s) DOWN, supervisor try to Restart, error message: %s",
 				UUID, currentIn.Name, ErrMsg)
-			glogger.GLogger.Debugf(info)
+			glogger.GLogger.Debug(info)
 			lineS := "event.outend.down." + UUID
 			eventbus.Publish(lineS, eventbus.EventMessage{
 				Topic:   lineS,
@@ -130,7 +130,7 @@ func StartOutSupervisor(OutCtx context.Context, out *typex.OutEnd, ruleEngine ty
 			}
 			info := fmt.Sprintf("OutEnd:(%s,%s) DOWN, supervisor try to Restart, error message: %s",
 				UUID, currentOut.Name, ErrMsg)
-			glogger.GLogger.Debugf(info)
+			glogger.GLogger.Debug(info)
 			lineS := "event.outend.down." + UUID
 			eventbus.Publish(lineS, eventbus.EventMessage{
 				Topic:   lineS,
@@ -189,7 +189,7 @@ func StartDeviceSupervisor(DeviceCtx context.Context, device *typex.Device, rule
 
 		// 资源可能不会及时DOWN
 		currentDeviceStatus := currentDevice.Device.Status()
-		if currentDeviceStatus == typex.DEV_DOWN {
+		if currentDeviceStatus == typex.SOURCE_DOWN {
 			ErrMsg := ""
 			Slot := intercache.GetSlot("__DefaultRuleEngine")
 			if Slot != nil {
@@ -200,7 +200,7 @@ func StartDeviceSupervisor(DeviceCtx context.Context, device *typex.Device, rule
 			}
 			info := fmt.Sprintf("Device:(%s,%s) DOWN, supervisor try to Restart, error message: %s",
 				UUID, currentDevice.Name, ErrMsg)
-			glogger.GLogger.Debugf(info)
+			glogger.GLogger.Debug(info)
 			lineS := "event.device.down." + UUID
 			eventbus.Publish(lineS, eventbus.EventMessage{
 				Topic:   lineS,
@@ -212,76 +212,6 @@ func StartDeviceSupervisor(DeviceCtx context.Context, device *typex.Device, rule
 			})
 			time.Sleep(4 * time.Second)
 			go LoadNewestDevice(UUID, ruleEngine)
-			return
-		}
-		<-ticker.C
-	}
-}
-
-/*
-*
-* 设备监控器 5秒检查一下状态
-*
- */
-func StartCecollaSupervisor(CecollaCtx context.Context, cecolla *typex.Cecolla, ruleEngine typex.Rhilex) {
-	UUID := cecolla.UUID
-	ticker := time.NewTicker(time.Duration(time.Second * 5))
-	defer ticker.Stop()
-	SuperVisor := supervisor.RegisterSuperVisor(cecolla.UUID)
-	glogger.GLogger.Debugf("Register SuperVisor For Cecolla:%s", SuperVisor.SlaverId)
-	defer supervisor.UnRegisterSuperVisor(SuperVisor.SlaverId)
-
-	for {
-		select {
-		case <-context.Background().Done():
-			{
-				glogger.GLogger.Debugf("Global Context cancel:%v, supervisor exit", UUID)
-				return
-			}
-		case <-SuperVisor.Ctx.Done():
-			{
-				glogger.GLogger.Debugf("SuperVisor Context cancel:%v, supervisor exit", UUID)
-				return
-			}
-		case <-CecollaCtx.Done():
-			{
-				glogger.GLogger.Debugf("Cecolla Context cancel:%v, supervisor exit", UUID)
-				return
-			}
-		default:
-		}
-		// 被删除后就直接退出监督进程
-		currentCecolla := ruleEngine.GetCecolla(UUID)
-		if currentCecolla == nil {
-			glogger.GLogger.Debugf("Cecolla:%v Deleted, supervisor exit", UUID)
-			return
-		}
-
-		// 资源可能不会及时DOWN
-		currentCecollaStatus := currentCecolla.Cecolla.Status()
-		if currentCecollaStatus == typex.CEC_DOWN {
-			ErrMsg := ""
-			Slot := intercache.GetSlot("__DefaultRuleEngine")
-			if Slot != nil {
-				CacheValue, ok := Slot[currentCecolla.UUID]
-				if ok {
-					ErrMsg = CacheValue.ErrMsg
-				}
-			}
-			info := fmt.Sprintf("Cecolla:(%s,%s) DOWN, supervisor try to Restart, error message: %s",
-				UUID, currentCecolla.Name, ErrMsg)
-			glogger.GLogger.Debugf(info)
-			lineS := "event.cecolla.down." + UUID
-			eventbus.Publish(lineS, eventbus.EventMessage{
-				Topic:   lineS,
-				From:    "res-supervisor",
-				Type:    "CECOLLA",
-				Event:   lineS,
-				Ts:      uint64(time.Now().UnixMilli()),
-				Payload: ErrMsg,
-			})
-			time.Sleep(4 * time.Second)
-			go LoadNewestCecolla(UUID, ruleEngine)
 			return
 		}
 		<-ticker.C

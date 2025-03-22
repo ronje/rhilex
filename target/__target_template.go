@@ -37,7 +37,7 @@ func NewTemplateTarget(e typex.Rhilex) typex.XTarget {
 	return ht
 }
 
-func (ht *TemplateTarget) Init(outEndId string, configMap map[string]interface{}) error {
+func (ht *TemplateTarget) Init(outEndId string, configMap map[string]any) error {
 	ht.PointId = outEndId
 
 	if err := utils.BindSourceConfig(configMap, &ht.mainConfig); err != nil {
@@ -60,7 +60,7 @@ func (ht *TemplateTarget) Status() typex.SourceState {
 	return ht.status
 
 }
-func (ht *TemplateTarget) To(data interface{}) (interface{}, error) {
+func (ht *TemplateTarget) To(data any) (any, error) {
 	return 0, nil
 }
 

@@ -139,19 +139,11 @@ type Rhilex interface {
 	//
 	RestartDevice(uuid string) error
 	//
-	SetDeviceStatus(uuid string, s DeviceState)
+	SetDeviceStatus(uuid string, s SourceState)
 	//
 	SetSourceStatus(uuid string, s SourceState)
 	// 检查类型是否支持
 	CheckSourceType(Type InEndType) error
 	CheckDeviceType(Type DeviceType) error
 	CheckTargetType(Type TargetType) error
-	// 云边协同
-	CheckCecollaType(Type CecollaType) error
-	GetCecolla(string) *Cecolla
-	SaveCecolla(*Cecolla)
-	AllCecollas() []*Cecolla
-	RestartCecolla(uuid string) error
-	RemoveCecolla(uuid string)
-	LoadCecollaWithCtx(cecolla *Cecolla, ctx context.Context, cancelCTX context.CancelFunc) error
 }

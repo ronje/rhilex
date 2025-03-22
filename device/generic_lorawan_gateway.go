@@ -54,7 +54,7 @@ type LoraGatewayMainConfig struct {
 
 type LoraGateway struct {
 	typex.XStatus
-	status     typex.DeviceState
+	status     typex.SourceState
 	mainConfig LoraGatewayMainConfig
 }
 
@@ -64,7 +64,7 @@ func NewLoraGateway(e typex.Rhilex) typex.XDevice {
 	return hd
 }
 
-func (hd *LoraGateway) Init(devId string, configMap map[string]interface{}) error {
+func (hd *LoraGateway) Init(devId string, configMap map[string]any) error {
 	hd.PointId = devId
 	if err := utils.BindSourceConfig(configMap, &hd.mainConfig); err != nil {
 		glogger.GLogger.Error(err)
@@ -78,16 +78,16 @@ func (hd *LoraGateway) Start(cctx typex.CCTX) error {
 	hd.Ctx = cctx.Ctx
 	hd.CancelCTX = cctx.CancelCTX
 
-	hd.status = typex.DEV_UP
+	hd.status = typex.SOURCE_UP
 	return nil
 }
 
-func (hd *LoraGateway) Status() typex.DeviceState {
+func (hd *LoraGateway) Status() typex.SourceState {
 	return hd.status
 }
 
 func (hd *LoraGateway) Stop() {
-	hd.status = typex.DEV_DOWN
+	hd.status = typex.SOURCE_DOWN
 	hd.CancelCTX()
 }
 
@@ -95,11 +95,11 @@ func (hd *LoraGateway) Details() *typex.Device {
 	return hd.RuleEngine.GetDevice(hd.PointId)
 }
 
-func (hd *LoraGateway) SetState(status typex.DeviceState) {
+func (hd *LoraGateway) SetState(status typex.SourceState) {
 	hd.status = status
 }
 
-func (hd *LoraGateway) OnDCACall(UUID string, Command string, Args interface{}) typex.DCAResult {
+func (hd *LoraGateway) OnDCACall(UUID string, Command string, Args any) typex.DCAResult {
 	return typex.DCAResult{}
 }
 

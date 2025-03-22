@@ -51,17 +51,17 @@ func InitCjt1882004Route() {
 }
 
 type Cjt1882004MasterPointVo struct {
-	DeviceUuid    string      `json:"device_uuid"`
-	UUID          string      `json:"uuid"`
-	MeterId       string      `json:"meterId"`
-	Tag           string      `json:"tag"`
-	Alias         string      `json:"alias"`
-	Frequency     *uint64     `json:"frequency"`
-	Weight        *float64    `json:"weight"`
-	Status        int         `json:"status"`        // 运行时数据
-	LastFetchTime uint64      `json:"lastFetchTime"` // 运行时数据
-	Value         interface{} `json:"value"`         // 运行时数据
-	ErrMsg        string      `json:"errMsg"`        // 运行时数据
+	DeviceUuid    string   `json:"device_uuid"`
+	UUID          string   `json:"uuid"`
+	MeterId       string   `json:"meterId"`
+	Tag           string   `json:"tag"`
+	Alias         string   `json:"alias"`
+	Frequency     *uint64  `json:"frequency"`
+	Weight        *float64 `json:"weight"`
+	Status        int      `json:"status"`        // 运行时数据
+	LastFetchTime uint64   `json:"lastFetchTime"` // 运行时数据
+	Value         any      `json:"value"`         // 运行时数据
+	ErrMsg        string   `json:"errMsg"`        // 运行时数据
 }
 
 /*
@@ -323,11 +323,11 @@ type Cjt1882004DeviceDto struct {
 	Config string
 }
 
-func (md Cjt1882004DeviceDto) GetConfig() map[string]interface{} {
-	result := make(map[string]interface{})
+func (md Cjt1882004DeviceDto) GetConfig() map[string]any {
+	result := make(map[string]any)
 	err := json.Unmarshal([]byte(md.Config), &result)
 	if err != nil {
-		return map[string]interface{}{}
+		return map[string]any{}
 	}
 	return result
 }

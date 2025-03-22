@@ -48,12 +48,12 @@ func InitAlgorithmRuntime(re typex.Rhilex) *AlgorithmRuntime {
 	__DefaultAIRuntime.XAlgorithms = make(map[string]XAlgorithm)
 	__DefaultAIRuntime.locker = sync.Mutex{}
 	// Yolo8
-	// err1 := LoadAlgorithm(NewYolo8ObjectDetectionCpu(), map[string]interface{}{})
+	// err1 := LoadAlgorithm(NewYolo8ObjectDetectionCpu(), map[string]any{})
 	// if err1 != nil {
 	// 	glogger.GLogger.Error(err1)
 	// }
 	// Tensorflow
-	// err2 :=LoadAlgorithm(NewTfObjectDetectionCpu(), map[string]interface{}{})
+	// err2 :=LoadAlgorithm(NewTfObjectDetectionCpu(), map[string]any{})
 	// if err2 != nil {
 	// 	glogger.GLogger.Error(err1)
 	// }
@@ -92,7 +92,7 @@ func ListAlgorithm() []XAlgorithm {
 * 加载算法
 *
  */
-func LoadAlgorithm(Algorithm XAlgorithm, Config map[string]interface{}) error {
+func LoadAlgorithm(Algorithm XAlgorithm, Config map[string]any) error {
 	__DefaultAIRuntime.locker.Lock()
 	defer __DefaultAIRuntime.locker.Unlock()
 	if err := Algorithm.Init(Config); err != nil {

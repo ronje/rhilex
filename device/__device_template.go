@@ -34,7 +34,7 @@ type TemplateDeviceMainConfig struct {
 
 type TemplateDevice struct {
 	typex.XStatus
-	status     typex.DeviceState
+	status     typex.SourceState
 	mainConfig TemplateDeviceMainConfig
 }
 
@@ -44,7 +44,7 @@ func NewTemplateDevice(e typex.Rhilex) typex.XDevice {
 	return hd
 }
 
-func (hd *TemplateDevice) Init(devId string, configMap map[string]interface{}) error {
+func (hd *TemplateDevice) Init(devId string, configMap map[string]any) error {
 	hd.PointId = devId
 	if err := utils.BindSourceConfig(configMap, &hd.mainConfig); err != nil {
 		glogger.GLogger.Error(err)
@@ -58,16 +58,16 @@ func (hd *TemplateDevice) Start(cctx typex.CCTX) error {
 	hd.Ctx = cctx.Ctx
 	hd.CancelCTX = cctx.CancelCTX
 
-	hd.status = typex.DEV_UP
+	hd.status = typex.SOURCE_UP
 	return nil
 }
 
-func (hd *TemplateDevice) Status() typex.DeviceState {
+func (hd *TemplateDevice) Status() typex.SourceState {
 	return hd.Status
 }
 
 func (hd *TemplateDevice) Stop() {
-	hd.status = typex.DEV_DOWN
+	hd.status = typex.SOURCE_DOWN
 	hd.CancelCTX()
 }
 
@@ -75,11 +75,11 @@ func (hd *TemplateDevice) Details() *typex.Device {
 	return hd.RuleEngine.GetDevice(hd.PointId)
 }
 
-func (hd *TemplateDevice) SetState(status typex.DeviceState) {
+func (hd *TemplateDevice) SetState(status typex.SourceState) {
 	hd.status = status
 }
 
-func (hd *TemplateDevice) OnDCACall(UUID string, Command string, Args interface{}) typex.DCAResult {
+func (hd *TemplateDevice) OnDCACall(UUID string, Command string, Args any) typex.DCAResult {
 	return typex.DCAResult{}
 }
 

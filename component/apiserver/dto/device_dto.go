@@ -24,11 +24,11 @@ type RhilexDeviceDto struct {
 	Config string
 }
 
-func (md RhilexDeviceDto) GetConfig() map[string]interface{} {
-	result := make(map[string]interface{})
+func (md RhilexDeviceDto) GetConfig() map[string]any {
+	result := make(map[string]any)
 	err := json.Unmarshal([]byte(md.Config), &result)
 	if err != nil {
-		return map[string]interface{}{}
+		return map[string]any{}
 	}
 	return result
 }

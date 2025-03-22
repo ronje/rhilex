@@ -18,7 +18,7 @@ func Test_rhilex_base_lib(t *testing.T) {
 
 	// Grpc Inend
 	grpcInend := typex.NewInEnd("GRPC", "rhilex Grpc InEnd",
-		"rhilex Grpc InEnd", map[string]interface{}{
+		"rhilex Grpc InEnd", map[string]any{
 			"host": "127.0.0.1",
 			"port": 2581,
 		})

@@ -20,8 +20,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/hootrhino/rhilex/component/datacenter"
 	"github.com/hootrhino/rhilex/component/dataschema"
+	"github.com/hootrhino/rhilex/datacenter"
 	"github.com/hootrhino/rhilex/glogger"
 	"github.com/hootrhino/rhilex/typex"
 
@@ -58,7 +58,7 @@ func buildColumns(rowList []kvp) []string {
 }
 
 // formatValue 根据值的类型格式化 SQL 值
-func formatValue(val interface{}) (string, error) {
+func formatValue(val any) (string, error) {
 	switch v := val.(type) {
 	case string:
 		return fmt.Sprintf("'%s'", v), nil
@@ -150,7 +150,7 @@ func InsertToDataCenterTable(rx typex.Rhilex, uuid string) func(*lua.LState) int
  */
 type kvp struct {
 	K string
-	V interface{}
+	V any
 }
 
 /*

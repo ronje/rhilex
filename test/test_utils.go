@@ -13,7 +13,7 @@ import (
 
 	httpserver "github.com/hootrhino/rhilex/component/apiserver"
 	"github.com/hootrhino/rhilex/component/performance"
-	"github.com/hootrhino/rhilex/component/rhilexmanager"
+	"github.com/hootrhino/rhilex/plugin"
 
 	core "github.com/hootrhino/rhilex/config"
 	"github.com/hootrhino/rhilex/engine"
@@ -21,12 +21,12 @@ import (
 	"github.com/hootrhino/rhilex/typex"
 )
 
-func Equal(a, b interface{}) {
+func Equal(a, b any) {
 	if a != nil {
 		panic(fmt.Sprintf("Assert Failed: %v %v", a, b))
 	}
 }
-func HttpPost(data map[string]interface{}, url string) string {
+func HttpPost(data map[string]any, url string) string {
 	p, errs1 := json.Marshal(data)
 	if errs1 != nil {
 		glogger.GLogger.Fatal(errs1)
@@ -73,20 +73,20 @@ func HttpGet(api string) string {
  */
 func RunTestEngine() typex.Rhilex {
 	mainConfig := core.InitGlobalConfig("config/rhilex.ini")
-	glogger.StartGLogger(
-		mainConfig.AppId,
-		mainConfig.LogLevel,
-		mainConfig.EnableConsole,
-		mainConfig.DebugMode,
-		mainConfig.LogMaxSize,
-		mainConfig.LogMaxBackups,
-		mainConfig.LogMaxAge,
-		mainConfig.LogCompress,
-	)
+	glogger.StartGLogger(glogger.LogConfig{
+		AppID:         mainConfig.AppId,
+		LogLevel:      mainConfig.LogLevel,
+		EnableConsole: mainConfig.EnableConsole,
+		DebugMode:     mainConfig.DebugMode,
+		LogMaxSize:    mainConfig.LogMaxSize,
+		LogMaxBackups: mainConfig.LogMaxBackups,
+		LogMaxAge:     mainConfig.LogMaxAge,
+		LogCompress:   mainConfig.LogCompress,
+	})
 	glogger.StartNewRealTimeLogger(core.GlobalConfig.LogLevel)
 	performance.SetDebugMode(mainConfig.EnablePProf)
 	performance.SetGomaxProcs(mainConfig.GomaxProcs)
-	return engine.InitRuleEngine(mainConfig)
+	return engine.NewRuleEngine(mainConfig)
 }
 
 /*
@@ -144,7 +144,7 @@ func StartTestServer(t *testing.T) {
 	engine := RunTestEngine()
 	engine.Start()
 	// HttpApiServer loaded default
-	if err := rhilexmanager.DefaultPluginTypeManager.LoadPlugin("plugin.http_server", httpserver.NewHttpApiServer(engine)); err != nil {
+	if err := plugin.LoadPlugin("plugin.http_server", httpserver.NewHttpApiServer(engine)); err != nil {
 		t.Fatal(err)
 	}
 }

@@ -50,7 +50,7 @@ func NewMqttServer(e typex.Rhilex) typex.XSource {
 	return &h
 }
 
-func (ms *MqttServer) Init(inEndId string, configMap map[string]interface{}) error {
+func (ms *MqttServer) Init(inEndId string, configMap map[string]any) error {
 	ms.PointId = inEndId
 	if err := utils.BindSourceConfig(configMap, &ms.mainConfig); err != nil {
 		return err

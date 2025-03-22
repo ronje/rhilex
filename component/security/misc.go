@@ -24,104 +24,136 @@ import (
 	"os"
 )
 
-const (
-	PUB_KEY  = "RSA PUBLIC KEY"
-	PRIV_KEY = "RSA PRIVATE KEY"
-)
+var privateKeyPath = "./.encrypt.priv"
+var publicKeyPath = "./.encrypt.pub"
 
-func InitSecurityLicense() {
-	GenLocalSecurityLicense()
+// InitSecurityLicense 初始化安全证书
+func InitSecurityLicense() error {
+
+	privateKey, publicKey, err := GenLocalSecurityLicense()
+	if err != nil {
+		return err
+	}
+	err = os.WriteFile(privateKeyPath, []byte(privateKey), 0600)
+	if err != nil {
+		return fmt.Errorf("failed to write private key file: %v", err)
+	}
+	err = os.WriteFile(publicKeyPath, []byte(publicKey), 0644)
+	if err != nil {
+		return fmt.Errorf("failed to write public key file: %v", err)
+	}
+	return nil
 }
 
-// bits 生成的公私钥对的位数，一般为 1024 或 2048
-// privateKey 生成的私钥
-// publicKey 生成的公钥
-func GenLocalSecurityLicense() (privateKey, publicKey string) {
-	priKey, err2 := rsa.GenerateKey(rand.Reader, 2048)
-	if err2 != nil {
-		panic(err2)
+// GenLocalSecurityLicense 生成本地安全证书
+func GenLocalSecurityLicense() (privateKey, publicKey string, err error) {
+	priKey, err := rsa.GenerateKey(rand.Reader, 2048)
+	if err != nil {
+		return "", "", fmt.Errorf("failed to generate RSA key pair: %v", err)
 	}
 
+	// 编码私钥
 	derStream := x509.MarshalPKCS1PrivateKey(priKey)
-	block := &pem.Block{
+	privateKeyBlock := &pem.Block{
 		Type:  "PRIVATE KEY",
 		Bytes: derStream,
 	}
-	prvKey := pem.EncodeToMemory(block)
+	privateKey = string(pem.EncodeToMemory(privateKeyBlock))
+
+	// 编码公钥
 	puKey := &priKey.PublicKey
 	derPkix, err := x509.MarshalPKIXPublicKey(puKey)
 	if err != nil {
-		panic(err)
+		return "", "", fmt.Errorf("failed to marshal public key: %v", err)
 	}
-	block = &pem.Block{
+	publicKeyBlock := &pem.Block{
 		Type:  "PUBLIC KEY",
 		Bytes: derPkix,
 	}
-	pubKey := pem.EncodeToMemory(block)
-	privateKey = string(prvKey)
-	publicKey = string(pubKey)
-	os.WriteFile("./.encrypt.priv", []byte(privateKey), 0755)
-	os.WriteFile("./.encrypt.pub", []byte(publicKey), 0755)
-	return
+	publicKey = string(pem.EncodeToMemory(publicKeyBlock))
+
+	return privateKey, publicKey, nil
 }
 
-// RSA加密
-// plainText 要加密的数据
-// path 公钥匙文件地址
-func RSA_Encrypt(plainText []byte, path string) ([]byte, error) {
-	file, err := os.Open(path)
+// readKeyFromFile 从文件中读取密钥
+func readKeyFromFile(path string) ([]byte, error) {
+	data, err := os.ReadFile(path)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to read key file: %v", err)
 	}
-	defer file.Close()
-	info, _ := file.Stat()
-	buf := make([]byte, info.Size())
-	file.Read(buf)
-	block, _ := pem.Decode(buf)
+	return data, nil
+}
+
+// parsePublicKey 解析公钥
+func parsePublicKey(data []byte) (*rsa.PublicKey, error) {
+	block, _ := pem.Decode(data)
+	if block == nil {
+		return nil, fmt.Errorf("failed to decode PEM block")
+	}
 	publicKeyInterface, err := x509.ParsePKIXPublicKey(block.Bytes)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to parse public key: %v", err)
 	}
-	publicKey := publicKeyInterface.(*rsa.PublicKey)
-	cipherText, err := rsa.EncryptPKCS1v15(rand.Reader, publicKey, plainText)
+	publicKey, ok := publicKeyInterface.(*rsa.PublicKey)
+	if !ok {
+		return nil, fmt.Errorf("not an RSA public key")
+	}
+	return publicKey, nil
+}
+
+// parsePrivateKey 解析私钥
+func parsePrivateKey(data []byte) (*rsa.PrivateKey, error) {
+	block, _ := pem.Decode(data)
+	if block == nil {
+		return nil, fmt.Errorf("failed to decode PEM block")
+	}
+	privateKey, err := x509.ParsePKCS1PrivateKey(block.Bytes)
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse private key: %v", err)
+	}
+	return privateKey, nil
+}
+
+// RSA_Encrypt RSA加密
+func RSA_Encrypt(plainText []byte, publicKeyPath string) ([]byte, error) {
+	publicKeyData, err := readKeyFromFile(publicKeyPath)
 	if err != nil {
 		return nil, err
+	}
+	publicKey, err := parsePublicKey(publicKeyData)
+	if err != nil {
+		return nil, err
+	}
+	cipherText, err := rsa.EncryptPKCS1v15(rand.Reader, publicKey, plainText)
+	if err != nil {
+		return nil, fmt.Errorf("failed to encrypt data: %v", err)
 	}
 	return cipherText, nil
 }
 
-// RSA解密
-func RSA_Decrypt(cipherText []byte, path string) ([]byte, error) {
-	file, err := os.Open(path)
+// RSA_Decrypt RSA解密
+func RSA_Decrypt(cipherText []byte, privateKeyPath string) ([]byte, error) {
+	privateKeyData, err := readKeyFromFile(privateKeyPath)
 	if err != nil {
 		return nil, err
 	}
-	defer file.Close()
-	info, _ := file.Stat()
-	buf := make([]byte, info.Size())
-	file.Read(buf)
-	block, _ := pem.Decode(buf)
-	privateKey, err := x509.ParsePKCS1PrivateKey(block.Bytes)
+	privateKey, err := parsePrivateKey(privateKeyData)
 	if err != nil {
 		return nil, err
 	}
-	plainText, err1 := rsa.DecryptPKCS1v15(rand.Reader, privateKey, cipherText)
-	if err1 != nil {
-		return nil, err1
+	plainText, err := rsa.DecryptPKCS1v15(rand.Reader, privateKey, cipherText)
+	if err != nil {
+		return nil, fmt.Errorf("failed to decrypt data: %v", err)
 	}
 	return plainText, nil
 }
 
 // CheckLicense 检查本地证书文件是否存在
 func CheckLicense() bool {
-	_, err := os.Stat("./.encrypt.priv")
-	if os.IsNotExist(err) {
-		//fmt.Printf("Private key file '%s' does not exist.\n", ".encrypt.priv")
+	if _, err := os.Stat(privateKeyPath); os.IsNotExist(err) {
 		return false
 	}
-	_, err = os.Stat("./.encrypt.pub")
-	if os.IsNotExist(err) {
-		//fmt.Printf("Public key file '%s' does not exist.\n", ".encrypt.pub")
+	if _, err := os.Stat(publicKeyPath); os.IsNotExist(err) {
 		return false
 	}
 	return true
@@ -129,11 +161,11 @@ func CheckLicense() bool {
 
 // ReadLocalKeys 读取本地的私钥和公钥文件，并返回它们的字符串表示
 func ReadLocalKeys() (string, string, error) {
-	privateKeyPEM, err := os.ReadFile("./.encrypt.priv")
+	privateKeyPEM, err := os.ReadFile(privateKeyPath)
 	if err != nil {
 		return "", "", fmt.Errorf("failed to read private key file: %v", err)
 	}
-	publicKeyPEM, err := os.ReadFile("./.encrypt.pub")
+	publicKeyPEM, err := os.ReadFile(publicKeyPath)
 	if err != nil {
 		return "", "", fmt.Errorf("failed to read public key file: %v", err)
 	}

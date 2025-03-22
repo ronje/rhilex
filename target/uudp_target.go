@@ -74,7 +74,7 @@ func NewUUdpTarget(e typex.Rhilex) typex.XTarget {
 	return ut
 }
 
-func (ut *UUdpTarget) Init(outEndId string, configMap map[string]interface{}) error {
+func (ut *UUdpTarget) Init(outEndId string, configMap map[string]any) error {
 	ut.PointId = outEndId
 	if err := utils.BindSourceConfig(configMap, &ut.mainConfig); err != nil {
 		return err
@@ -135,7 +135,7 @@ func (ut *UUdpTarget) Status() typex.SourceState {
 
 }
 
-func (ut *UUdpTarget) To(data interface{}) (interface{}, error) {
+func (ut *UUdpTarget) To(data any) (any, error) {
 	socket, err := net.DialUDP("udp", nil, &net.UDPAddr{
 		IP:   net.ParseIP(ut.mainConfig.UdpHostConfig.Host),
 		Port: ut.mainConfig.UdpHostConfig.Port,

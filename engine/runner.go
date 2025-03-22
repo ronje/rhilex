@@ -21,19 +21,19 @@ import (
 	"strings"
 	"syscall"
 
+	plugins "github.com/hootrhino/rhilex/plugin"
+	"github.com/hootrhino/rhilex/plugin/discover"
 	wdog "github.com/hootrhino/rhilex/plugin/generic_watchdog"
-	modbusscrc "github.com/hootrhino/rhilex/plugin/modbus_crc_tools"
 	modbusscanner "github.com/hootrhino/rhilex/plugin/modbus_scanner"
 	ngrokc "github.com/hootrhino/rhilex/plugin/ngrokc"
 	telemetry "github.com/hootrhino/rhilex/plugin/telemetry"
-	ttyterminal "github.com/hootrhino/rhilex/plugin/ttyd_terminal"
-	usbmonitor "github.com/hootrhino/rhilex/plugin/usb_monitor"
+	usbmonitor "github.com/hootrhino/rhilex/plugin/usbmonitor"
+	"github.com/hootrhino/rhilex/plugin/webterminal"
 	ini "gopkg.in/ini.v1"
 
 	apiServer "github.com/hootrhino/rhilex/component/apiserver"
 	"github.com/hootrhino/rhilex/component/globalinit"
 	"github.com/hootrhino/rhilex/component/performance"
-	"github.com/hootrhino/rhilex/component/rhilexmanager"
 	core "github.com/hootrhino/rhilex/config"
 	glogger "github.com/hootrhino/rhilex/glogger"
 	icmpsender "github.com/hootrhino/rhilex/plugin/icmp_sender"
@@ -43,16 +43,16 @@ import (
 
 func RunRhilex(iniPath string) {
 	mainConfig := core.InitGlobalConfig(iniPath)
-	glogger.StartGLogger(
-		mainConfig.AppId,
-		mainConfig.LogLevel,
-		mainConfig.EnableConsole,
-		mainConfig.DebugMode,
-		mainConfig.LogMaxSize,
-		mainConfig.LogMaxBackups,
-		mainConfig.LogMaxAge,
-		mainConfig.LogCompress,
-	)
+	glogger.StartGLogger(glogger.LogConfig{
+		AppID:         mainConfig.AppId,
+		LogLevel:      mainConfig.LogLevel,
+		EnableConsole: mainConfig.EnableConsole,
+		DebugMode:     mainConfig.DebugMode,
+		LogMaxSize:    mainConfig.LogMaxSize,
+		LogMaxBackups: mainConfig.LogMaxBackups,
+		LogMaxAge:     mainConfig.LogMaxAge,
+		LogCompress:   mainConfig.LogCompress,
+	})
 	globalinit.InitGlobalInitManager()
 	glogger.StartNewRealTimeLogger(mainConfig.LogLevel)
 	performance.SetDebugMode(mainConfig.EnablePProf)
@@ -60,15 +60,17 @@ func RunRhilex(iniPath string) {
 	//
 	c := make(chan os.Signal, 1)
 	signal.Notify(c, syscall.SIGINT, syscall.SIGABRT, syscall.SIGTERM)
-	engine := InitRuleEngine(mainConfig)
+	engine := NewRuleEngine(mainConfig)
+	InitAllComponent(engine)
+	StartAllComponent()
 	engine.Start()
 	license_manager := license_manager.NewLicenseManager(engine)
-	if err := rhilexmanager.DefaultPluginTypeManager.LoadPlugin("plugin.license_manager", license_manager); err != nil {
+	if err := plugins.LoadPlugin("plugin.license_manager", license_manager); err != nil {
 		glogger.GLogger.Error(err)
 		return
 	}
 	apiServer := apiServer.NewHttpApiServer(engine)
-	if err := rhilexmanager.DefaultPluginTypeManager.LoadPlugin("plugin.http_server", apiServer); err != nil {
+	if err := plugins.LoadPlugin("plugin.http_server", apiServer); err != nil {
 		glogger.GLogger.Error(err)
 		return
 	}
@@ -76,6 +78,7 @@ func RunRhilex(iniPath string) {
 	loadOtherPlugin()
 	s := <-c
 	glogger.GLogger.Warn("RHILEX Receive Stop Signal: ", s)
+	StopAllComponent()
 	engine.Stop()
 }
 
@@ -85,29 +88,30 @@ func loadOtherPlugin() {
 	sections := cfg.ChildSections("plugin")
 	for _, section := range sections {
 		name := strings.TrimPrefix(section.Name(), "plugin.")
-		enable, err := section.GetKey("enable")
-		if err != nil {
+		if name == "http_server" {
 			continue
 		}
+		if name == "license_manager" {
+			continue
+		}
+		enable, err := section.GetKey("enable")
+		if err != nil {
+			glogger.GLogger.Error(err)
+			continue
+		}
+
 		if !enable.MustBool(false) {
-			glogger.GLogger.Warnf("Plugin is disable:%s", name)
 			continue
 		}
 		var plugin typex.XPlugin
 		if name == "usbmonitor" {
-			plugin = usbmonitor.NewUsbMonitor()
+			plugin = usbmonitor.NewUSBMonitorPlugin()
 		}
 		if name == "icmpsender" {
 			plugin = icmpsender.NewICMPSender()
 		}
 		if name == "modbus_scanner" {
 			plugin = modbusscanner.NewModbusScanner()
-		}
-		if name == "ttyd" {
-			plugin = ttyterminal.NewWebTTYPlugin()
-		}
-		if name == "modbus_crc_tools" {
-			plugin = modbusscrc.NewModbusCrcCalculator()
 		}
 		if name == "soft_wdog" {
 			plugin = wdog.NewGenericWatchDog()
@@ -118,8 +122,14 @@ func loadOtherPlugin() {
 		if name == "telemetry" {
 			plugin = telemetry.NewTelemetry()
 		}
+		if name == "discover" {
+			plugin = discover.NewDiscoverPlugin()
+		}
+		if name == "webterminal" {
+			plugin = webterminal.NewWebTerminal()
+		}
 		if plugin != nil {
-			if err := rhilexmanager.DefaultPluginTypeManager.LoadPlugin(section.Name(), plugin); err != nil {
+			if err := plugins.LoadPlugin(section.Name(), plugin); err != nil {
 				glogger.GLogger.Error(err)
 			}
 		}

@@ -2,8 +2,8 @@ package test
 
 import (
 	httpserver "github.com/hootrhino/rhilex/component/apiserver"
-	"github.com/hootrhino/rhilex/component/rhilexmanager"
 	"github.com/hootrhino/rhilex/glogger"
+	"github.com/hootrhino/rhilex/plugin"
 
 	"testing"
 	"time"
@@ -24,12 +24,12 @@ func Test_Generic_Local_camera(t *testing.T) {
 
 	hh := httpserver.NewHttpApiServer(engine)
 	// HttpApiServer loaded default
-	if err := rhilexmanager.DefaultPluginTypeManager.LoadPlugin("plugin.http_server", hh); err != nil {
+	if err := plugin.LoadPlugin("plugin.http_server", hh); err != nil {
 		glogger.GLogger.Fatal("http_server load failed:", err)
 		t.Fatal(err)
 	}
 	GENERIC_CAMERA := typex.NewDevice(typex.GENERIC_CAMERA,
-		"GENERIC_CAMERA", "GENERIC_CAMERA", map[string]interface{}{
+		"GENERIC_CAMERA", "GENERIC_CAMERA", map[string]any{
 			"inputMode":    "REMOTE_STREAM_RTSP",
 			"inputAddr":    "rtsp://192.168.1.210:554/av0_0",
 			"outputMode":   "LOCAL_STREAM_SERVER",
@@ -56,12 +56,12 @@ func Test_Generic_RTSP_camera(t *testing.T) {
 	engine.Start()
 
 	hh := httpserver.NewHttpApiServer(engine)
-	if err := rhilexmanager.DefaultPluginTypeManager.LoadPlugin("plugin.http_server", hh); err != nil {
+	if err := plugin.LoadPlugin("plugin.http_server", hh); err != nil {
 		glogger.GLogger.Fatal("Rule load failed:", err)
 		t.Fatal(err)
 	}
 	GENERIC_CAMERA := typex.NewDevice(typex.GENERIC_CAMERA,
-		"GENERIC_CAMERA", "GENERIC_CAMERA", map[string]interface{}{
+		"GENERIC_CAMERA", "GENERIC_CAMERA", map[string]any{
 			"maxThread":    10,
 			"inputMode":    "RTSP",
 			"device":       "video0",
@@ -84,12 +84,12 @@ func Test_Generic_LOCAL_camera(t *testing.T) {
 	engine.Start()
 
 	hh := httpserver.NewHttpApiServer(engine)
-	if err := rhilexmanager.DefaultPluginTypeManager.LoadPlugin("plugin.http_server", hh); err != nil {
+	if err := plugin.LoadPlugin("plugin.http_server", hh); err != nil {
 		glogger.GLogger.Fatal("Rule load failed:", err)
 		t.Fatal(err)
 	}
 	GENERIC_CAMERA := typex.NewDevice(typex.GENERIC_CAMERA,
-		"GENERIC_CAMERA", "GENERIC_CAMERA", map[string]interface{}{
+		"GENERIC_CAMERA", "GENERIC_CAMERA", map[string]any{
 			"maxThread":    10,
 			"inputMode":    "LOCAL",
 			"device":       "video0",

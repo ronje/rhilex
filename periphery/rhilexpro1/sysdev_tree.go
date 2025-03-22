@@ -18,15 +18,22 @@ package rhilexpro1
 import "github.com/hootrhino/rhilex/periphery"
 
 func GetSysDevTree() periphery.DeviceTree {
+	wlanList, _ := getWlanList()
+	Wlans := []periphery.DeviceNode{}
+	for _, wlan := range wlanList {
+		Wlans = append(Wlans, periphery.DeviceNode{Name: wlan.Name, Type: periphery.WLAN, Status: 1})
+	}
+	ethList, _ := getEthList()
+	eths := []periphery.DeviceNode{}
+	for _, eth := range ethList {
+		eths = append(eths, periphery.DeviceNode{Name: eth.Name, Type: periphery.ETHNET, Status: 1})
+	}
 	return periphery.DeviceTree{
-		Network: []periphery.DeviceNode{
-			{Name: "eth0", Type: "ethernet", Status: 1},
-			{Name: "eth1", Type: "ethernet", Status: 1},
+		Network: eths,
+		Wlan:    Wlans,
+		MNet4g: []periphery.DeviceNode{
+			{Name: "ppp0", Type: periphery.NM4G, Status: 1},
 		},
-		Wlan: []periphery.DeviceNode{
-			{Name: "wlan0", Type: "wlan", Status: 1},
-		},
-		MNet4g: []periphery.DeviceNode{},
 		MNet5g: []periphery.DeviceNode{},
 		CanBus: []periphery.DeviceNode{},
 	}

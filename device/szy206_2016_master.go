@@ -62,7 +62,7 @@ type SZY206_2016_MasterGatewayMainConfig struct {
 
 type SZY206_2016_MasterGateway struct {
 	typex.XStatus
-	status      typex.DeviceState
+	status      typex.SourceState
 	mainConfig  SZY206_2016_MasterGatewayMainConfig
 	DataPoints  map[string]SZY206_2016_DataPoint
 	uartHandler *szy2062016.SZY206ClientHandler
@@ -101,7 +101,7 @@ func NewSZY206_2016_MasterGateway(e typex.Rhilex) typex.XDevice {
 	return gw
 }
 
-func (gw *SZY206_2016_MasterGateway) Init(devId string, configMap map[string]interface{}) error {
+func (gw *SZY206_2016_MasterGateway) Init(devId string, configMap map[string]any) error {
 	gw.PointId = devId
 	intercache.RegisterSlot(gw.PointId)
 
@@ -185,7 +185,7 @@ func (gw *SZY206_2016_MasterGateway) Start(cctx typex.CCTX) error {
 		goto END
 	}
 END:
-	gw.status = typex.DEV_UP
+	gw.status = typex.SOURCE_UP
 	return nil
 }
 
@@ -308,22 +308,22 @@ func (gw *SZY206_2016_MasterGateway) work(handler *szy2062016.SZY206ClientHandle
 		}
 	}
 }
-func (gw *SZY206_2016_MasterGateway) Status() typex.DeviceState {
+func (gw *SZY206_2016_MasterGateway) Status() typex.SourceState {
 	if gw.mainConfig.CommonConfig.Mode == "UART" {
 		if gw.uartHandler == nil {
-			return typex.DEV_DOWN
+			return typex.SOURCE_DOWN
 		}
 	}
 	if gw.mainConfig.CommonConfig.Mode == "TCP" {
 		if gw.tcpHandler == nil {
-			return typex.DEV_DOWN
+			return typex.SOURCE_DOWN
 		}
 	}
 	return gw.status
 }
 
 func (gw *SZY206_2016_MasterGateway) Stop() {
-	gw.status = typex.DEV_DOWN
+	gw.status = typex.SOURCE_DOWN
 	if gw.CancelCTX != nil {
 		gw.CancelCTX()
 	}
@@ -344,11 +344,11 @@ func (gw *SZY206_2016_MasterGateway) Details() *typex.Device {
 	return gw.RuleEngine.GetDevice(gw.PointId)
 }
 
-func (gw *SZY206_2016_MasterGateway) SetState(status typex.DeviceState) {
+func (gw *SZY206_2016_MasterGateway) SetState(status typex.SourceState) {
 	gw.status = status
 }
 
-func (gw *SZY206_2016_MasterGateway) OnDCACall(UUID string, Command string, Args interface{}) typex.DCAResult {
+func (gw *SZY206_2016_MasterGateway) OnDCACall(UUID string, Command string, Args any) typex.DCAResult {
 	return typex.DCAResult{}
 }
 

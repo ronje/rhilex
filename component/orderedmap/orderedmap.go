@@ -18,15 +18,17 @@ package orderedmap
 import "sync"
 
 type OrderedMap[K comparable, V any] struct {
-	mu     sync.RWMutex
-	keys   []K
-	values map[K]V
+	mu       sync.RWMutex
+	keys     []K
+	values   map[K]V
+	keyIndex map[K]int
 }
 
 func NewOrderedMap[K comparable, V any]() *OrderedMap[K, V] {
 	return &OrderedMap[K, V]{
-		keys:   []K{},
-		values: make(map[K]V),
+		keys:     []K{},
+		values:   make(map[K]V),
+		keyIndex: make(map[K]int),
 	}
 }
 
@@ -35,6 +37,7 @@ func (om *OrderedMap[K, V]) Set(key K, value V) {
 	defer om.mu.Unlock()
 
 	if _, exists := om.values[key]; !exists {
+		om.keyIndex[key] = len(om.keys)
 		om.keys = append(om.keys, key)
 	}
 	om.values[key] = value
@@ -52,13 +55,17 @@ func (om *OrderedMap[K, V]) Delete(key K) {
 	om.mu.Lock()
 	defer om.mu.Unlock()
 
-	if _, exists := om.values[key]; exists {
+	if index, exists := om.keyIndex[key]; exists {
 		delete(om.values, key)
-		for i, k := range om.keys {
-			if k == key {
-				om.keys = append(om.keys[:i], om.keys[i+1:]...)
-				break
-			}
+		delete(om.keyIndex, key)
+
+		// Remove the key from the keys slice
+		copy(om.keys[index:], om.keys[index+1:])
+		om.keys = om.keys[:len(om.keys)-1]
+
+		// Update the keyIndex map for the keys after the deleted key
+		for i := index; i < len(om.keys); i++ {
+			om.keyIndex[om.keys[i]] = i
 		}
 	}
 }
@@ -82,5 +89,8 @@ func (om *OrderedMap[K, V]) Values() []V {
 }
 
 func (om *OrderedMap[K, V]) Size() int {
+	om.mu.RLock()
+	defer om.mu.RUnlock()
+
 	return len(om.values)
 }

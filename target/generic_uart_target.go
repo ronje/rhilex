@@ -18,7 +18,6 @@ package target
 import (
 	"encoding/hex"
 	"fmt"
-	"strings"
 	"sync"
 	"time"
 
@@ -86,7 +85,7 @@ func NewGenericUart(e typex.Rhilex) typex.XTarget {
 	return mdev
 }
 
-func (mdev *GenericUart) Init(outEndId string, configMap map[string]interface{}) error {
+func (mdev *GenericUart) Init(outEndId string, configMap map[string]any) error {
 	mdev.PointId = outEndId
 	if err := utils.BindSourceConfig(configMap, &mdev.mainConfig); err != nil {
 		return err
@@ -165,7 +164,7 @@ func (mdev *GenericUart) Status() typex.SourceState {
 * 数据写到串口
 *
  */
-func (mdev *GenericUart) To(data interface{}) (interface{}, error) {
+func (mdev *GenericUart) To(data any) (any, error) {
 	if mdev.serialPort == nil {
 		return 0, fmt.Errorf("serial Port invalid")
 	}
@@ -215,16 +214,4 @@ func (mdev *GenericUart) Stop() {
 }
 func (mdev *GenericUart) Details() *typex.OutEnd {
 	return mdev.RuleEngine.GetOutEnd(mdev.PointId)
-}
-func insertHexBytes(input string) (string, error) {
-	parts := strings.Split(input, `\xFF`)
-	var bytes []byte
-
-	for _, part := range parts {
-		bytes = append(bytes, []byte(part)...)
-		if part != parts[len(parts)-1] {
-			bytes = append(bytes, 0xFF)
-		}
-	}
-	return string(bytes), nil
 }

@@ -5,7 +5,7 @@ import (
 
 	common "github.com/hootrhino/rhilex/component/apiserver/common"
 	"github.com/hootrhino/rhilex/component/apiserver/server"
-	"github.com/hootrhino/rhilex/component/rhilexmanager"
+	"github.com/hootrhino/rhilex/plugin"
 	"github.com/hootrhino/rhilex/typex"
 
 	"github.com/gin-gonic/gin"
@@ -28,9 +28,9 @@ func InitPluginsRoute() {
 
 func PluginService(c *gin.Context, ruleEngine typex.Rhilex) {
 	type Form struct {
-		UUID string      `json:"uuid" binding:"required"`
-		Name string      `json:"name" binding:"required"`
-		Args interface{} `json:"args"`
+		UUID string `json:"uuid" binding:"required"`
+		Name string `json:"name" binding:"required"`
+		Args any    `json:"args"`
 	}
 	form := Form{}
 	if err := c.ShouldBindJSON(&form); err != nil {
@@ -38,7 +38,7 @@ func PluginService(c *gin.Context, ruleEngine typex.Rhilex) {
 		return
 	}
 
-	plugin := rhilexmanager.DefaultPluginTypeManager.Find(form.UUID)
+	plugin := plugin.Find(form.UUID)
 	if plugin != nil {
 		result := plugin.Service(typex.ServiceArg{
 			Name: form.Name,
@@ -58,7 +58,7 @@ func PluginService(c *gin.Context, ruleEngine typex.Rhilex) {
  */
 func PluginDetail(c *gin.Context, ruleEngine typex.Rhilex) {
 	uuid, _ := c.GetQuery("uuid")
-	plugin := rhilexmanager.DefaultPluginTypeManager.Find(uuid)
+	plugin := plugin.Find(uuid)
 	if plugin != nil {
 		c.JSON(common.HTTP_OK, common.OkWithData(plugin.PluginMetaInfo()))
 		return

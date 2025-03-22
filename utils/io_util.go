@@ -3,7 +3,6 @@ package utils
 import (
 	"context"
 	"errors"
-	"fmt"
 	"io"
 	"strings"
 	"time"
@@ -45,11 +44,6 @@ func ReadAtLeast(ctx context.Context, r io.Reader, buf []byte, min int) (n int, 
 	return
 }
 
-/*
-*
-* 时间片读写请求(该函数已经被优化为ReadInLeastTimeout，除了历史遗留以后不要用，后期全面迁移)
-*
- */
 func SliceRequest(ctx context.Context,
 	iio io.ReadWriteCloser, writeBytes []byte,
 	resultBuffer []byte,
@@ -64,32 +58,21 @@ func SliceRequest(ctx context.Context,
 
 /*
 *
-* 读取数据的时候，如果出现错误就返回
-*
- */
-func SliceReceiveWithError(ctx context.Context,
-	iio io.ReadWriteCloser, resultBuffer []byte, td time.Duration) (int, error) {
-	return SliceReceive(ctx, iio, resultBuffer, true, td)
-}
-
-/*
-*
-* 读取数据的时候，如果出现错误则判断是否是串口引起的超时，如果是就忽略
-*
- */
-func SliceReceiveWithoutError(ctx context.Context,
-	iio io.ReadWriteCloser, resultBuffer []byte, td time.Duration) (int, error) {
-	return SliceReceive(ctx, iio, resultBuffer, false, td)
-}
-
-/*
-*
 * 通过一个定时时间片读取
 *
  */
 func SliceReceive(ctx context.Context, io io.ReadWriteCloser, resultBuffer []byte,
 	showError bool, timeout time.Duration) (int, error) {
-	N, B := ReadInLeastTimeout(ctx, io, timeout)
+	N, B, E := ReadInWill(ctx, io, timeout)
+	if E != nil {
+		if showError {
+			if strings.Contains(E.Error(), "timeout") {
+				return N, nil
+			}
+			return N, E
+		}
+		return N, E
+	}
 	copy(resultBuffer, B[:N])
 	return N, nil
 }
@@ -116,64 +99,39 @@ func Paginate(pageNum int, pageSize int, sliceLength int) (int, int) {
 
 /*
 *
-* 自定义日志
-*
- */
-func CLog(format string, v ...interface{}) string {
-	timestamp := time.Now().UTC().Format("2006/01/02 15:04:05")
-	logMsg := fmt.Sprintf(format, v...)
-	logLine := fmt.Sprintf("[%s] %s\n", timestamp, logMsg)
-	fmt.Print(logLine)
-	return logLine
-}
-
-/*
-*
 * 在timeout内读取N个字节
 *
  */
-func ReadInLeastTimeout(ctx context.Context,
-	io io.ReadWriteCloser, timeout time.Duration) (int, []byte) {
-	var responseData [256]byte
-	CtxR, Cancel := context.WithTimeout(ctx, timeout)
-	acc := 0
-	defer Cancel()
+func ReadInWill(ctx context.Context, rwc io.ReadWriteCloser, timeout time.Duration) (int, []byte, error) {
+	ctx, cancel := context.WithTimeout(ctx, timeout)
+	defer cancel()
+
+	var responseData []byte
+	totalRead := 0
+	tempBuffer := make([]byte, 1024)
+
 	for {
 		select {
 		case <-ctx.Done():
-			return acc, responseData[:acc]
-		case <-CtxR.Done():
-			return acc, responseData[:acc]
+			if ctx.Err() == context.DeadlineExceeded {
+				return totalRead, responseData, ctx.Err()
+			}
+			return totalRead, responseData, ctx.Err()
 		default:
-		}
-		N, errRead := io.Read(responseData[acc:])
-		if errRead != nil {
-			if strings.Contains(errRead.Error(), "timeout") {
-				if N > 0 {
-					acc += N
+			n, err := rwc.Read(tempBuffer)
+			if err != nil {
+				if err == io.EOF {
+					return totalRead, responseData, nil
 				}
-				continue
+				if ctx.Err() == context.DeadlineExceeded {
+					return totalRead, responseData, ctx.Err()
+				}
+				return totalRead, responseData, err
+			}
+			if n > 0 {
+				responseData = append(responseData, tempBuffer[:n]...)
+				totalRead += n
 			}
 		}
-		if N > 0 {
-			acc += N
-		}
 	}
-}
-
-/*
-*
-* 十六进制打印字节
-*
- */
-
-func BeautifulHex(b []byte) string {
-	var sb strings.Builder
-	for i, byteValue := range b {
-		if i > 0 {
-			sb.WriteString(" ")
-		}
-		sb.WriteString(fmt.Sprintf("%02X", byteValue))
-	}
-	return sb.String()
 }

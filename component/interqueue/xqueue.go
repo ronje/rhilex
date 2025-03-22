@@ -21,6 +21,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/hootrhino/rhilex/component/intermetric"
 	"github.com/hootrhino/rhilex/component/luaexecutor"
 	"github.com/hootrhino/rhilex/glogger"
 	"github.com/hootrhino/rhilex/typex"
@@ -38,56 +39,60 @@ type XQueue struct {
 	maxQueueSize int
 }
 
+// 初始化队列
 func InitXQueue(rhilex typex.Rhilex, maxQueueSize int) *XQueue {
-	InQueue := make([]chan QueueData, 10)
-	OutQueue := make([]chan QueueData, 10)
-	DeviceQueue := make([]chan QueueData, 10)
-	for i := 0; i < 10; i++ {
-		InQueue[i] = make(chan QueueData, maxQueueSize)
-		OutQueue[i] = make(chan QueueData, maxQueueSize)
-		DeviceQueue[i] = make(chan QueueData, maxQueueSize)
+	queueCount := 10
+	inQueue := make([]chan QueueData, queueCount)
+	outQueue := make([]chan QueueData, queueCount)
+	deviceQueue := make([]chan QueueData, queueCount)
+
+	// 初始化队列通道
+	initQueues := func(queues []chan QueueData) {
+		for i := 0; i < queueCount; i++ {
+			queues[i] = make(chan QueueData, maxQueueSize)
+		}
 	}
+	initQueues(inQueue)
+	initQueues(outQueue)
+	initQueues(deviceQueue)
+
 	__DefaultXQueue = &XQueue{
-		InQueue:      InQueue,
-		OutQueue:     OutQueue,
-		DeviceQueue:  DeviceQueue,
+		InQueue:      inQueue,
+		OutQueue:     outQueue,
+		DeviceQueue:  deviceQueue,
 		rhilex:       rhilex,
 		locker:       sync.Mutex{},
 		maxQueueSize: maxQueueSize,
 	}
 	return __DefaultXQueue
 }
+
+// 启动队列
 func StartXQueue() {
 	__DefaultXQueue.StartXQueue()
 }
-func (q *XQueue) startInQueue(ctx context.Context) {
-	glogger.GLogger.Info("Start XQueue: InQueue")
-	q.processQueue(ctx, q.InQueue, func(data QueueData) {
-		if data.I == nil || data.E == nil {
-			return
+
+// 通用的推送函数
+func pushData(q *XQueue, data QueueData, queue []chan QueueData) error {
+	// 减少锁的使用范围
+	var available []int
+	for i := 0; i < len(queue); i++ {
+		if len(queue[i])+1 <= q.maxQueueSize {
+			available = append(available, i)
 		}
-		luaexecutor.RunSourceCallbacks(data.I, data.Data)
-	})
+	}
+	if len(available) == 0 {
+		return fmt.Errorf("Queue Send Failed: No available channels")
+	}
+	// 更高效的随机数生成
+	randomIndex := available[rand.Intn(len(available))]
+	queue[randomIndex] <- data
+	return nil
 }
 
-func (q *XQueue) startDeviceQueue(ctx context.Context) {
-	glogger.GLogger.Info("Start XQueue: DeviceQueue")
-	q.processQueue(ctx, q.DeviceQueue, func(data QueueData) {
-		if data.D == nil || data.E == nil {
-			return
-		}
-		luaexecutor.RunDeviceCallbacks(data.D, data.Data)
-	})
-}
-
-func (q *XQueue) startOutQueue(ctx context.Context) {
-	glogger.GLogger.Info("Start XQueue: OutQueue")
-	q.processQueue(ctx, q.OutQueue, func(data QueueData) {
-		ProcessOutQueueData(data, data.E)
-	})
-}
-
-func (q *XQueue) processQueue(ctx context.Context, queue []chan QueueData, callback func(QueueData)) {
+// 通用的启动队列处理函数
+func startQueue(ctx context.Context, q *XQueue, queue []chan QueueData, logMsg string, callback func(QueueData)) {
+	glogger.GLogger.Info("Start XQueue: " + logMsg)
 	for {
 		for _, qc := range queue {
 			select {
@@ -104,6 +109,34 @@ func (q *XQueue) processQueue(ctx context.Context, queue []chan QueueData, callb
 	}
 }
 
+// 启动输入队列
+func (q *XQueue) startInQueue(ctx context.Context) {
+	startQueue(ctx, q, q.InQueue, "InQueue", func(data QueueData) {
+		if data.I == nil || data.E == nil {
+			return
+		}
+		luaexecutor.RunSourceCallbacks(data.I, data.Data)
+	})
+}
+
+// 启动设备队列
+func (q *XQueue) startDeviceQueue(ctx context.Context) {
+	startQueue(ctx, q, q.DeviceQueue, "DeviceQueue", func(data QueueData) {
+		if data.D == nil || data.E == nil {
+			return
+		}
+		luaexecutor.RunDeviceCallbacks(data.D, data.Data)
+	})
+}
+
+// 启动输出队列
+func (q *XQueue) startOutQueue(ctx context.Context) {
+	startQueue(ctx, q, q.OutQueue, "OutQueue", func(data QueueData) {
+		ProcessOutQueueData(data, data.E)
+	})
+}
+
+// 启动所有队列
 func (q *XQueue) StartXQueue() {
 	ctx := context.Background()
 	go q.startInQueue(ctx)
@@ -111,53 +144,73 @@ func (q *XQueue) StartXQueue() {
 	go q.startOutQueue(ctx)
 }
 
-func (q *XQueue) push(data QueueData, queue []chan QueueData) error {
-	q.locker.Lock()
-	defer q.locker.Unlock()
-	var available []int
-	for i := 0; i < len(queue); i++ {
-		if len(queue[i])+1 <= q.maxQueueSize {
-			available = append(available, i)
-		}
-	}
-	if len(available) > 0 {
-		randomIndex := available[rand.Intn(len(available))]
-		queue[randomIndex] <- data
-		return nil
-	}
-	return fmt.Errorf("Queue Send Failed: No available channels")
+// 通用的推送包装函数
+func pushWrapper[QueueType any](q *XQueue, pushFunc func(*XQueue, QueueType, string) error, target QueueType, data string) error {
+	return pushFunc(q, target, data)
 }
 
+// 推送数据到输入队列
 func (q *XQueue) PushInQueue(in *typex.InEnd, data string) error {
 	qd := QueueData{
 		E:    q.rhilex,
 		I:    in,
 		Data: data,
 	}
-	return q.push(qd, q.InQueue)
+	return pushData(q, qd, q.InQueue)
 }
 func PushInQueue(in *typex.InEnd, data string) error {
-	return __DefaultXQueue.PushInQueue(in, data)
+	return pushWrapper(__DefaultXQueue, (*XQueue).PushInQueue, in, data)
 }
+
+// 推送数据到设备队列
 func (q *XQueue) PushDeviceQueue(device *typex.Device, data string) error {
 	qd := QueueData{
 		E:    q.rhilex,
 		D:    device,
 		Data: data,
 	}
-	return q.push(qd, q.DeviceQueue)
+	return pushData(q, qd, q.DeviceQueue)
 }
 func PushDeviceQueue(device *typex.Device, data string) error {
-	return __DefaultXQueue.PushDeviceQueue(device, data)
+	return pushWrapper(__DefaultXQueue, (*XQueue).PushDeviceQueue, device, data)
 }
+
+// 推送数据到输出队列
 func (q *XQueue) PushOutQueue(out *typex.OutEnd, data string) error {
 	qd := QueueData{
 		E:    q.rhilex,
 		O:    out,
 		Data: data,
 	}
-	return q.push(qd, q.OutQueue)
+	return pushData(q, qd, q.OutQueue)
 }
 func PushOutQueue(out *typex.OutEnd, data string) error {
-	return __DefaultXQueue.PushOutQueue(out, data)
+	return pushWrapper(__DefaultXQueue, (*XQueue).PushOutQueue, out, data)
+}
+
+type QueueData struct {
+	Debug bool // 是否是Debug消息
+	I     *typex.InEnd
+	O     *typex.OutEnd
+	D     *typex.Device
+	E     typex.Rhilex
+	Data  string
+}
+
+func (qd QueueData) String() string {
+	return "QueueData@In:" + qd.I.UUID + ", Data:" + qd.Data
+}
+
+func ProcessOutQueueData(qd QueueData, e typex.Rhilex) {
+	if qd.O != nil {
+		target := e.GetOutEnd(qd.O.UUID)
+		if target != nil {
+			if _, err := target.Target.To(qd.Data); err != nil {
+				glogger.GLogger.Error(err)
+				intermetric.IncOutFailed()
+			} else {
+				intermetric.IncOut()
+			}
+		}
+	}
 }

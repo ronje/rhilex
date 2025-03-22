@@ -1,0 +1,86 @@
+syntax = "proto3";
+option go_package = "./;tunnel";
+option java_multiple_files = false;
+option java_package = "tunnel";
+option java_outer_classname = "tunnel";
+
+// Import the necessary protobuf file for Empty
+import "google/protobuf/empty.proto";
+
+// 服务端口映射请求
+message PortMappingRequest {
+  string client_id = 1;         // 客户端 ID
+  string local_ip = 2;          // 内网设备 IP
+  int32 local_port = 3;         // 内网设备端口
+  string remote_ip = 4;         // 外网映射 IP
+  int32 remote_port = 5;        // 外网映射端口
+}
+
+// 客户端认证信息
+message AuthRequest {
+  string client_id = 1;         // 客户端 ID
+  string auth_token = 2;        // 认证令牌
+}
+
+message AuthResponse {
+  bool success = 1;             // 是否认证通过
+  string error_message = 2;     // 错误信息
+}
+
+// 客户端状态信息
+message ClientStatus {
+  string client_id = 1;         // 客户端 ID
+  bool is_online = 2;           // 是否在线
+  repeated string mapped_ports = 3; // 映射的端口
+}
+
+// 客户端连接事件
+message ClientEvent {
+  enum EventType {
+    CLIENT_CONNECTED = 0;  // 客户端连接
+    CLIENT_DISCONNECTED = 1; // 客户端断开连接
+  }
+
+  EventType event_type = 1;  // 事件类型
+  string client_id = 2;      // 客户端 ID
+}
+
+// 客户端状态查询请求
+message ClientStatusQuery {
+  string client_id = 1;  // 客户端 ID
+}
+
+// 客户端状态查询响应
+message ClientStatusResponse {
+  ClientStatus status = 1;  // 客户端状态
+}
+
+// 透传数据请求
+message TunnelDataRequest {
+  string client_id = 1;     // 客户端 ID
+  string data = 2;          // 传输的数据
+}
+
+// 透传数据响应
+message TunnelDataResponse {
+  bool success = 1;         // 是否成功接收数据
+  string error_message = 2; // 错误信息
+}
+
+// 服务端定义
+service TunnelService {
+  // 客户端认证
+  rpc Authenticate(AuthRequest) returns (AuthResponse);
+
+  // 客户端连接事件通知
+  rpc ClientEventNotify(ClientEvent) returns (google.protobuf.Empty);
+
+  // 客户端状态查询
+  rpc GetClientStatus(ClientStatusQuery) returns (ClientStatusResponse);
+
+  // 端口映射
+  rpc AddPortMapping(PortMappingRequest) returns (google.protobuf.Empty);
+
+  // 透传数据（双向流式）
+  rpc TunnelData(stream TunnelDataRequest) returns (stream TunnelDataResponse);
+}

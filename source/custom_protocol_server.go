@@ -21,9 +21,10 @@ import (
 	"net"
 	"regexp"
 	"strings"
+	"time"
 
+	"github.com/hootrhino/rhilex/component/protocol"
 	"github.com/hootrhino/rhilex/glogger"
-	"github.com/hootrhino/rhilex/protocol"
 	"github.com/hootrhino/rhilex/typex"
 	"github.com/hootrhino/rhilex/utils"
 )
@@ -56,7 +57,7 @@ func NewCustomProtocol(e typex.Rhilex) typex.XSource {
 	return &h
 }
 
-func (hh *CustomProtocol) Init(inEndId string, configMap map[string]interface{}) error {
+func (hh *CustomProtocol) Init(inEndId string, configMap map[string]any) error {
 	hh.PointId = inEndId
 	if err := utils.BindSourceConfig(configMap, &hh.mainConfig); err != nil {
 		return err
@@ -79,46 +80,63 @@ func (hh *CustomProtocol) Start(cctx typex.CCTX) error {
 	Listener, err := net.Listen("tcp", fmt.Sprintf("%s:%d",
 		hh.mainConfig.Host, hh.mainConfig.Port))
 	if err != nil {
-		glogger.GLogger.Error(err)
+		glogger.GLogger.Errorf("Failed to listen on %s:%d: %v", hh.mainConfig.Host, hh.mainConfig.Port, err)
 		return err
 	}
 	hh.Listener = Listener.(*net.TCPListener)
+
 	go func(ctx context.Context, Listener *net.TCPListener) {
+		defer func() {
+			if Listener != nil {
+				Listener.Close()
+			}
+		}()
+
+		maxRetries := 10
+		retryDelay := 5 * time.Second
 		for {
 			select {
 			case <-ctx.Done():
 				return
 			default:
-			}
-			conn, err := Listener.Accept()
-			if err != nil {
-				glogger.GLogger.Error("Error accepting connection:", err.Error())
-				continue
-			}
-			glogger.GLogger.Info("Accepting connection:", conn.RemoteAddr())
-			config := protocol.ExchangeConfig{
-				Port:         conn,
-				ReadTimeout:  100,
-				WriteTimeout: 0,
-				Logger:       glogger.Logrus,
-			}
-			ctx, cancel := context.WithCancel(hh.Ctx)
-			TransportSlaver := protocol.NewGenericProtocolSlaver(ctx, cancel, config)
-			TransportSlaver.StartLoop(func(ApplicationFrame *protocol.ApplicationFrame, err error) {
+				conn, err := Listener.Accept()
 				if err != nil {
-					glogger.GLogger.Error(err)
-					return
+					if maxRetries > 0 {
+						glogger.GLogger.Errorf("Error accepting connection: %v, retries left: %d", err, maxRetries)
+						maxRetries--
+						time.Sleep(retryDelay)
+						continue
+					} else {
+						glogger.GLogger.Errorf("Max retries reached, giving up: %v", err)
+						return
+					}
 				}
-				ParsedData, errParse := utils.ParseBinary(hh.mainConfig.ProtocolExpr, ApplicationFrame.Payload)
-				if errParse != nil {
-					glogger.GLogger.Error(errParse)
-					return
+				maxRetries = 10 // Reset retries on successful connection
+				glogger.GLogger.Info("Accepting connection:", conn.RemoteAddr())
+				config := protocol.ExchangeConfig{
+					Port:         conn,
+					ReadTimeout:  100,
+					WriteTimeout: 0,
+					Logger:       glogger.Logrus,
 				}
-				ClientDataBytes, _ := json.Marshal(ParsedData)
-				if len(ClientDataBytes) > 2 {
-					hh.RuleEngine.WorkInEnd(hh.Details(), string(ClientDataBytes))
-				}
-			})
+				ctx, cancel := context.WithCancel(hh.Ctx)
+				TransportSlaver := protocol.NewGenericProtocolSlaver(ctx, cancel, config)
+				TransportSlaver.StartLoop(func(ApplicationFrame *protocol.ApplicationFrame, err error) {
+					if err != nil {
+						glogger.GLogger.Error(err)
+						return
+					}
+					ParsedData, errParse := utils.ParseBinary(hh.mainConfig.ProtocolExpr, ApplicationFrame.Payload)
+					if errParse != nil {
+						glogger.GLogger.Error(errParse)
+						return
+					}
+					ClientDataBytes, _ := json.Marshal(ParsedData)
+					if len(ClientDataBytes) > 2 {
+						hh.RuleEngine.WorkInEnd(hh.Details(), string(ClientDataBytes))
+					}
+				})
+			}
 		}
 	}(hh.Ctx, hh.Listener)
 	hh.status = typex.SOURCE_UP

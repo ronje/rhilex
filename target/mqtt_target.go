@@ -73,7 +73,7 @@ func NewMqttTarget(e typex.Rhilex) typex.XTarget {
 	return m
 }
 
-func (mq *mqttOutEndTarget) Init(outEndId string, configMap map[string]interface{}) error {
+func (mq *mqttOutEndTarget) Init(outEndId string, configMap map[string]any) error {
 	mq.PointId = outEndId
 	if err := utils.BindSourceConfig(configMap, &mq.mainConfig); err != nil {
 		return err
@@ -147,7 +147,7 @@ func (mq *mqttOutEndTarget) Details() *typex.OutEnd {
 	return mq.RuleEngine.GetOutEnd(mq.PointId)
 }
 
-func (mq *mqttOutEndTarget) To(data interface{}) (interface{}, error) {
+func (mq *mqttOutEndTarget) To(data any) (any, error) {
 	if mq.client != nil {
 		switch T := data.(type) {
 		case string:

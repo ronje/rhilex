@@ -65,7 +65,7 @@ func NewSemtechUdpForwarder(e typex.Rhilex) typex.XTarget {
 	return ht
 }
 
-func (ht *SemtechUdpForwarder) Init(outEndId string, configMap map[string]interface{}) error {
+func (ht *SemtechUdpForwarder) Init(outEndId string, configMap map[string]any) error {
 	ht.PointId = outEndId
 	if err := utils.BindSourceConfig(configMap, &ht.mainConfig); err != nil {
 		return err
@@ -123,7 +123,7 @@ func (ht *SemtechUdpForwarder) Status() typex.SourceState {
 * 数据转发
 *
  */
-func (ht *SemtechUdpForwarder) To(data interface{}) (interface{}, error) {
+func (ht *SemtechUdpForwarder) To(data any) (any, error) {
 	switch T := data.(type) {
 	case string:
 		SemtechPushMessage := NewSemtechPushMessage(ht.mac, []byte(T))

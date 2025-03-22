@@ -21,8 +21,8 @@ import (
 	"time"
 
 	intercache "github.com/hootrhino/rhilex/component/intercache"
-	"github.com/hootrhino/rhilex/component/rhilexmanager"
 	"github.com/hootrhino/rhilex/glogger"
+	"github.com/hootrhino/rhilex/registry"
 	"github.com/hootrhino/rhilex/typex"
 )
 
@@ -33,7 +33,7 @@ import (
  */
 func (e *RuleEngine) LoadInEndWithCtx(in *typex.InEnd,
 	ctx context.Context, cancelCTX context.CancelFunc) error {
-	if config := rhilexmanager.DefaultSourceTypeManager.Find(in.Type); config != nil {
+	if config := registry.DefaultSourceRegistry.Find(in.Type); config != nil {
 		return e.loadSource(config.NewSource(e), in, ctx, cancelCTX)
 	}
 	return fmt.Errorf("unsupported InEnd type:%s", in.Type)

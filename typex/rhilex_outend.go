@@ -26,14 +26,14 @@ type OutEnd struct {
 	Name        string      `json:"name"`
 	Description string      `json:"description"`
 	//
-	Config map[string]interface{} `json:"config"`
-	Target XTarget                `json:"-"`
+	Config map[string]any `json:"config"`
+	Target XTarget        `json:"-"`
 }
 
 func NewOutEnd(t TargetType,
 	n string,
 	d string,
-	c map[string]interface{}) *OutEnd {
+	c map[string]any) *OutEnd {
 	return &OutEnd{
 		UUID:        utils.MakeUUID("OUTEND"),
 		Type:        TargetType(t),
@@ -44,6 +44,6 @@ func NewOutEnd(t TargetType,
 	}
 }
 
-func (out *OutEnd) GetConfig(k string) interface{} {
+func (out *OutEnd) GetConfig(k string) any {
 	return (out.Config)[k]
 }

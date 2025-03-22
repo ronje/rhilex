@@ -7,24 +7,24 @@ import (
 	httpserver "github.com/hootrhino/rhilex/component/apiserver"
 	"github.com/hootrhino/rhilex/component/apiserver/model"
 	"github.com/hootrhino/rhilex/component/apiserver/service"
-	"github.com/hootrhino/rhilex/component/rhilexmanager"
-	"github.com/hootrhino/rhilex/config"
+	core "github.com/hootrhino/rhilex/config"
 	"github.com/hootrhino/rhilex/engine"
 	"github.com/hootrhino/rhilex/glogger"
+	"github.com/hootrhino/rhilex/plugin"
 	"github.com/hootrhino/rhilex/typex"
 )
 
 // 初始化一些测试数据
 func TestInitData(t *testing.T) {
-	engine := engine.InitRuleEngine(core.InitGlobalConfig("config/rhilex.ini"))
+	engine := engine.NewRuleEngine(core.InitGlobalConfig("config/rhilex.ini"))
 	engine.Start()
 	hh := httpserver.NewHttpApiServer(engine)
 	// HttpApiServer loaded default
-	if err := rhilexmanager.DefaultPluginTypeManager.LoadPlugin("plugin.http_server", hh); err != nil {
+	if err := plugin.LoadPlugin("plugin.http_server", hh); err != nil {
 		glogger.GLogger.Fatal("Rule load failed:", err)
 	}
 	// Grpc Inend
-	grpcInend := typex.NewInEnd("GRPC", "rhilex Grpc InEnd", "rhilex Grpc InEnd", map[string]interface{}{
+	grpcInend := typex.NewInEnd("GRPC", "rhilex Grpc InEnd", "rhilex Grpc InEnd", map[string]any{
 		"port": "2581",
 	})
 	b1, _ := json.Marshal(grpcInend.Config)
@@ -36,7 +36,7 @@ func TestInitData(t *testing.T) {
 		Description: grpcInend.Description,
 	})
 	// CoAP Inend
-	coapInend := typex.NewInEnd("COAP", "rhilex COAP InEnd", "rhilex COAP InEnd", map[string]interface{}{
+	coapInend := typex.NewInEnd("COAP", "rhilex COAP InEnd", "rhilex COAP InEnd", map[string]any{
 		"port": "2582",
 	})
 	b2, _ := json.Marshal(coapInend.Config)
@@ -48,7 +48,7 @@ func TestInitData(t *testing.T) {
 		Description: coapInend.Description,
 	})
 	// Http Inend
-	httpInend := typex.NewInEnd("HTTP", "rhilex HTTP InEnd", "rhilex HTTP InEnd", map[string]interface{}{
+	httpInend := typex.NewInEnd("HTTP", "rhilex HTTP InEnd", "rhilex HTTP InEnd", map[string]any{
 		"port": "2583",
 	})
 	b3, _ := json.Marshal(httpInend.Config)
@@ -61,7 +61,7 @@ func TestInitData(t *testing.T) {
 	})
 
 	// Udp Inend
-	udpInend := typex.NewInEnd("UDP", "rhilex UDP InEnd", "rhilex UDP InEnd", map[string]interface{}{
+	udpInend := typex.NewInEnd("UDP", "rhilex UDP InEnd", "rhilex UDP InEnd", map[string]any{
 		"port": "2584",
 	})
 	b4, _ := json.Marshal(udpInend.Config)

@@ -29,6 +29,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	common "github.com/hootrhino/rhilex/component/apiserver/common"
+	"github.com/hootrhino/rhilex/glogger"
 	"github.com/hootrhino/rhilex/ossupport"
 	"github.com/hootrhino/rhilex/typex"
 	"github.com/hootrhino/rhilex/utils"
@@ -76,87 +77,87 @@ func UpgradeFirmWare(c *gin.Context, ruleEngine typex.Rhilex) {
 	os.Stdout = file
 	os.Stderr = file
 
-	utils.CLog("[RHILEX UPGRADE] Current Version: %s", typex.MainVersion)
+	glogger.DefaultOutput("[RHILEX UPGRADE] Current Version: %s", typex.MainVersion)
 	uploadPath := "./zupgrade/"        // 固定路径
 	tempPath := uploadPath + "temp001" // 固定路径
 	errMkdirAll := os.MkdirAll(tempPath, os.ModePerm)
 	if errMkdirAll != nil {
 		c.JSON(common.HTTP_OK,
-			common.Error(utils.CLog("[RHILEX UPGRADE] %s", errMkdirAll.Error())))
+			common.Error(glogger.DefaultOutput("[RHILEX UPGRADE] %s", errMkdirAll.Error())))
 		return
 	}
 	// 提前解压文件
 	if errUnzip := ossupport.Unzip(ossupport.FirmwarePath, tempPath); errUnzip != nil {
 		c.JSON(common.HTTP_OK,
-			common.Error(utils.CLog("[RHILEX UPGRADE] Unzip error:%s", errUnzip.Error())))
+			common.Error(glogger.DefaultOutput("[RHILEX UPGRADE] Unzip error:%s", errUnzip.Error())))
 		return
 	}
 	// 检查 /tmp/temp001/rhilex 的Md5
 	md51, errSumMD5 := sumMD5(tempPath + "/" + ossupport.GetExePath())
 	if errSumMD5 != nil {
 		c.JSON(common.HTTP_OK,
-			common.Error(utils.CLog("[RHILEX UPGRADE] GetExePath error:%s", errSumMD5.Error())))
+			common.Error(glogger.DefaultOutput("[RHILEX UPGRADE] GetExePath error:%s", errSumMD5.Error())))
 		return
 	}
 	errCheckFileType := CheckFileType(tempPath + "/" + ossupport.GetExePath())
 	if errCheckFileType != nil {
 		c.JSON(common.HTTP_OK,
-			common.Error(utils.CLog("[RHILEX UPGRADE] CheckFileType error:%s", errCheckFileType.Error())))
+			common.Error(glogger.DefaultOutput("[RHILEX UPGRADE] CheckFileType error:%s", errCheckFileType.Error())))
 		return
 	}
 	// 从解压后的目录提取Md5
 	readBytes, errReadFile := os.ReadFile(tempPath + "/md5.sum")
 	if errReadFile != nil {
 		c.JSON(common.HTTP_OK,
-			common.Error(utils.CLog("[RHILEX UPGRADE] ReadFile md5.sum error:%s", errReadFile.Error())))
+			common.Error(glogger.DefaultOutput("[RHILEX UPGRADE] ReadFile md5.sum error:%s", errReadFile.Error())))
 		return
 	}
-	utils.CLog("[RHILEX UPGRADE] Compare MD5:[%s]~[%s]", md51, string(readBytes))
+	glogger.DefaultOutput("[RHILEX UPGRADE] Compare MD5:[%s]~[%s]", md51, string(readBytes))
 	if md51 != string(readBytes) {
 		c.JSON(common.HTTP_OK,
-			common.Error(utils.CLog("[RHILEX UPGRADE] Invalid sum md5!")))
+			common.Error(glogger.DefaultOutput("[RHILEX UPGRADE] Invalid sum md5!")))
 		return
 	}
 	if errMov := MoveFile(tempPath+"/"+ossupport.GetExePath(),
 		ossupport.MainWorkDir+ossupport.GetUpgraderPath()); errMov != nil {
 
 		c.JSON(common.HTTP_OK,
-			common.Error(utils.CLog("[RHILEX UPGRADE] Move Upgrader Failed:%s", errMov)))
+			common.Error(glogger.DefaultOutput("[RHILEX UPGRADE] Move Upgrader Failed:%s", errMov)))
 		return
 	}
 	if errChmod := ossupport.ChmodX(ossupport.MainWorkDir + ossupport.GetUpgraderPath()); errChmod != nil {
 		c.JSON(common.HTTP_OK,
-			common.Error(utils.CLog("[RHILEX UPGRADE] ChmodX Upgrader Failed:%s", errChmod)))
+			common.Error(glogger.DefaultOutput("[RHILEX UPGRADE] ChmodX Upgrader Failed:%s", errChmod)))
 		return
 	}
-	utils.CLog("[RHILEX UPGRADE] Remove Temp File:%s", tempPath)
+	glogger.DefaultOutput("[RHILEX UPGRADE] Remove Temp File:%s", tempPath)
 	if errRm := os.RemoveAll(tempPath); errRm != nil {
 		c.JSON(common.HTTP_OK,
-			common.Error(utils.CLog("[RHILEX UPGRADE] Remove Temp File:%s", errRm)))
+			common.Error(glogger.DefaultOutput("[RHILEX UPGRADE] Remove Temp File:%s", errRm)))
 		return
 	}
-	utils.CLog("[RHILEX UPGRADE] RuleEngine GetConfig:%s", tempPath)
+	glogger.DefaultOutput("[RHILEX UPGRADE] RuleEngine GetConfig:%s", tempPath)
 	IniPath := ruleEngine.GetConfig().IniPath
 	mainCfg, errLoad := ini.Load(IniPath)
 	if errLoad != nil {
 		c.JSON(common.HTTP_OK,
-			common.Error(utils.CLog("[RHILEX UPGRADE] Load Ini File error:%s", errLoad)))
+			common.Error(glogger.DefaultOutput("[RHILEX UPGRADE] Load Ini File error:%s", errLoad)))
 		return
 	}
 	section := mainCfg.Section("plugin.license_manager")
 	license_path, err1 := section.GetKey("license_path")
 	if err1 != nil {
 		c.JSON(common.HTTP_OK,
-			common.Error(utils.CLog("[RHILEX UPGRADE] GetKey license_manager.license_path error:%s", err1)))
+			common.Error(glogger.DefaultOutput("[RHILEX UPGRADE] GetKey license_manager.license_path error:%s", err1)))
 		return
 	}
 	key_path, err2 := section.GetKey("key_path")
 	if err2 != nil {
 		c.JSON(common.HTTP_OK,
-			common.Error(utils.CLog("[RHILEX UPGRADE] GetKey license_manager.key_path error:%s", err2)))
+			common.Error(glogger.DefaultOutput("[RHILEX UPGRADE] GetKey license_manager.key_path error:%s", err2)))
 		return
 	}
-	utils.CLog("[RHILEX UPGRADE] Start Upgrade Process: license_path=%s, key_path=%s",
+	glogger.DefaultOutput("[RHILEX UPGRADE] Start Upgrade Process: license_path=%s, key_path=%s",
 		license_path.String(), key_path.String())
 	go func() {
 		time.Sleep(2 * time.Second)

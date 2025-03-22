@@ -65,7 +65,7 @@ func NewSmtpTarget(e typex.Rhilex) typex.XTarget {
 	return ht
 }
 
-func (ht *SmtpTarget) Init(outEndId string, configMap map[string]interface{}) error {
+func (ht *SmtpTarget) Init(outEndId string, configMap map[string]any) error {
 	ht.PointId = outEndId
 	if err := utils.BindSourceConfig(configMap, &ht.mainConfig); err != nil {
 		return err
@@ -88,7 +88,7 @@ func (ht *SmtpTarget) Status() typex.SourceState {
 	}
 	return typex.SOURCE_UP
 }
-func (ht *SmtpTarget) To(data interface{}) (interface{}, error) {
+func (ht *SmtpTarget) To(data any) (any, error) {
 	switch T := data.(type) {
 	case string:
 		err := sendMail(ht.mainConfig.From, ht.mainConfig.To, ht.mainConfig.Subject, T,

@@ -25,9 +25,9 @@ import (
 	"github.com/hootrhino/rhilex/component/apiserver/model"
 	"github.com/hootrhino/rhilex/component/apiserver/server"
 	"github.com/hootrhino/rhilex/component/apiserver/service"
-	"github.com/hootrhino/rhilex/component/datacenter"
 	"github.com/hootrhino/rhilex/component/interdb"
 	core "github.com/hootrhino/rhilex/config"
+	"github.com/hootrhino/rhilex/datacenter"
 	"github.com/hootrhino/rhilex/glogger"
 	"github.com/hootrhino/rhilex/typex"
 	"github.com/xuri/excelize/v2"
@@ -146,7 +146,7 @@ func ExportData(c *gin.Context, ruleEngine typex.Rhilex) {
 		return
 	}
 	Headers := []string{}
-	OneRowNCol := make([]interface{}, len(TableSchemas))
+	OneRowNCol := make([]any, len(TableSchemas))
 	for i, TableSchema := range TableSchemas {
 		Headers = append(Headers, TableSchema.Name)
 		switch TableSchema.Type {
@@ -188,7 +188,7 @@ func ExportData(c *gin.Context, ruleEngine typex.Rhilex) {
 			return
 		}
 		cell, _ = excelize.CoordinatesToCellName(1, idx+2)
-		SheetRow := []interface{}{}
+		SheetRow := []any{}
 		for _, Column := range OneRowNCol {
 			switch T := Column.(type) {
 			case *bool:
@@ -293,7 +293,7 @@ func QueryDDLDataList(c *gin.Context, ruleEngine typex.Rhilex) {
 		return
 	}
 	DbTx := datacenter.DataCenterDb().Scopes(service.Paginate(*pager))
-	records := []map[string]interface{}{}
+	records := []map[string]any{}
 	tableName := fmt.Sprintf("data_center_%s", uuid)
 	// Default order by ts desc
 	Order := "DESC"
@@ -345,7 +345,7 @@ func QueryDDLLastData(c *gin.Context, ruleEngine typex.Rhilex) {
 		return
 	}
 	tableName := fmt.Sprintf("data_center_%s", uuid)
-	record := map[string]interface{}{}
+	record := map[string]any{}
 	result := datacenter.DataCenterDb().Select(selectFields).
 		Table(tableName).Order("create_at DESC").Limit(1).Scan(&record)
 	if result.Error != nil {
@@ -409,7 +409,7 @@ func GetSchemaDDLDefine(c *gin.Context, ruleEngine typex.Rhilex) {
  *
  * 标准类型：STRING、 INTEGER 、FLOAT 、BOOL 、GEO 、STRING
  */
-func SqliteTypeMappingGoDefault(dbType string) (string, interface{}) {
+func SqliteTypeMappingGoDefault(dbType string) (string, any) {
 	switch dbType {
 	case "TEXT":
 		return "STRING", "''"
@@ -431,8 +431,8 @@ func SqliteTypeMappingGoDefault(dbType string) (string, interface{}) {
 * 数据模型的列类型映射
 *
  */
-type SchemaColumn map[string]interface{}
+type SchemaColumn map[string]any
 
-func (s *SchemaColumn) Scan(value interface{}) error {
+func (s *SchemaColumn) Scan(value any) error {
 	return nil
 }

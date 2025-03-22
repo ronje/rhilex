@@ -63,7 +63,7 @@ func NewInternalEventSource(r typex.Rhilex) typex.XSource {
 	return &u
 }
 
-func (u *InternalEventSource) Init(inEndId string, configMap map[string]interface{}) error {
+func (u *InternalEventSource) Init(inEndId string, configMap map[string]any) error {
 	u.PointId = inEndId
 	if err := utils.BindSourceConfig(configMap, &u.mainConfig); err != nil {
 		return err
@@ -111,8 +111,8 @@ type event struct {
 	// - TARGET: 北向事件
 	// - SYSTEM: 系统内部事件
 	// - HARDWARE: 硬件事件
-	Type  string      `json:"type"`
-	Event string      `json:"event"`
-	Ts    uint64      `json:"ts"`
-	Info  interface{} `json:"info"`
+	Type  string `json:"type"`
+	Event string `json:"event"`
+	Ts    uint64 `json:"ts"`
+	Info  any    `json:"info"`
 }

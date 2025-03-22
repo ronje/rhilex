@@ -27,6 +27,7 @@ import (
 	"github.com/hootrhino/rhilex/component/activation"
 	"github.com/hootrhino/rhilex/component/performance"
 	"github.com/hootrhino/rhilex/engine"
+	"github.com/hootrhino/rhilex/glogger"
 	"github.com/hootrhino/rhilex/ossupport"
 	"github.com/hootrhino/rhilex/periphery"
 	"github.com/hootrhino/rhilex/typex"
@@ -50,7 +51,7 @@ func init() {
 	typex.DefaultVersionInfo.Product = periphery.CheckVendor(env)
 	dist, err := utils.GetOSDistribution()
 	if err != nil {
-		utils.CLog("Failed to Get OS Distribution:%s", err)
+		glogger.DefaultOutput("Failed to Get OS Distribution:%s", err)
 		os.Exit(1)
 	}
 	typex.DefaultVersionInfo.Dist = dist
@@ -69,7 +70,7 @@ func main() {
 		Commands: []*cli.Command{
 			{
 				Name:  "run",
-				Usage: "start rhilex system",
+				Usage: "Start RHILEX",
 				Flags: []cli.Flag{
 					&cli.StringFlag{
 						Name:  "db",
@@ -83,20 +84,19 @@ func main() {
 					},
 				},
 				Action: func(c *cli.Context) error {
-					utils.CLog("%s", typex.Banner)
-					utils.ShowGGpuAndCpuInfo()
+					glogger.DefaultOutput("%s", typex.Banner)
 					utils.ShowIpAddress()
 					pid := os.Getpid()
 					err := os.WriteFile(ossupport.MainExePidPath, []byte(fmt.Sprintf("%d", pid)), 0755)
 					if err != nil {
-						utils.CLog("[RHILEX RUN] Write Pid File Failed:%s", err)
+						glogger.DefaultOutput("[RHILEX RUN] Write Pid File Failed:%s", err)
 						return nil
 					}
 					engine.RunRhilex(c.String("config"))
 					if utils.PathExists(ossupport.MainExePidPath) {
 						os.Remove(ossupport.MainExePidPath)
 					}
-					utils.CLog("[RHILEX RUN] Stop rhilex successfully.")
+					glogger.DefaultOutput("[RHILEX RUN] Stop rhilex successfully.")
 					return nil
 				},
 			},
@@ -135,7 +135,7 @@ func main() {
 					flag := os.O_APPEND | os.O_CREATE | os.O_WRONLY
 					file, err := os.OpenFile(ossupport.UpgradeLogPath, flag, 0755)
 					if err != nil {
-						utils.CLog("%s", err.Error())
+						glogger.DefaultOutput("%s", err.Error())
 						return nil
 					}
 					defer file.Close()
@@ -143,72 +143,72 @@ func main() {
 					os.Stderr = file
 					// upgrade lock
 					if err := os.WriteFile(ossupport.UpgradeLockPath, []byte{48}, 0755); err != nil {
-						utils.CLog("[RHILEX UPGRADE] Write Upgrade Lock File error:%s", err.Error())
+						glogger.DefaultOutput("[RHILEX UPGRADE] Write Upgrade Lock File error:%s", err.Error())
 						return nil
 					}
 					defer func() {
 						// upgrade lock
 						if err := os.Remove(ossupport.UpgradeLockPath); err != nil {
-							utils.CLog("[RHILEX UPGRADE] Remove Upgrade Lock File error:%s", err.Error())
+							glogger.DefaultOutput("[RHILEX UPGRADE] Remove Upgrade Lock File error:%s", err.Error())
 							return
 						}
-						utils.CLog("[RHILEX UPGRADE] Remove Upgrade Lock File Finished")
+						glogger.DefaultOutput("[RHILEX UPGRADE] Remove Upgrade Lock File Finished")
 					}()
 					if !c.Bool("upgrade") {
-						utils.CLog("[RHILEX UPGRADE] Nothing todo")
+						glogger.DefaultOutput("[RHILEX UPGRADE] Nothing todo")
 						return nil
 					}
-					utils.CLog("[RHILEX BACKUP] Start backup ")
+					glogger.DefaultOutput("[RHILEX BACKUP] Start backup ")
 					var errBob error
 					errBob = ossupport.BackupOldVersion(ossupport.MainWorkDir+ossupport.GetExePath(),
 						ossupport.OldBackupDir+ossupport.GetExePath())
 					if errBob != nil {
-						utils.CLog("[RHILEX BACKUP] Backup rhilex Failed: %s", errBob)
+						glogger.DefaultOutput("[RHILEX BACKUP] Backup rhilex Failed: %s", errBob)
 						return nil
 					}
 					errBob = ossupport.BackupOldVersion(c.String("inipath"), ossupport.OldBackupDir+"rhilex.ini")
 					if errBob != nil {
-						utils.CLog("[RHILEX BACKUP] Backup rhilex.ini Failed: %s", errBob)
+						glogger.DefaultOutput("[RHILEX BACKUP] Backup rhilex.ini Failed: %s", errBob)
 						return nil
 					}
 					errBob = ossupport.BackupOldVersion(c.String("rundbpath"), ossupport.OldBackupDir+"rhilex.db")
 					if errBob != nil {
-						utils.CLog("[RHILEX BACKUP] Backup rhilex.db Failed: %s", errBob)
+						glogger.DefaultOutput("[RHILEX BACKUP] Backup rhilex.db Failed: %s", errBob)
 						return nil
 					}
 					errBob = ossupport.BackupOldVersion(c.String("keypath"), ossupport.OldBackupDir+"license.key")
 					if errBob != nil {
-						utils.CLog("[RHILEX BACKUP] Backup License.Key Failed: %s", errBob)
+						glogger.DefaultOutput("[RHILEX BACKUP] Backup License.Key Failed: %s", errBob)
 						return nil
 					}
 					errBob = ossupport.BackupOldVersion(c.String("licpath"), ossupport.OldBackupDir+"license.lic")
 					if errBob != nil {
-						utils.CLog("[RHILEX BACKUP] Backup License.Lic Failed: %s", errBob)
+						glogger.DefaultOutput("[RHILEX BACKUP] Backup License.Lic Failed: %s", errBob)
 						return nil
 					}
 					errBob = ossupport.BackupOldVersion(ossupport.DataCenterPath, ossupport.OldBackupDir+"rhilex_datacenter.db")
 					if errBob != nil {
-						utils.CLog("[RHILEX BACKUP] Backup DataCenter Failed: %s", errBob)
+						glogger.DefaultOutput("[RHILEX BACKUP] Backup DataCenter Failed: %s", errBob)
 						return nil
 					}
 					errBob = ossupport.BackupOldVersion(ossupport.LostCacheDataPath, ossupport.OldBackupDir+"rhilex_lostcache.db")
 					if errBob != nil {
-						utils.CLog("[RHILEX BACKUP] Backup LostCacheData Failed: %s", errBob)
+						glogger.DefaultOutput("[RHILEX BACKUP] Backup LostCacheData Failed: %s", errBob)
 						return nil
 					}
-					utils.CLog("[RHILEX BACKUP] Backup finished")
-					utils.CLog("[RHILEX UPGRADE] Unzip Firmware")
+					glogger.DefaultOutput("[RHILEX BACKUP] Backup finished")
+					glogger.DefaultOutput("[RHILEX UPGRADE] Unzip Firmware")
 					cwd, err := os.Getwd()
 					if err != nil {
-						utils.CLog("[RHILEX UPGRADE] Getwd error: %v", err)
+						glogger.DefaultOutput("[RHILEX UPGRADE] Getwd error: %v", err)
 						return nil
 					}
 					if err := ossupport.UnzipFirmware(ossupport.FirmwarePath, cwd); err != nil {
-						utils.CLog("[RHILEX UPGRADE] Unzip Firmware error:%s", err.Error())
+						glogger.DefaultOutput("[RHILEX UPGRADE] Unzip Firmware error:%s", err.Error())
 						return nil
 					}
-					utils.CLog("[RHILEX UPGRADE] Unzip Firmware finished")
-					utils.CLog("[RHILEX UPGRADE] Upgrade finished")
+					glogger.DefaultOutput("[RHILEX UPGRADE] Unzip Firmware finished")
+					glogger.DefaultOutput("[RHILEX UPGRADE] Upgrade finished")
 					return nil
 				},
 			},
@@ -225,44 +225,44 @@ func main() {
 					},
 				},
 				Action: func(c *cli.Context) error {
-					utils.CLog("[RHILEX ROLLBACK] Rollback Process Started")
+					glogger.DefaultOutput("[RHILEX ROLLBACK] Rollback Process Started")
 					var errBob error
 					errBob = ossupport.BackupOldVersion(ossupport.OldBackupDir+ossupport.GetExePath(), ossupport.GetExePath())
 					if errBob != nil {
-						utils.CLog("[RHILEX ROLLBACK] Rollback Failed: %s", errBob)
+						glogger.DefaultOutput("[RHILEX ROLLBACK] Rollback Failed: %s", errBob)
 						return nil
 					}
 					errBob = ossupport.BackupOldVersion(ossupport.OldBackupDir+"rhilex.ini", ossupport.RunIniPath)
 					if errBob != nil {
-						utils.CLog("[RHILEX ROLLBACK] Rollback Failed: %s", errBob)
+						glogger.DefaultOutput("[RHILEX ROLLBACK] Rollback Failed: %s", errBob)
 						return nil
 					}
 					errBob = ossupport.BackupOldVersion(ossupport.OldBackupDir+"rhilex.db", ossupport.RunDbPath)
 					if errBob != nil {
-						utils.CLog("[RHILEX ROLLBACK] Rollback Failed: %s", errBob)
+						glogger.DefaultOutput("[RHILEX ROLLBACK] Rollback Failed: %s", errBob)
 						return nil
 					}
 					errBob = ossupport.BackupOldVersion(ossupport.OldBackupDir+"license.key", ossupport.LicenseKeyPath)
 					if errBob != nil {
-						utils.CLog("[RHILEX ROLLBACK] Rollback Failed: %s", errBob)
+						glogger.DefaultOutput("[RHILEX ROLLBACK] Rollback Failed: %s", errBob)
 						return nil
 					}
 					errBob = ossupport.BackupOldVersion(ossupport.OldBackupDir+"license.lic", ossupport.LicenseLicPath)
 					if errBob != nil {
-						utils.CLog("[RHILEX ROLLBACK] Rollback Failed: %s", errBob)
+						glogger.DefaultOutput("[RHILEX ROLLBACK] Rollback Failed: %s", errBob)
 						return nil
 					}
 					errBob = ossupport.BackupOldVersion(ossupport.OldBackupDir+"rhilex_datacenter.db", ossupport.DataCenterPath)
 					if errBob != nil {
-						utils.CLog("[RHILEX ROLLBACK] Rollback Failed: %s", errBob)
+						glogger.DefaultOutput("[RHILEX ROLLBACK] Rollback Failed: %s", errBob)
 						return nil
 					}
 					errBob = ossupport.BackupOldVersion(ossupport.OldBackupDir+"rhilex_lostcache.db", ossupport.LostCacheDataPath)
 					if errBob != nil {
-						utils.CLog("[RHILEX ROLLBACK] Rollback Failed: %s", errBob)
+						glogger.DefaultOutput("[RHILEX ROLLBACK] Rollback Failed: %s", errBob)
 						return nil
 					}
-					utils.CLog("[RHILEX ROLLBACK] Rollback Process Exited")
+					glogger.DefaultOutput("[RHILEX ROLLBACK] Rollback Process Exited")
 					return nil
 				},
 			},
@@ -281,7 +281,7 @@ func main() {
 				Action: func(c *cli.Context) error {
 					file, err := os.Create(ossupport.RecoverLogPath)
 					if err != nil {
-						utils.CLog("%s", err.Error())
+						glogger.DefaultOutput("%s", err.Error())
 						return nil
 					}
 					defer file.Close()
@@ -289,57 +289,57 @@ func main() {
 					os.Stderr = file
 					// upgrade lock
 					if err := os.WriteFile(ossupport.UpgradeLockPath, []byte{48}, 0755); err != nil {
-						utils.CLog("[DATA RECOVER] Write Recover Lock File error:%s", err.Error())
+						glogger.DefaultOutput("[DATA RECOVER] Write Recover Lock File error:%s", err.Error())
 						return nil
 					}
 					defer func() {
 						// upgrade lock
 						if err := os.Remove(ossupport.UpgradeLockPath); err != nil {
-							utils.CLog("[DATA RECOVER] Remove Recover Lock File error:%s", err.Error())
+							glogger.DefaultOutput("[DATA RECOVER] Remove Recover Lock File error:%s", err.Error())
 							return
 						}
-						utils.CLog("[DATA RECOVER] Remove Recover Lock File Finished")
+						glogger.DefaultOutput("[DATA RECOVER] Remove Recover Lock File Finished")
 					}()
 					if runtime.GOOS != "linux" {
-						utils.CLog("[DATA RECOVER] Only Support Linux")
+						glogger.DefaultOutput("[DATA RECOVER] Only Support Linux")
 						return nil
 					}
 
 					if !c.Bool("recover") {
-						utils.CLog("[DATA RECOVER] Nothing todo")
+						glogger.DefaultOutput("[DATA RECOVER] Nothing todo")
 						return nil
 					}
-					utils.CLog("[DATA RECOVER] Remove Old Db File")
+					glogger.DefaultOutput("[DATA RECOVER] Remove Old Db File")
 					if err := os.Remove(ossupport.RunDbPath); err != nil {
-						utils.CLog("[DATA RECOVER] Remove Main COnfig Db error:%s", err.Error())
+						glogger.DefaultOutput("[DATA RECOVER] Remove Main COnfig Db error:%s", err.Error())
 						return nil
 					}
 					if err := os.Remove(ossupport.DataCenterPath); err != nil {
-						utils.CLog("[DATA RECOVER] Remove Data Center Db error:%s", err.Error())
+						glogger.DefaultOutput("[DATA RECOVER] Remove Data Center Db error:%s", err.Error())
 						return nil
 					}
 					if err := os.Remove(ossupport.LostCacheDataPath); err != nil {
-						utils.CLog("[DATA RECOVER] Remove Lost Cache Db error:%s", err.Error())
+						glogger.DefaultOutput("[DATA RECOVER] Remove Lost Cache Db error:%s", err.Error())
 						return nil
 					}
-					utils.CLog("[DATA RECOVER] Remove Old Db File Finished")
-					utils.CLog("[DATA RECOVER] Move New Db File")
+					glogger.DefaultOutput("[DATA RECOVER] Remove Old Db File Finished")
+					glogger.DefaultOutput("[DATA RECOVER] Move New Db File")
 					if err := ossupport.MoveFile(ossupport.RecoveryDbPath,
 						ossupport.RunDbPath); err != nil {
-						utils.CLog("[DATA RECOVER] Move New Db File error:%s", err.Error())
+						glogger.DefaultOutput("[DATA RECOVER] Move New Db File error:%s", err.Error())
 						return nil
 					}
 					if err := ossupport.MoveFile(ossupport.RecoveryDataCenterPath,
 						ossupport.DataCenterPath); err != nil {
-						utils.CLog("[DATA RECOVER] Move DataCenter File error:%s", err.Error())
+						glogger.DefaultOutput("[DATA RECOVER] Move DataCenter File error:%s", err.Error())
 						return nil
 					}
-					utils.CLog("[DATA RECOVER] Move New Db File Finished")
-					utils.CLog("[DATA RECOVER] Try to Restart rhilex")
+					glogger.DefaultOutput("[DATA RECOVER] Move New Db File Finished")
+					glogger.DefaultOutput("[DATA RECOVER] Try to Restart rhilex")
 					if err := ossupport.RestartRhilex(); err != nil {
-						utils.CLog("[DATA RECOVER] Restart rhilex error:%s", err.Error())
+						glogger.DefaultOutput("[DATA RECOVER] Restart rhilex error:%s", err.Error())
 					} else {
-						utils.CLog("[DATA RECOVER] Restart rhilex success, Recover Process Exited")
+						glogger.DefaultOutput("[DATA RECOVER] Restart rhilex success, Recover Process Exited")
 					}
 					os.Exit(0)
 					return nil
@@ -409,32 +409,32 @@ func main() {
 					// 激活服务器默认使用60004端口，约定俗成
 					Certificate, Privatekey, License, errGetLicense := activation.GetLicense(host, sn, iface, mac, U, P)
 					if errGetLicense != nil {
-						utils.CLog("[LICENCE ACTIVE]: Get License failed:%s", errGetLicense)
+						glogger.DefaultOutput("[LICENCE ACTIVE]: Get License failed:%s", errGetLicense)
 						return nil
 					}
 					// cert
 					CertificateFile, err1 := os.Create("./license.cert")
 					if err1 != nil {
-						utils.CLog("[LICENCE ACTIVE]: Create Certificate failed:%s", err1)
+						glogger.DefaultOutput("[LICENCE ACTIVE]: Create Certificate failed:%s", err1)
 						return nil
 					}
 					CertificateFile.Write([]byte(Certificate))
 					// key
 					PrivatekeyFile, err2 := os.Create("./license.key")
 					if err2 != nil {
-						utils.CLog("[LICENCE ACTIVE]: Create Key failed:%s", err2)
+						glogger.DefaultOutput("[LICENCE ACTIVE]: Create Key failed:%s", err2)
 						return nil
 					}
 					PrivatekeyFile.Write([]byte(Privatekey))
 					// lic
 					LicenseFile, err3 := os.Create("./license.lic")
 					if err3 != nil {
-						utils.CLog("[LICENCE ACTIVE]: Create License failed:%s", err3)
+						glogger.DefaultOutput("[LICENCE ACTIVE]: Create License failed:%s", err3)
 						return nil
 					}
 					LicenseFile.Write([]byte(License))
-					utils.CLog("[LICENCE ACTIVE]: Get License success. save to ./license.cert, ./license.key, ./license.lic")
-					utils.CLog("[LICENCE ACTIVE]: ! Warning: Freetrial license is only valid for 99 days, and a MAC address can only be applied for once")
+					glogger.DefaultOutput("[LICENCE ACTIVE]: Get License success. save to ./license.cert, ./license.key, ./license.lic")
+					glogger.DefaultOutput("[LICENCE ACTIVE]: ! Warning: Freetrial license is only valid for 99 days, and a MAC address can only be applied for once")
 					defer PrivatekeyFile.Close()
 					defer CertificateFile.Close()
 					defer LicenseFile.Close()
@@ -467,34 +467,34 @@ func main() {
 				Action: func(c *cli.Context) error {
 					keyPath := c.String("key")
 					if keyPath == "" {
-						utils.CLog("[LICENCE ACTIVE]: missing admin 'key' parameter")
+						glogger.DefaultOutput("[LICENCE ACTIVE]: missing admin 'key' parameter")
 						return nil
 					}
 					licPath := c.String("lic")
 					if licPath == "" {
-						utils.CLog("[LICENCE ACTIVE]: missing admin 'lic' parameter")
+						glogger.DefaultOutput("[LICENCE ACTIVE]: missing admin 'lic' parameter")
 						return nil
 					}
 					certPath := c.String("cert")
 					if certPath == "" {
-						utils.CLog("[LICENCE ACTIVE]: missing admin 'cert' parameter")
+						glogger.DefaultOutput("[LICENCE ACTIVE]: missing admin 'cert' parameter")
 						return nil
 					}
 					// rhilex validate -lic ./license.lic -key ./license.key
 					LocalLicense, err := utils.ValidateLicense(keyPath, licPath)
 					if err != nil {
-						utils.CLog("[LICENCE ACTIVE]: Validate License Failed: %s", err)
+						glogger.DefaultOutput("[LICENCE ACTIVE]: Validate License Failed: %s", err)
 						return nil
 					}
 					utils.BeautyPrintInfo("License Info", LocalLicense.ToString())
 					certBytes, err1 := os.ReadFile(certPath)
 					if err1 != nil {
-						utils.CLog("[LICENCE ACTIVE]: Load Certificate Failed: %s", err)
+						glogger.DefaultOutput("[LICENCE ACTIVE]: Load Certificate Failed: %s", err)
 						return nil
 					}
 					certInfo, err := misc.ParseCertificateAuthorityInfo(certBytes)
 					if err != nil {
-						utils.CLog("[LICENCE ACTIVE]: Validate Certificate Failed: %s", err)
+						glogger.DefaultOutput("[LICENCE ACTIVE]: Validate Certificate Failed: %s", err)
 						return nil
 					}
 					utils.BeautyPrintInfo("Certificate Info", certInfo)
@@ -504,7 +504,7 @@ func main() {
 			// version
 			{
 				Name:        "version",
-				Usage:       "print rhilex version",
+				Usage:       "Show rhilex Current Version",
 				Description: "Show rhilex Current Version",
 				Flags: []cli.Flag{
 					&cli.StringFlag{
@@ -514,19 +514,19 @@ func main() {
 				Action: func(*cli.Context) error {
 					version := fmt.Sprintf("[%v-%v-%v]",
 						runtime.GOOS, runtime.GOARCH, typex.MainVersion)
-					utils.CLog("[*] Version: %s", version)
+					glogger.DefaultOutput("[*] Version: %s", version)
 					return nil
 				},
 			},
 			// hwinfo
 			{
 				Name:        "hwinfo",
-				Usage:       "print rhilex interface info",
+				Usage:       "Show Local Hardware Info",
 				Description: "Show Local Hardware Info",
 				Action: func(*cli.Context) error {
 					macs, err1 := ossupport.ShowMacAddress()
 					if err1 != nil {
-						utils.CLog("[SHOW HWINFO]: Get Interface Address Failed: %s", err1)
+						glogger.DefaultOutput("[SHOW HWINFO]: Get Interface Address Failed: %s", err1)
 						return nil
 					}
 					fmt.Println("# All Interface Address")
@@ -539,10 +539,25 @@ func main() {
 			// bench
 			{
 				Name:        "pbench",
-				Usage:       "print hardware performance test result",
-				Description: "Performance Bench Test",
+				Usage:       "Print hardware performance test result",
+				Description: "Print hardware performance test result",
 				Action: func(*cli.Context) error {
 					performance.TestPerformance()
+					return nil
+				},
+			},
+			// check new version
+			{
+				Name:        "checknew",
+				Usage:       "Check Newest Version",
+				Description: "Check Newest Version",
+				Action: func(*cli.Context) error {
+					v, e := engine.CheckNewestVersion()
+					if e != nil {
+						glogger.DefaultOutput("[LICENCE ACTIVE]:Check Newest Version Failed: %s", e)
+						return nil
+					}
+					glogger.DefaultOutput("[*] Newest Version found: %s", v)
 					return nil
 				},
 			},
