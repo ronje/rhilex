@@ -12,7 +12,6 @@ cat >./typex/version.go <<EOF
 //=================
 package typex
 
-import "github.com/hootrhino/rhilex/utils"
 
 // v0.0.0: Default Develop Version
 var MainVersion string = "v0.0.0"
@@ -24,16 +23,6 @@ type VersionInfo struct {
 	Dist        string
 }
 
-var License = utils.LocalLicense{
-	Type:              "FREETRIAL",
-	DeviceID:          "",
-	AuthorizeAdmin:    "",
-	AuthorizePassword: "",
-	MAC:               "",
-	BeginAuthorize:    0,
-	EndAuthorize:      0,
-	License:           "",
-}
 
 var DefaultVersionInfo = VersionInfo{
 	Product:     "COMMON",

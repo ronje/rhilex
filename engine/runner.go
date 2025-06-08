@@ -26,7 +26,6 @@ import (
 	wdog "github.com/hootrhino/rhilex/plugin/generic_watchdog"
 	modbusscanner "github.com/hootrhino/rhilex/plugin/modbus_scanner"
 	ngrokc "github.com/hootrhino/rhilex/plugin/ngrokc"
-	telemetry "github.com/hootrhino/rhilex/plugin/telemetry"
 	usbmonitor "github.com/hootrhino/rhilex/plugin/usbmonitor"
 	"github.com/hootrhino/rhilex/plugin/webterminal"
 	ini "gopkg.in/ini.v1"
@@ -37,7 +36,6 @@ import (
 	core "github.com/hootrhino/rhilex/config"
 	glogger "github.com/hootrhino/rhilex/glogger"
 	icmpsender "github.com/hootrhino/rhilex/plugin/icmp_sender"
-	license_manager "github.com/hootrhino/rhilex/plugin/license_manager"
 	typex "github.com/hootrhino/rhilex/typex"
 )
 
@@ -64,11 +62,7 @@ func RunRhilex(iniPath string) {
 	InitAllComponent(engine)
 	StartAllComponent()
 	engine.Start()
-	license_manager := license_manager.NewLicenseManager(engine)
-	if err := plugins.LoadPlugin("plugin.license_manager", license_manager); err != nil {
-		glogger.GLogger.Error(err)
-		return
-	}
+
 	apiServer := apiServer.NewHttpApiServer(engine)
 	if err := plugins.LoadPlugin("plugin.http_server", apiServer); err != nil {
 		glogger.GLogger.Error(err)
@@ -89,9 +83,6 @@ func loadOtherPlugin() {
 	for _, section := range sections {
 		name := strings.TrimPrefix(section.Name(), "plugin.")
 		if name == "http_server" {
-			continue
-		}
-		if name == "license_manager" {
 			continue
 		}
 		enable, err := section.GetKey("enable")
@@ -119,9 +110,7 @@ func loadOtherPlugin() {
 		if name == "ngrokc" {
 			plugin = ngrokc.NewNgrokClient()
 		}
-		if name == "telemetry" {
-			plugin = telemetry.NewTelemetry()
-		}
+
 		if name == "discover" {
 			plugin = discover.NewDiscoverPlugin()
 		}

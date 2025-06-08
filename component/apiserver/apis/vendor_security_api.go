@@ -28,5 +28,26 @@ import (
  */
 
 func GetVendorKey(c *gin.Context, ruleEngine typex.Rhilex) {
-	c.JSON(common.HTTP_OK, common.OkWithData(typex.License))
+	type LocalLicense struct {
+		Type              string `json:"type"` // FREETRIAL | COMMERCIAL
+		DeviceID          string `json:"device_id"`
+		AuthorizeAdmin    string `json:"authorize_admin"`
+		AuthorizePassword string `json:"authorize_password"`
+		BeginAuthorize    int64  `json:"begin_authorize"`
+		EndAuthorize      int64  `json:"end_authorize"`
+		Iface             string `json:"iface"`
+		MAC               string `json:"mac"`
+		License           string `json:"license"`
+	}
+	c.JSON(common.HTTP_OK, common.OkWithData(LocalLicense{
+		Type:              "COMMERCIAL",
+		DeviceID:          "RHILEX-0001",
+		AuthorizeAdmin:    "admin",
+		AuthorizePassword: "password",
+		BeginAuthorize:    0,
+		EndAuthorize:      0,
+		Iface:             "eth0",
+		MAC:               "00:00:00:00:00:00",
+		License:           "RHILEX-0001",
+	}))
 }
