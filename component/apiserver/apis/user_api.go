@@ -220,13 +220,10 @@ func Login(c *gin.Context, ruleEngine typex.Rhilex) {
 		return
 	}
 	UserDetail := UserDetailVo{
-		Username:       claims.Username,
-		Role:           "ADMIN",
-		Description:    "RHILEX ADMIN",
-		BeginAuthorize: typex.License.BeginAuthorize,
-		EndAuthorize:   typex.License.EndAuthorize,
-		Type:           typex.License.Type,
-		Token:          token,
+		Username:    claims.Username,
+		Role:        "ADMIN",
+		Description: "RHILEX ADMIN",
+		Token:       token,
 	}
 	c.JSON(common.HTTP_OK, common.OkWithData(UserDetail))
 
@@ -264,13 +261,10 @@ func UserDetail(c *gin.Context, ruleEngine typex.Rhilex) {
 		return
 	}
 	c.JSON(common.HTTP_OK, common.OkWithData(UserDetailVo{
-		Username:       claims.Username,
-		Role:           "ADMIN",
-		Description:    "RHILEX ADMIN",
-		BeginAuthorize: typex.License.BeginAuthorize,
-		EndAuthorize:   typex.License.EndAuthorize,
-		Type:           typex.License.Type,
-		Token:          token,
+		Username:    claims.Username,
+		Role:        "ADMIN",
+		Description: "RHILEX ADMIN",
+		Token:       token,
 	}))
 }
 

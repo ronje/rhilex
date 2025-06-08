@@ -25,7 +25,6 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
-	"time"
 
 	"github.com/gin-gonic/gin"
 	common "github.com/hootrhino/rhilex/component/apiserver/common"
@@ -33,7 +32,6 @@ import (
 	"github.com/hootrhino/rhilex/ossupport"
 	"github.com/hootrhino/rhilex/typex"
 	"github.com/hootrhino/rhilex/utils"
-	"gopkg.in/ini.v1"
 )
 
 /*
@@ -137,32 +135,7 @@ func UpgradeFirmWare(c *gin.Context, ruleEngine typex.Rhilex) {
 		return
 	}
 	glogger.DefaultOutput("[RHILEX UPGRADE] RuleEngine GetConfig:%s", tempPath)
-	IniPath := ruleEngine.GetConfig().IniPath
-	mainCfg, errLoad := ini.Load(IniPath)
-	if errLoad != nil {
-		c.JSON(common.HTTP_OK,
-			common.Error(glogger.DefaultOutput("[RHILEX UPGRADE] Load Ini File error:%s", errLoad)))
-		return
-	}
-	section := mainCfg.Section("plugin.license_manager")
-	license_path, err1 := section.GetKey("license_path")
-	if err1 != nil {
-		c.JSON(common.HTTP_OK,
-			common.Error(glogger.DefaultOutput("[RHILEX UPGRADE] GetKey license_manager.license_path error:%s", err1)))
-		return
-	}
-	key_path, err2 := section.GetKey("key_path")
-	if err2 != nil {
-		c.JSON(common.HTTP_OK,
-			common.Error(glogger.DefaultOutput("[RHILEX UPGRADE] GetKey license_manager.key_path error:%s", err2)))
-		return
-	}
-	glogger.DefaultOutput("[RHILEX UPGRADE] Start Upgrade Process: license_path=%s, key_path=%s",
-		license_path.String(), key_path.String())
-	go func() {
-		time.Sleep(2 * time.Second)
-		ossupport.StartUpgradeProcess(IniPath, license_path.String(), key_path.String(), "./rhilex.db")
-	}()
+
 	c.JSON(common.HTTP_OK, common.Ok())
 }
 

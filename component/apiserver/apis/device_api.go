@@ -318,11 +318,10 @@ func CreateDevice(c *gin.Context, ruleEngine typex.Rhilex) {
 	}
 	deviceConfig := DeviceConfig{}
 	json.Unmarshal(configJson, &deviceConfig)
-	if deviceConfig.CecollaConfig.Enable != nil {
-		if *deviceConfig.CecollaConfig.Enable {
-
-		}
-	}
+	// if deviceConfig.CecollaConfig.Enable != nil {
+	// 	if *deviceConfig.CecollaConfig.Enable {
+	// 	}
+	// }
 
 	if err := ruleEngine.CheckDeviceType(typex.DeviceType(form.Type)); err != nil {
 		c.JSON(common.HTTP_OK, common.Error400(err))
@@ -331,26 +330,6 @@ func CreateDevice(c *gin.Context, ruleEngine typex.Rhilex) {
 	if service.CheckDeviceNameDuplicate(form.Name) {
 		c.JSON(common.HTTP_OK, common.Error("Device Name Duplicated"))
 		return
-	}
-	// 检查个人版的创建权限: 以下三种情况，以及2个数量
-	// - GENERIC_UART_RW
-	// - GENERIC_MODBUS_MASTER
-	// - GENERIC_MODBUS_SLAVER
-	if typex.License.Type == "FREETRIAL" {
-		if !utils.SContains([]string{
-			"GENERIC_UART_RW",
-			"GENERIC_MODBUS_MASTER",
-			"GENERIC_MODBUS_SLAVER",
-		}, form.Type) {
-			c.JSON(common.HTTP_OK,
-				common.Error("FREETRIAL Version Only Allow Create Limited Device Type"))
-			return
-		}
-		if count := service.CheckDeviceCount(form.Name); count > (2) {
-			c.JSON(common.HTTP_OK,
-				common.Error("FREETRIAL Version Only Allow Create 2 Input Devices"))
-			return
-		}
 	}
 
 	if ok, r := utils.IsValidNameLength(form.Name); !ok {
@@ -423,26 +402,6 @@ func UpdateDevice(c *gin.Context, ruleEngine typex.Rhilex) {
 		}
 	}
 
-	// 检查个人版的创建权限: 以下三种情况，以及2个数量
-	// - GENERIC_UART_RW
-	// - GENERIC_MODBUS_MASTER
-	// - GENERIC_MODBUS_SLAVER
-	if typex.License.Type == "FREETRIAL" {
-		if !utils.SContains([]string{
-			"GENERIC_UART_RW",
-			"GENERIC_MODBUS_MASTER",
-			"GENERIC_MODBUS_SLAVER",
-		}, form.Type) {
-			c.JSON(common.HTTP_OK,
-				common.Error("FREETRIAL Version Only Allow Create Limited Device Type"))
-			return
-		}
-		if count := service.CheckDeviceCount(form.Name); count > (2) {
-			c.JSON(common.HTTP_OK,
-				common.Error("FREETRIAL Version Only Allow Create 2 Input Devices"))
-			return
-		}
-	}
 	//
 	// 取消绑定分组,删除原来旧的分组
 	txErr := service.ReBindResource(func(tx *gorm.DB) error {
