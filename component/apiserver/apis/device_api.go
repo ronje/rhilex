@@ -398,7 +398,6 @@ func UpdateDevice(c *gin.Context, ruleEngine typex.Rhilex) {
 	json.Unmarshal(configJson, &deviceConfig)
 	// if deviceConfig.CecollaConfig.Enable != nil {
 	// 	if *deviceConfig.CecollaConfig.Enable {
-
 	// 	}
 	// }
 
