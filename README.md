@@ -33,9 +33,8 @@ RHILEX 是一款功能强大的工业边缘网关系统，旨在为工业自动�
 
 
 ## 三、安装与部署
-前端：https://github.com/hootrhino/rhilex-web 下载前端项目。
-
-其他请访问：https://www.hootrhino.com 获取资料。（近期服务器到期，决定不再续费，如果有定制化需求请联系我）
+- 前端：https://github.com/hootrhino/rhilex-web 下载前端项目。
+- 其他：https://www.hootrhino.com 获取资料。（近期服务器到期，决定不再续费，如果有定制化需求请联系我）
 
 
 ## 四、使用方法
@@ -70,4 +69,4 @@ RHILEX 是一款功能强大的工业边缘网关系统，旨在为工业自动�
 如果您对项目有任何疑问、建议或合作意向，请通过以下方式联系我们：
 - ![image](https://github.com/user-attachments/assets/4fb3107e-5307-469e-af9f-0a1a8814eb35)
 
-> RHILEX全部商业仓库代码均以公开，未来不做免费答疑。感兴趣请自行研究源码，结构简单注释也有很多。
+> RHILEX全部商业仓库代码均公开，未来不做免费答疑。感兴趣请自行研究源码，结构简单注释也有很多。
