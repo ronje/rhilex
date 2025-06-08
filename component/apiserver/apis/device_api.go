@@ -396,11 +396,11 @@ func UpdateDevice(c *gin.Context, ruleEngine typex.Rhilex) {
 	}
 	deviceConfig := DeviceConfig{}
 	json.Unmarshal(configJson, &deviceConfig)
-	if deviceConfig.CecollaConfig.Enable != nil {
-		if *deviceConfig.CecollaConfig.Enable {
+	// if deviceConfig.CecollaConfig.Enable != nil {
+	// 	if *deviceConfig.CecollaConfig.Enable {
 
-		}
-	}
+	// 	}
+	// }
 
 	//
 	// 取消绑定分组,删除原来旧的分组
